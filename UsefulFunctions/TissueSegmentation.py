@@ -4,11 +4,14 @@ Created on Tue May 03 16:32:53 2016
 
 @author: Peter
 """
+import pdb
 
 from optparse import OptionParser
 
-from skimage.morphology import disk, opening
+from skimage.morphology import disk, opening, closing
 from skimage.filters import threshold_otsu
+from skimage.measure import regionprops, label
+
 from scipy.ndimage.morphology import binary_fill_holes, morphological_gradient
 import numpy as np
 import matplotlib.pyplot as plt
@@ -60,8 +63,37 @@ def RemoveBorder(image_bin, border = 15):
     result[border:neg_border, border:neg_border] = image_bin[border:neg_border, border:neg_border]
     return result
 
+def RemoveIsolatedPoints(binary_image, thresh = 100):
+    ## removing tiny areas...
+    #pdb.set_trace()
+    labeled = label(binary_image)
+    reg_prop = regionprops(labeled)
+    for i in range(len(reg_prop)):
+        if reg_prop[ i  ].area < thresh:
+            labeled[labeled == (i+1)] = 0
+    labeled[labeled > 0] = 1 
+    return labeled
+
+def FindTicket(RGB_image, _3tuple = (80, 80, 80)):
+    ## Find the "black ticket on the images"
+    temp_image_3 = np.copy(RGB_image)
+    temp_image_3[:,:,:] = 0
+    for i in range(3):
+        temp_image_1 = np.zeros(shape = RGB_image.shape[0:2])
+        temp_image_1[np.where(RGB_image[:,:,i] < _3tuple[i])] = 1
+        temp_image_3[:,:,i] = temp_image_1
+
+    temp_resultat = temp_image_3.sum(axis=2)
+    temp_resultat[temp_resultat > 0]=1
+    #temp_resultat = Filling_holes_2(temp_resultat)
+    temp_resultat = closing(temp_resultat, disk(20))
+    temp_resultat = opening(temp_resultat, disk(20))
+    temp_resultat = RemoveBorder(temp_resultat)
+    return temp_resultat
+
+
 def Preprocessing(image, thresh = 200, invert = True):
-    return RemoveBorder( FillHole( TissueThresh( IterOpening( image ), thresh ), invert = invert) )
+    return RemoveIsolatedPoints( RemoveBorder( FillHole( TissueThresh( IterOpening( image ), thresh ), invert = invert) ) )
 
 def Contours(bin_image, contour_size = 3):
     ## Computes the contours
@@ -82,12 +114,17 @@ def save(original, contour = None, name = "random_picture.png"):
     plt.savefig(name, bbox_inches='tight')
     plt.close()
     
-def ROI_binary_mask(sample):
+def ROI_binary_mask(sample, size = 5):
     PreprocRes = np.copy(sample)
         
     for i in range(3):  ### RGB
         PreprocRes[:,:,i] =  Preprocessing( sample[:,:,i] )
     res = combining(PreprocRes)
+    ticket = FindTicket(sample)
+    res = res - ticket
+    res[res > 0] = 1
+    res[res < 0] = 0
+    res = opening(res, disk(size))
     return res
 
 if __name__ == "__main__":
@@ -155,6 +192,7 @@ if __name__ == "__main__":
         name_tag = file_tiff.split('\\')[-1].split('.')[0]
         file_name = os.path.join(options.output_folder, name_tag + ".png")
         save(sample, cont, file_name)
+        save(res, name = os.path.join(options.output_folder, name_tag + "_binary.png"))
 ########################################
     
     
