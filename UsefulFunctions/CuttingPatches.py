@@ -239,7 +239,6 @@ def visualise_cut(slide,list_pos,res_to_view=None,color='red',size=12,title=""):
     ax.set_title(title, size=20)
     plt.show()
 
-
 if __name__ == "__main__":
     
     parser = OptionParser()
