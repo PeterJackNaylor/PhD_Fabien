@@ -8,7 +8,6 @@ Created on Tue May 03 16:32:53 2016
 import pandas as pd
 import numpy as np
 import os
-from optparse import OptionParser
 import pdb
 import glob
 
@@ -82,8 +81,12 @@ def Unmatched_print(data, folder):
         for el in folder:
             if el not in matched:
                 print el
-
-
+def MissingFiles(data, column_match = "Match", id_name = "patient_id"):
+    temp = data.ix[data[column_match]=='0'][id_name]
+    print "Their is %d missing slides" %temp.shape[0]
+    for row in temp.index:
+        #print "Slide %d missing, id number %d" %(row+1, data.ix[row,id_name])
+        print "Slide %d, id number %d" %(row+1, data.ix[row,id_name])
 if __name__ == "__main__":
     
     data = pd.read_csv(path_file)
@@ -93,5 +96,5 @@ if __name__ == "__main__":
     Matching(data, all_tiff)
     
     Unmatched_print(data, all_tiff)
-        
+    MissingFiles(data)   
     
