@@ -113,7 +113,7 @@ if __name__ == "__main__":
     test = DataManager(path)
     test.prepare_sets()
     
-    transform_list = [Transf.Identity(), Transf.Rotation(45, enlarge=True)]#Transf.Flip(1)]#Transf.ElasticDeformation(0,30,4)]#, Transf.Rotation(45)]#,Transf.ElasticDeformation(0,30,4)]
+    transform_list = [Transf.Identity(), Transf.Rotation(45, enlarge=True), Transf.Flip(1)]#Transf.ElasticDeformation(0,30,4)]#, Transf.Rotation(45)]#,Transf.ElasticDeformation(0,30,4)]
     test.SetTransformation(transform_list)
     i = 0    
     for img, img_gt in test.TrainingIterator(fold = 1):

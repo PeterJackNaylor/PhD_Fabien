@@ -31,10 +31,18 @@ from skimage.transform import PiecewiseAffineTransform, warp
 #==============================================================================
 def flip_vertical(picture):
     res = cv2.flip(picture,1)
+    if len(res.shape) == 2:
+        res2 = np.zeros(shape=picture.shape)
+        res2[:,:,0] = res
+        return res2
     return res
     
 def flip_horizontal(picture):
     res = cv2.flip(picture,0)
+    if len(res.shape) == 2:
+        res2 = np.zeros(shape=picture.shape)
+        res2[:,:,0] = res
+        return res2
     return res
 
 class Transf(object):
@@ -77,7 +85,9 @@ class Transf(object):
         #bottom right from right part
         enlarged_image[(y+rows):(2 * y + rows), (x + cols):(2 * x + cols), 0:channels] = flip_horizontal(enlarged_image[rows:(y + rows), (x + cols):(2 * x + cols), 0:channels])
         enlarged_image = enlarged_image.astype('uint8')
+        
         return(enlarged_image)
+
 class Identity(Transf):
 
     def __init__(self):
