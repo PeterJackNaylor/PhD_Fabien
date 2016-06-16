@@ -2,31 +2,40 @@ import numpy as np
 import cv2
 from skimage.transform import PiecewiseAffineTransform, warp
 
-
+#==============================================================================
+# 
+# def flip_vertical(picture):
+#     result = picture.copy()
+#     height, width , channel= result.shape
+#     
+#     for x in range(0, width/2):   # Only process the half way
+#         for y in range(0, height):
+#         # swap pix and pix2
+#             #print [y, width  - x]
+#             result[y, width  - x - 1,  :] = picture[y, x, :]
+#             result[y, x, :] = picture[y, width - x - 1, :]
+#     return result
+# 
+# def flip_horizontal(picture):
+#     result = picture.copy()
+#     height, width , channel= result.shape
+#     
+#     for y in range(0, height/2):   # Only process the half way
+#         for x in range(0, width):
+#         # swap pix and pix2
+#             #print [y, width  - x]
+#             result[y, x,  :] = picture[height - 1 - y, x, :]
+#             result[height - 1 - y, x, :] = picture[y, x, :]
+#     return result
+# 
+#==============================================================================
 def flip_vertical(picture):
-    result = picture.copy()
-    height, width , channel= result.shape
+    res = cv2.flip(picture,1)
+    return res
     
-    for x in range(0, width/2):   # Only process the half way
-        for y in range(0, height):
-        # swap pix and pix2
-            #print [y, width  - x]
-            result[y, width  - x - 1,  :] = picture[y, x, :]
-            result[y, x, :] = picture[y, width - x - 1, :]
-    return result
-
 def flip_horizontal(picture):
-    result = picture.copy()
-    height, width , channel= result.shape
-    
-    for y in range(0, height/2):   # Only process the half way
-        for x in range(0, width):
-        # swap pix and pix2
-            #print [y, width  - x]
-            result[y, x,  :] = picture[height - 1 - y, x, :]
-            result[height - 1 - y, x, :] = picture[y, x, :]
-    return result
-
+    res = cv2.flip(picture,0)
+    return res
 
 class Transf(object):
     
@@ -69,12 +78,23 @@ class Transf(object):
         enlarged_image[(y+rows):(2 * y + rows), (x + cols):(2 * x + cols), 0:channels] = flip_horizontal(enlarged_image[rows:(y + rows), (x + cols):(2 * x + cols), 0:channels])
         enlarged_image = enlarged_image.astype('uint8')
         return(enlarged_image)
+class Identity(Transf):
+
+    def __init__(self):
+
+        Transf.__init__(self,"identity")
+
+    def _apply_(self, image):
+
+        return image
+        
+        
 
 class Translation(Transf):
     
-    def __init__(self, name, x, y, enlarge = True):
+    def __init__(self, x, y, enlarge = True):
     
-        Transf.__init__(self, name)
+        Transf.__init__(self, "Trans_" + str(x) + "_" + str(y))
         if x < 0 :
             x = - x
             x_rev = -1
@@ -109,9 +129,9 @@ class Translation(Transf):
         
 class Rotation(Transf):
     
-    def __init__(self, name, deg, enlarge = True):
+    def __init__(self, deg, enlarge = True):
 
-        Transf.__init__(self, name)
+        Transf.__init__(self, "Rot_" + str(deg))
         self.params = {"deg" : deg, "enlarge" : enlarge}
     
     def _apply_(self, image):
@@ -132,6 +152,11 @@ class Rotation(Transf):
             b_rows, b_cols, b_channels = big_image.shape
             M = cv2.getRotationMatrix2D((b_cols/2,b_rows/2),deg,1)
             dst = cv2.warpAffine(big_image,M,(b_cols,b_rows))
+            if b_channels == 1:
+                dst_ = np.zeros(shape=(b_rows, b_cols, b_channels))
+                dst_[:,:,0] = dst
+                dst = dst_.copy()
+                del dst_
             res = dst[z:(z+rows),z:(z+cols),:]
         else:
             M = cv2.getRotationMatrix2D((cols/2,rows/2),30,1)
@@ -140,10 +165,11 @@ class Rotation(Transf):
 
 class Flip(Transf):
     
-    def __init__(self, name, hori):
+    def __init__(self, hori):
         if hori != 0 and hori!= 1:
             print "you must give a integer, your parameter is ignored"
-        Transf.__init__(self, name)
+            hori = 1
+        Transf.__init__(self, "Flip_" + str(hori))
         self.params = {"hori" : hori}
     
     def _apply_(self, image):
@@ -160,8 +186,8 @@ class Flip(Transf):
 
 class OutOfFocus(Transf):
     
-    def __init__(self, name, sigma):
-        Transf.__init__(self, name)
+    def __init__(self, sigma):
+        Transf.__init__(self, "OutOfFocus_" + str(sigma))
         self.params = {"sigma" : sigma}
     
     def _apply_(self, image):
@@ -174,8 +200,8 @@ class OutOfFocus(Transf):
 
 
 class ElasticDeformation(Transf):
-    def __init__(self, name, mu, sigma, num_points):
-        Transf.__init__(self, name)
+    def __init__(self, mu, sigma, num_points):
+        Transf.__init__(self, "ElasticDeform_" + str(mu) + "_" + str(sigma) + "_" + str(num_points))
         self.params = { "mu" : mu, "sigma" : sigma, "num_points": num_points}
         
     def grid(self, rows, cols, num_points):
