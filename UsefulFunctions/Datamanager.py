@@ -118,3 +118,4 @@ if __name__ == "__main__":
     i = 0    
     for img, img_gt in test.TrainingIterator(fold = 1):
         i+=1
+        
