@@ -19,7 +19,7 @@ import UsefulOpenSlide as UOS
 from TissueSegmentation import ROI_binary_mask, save
 
 from optparse import OptionParser
-
+from sys import platform as _platform
 
 
 def Sample_imagette(im_bin, N, slide, level_resolution, nber_pixels, current_level,mask):
@@ -265,10 +265,15 @@ if __name__ == "__main__":
     except:
         print "Issue with file name"
     try:
+        pdb.set_trace()
         if not os.path.isdir(options.output_folder):
             os.mkdir(options.output_folder)
-        name = options.file.split('\\')[-1].split('.')[0]
-        options.output_folder = options.output_folder +"\\"+ name
+        if _platform == "linux2":
+            name = options.file.split('/')[-1].split('.')[0]
+            options.output_folder = options.output_folder +""+ name
+        else:
+            name = options.file.split('\\')[-1].split('.')[0]
+            options.output_folder = options.output_folder +"\\"+ name
         if not os.path.isdir(options.output_folder):
             os.mkdir(options.output_folder)
     except:
@@ -309,7 +314,10 @@ if __name__ == "__main__":
     i = 0
     for para in list_of_para:
         sample = UOS.GetImage(options.file, para)
-        sample.save(options.output_folder + "\\" + str(i)+".png")
+        if _platform == "linux2":
+            sample.save(options.output_folder + "/" + str(i)+".png")
+        else:
+            sample.save(options.output_folder + "\\" + str(i)+".png")
         i += 1
 ########################################
     

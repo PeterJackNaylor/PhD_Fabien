@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 from skimage.transform import PiecewiseAffineTransform, warp
-
+from skimage import img_as_ubyte
 #==============================================================================
 # 
 # def flip_vertical(picture):
@@ -87,6 +87,18 @@ class Transf(object):
         enlarged_image = enlarged_image.astype('uint8')
         
         return(enlarged_image)
+        
+    def OutputType(self,image):
+        if len(image.shape) == 2:
+            img = image > 0
+            img.dtype = 'uint8'
+            return img
+        elif image.shape[2] == 1:
+            img = image > 0
+            img.dtype = 'uint8'
+            return img
+        return image
+        
 
 class Identity(Transf):
 
@@ -95,7 +107,7 @@ class Identity(Transf):
         Transf.__init__(self,"identity")
 
     def _apply_(self, image):
-
+        image = self.OutputType(image)
         return image
         
         
@@ -134,8 +146,10 @@ class Translation(Transf):
         else:
             M = np.float32([[1,0,(x * rev_x * -1)],[0,1,(y * rev_y * -1)]])
             res = cv2.warpAffine(image, M, (cols,rows))
-        return res
         
+        image = self.OutputType(image)
+        return res
+
         
 class Rotation(Transf):
     
@@ -171,7 +185,12 @@ class Rotation(Transf):
         else:
             M = cv2.getRotationMatrix2D((cols/2,rows/2),30,1)
             res = cv2.warpAffine(image, M, (cols,rows))
+            
+        res = self.OutputType(res)
+        
         return res
+
+
 
 class Flip(Transf):
     
@@ -191,6 +210,7 @@ class Flip(Transf):
         else:
             res = flip_vertical(image)
         
+        res = self.OutputType(res)
         return res
 
 
@@ -201,18 +221,28 @@ class OutOfFocus(Transf):
         self.params = {"sigma" : sigma}
     
     def _apply_(self, image):
-        
+        if len(image.shape) == 2:
+            image = self.OutputType(image)
+            return image
+        elif image.shape[2] == 1:            
+            image = self.OutputType(image)
+            return image
         sigma = self.params["sigma"]
         
         res = cv2.blur(image, (sigma, sigma))
-    
+        
+        res = self.OutputType(res)
         return res
+        
 
 
 class ElasticDeformation(Transf):
-    def __init__(self, mu, sigma, num_points):
+    def __init__(self, mu, sigma, num_points, seed = None):
         Transf.__init__(self, "ElasticDeform_" + str(mu) + "_" + str(sigma) + "_" + str(num_points))
         self.params = { "mu" : mu, "sigma" : sigma, "num_points": num_points}
+        if seed is None:
+            seed = np.random.randint(0,1000000)
+        self.seed = seed
         
     def grid(self, rows, cols, num_points):
         ### returns a grid in the form of a stacked array x is 0 and y is 1
@@ -233,6 +263,7 @@ class ElasticDeformation(Transf):
 
         src = self.grid(rows, cols, num_points)
         # add gaussian displacement to row coordinates
+        np.random.seed(self.seed)
         dst_rows = src[:, 1] - sigma * np.random.randn(src.shape[0]) + mu
         dst_cols = src[:, 0] - sigma * np.random.randn(src.shape[0]) + mu
 
@@ -251,5 +282,20 @@ class ElasticDeformation(Transf):
         out_rows = rows
         out_cols = cols
         res = warp(image, tform, output_shape=(out_rows, out_cols))
+                    
+        res = self.OutputType(res)
         
         return res
+        
+    def OutputType(self,image):
+        if len(image.shape) == 2:
+            img = image > 0
+            img.dtype = 'uint8'
+            return img
+        elif image.shape[2] == 1:
+            img = image > 0
+            img.dtype = 'uint8'
+            return img
+        else:
+            img = img_as_ubyte(image)
+            return img

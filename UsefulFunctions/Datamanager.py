@@ -13,7 +13,7 @@ class DataManager(object):
         self.name = name
         self.transforms = None
         
-    def TrainingIterator(self, fold):
+    def TrainingIteratorFold(self, fold):
         try:
             train_paths, test_paths = self.ValScheme[fold]
         except:
@@ -26,9 +26,24 @@ class DataManager(object):
             for path_nii in np.array(self.nii)[train_paths]:
                 img, img_gt = self.LoadGTAndImage(path_nii)
                 for f in self.transforms:
-                    yield f._apply_(img), f._apply_(img_gt)
-        
-        
+                    yield f._apply_(img), f._apply_(img_gt), f.name
+    
+    def TrainingIteratorLeaveValOut(self):
+        fold = 0
+        try:
+            train_paths, test_paths = self.ValScheme[fold]
+        except:
+            self.prepare_sets()
+            train_paths, test_paths = self.ValScheme[fold]
+        all_paths = np.concatenate([train_paths, test_paths])
+        if self.transforms is None:
+            for path_nii in np.array(self.nii)[all_paths]:
+                yield self.LoadGTAndImage(path_nii), "Id"
+        else:
+            for path_nii in np.array(self.nii)[all_paths]:
+                img, img_gt = self.LoadGTAndImage(path_nii)
+                for f in self.transforms:
+                    yield f._apply_(img), f._apply_(img_gt), f.name
     def get_files(self, path):
         ##Getting all nii.gz and png files in a 2 fold directory
         folders = glob.glob(path+"/*")
