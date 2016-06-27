@@ -14,7 +14,7 @@ import pdb
 def MakeLMDB(path, output_dir, transform_list,
              img_width = 512, img_height = 512,
              val_num = 2, count = False,
-             verbose = True
+             get_mean = True, verbose = True
              ):
     
     test = Dm.DataManager(path)
@@ -31,12 +31,8 @@ def MakeLMDB(path, output_dir, transform_list,
     if not os.path.isdir(label_lmdb_name):
         os.makedirs(label_lmdb_name)
     label_in_db = lmdb.open(label_lmdb_name, map_size=int(1e12))
-    
-    num_images = 0;
+
     color_mean_color = np.zeros((3))
-    
-    img_width = 512
-    img_height = 512
     
     in_idx = 0 
     num_img = (len(test.nii) - val_num) * len(transform_list)
@@ -62,7 +58,6 @@ def MakeLMDB(path, output_dir, transform_list,
                 # compute mean color image
                 for i in range(3):
                     color_mean_color[i] += im[i,:,:].mean()
-                num_images += 1
     
                 #color_im_dat = caffe.io.array_to_datum(im)
                 color_im_dat = caffe.proto.caffe_pb2.Datum()
@@ -75,7 +70,8 @@ def MakeLMDB(path, output_dir, transform_list,
                 #pdb.set_trace()
                 im_gt = img_gt
                 if im_gt.dtype != np.uint8:
-                    pdb.set_trace()
+                    print "not good"
+                    #pdb.set_trace()
                 assert im_gt.dtype == np.uint8
                 label_im_dat = caffe.proto.caffe_pb2.Datum()
                 label_im_dat.channels = 1
@@ -89,8 +85,15 @@ def MakeLMDB(path, output_dir, transform_list,
                 label_in_txn.put('{:0>12d}'.format(in_idx), label_im_dat.SerializeToString())
                 
                 in_idx += 1
+    for i in range(3):
+        color_mean_color[i] = color_mean_color[i] / in_idx
+    if count and get_mean:
+        return in_idx, color_mean_color
     if count:
         return in_idx
+    if get_mean:
+        return color_mean_color
+    
 
 if __name__ == "__main__":
     

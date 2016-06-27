@@ -2,6 +2,7 @@
 """
 Command line example : 
 %run CuttingPatches.py --file D:/dataThomas/Projet_FR-TNBC-2015-09-30/All\1572_HES_(Colo)_20150925_162438.tiff --output_folder D:/dataThomas/Projet_FR-TNBC-2015-09-30/SlideSegmentation --res 0 --height 512 --width 512 --nber_squares 400 --perc_contour 0.15
+%python CuttingPatches.py --file /media/naylor/Peter-HD/dataThomas/Projet_FR-TNBC-2015-09-30/All/Biopsy/498959.tiff --output_folder /media/naylor/Peter-HD/dataThomas/Projet_FR-TNBC-2015-09-30/SlideSegmentation/ --res 0 --height 512 --width 512 --nber_squares 400 --perc_contour 0.15
 
 """
 
@@ -265,7 +266,7 @@ if __name__ == "__main__":
     except:
         print "Issue with file name"
     try:
-        pdb.set_trace()
+        #pdb.set_trace()
         if not os.path.isdir(options.output_folder):
             os.mkdir(options.output_folder)
         if _platform == "linux2":
