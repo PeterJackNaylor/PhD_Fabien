@@ -1,5 +1,19 @@
 # -*- coding: utf-8 -*-
 
+"""
+
+line for kepler:
+
+export WEIGHT=/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel
+export WD=/data/users/pnaylor/Documents/Python/FCN
+export OUT=temp_weight
+export DATA=/data/users/pnaylor/Bureau/ToAnnotate/lmdb
+export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
+
+--wd $WD --rawdata $RAWDATA --data $DATA --outputfolder $OUT --weight $WEIGHT --niter 200 --cn fcn32
+
+"""
+
 
 from DataToLMDB import MakeLMDB
 
@@ -44,28 +58,28 @@ def run_solvers(niter, solvers, res_fold, disp_interval=10):
         s.net.save(weights[name])
     return loss, acc, weights
 
-
-
-
-
-
-
 if __name__ == "__main__":
     
     parser = OptionParser()
 
     parser.add_option("-d", "--data", dest="data",
                       help="Input file (raw data)")
+                      
     parser.add_option("--wd", dest="wd",
                       help="Working directory")
+                      
     parser.add_option("--rawdata", dest="rawdata", 
                       help="raw data folder, with respect to datamanager.py")
+                      
     parser.add_option("--outputfolder", dest="outputfolder",
                       help="Where the temporay weight folder will be stored")
+                      
     parser.add_option("--cn", dest="cn", 
                       help="Classifier name, like FCN32")
+                      
     parser.add_option("--weight", dest="weight", 
                       help="Where to find the weight file")
+                      
     parser.add_option("--niter", dest="niter", 
                       help="Number of iterations")    
     
