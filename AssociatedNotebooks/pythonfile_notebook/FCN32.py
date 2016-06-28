@@ -1,49 +1,8 @@
 # -*- coding: utf-8 -*-
-
-
-## cell 1 
-from DataToLMDB import MakeLMDB
-import ImageTransf as Transf
-
-path = '/home/naylor/Bureau/ToAnnotate'
-wd = '/home/naylor/Documents/Python/PhD/PhD_Fabien/AssociatedNotebooks'
-
-output_dir = path + '/lmdb'
-
-enlarge = False ## create symetry if the image becomes black ? 
-
-transform_list = [Transf.Identity(),
-                  Transf.Rotation(45, enlarge=enlarge), 
-                  Transf.Rotation(90, enlarge=enlarge),
-                  Transf.Rotation(135, enlarge=enlarge),
-                  Transf.Flip(0),
-                  Transf.Flip(1),
-                  Transf.OutOfFocus(5),
-                  Transf.OutOfFocus(10),
-                  Transf.ElasticDeformation(0, 30, num_points = 4),
-                  Transf.ElasticDeformation(0, 30, num_points = 4)]
-
-mean_ = MakeLMDB(path, output_dir, transform_list, val_num = 2, get_mean=True, verbose = False)
-
-
-## cell 2
-
-import sys
 import caffe
 import os
 
-caffe.set_device(0)
-caffe.set_mode_gpu()
 
-weights =  '/home/naylor/Documents/FCN/fcn.berkeleyvision.org/voc-fcn32s/fcn32s-heavy-pascal.caffemodel'
-assert os.path.exists(weights)
-solver = None
-
-
-## cell 3 
-
-
-import caffe
 from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
@@ -56,7 +15,7 @@ def conv_relu(bottom, nout, ks=3, stride=1, pad=1):
 def max_pool(bottom, ks=2, stride=2):
     return L.Pooling(bottom, pool=P.Pooling.MAX, kernel_size=ks, stride=stride)
 
-def fcn32(batch_size, lmdb, mean_, layer_name = ""):
+def fcn32(batch_size, lmdb, layer_name = ""):
     n = caffe.NetSpec()
 
     n.data, n.label = L.Data(batch_size=batch_size, backend=P.Data.LMDB, source=lmdb,
@@ -109,14 +68,8 @@ def fcn32(batch_size, lmdb, mean_, layer_name = ""):
 
     return n.to_proto()
 
-def make_net():
-    if not os.path.isdir('./fcn32'):
-        os.mkdir('./fcn32')
-    with open('fcn32/train.prototxt', 'w') as f:
-        f.write(str(fcn32(5, output_dir, mean_)))
-
-
-if __name__ == '__main__':
-    make_net()
-    # load the solver
-    #solver = caffe.SGDSolver('fcn32/train.prototxt')
+def make_net(batchsize, data_folder, output_folder):
+    if not os.path.isdir(output_folder):
+        os.mkdir(output_folder)
+    with open(output_folder + '/train.prototxt', 'w') as f:
+        f.write(str(fcn32(batchsize, data_folder)))
