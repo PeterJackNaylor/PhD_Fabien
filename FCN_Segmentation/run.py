@@ -6,10 +6,9 @@ line for kepler:
 
 export WEIGHT=/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel
 export WD=/data/users/pnaylor/Documents/Python/FCN
-export OUT=temp_weight
 export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
 
---wd $WD --rawdata $RAWDATA --data $DATA --outputfolder $OUT --weight $WEIGHT --niter 200 --cn /fcn32
+--rawdata $RAWDATA --wd $WD --cn /FCN1 --weight $WEIGHT --niter 200 
 
 """
 
@@ -136,7 +135,7 @@ if __name__ == "__main__":
         
         FCN32.make_net(os.path.join(options.wd, options.cn), 
                                    data_train, data_test,
-                                   classifier_name = "FCN32",
+                                   classifier_name = options.cn,
                                    classifier_name1 = "score_fr1",
                                    classifier_name2 = "upscore1")
                                    
