@@ -44,6 +44,12 @@ class DataManager(object):
                 img, img_gt = self.LoadGTAndImage(path_nii)
                 for f in self.transforms:
                     yield f._apply_(img), f._apply_(img_gt), f.name
+    
+    def ValIterator(self):
+        for path_nii in np.array(self.nii)[np.array(self.ValScheme['score_set'])]:
+                img, img_gt = self.LoadGTAndImage(path_nii)
+                yield img, img_gt, "Id"
+    
     def get_files(self, path):
         ##Getting all nii.gz and png files in a 2 fold directory
         folders = glob.glob(path+"/*")
@@ -99,10 +105,13 @@ class DataManager(object):
         img = image.get_data()
         new_img = np.zeros(shape=(img.shape[1], img.shape[0], 1))
         new_img[:,:,0] = img[:,:,0].transpose()
+        new_img = new_img.astype("uint8")
         return new_img
     
     def LoadImage(self, path):
         image = misc.imread(path)
+        if image.shape[2] == 4:
+            image = image[:,:,0:3]
         return image
 
 

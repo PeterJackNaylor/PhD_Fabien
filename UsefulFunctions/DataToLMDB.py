@@ -8,9 +8,79 @@ import Datamanager as Dm
 import ImageTransf as Transf
 from optparse import OptionParser
 import time
-import pdb
+import scipy.misc
 
 
+def CheckOrCreate(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+        
+
+def MakeDataLikeFCN(path, output_dir, transform_list,
+                     val_num = 2, count = False):
+    test = Dm.DataManager(path)
+    test.prepare_sets(leave_out = val_num)
+    
+    test.SetTransformation(transform_list)   
+
+########### Checking all folders 
+    CheckOrCreate(path)
+        
+    train_path = os.path.join(output_dir,"train")
+    test_path = os.path.join(output_dir, "test")
+    files_path = os.path.join(output_dir, "files")
+    
+    CheckOrCreate(train_path)
+    CheckOrCreate(test_path)
+    CheckOrCreate(files_path)
+    
+    lab_train_path = os.path.join(train_path, "label")
+    img_train_path = os.path.join(train_path, "img")
+    
+    CheckOrCreate(lab_train_path)
+    CheckOrCreate(img_train_path)
+    
+    img_test_path = os.path.join(test_path, "img")
+    lab_test_path = os.path.join(test_path, "label")
+    
+    CheckOrCreate(lab_test_path)
+    CheckOrCreate(img_test_path)
+    
+    index = 0 
+    if os.path.isfile(os.path.join(files_path,"train.txt")):
+        os.remove(os.path.join(files_path,"train.txt"))
+    with open(os.path.join(files_path,"train.txt"), "a") as myfile:
+        for img, img_gt, name in test.TrainingIteratorLeaveValOut():
+            name_img = str(index) + "_" + name
+            if len(img_gt.shape)==3:
+                img_gt = img_gt[:,:,0]
+            scipy.misc.imsave(os.path.join(img_train_path, name_img + ".png"), img)
+            scipy.misc.imsave(os.path.join(lab_train_path, name_img + ".png"), img_gt)
+            myfile.write(name_img + "\n")            
+            index += 1 
+
+    index = 0
+    if count:
+        index2 = index.copy()
+
+    if os.path.isfile(os.path.join(files_path,"test.txt")):
+        os.remove(os.path.join(files_path,"test.txt"))
+    with open(os.path.join(files_path,"test.txt"), "a") as myfile:
+        for img, img_gt, name in test.ValIterator():
+            name_img = str(index) + "_" + name
+            if len(img_gt.shape)==3:
+                img_gt = img_gt[:,:,0]
+            #pdb.set_trace()
+            scipy.misc.imsave(os.path.join(img_test_path, name_img + ".png"), img)
+            scipy.misc.imsave(os.path.join(lab_test_path, name_img + ".png"), img_gt)
+            myfile.write(name_img + "\n")            
+            index +=1
+
+
+    if count:
+        index2 += index
+        return index2
+    
 def MakeLMDB(path, output_dir, transform_list,
              img_width = 512, img_height = 512,
              val_num = 2, count = False,
@@ -21,7 +91,7 @@ def MakeLMDB(path, output_dir, transform_list,
     test.prepare_sets(leave_out = val_num)
     
     test.SetTransformation(transform_list)    
-    
+
     color_lmdb_name = output_dir + '/color-lmdb'
     if not os.path.isdir(color_lmdb_name):
         os.makedirs(color_lmdb_name)
