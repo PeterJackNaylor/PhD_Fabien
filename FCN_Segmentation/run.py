@@ -8,7 +8,7 @@ export WEIGHT=/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal
 export WD=/data/users/pnaylor/Documents/Python/FCN
 export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
 
---rawdata $RAWDATA --wd $WD --cn /FCN1 --weight $WEIGHT --niter 200 
+--rawdata $RAWDATA --wd $WD --cn FCN1 --weight $WEIGHT --niter 200 
 
 """
 
@@ -42,9 +42,10 @@ def run_solvers(niter, solvers, res_fold, disp_interval=10):
                  for _ in blobs)
     for it in range(niter):
         for name, s in solvers:
+	    #pdb.set_trace()
             s.step(1)  # run a single SGD step in Caffe
-            loss[name][it], acc[name][it] = (s.net.blobs[b].data.copy()
-                                             for b in blobs)
+            loss[name][it], acc[name][it] = [s.net.blobs[b].data.copy()
+                                             for b in blobs]
         if it % disp_interval == 0 or it + 1 == niter:
             loss_disp = '; '.join('%s: loss=%.3f, acc=%2d%%' %
                                   (n, loss[n][it], np.round(100*acc[n][it]))
@@ -109,9 +110,9 @@ if __name__ == "__main__":
         
     options.niter = int(options.niter)
     
-    create_dataset = True
-    create_solver = True
-    create_net = True
+    create_dataset = False
+    create_solver = False
+    create_net = False
 
     enlarge = False ## create symetry if the image becomes black ? 
 
@@ -132,7 +133,7 @@ if __name__ == "__main__":
     if create_net:
         data_train = options.wd #os.path.join(options.wd, "train")
         data_test = options.wd #os.path.join(options.wd, "test")
-        
+	CheckOrCreate(os.path.join(options.wd, options.cn))        
         FCN32.make_net(os.path.join(options.wd, options.cn), 
                                    data_train, data_test,
                                    classifier_name = options.cn,
@@ -162,9 +163,9 @@ if __name__ == "__main__":
 
     niter = options.niter
     
-    pdb.set_trace()
+    #pdb.set_trace()
     my_solver = caffe.get_solver(solver_path)
-    pdb.set_trace()
+    #pdb.set_trace()
     my_solver.net.copy_from(weights)
     
 

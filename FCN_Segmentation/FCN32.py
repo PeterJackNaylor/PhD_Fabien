@@ -77,7 +77,7 @@ def fcn(split, data_train, data_test, classifier_name = "FCN32",
     
     n.loss = L.SoftmaxWithLoss(n.score, n.label,
             loss_param=dict(normalize=False, ignore_label=255))
-
+    n.acc = L.Accuracy(n.score, n.label)
     return n.to_proto()
 
 def make_net(wd, data_train, data_test, classifier_name = "FCN32",
