@@ -73,7 +73,7 @@ def fcn(split, data_train, data_test, classifier_name="FCN32",
     upscore = L.Deconvolution(score_fr,
                               convolution_param=dict(num_output=2, kernel_size=64, stride=32,
                                                      bias_term=False),
-                              param=[dict(lr_mult=2)])
+                              param=[dict(lr_mult=4)])
     n.__setattr__(classifier_name2, upscore)
 
     n.score2 = crop(upscore, n.data)
