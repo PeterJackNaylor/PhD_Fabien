@@ -2,26 +2,29 @@ import caffe
 from caffe import layers as L, params as P
 from caffe.coord_map import crop
 import sys
-import os 
+import os
 
 
 sys.path.append(os.getcwd())
 
+
 def conv_relu(bottom, nout, ks=3, stride=1, pad=1):
     conv = L.Convolution(bottom, kernel_size=ks, stride=stride,
-        num_output=nout, pad=pad,
-        param=[dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)])
+                         num_output=nout, pad=pad,
+                         param=[dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)])
     return conv, L.ReLU(conv, in_place=True)
+
 
 def max_pool(bottom, ks=2, stride=2):
     return L.Pooling(bottom, pool=P.Pooling.MAX, kernel_size=ks, stride=stride)
 
-def fcn(split, data_train, data_test, classifier_name = "FCN32",
-        classifier_name1 = "score_fr", classifier_name2 = "upscore"):
+
+def fcn(split, data_train, data_test, classifier_name="FCN32",
+        classifier_name1="score_fr", classifier_name2="upscore"):
     n = caffe.NetSpec()
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
-            seed=1337, classifier_name=classifier_name)
-    
+                         seed=1337, classifier_name=classifier_name)
+
     if split == 'train':
         pydata_params['dir'] = data_train
         pylayer = 'FCNdatalayer'
@@ -29,7 +32,7 @@ def fcn(split, data_train, data_test, classifier_name = "FCN32",
         pydata_params['dir'] = data_test
         pylayer = 'FCNdatalayer'
     n.data, n.label = L.Python(module='dataLayerFCN', layer=pylayer,
-            ntop=2, param_str=str(pydata_params))
+                               ntop=2, param_str=str(pydata_params))
 
     # the base net
     n.conv1_1, n.relu1_1 = conv_relu(n.data, 64, pad=100)
@@ -58,35 +61,35 @@ def fcn(split, data_train, data_test, classifier_name = "FCN32",
     # fully conv
     n.fc6, n.relu6 = conv_relu(n.pool5, 4096, ks=7, pad=0)
     n.drop6 = L.Dropout(n.relu6, dropout_ratio=0.5, in_place=True)
-    
+
     n.fc7, n.relu7 = conv_relu(n.drop6, 4096, ks=1, pad=0)
     n.drop7 = L.Dropout(n.relu7, dropout_ratio=0.5, in_place=True)
-    
+
     score_fr = L.Convolution(n.drop7, num_output=2, kernel_size=1, pad=0,
-        param=[dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)])
-    
+                             param=[dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)])
+
     n.__setattr__(classifier_name1, score_fr)
-    
+
     upscore = L.Deconvolution(score_fr,
-        convolution_param=dict(num_output=2, kernel_size=64, stride=32,
-            bias_term=False),
-        param=[dict(lr_mult=0)])
+                              convolution_param=dict(num_output=2, kernel_size=64, stride=32,
+                                                     bias_term=False),
+                              param=[dict(lr_mult=0)])
     n.__setattr__(classifier_name2, upscore)
-    
+
     n.score = crop(upscore, n.data)
-    
+
     n.loss = L.SoftmaxWithLoss(n.score, n.label,
-            loss_param=dict(normalize=False, ignore_label=255))
+                               loss_param=dict(normalize=False, ignore_label=255))
     n.acc = L.Accuracy(n.score, n.label)
     return n.to_proto()
 
-def make_net(wd, data_train, data_test, classifier_name = "FCN32",
-        classifier_name1 = "score_fr", classifier_name2 = "upscore"):
-    with open(os.path.join(wd,'train.prototxt'), 'w') as f:
+
+def make_net(wd, data_train, data_test, classifier_name="FCN32",
+             classifier_name1="score_fr", classifier_name2="upscore"):
+    with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
         f.write(str(fcn('train', data_train, data_test, classifier_name,
                         classifier_name1, classifier_name2)))
 
-    with open(os.path.join(wd,'test.prototxt'), 'w') as f:
+    with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
         f.write(str(fcn('test', data_train, data_test, classifier_name,
                         classifier_name1, classifier_name2)))
-
