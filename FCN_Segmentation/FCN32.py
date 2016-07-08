@@ -78,7 +78,7 @@ def fcn(split, data_train, data_test, classifier_name="FCN32",
 
     n.score2 = crop(upscore, n.data)
 
-    n.loss = L.SoftmaxWithLoss(n.score, n.label,
+    n.loss = L.SoftmaxWithLoss(n.score2, n.label,
                                loss_param=dict(normalize=False, ignore_label=255))
     n.acc = L.Accuracy(n.score, n.label)
     return n.to_proto()
