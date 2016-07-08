@@ -10,21 +10,21 @@ import pdb
 
 
 def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_snap="./temp_snapshot"):
-    #pdb.set_trace()
+    # pdb.set_trace()
     s = caffe_pb2.SolverParameter()
     s.train_net = train_net_path
     if test_net_path is not None:
         s.test_net.append(test_net_path)
         s.test_interval = 1000  # Test after every 1000 training iterations.
-        s.test_iter.append(100) # Test on 100 batches each time we test.
+        s.test_iter.append(100)  # Test on 100 batches each time we test.
 
     # The number of iterations over which to average the gradient.
     # Effectively boosts the training batch size by the given factor, without
     # affecting memory utilization.
     s.iter_size = 1
-    
-    s.max_iter = 100000     # # of times to update the net (training iterations)
-    
+
+    s.max_iter = 50000    # # of times to update the net (training iterations)
+
     # Solve using the stochastic gradient descent (SGD) algorithm.
     # Other choices include 'Adam' and 'RMSProp'.
     s.type = 'SGD'
@@ -55,10 +55,10 @@ def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_s
     if not os.path.isdir(out_snap):
         os.mkdir(out_snap)
     s.snapshot_prefix = out_snap
-    
+
     # Train on the GPU.  Using the CPU to train large networks is very slow.
     s.solver_mode = caffe_pb2.SolverParameter.GPU
-    
+
     # Write the solver to a temporary file and return its filename.
     with open(solver_name, 'w') as f:
         f.write(str(s))
