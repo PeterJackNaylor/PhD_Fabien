@@ -115,8 +115,8 @@ if __name__ == "__main__":
     options.niter = int(options.niter)
 
     create_dataset = False
-    create_solver = False
-    create_net = False
+    create_solver = True
+    create_net = True
 
     enlarge = False  # create symetry if the image becomes black ?
 
