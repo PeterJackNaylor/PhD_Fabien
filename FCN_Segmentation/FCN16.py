@@ -69,10 +69,10 @@ def fcn(split, data_train, data_test, classifier_name="FCN16",
     n.fc7, n.relu7 = conv_relu(n.drop6, 4096, ks=1, pad=0)
     n.drop7 = L.Dropout(n.relu7, dropout_ratio=0.5, in_place=True)
 
-    n.score_fr = L.Convolution(n.drop7, num_output=2, kernel_size=1, pad=0,
-                               param=[dict(lr_mult=1, decay_mult=1),
-                                      dict(lr_mult=2, decay_mult=0)],
-                               weight_filler=dict(type="xavier"))
+    score_fr = L.Convolution(n.drop7, num_output=2, kernel_size=1, pad=0,
+                             param=[dict(lr_mult=1, decay_mult=1),
+                                    dict(lr_mult=2, decay_mult=0)],
+                             weight_filler=dict(type="xavier"))
 
     n.__setattr__(classifier_name1, score_fr)
 
