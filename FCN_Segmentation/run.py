@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     options.niter = int(options.niter)
 
-    create_dataset = False
+    create_dataset = True
     create_solver = True
     create_net = True
 
@@ -130,6 +130,12 @@ if __name__ == "__main__":
                       Transf.OutOfFocus(10),
                       Transf.ElasticDeformation(0, 30, num_points=4),
                       Transf.ElasticDeformation(0, 30, num_points=4)]
+    for rot in [15, 30, 60, 75, 105, 120, 150, 165]:
+        transform_list.append(Transf.Rotation(45, enlarge=enlarge))
+    for sig in [1, 2, 3, 4, 6, 7, 8, 9]:
+        transform_list.append(Transf.OutOfFocus(sig))
+    for i in range(20):
+        transform_list.append(Transf.ElasticDeformation(0, 30, num_points=4))
 
     if create_dataset:
         MakeDataLikeFCN(options.rawdata, options.wd, transform_list)
