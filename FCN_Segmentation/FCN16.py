@@ -79,7 +79,7 @@ def fcn(split, data_train, data_test, classifier_name="FCN16",
     n.upscore2 = L.Deconvolution(n.score_fr,
                                  convolution_param=dict(num_output=2, kernel_size=4, stride=2,
                                                         bias_term=False),
-                                 weight_filler=dict(type='bilinear')
+                                 weight_filler=dict(type='bilinear'),
                                  param=[dict(lr_mult=1)])
 
     n.score_pool4 = L.Convolution(n.pool4, num_output=2, kernel_size=1, pad=0,
