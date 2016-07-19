@@ -19,8 +19,9 @@ def max_pool(bottom, ks=2, stride=2):
     return L.Pooling(bottom, pool=P.Pooling.MAX, kernel_size=ks, stride=stride)
 
 
-def fcn(split, data_train, data_test, classifier_name="FCN32",
-        classifier_name1="score_fr", classifier_name2="upscore"):
+def fcn(split, data_train, data_test, classifier_name="FCN16",
+        classifier_name1="score_fr", classifier_name2="upscore",
+        classifier_name3="score_fr2", classifier_name4="upscore2"):
     n = caffe.NetSpec()
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
                          seed=1337, classifier_name=classifier_name)
@@ -68,39 +69,50 @@ def fcn(split, data_train, data_test, classifier_name="FCN32",
     n.fc7, n.relu7 = conv_relu(n.drop6, 4096, ks=1, pad=0)
     n.drop7 = L.Dropout(n.relu7, dropout_ratio=0.5, in_place=True)
 
-    score_fr = L.Convolution(n.drop7, num_output=2, kernel_size=1, pad=0,
-                             param=[dict(lr_mult=1, decay_mult=1),
-                                    dict(lr_mult=2, decay_mult=0)],
-                             weight_filler=dict(type="xavier"))
+    n.score_fr = L.Convolution(n.drop7, num_output=2, kernel_size=1, pad=0,
+                               param=[dict(lr_mult=1, decay_mult=1),
+                                      dict(lr_mult=2, decay_mult=0)],
+                               weight_filler=dict(type="xavier"))
 
     n.__setattr__(classifier_name1, score_fr)
 
-    upscore = L.Deconvolution(score_fr,
-                              convolution_param=dict(num_output=2, kernel_size=64, stride=32,
-                                                     bias_term=False),
-                              weight_filler=dict(type='bilinear'),
-                              param=[dict(lr_mult=1)])
-    n.__setattr__(classifier_name2, upscore)
+    n.upscore2 = L.Deconvolution(n.score_fr,
+                                 convolution_param=dict(num_output=2, kernel_size=4, stride=2,
+                                                        bias_term=False),
+                                 weight_filler=dict(type='bilinear')
+                                 param=[dict(lr_mult=1)])
 
-    n.score2 = crop(upscore, n.data)
+    n.score_pool4 = L.Convolution(n.pool4, num_output=2, kernel_size=1, pad=0,
+                                  param=[dict(lr_mult=1, decay_mult=1),
+                                         dict(lr_mult=2, decay_mult=0)],
+                                  weight_filler=dict(type="xavier"))
+    n.score_pool4c = crop(n.score_pool4, n.upscore2)
+    n.fuse_pool4 = L.Eltwise(n.upscore2, n.score_pool4c,
+                             operation=P.Eltwise.SUM)
+    n.upscore16 = L.Deconvolution(n.fuse_pool4,
+                                  convolution_param=dict(num_output=2, kernel_size=32, stride=16,
+                                                         bias_term=False),
+                                  weight_filler=dict(type='bilinear'),
+                                  param=[dict(lr_mult=1)])
 
+    n.score = crop(n.upscore16, n.data)
     if split != "val":
-        n.loss = L.SoftmaxWithLoss(n.score2, n.label,
+        n.loss = L.SoftmaxWithLoss(n.score, n.label,
                                    loss_param=dict(normalize=False, ignore_label=255))
-        n.acc = L.Accuracy(n.score2, n.label)
+
     return n.to_proto()
 
 
-def make_net(wd, data_train, data_test, classifier_name="FCN32",
-             classifier_name1="score_fr", classifier_name2="upscore"):
+def make_net(wd, data_train, data_test, classifier_name="FCN16",
+             classifier_name1="score_fr"):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
         f.write(str(fcn('train', data_train, data_test, classifier_name,
-                        classifier_name1, classifier_name2)))
+                        classifier_name1)))
 
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
         f.write(str(fcn('test', data_train, data_test, classifier_name,
-                        classifier_name1, classifier_name2)))
+                        classifier_name1)))
 
     with open(os.path.join(wd, 'deploy.prototxt'), 'w') as f:
         f.write(str(fcn('val', data_train, data_test, classifier_name,
-                        classifier_name1, classifier_name2)))
+                        classifier_name1)))
