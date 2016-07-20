@@ -4,20 +4,12 @@ cell cognition, the format of the folders/names of files will be the
 exact same as the one's originaly given by cell cognition
 """
 
-import matplotlib.pyplot as plt
-import numpy as np
-from scipy.ndimage.morphology import morphological_gradient
 import os
 import glob
 from skimage.io import imread as ir
 from optparse import OptionParser
 import time
-
-
-def Contours(bin_image, contour_size=3):
-    # Computes the contours
-    grad = morphological_gradient(bin_image, size=(contour_size, contour_size))
-    return grad
+from usefulPloting import Contours, ImageSegmentationSave
 
 
 def CheckOrCreate(path):
@@ -33,17 +25,6 @@ def CheckExistants(path):
 We will take the name from the input directory, transform it into
 the name and appended it to the label path name
 """
-
-
-def Image(RGB, Segmentation, output):
-
-    plt.imshow(RGB)
-    ContourSegmentation = Contours(Segmentation)
-    x_, y_ = np.where(ContourSegmentation > 0)
-    plt.scatter(x=x_, y=y_, c='r', s=1)
-
-    plt.savefig(output)
-    plt.clf()
 
 
 def GetNumber(filename):
@@ -125,7 +106,7 @@ if __name__ == "__main__":
                 _segmentation = ir(_name) > 0
                 _segmentation = _segmentation + 0
                 savename = os.path.join(output[output_path], str(number))
-                Image(RGB, _segmentation.transpose(), savename)
+                ImageSegmentationSave(RGB, _segmentation.transpose(), savename)
 
 
 ########################################

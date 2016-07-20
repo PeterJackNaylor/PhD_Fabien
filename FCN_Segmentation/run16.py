@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 
 """
 
 line for kepler:
 
-export WEIGHT=/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel
+export WEIGHT=/data/users/pnaylor/Documents/Python/FCN/FCN2/temp_files/weights.pretrained.caffemodel
 export WD=/data/users/pnaylor/Documents/Python/FCN
 export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
 
---rawdata $RAWDATA --wd $WD --cn FCN1 --weight $WEIGHT --niter 200 
+--rawdata $RAWDATA --wd $WD --cn FCN16 --weight $WEIGHT --niter 200 
 
 """
 
@@ -19,7 +18,7 @@ import caffe
 import os
 
 from solver import solver
-import FCN32
+import FCN16
 import numpy as np
 import time
 
@@ -98,7 +97,7 @@ if __name__ == "__main__":
         options.niter = "200"
 
     if options.cn is None:
-        options.cn = 'fcn32'
+        options.cn = 'fcn16'
 
     if options.gpu is None:
         options.gpu = "0"
@@ -114,7 +113,7 @@ if __name__ == "__main__":
 
     options.niter = int(options.niter)
 
-    create_dataset = True
+    create_dataset = False
     create_solver = True
     create_net = True
 
@@ -130,12 +129,6 @@ if __name__ == "__main__":
                       Transf.OutOfFocus(10),
                       Transf.ElasticDeformation(0, 30, num_points=4),
                       Transf.ElasticDeformation(0, 30, num_points=4)]
-    for rot in [15, 30, 60, 75, 105, 120, 150, 165]:
-        transform_list.append(Transf.Rotation(45, enlarge=enlarge))
-    for sig in [1, 2, 3, 4, 6, 7, 8, 9]:
-        transform_list.append(Transf.OutOfFocus(sig))
-    for i in range(20):
-        transform_list.append(Transf.ElasticDeformation(0, 30, num_points=4))
 
     if create_dataset:
         MakeDataLikeFCN(options.rawdata, options.wd, transform_list)
@@ -144,13 +137,12 @@ if __name__ == "__main__":
         data_train = options.wd  # os.path.join(options.wd, "train")
         data_test = options.wd  # os.path.join(options.wd, "test")
         CheckOrCreate(os.path.join(options.wd, options.cn))
-        FCN32.make_net(os.path.join(options.wd, options.cn),
+        FCN16.make_net(os.path.join(options.wd, options.cn),
                        data_train, data_test,
                        classifier_name=options.cn,
-                       classifier_name1="score_fr1",
-                       classifier_name2="upscore1")
+                       classifier_name1="score_fr1")
 
-    solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
+    solver_path = os.path.join(options.wd, options.cn, "solver16.prototxt")
     outsnap = os.path.join(options.wd, options.cn, "snapshot", "snapshot")
 
     CheckOrCreate(os.path.join(options.wd, options.cn))
@@ -162,7 +154,7 @@ if __name__ == "__main__":
                                           "train.prototxt"),
                              test_net_path=os.path.join(
                                  options.wd, options.cn, "test.prototxt"),
-                             base_lr=0.000001,
+                             base_lr=0.000000001,
                              out_snap=outsnap)
         # name_solver is solver_path.....
     weights = options.weight
