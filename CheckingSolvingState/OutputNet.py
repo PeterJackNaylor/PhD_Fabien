@@ -147,7 +147,7 @@ if __name__ == "__main__":
     files = glob.glob(os.path.join(options.input, "*.png"))
     n = len(files)
     i_old = 0
-    for i in range(options.batch, n, options.batch):
+    for i in range(int(options.batch), n, int(options.batch)):
         all_in_one(net, options.input, options.ouput,
                    range_min=i_old, range_max=i)
         print i, i_old
