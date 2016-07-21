@@ -36,7 +36,7 @@ def fcn(split, data_train, data_test, classifier_name="FCN32",
         n.data, n.label = L.Python(module='dataLayerFCN', layer=pylayer,
                                    ntop=2, param_str=str(pydata_params))
     else:
-        n.data = L.Data()
+        n.data = L.Data(input_param=dict(shape=dict(dim=[1, 3, 512, 512])))
         # the base net
     n.conv1_1, n.relu1_1 = conv_relu(n.data, 64, pad=100)
     n.conv1_2, n.relu1_2 = conv_relu(n.relu1_1, 64)

@@ -1,0 +1,7 @@
+#python CheckingSegmentation.py --output ~/Documents/Histopathologie/498959/ --input ~/Documents/Histopathologie/498959/RGB/ --label_h ~/Documents/Histopathologie/498959/h/ --label_e ~/Documents/Histopathologie/498959/e/
+python CheckingSegmentation.py --output ~/Documents/Histopathologie/502182/ --input ~/Documents/Histopathologie/502182/RGB/ --label_h ~/Documents/Histopathologie/502182/h/ --label_e ~/Documents/Histopathologie/502182/e/
+python CheckingSegmentation.py --output ~/Documents/Histopathologie/542542/ --input ~/Documents/Histopathologie/542542/RGB/ --label_h ~/Documents/Histopathologie/542542/h/ --label_e ~/Documents/Histopathologie/542542/e/
+python CheckingSegmentation.py --output ~/Documents/Histopathologie/562522/ --input ~/Documents/Histopathologie/562522/RGB/ --label_h ~/Documents/Histopathologie/562522/h/ --label_e ~/Documents/Histopathologie/562522/e/
+python CheckingSegmentation.py --output ~/Documents/Histopathologie/572123/ --input ~/Documents/Histopathologie/572123/RGB/ --label_h ~/Documents/Histopathologie/572123/h/ --label_e ~/Documents/Histopathologie/572123/e/
+python CheckingSegmentation.py --output ~/Documents/Histopathologie/581910/ --input ~/Documents/Histopathologie/581910/RGB/ --label_h ~/Documents/Histopathologie/581910/h/ --label_e ~/Documents/Histopathologie/581910/e/
+python CheckingSegmentation.py --output ~/Documents/Histopathologie/588626/ --input ~/Documents/Histopathologie/588626/RGB/ --label_h ~/Documents/Histopathologie/588626/h/ --label_e ~/Documents/Histopathologie/588626/e/
