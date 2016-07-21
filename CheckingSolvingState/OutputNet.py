@@ -1,3 +1,6 @@
+import matplotlib as mpl
+
+mpl.use('Agg')
 
 import os
 import glob
@@ -8,8 +11,6 @@ from usefulPloting import Contours, ImageSegmentationSave
 import glob
 import caffe
 import numpy as np
-import matplotlib as mpl
-mpl.use('Agg')
 
 
 def CheckOrCreate(path):
@@ -150,7 +151,6 @@ if __name__ == "__main__":
     for i in range(int(options.batch), n, int(options.batch)):
         all_in_one(net, options.input, options.output,
                    range_min=i_old, range_max=i)
-        print i, i_old
         i_old = i
         ########################################
 
