@@ -1,3 +1,6 @@
+import matplotlib as mpl
+
+mpl.use('Agg')
 
 import os
 import glob
@@ -8,8 +11,6 @@ from usefulPloting import Contours, ImageSegmentationSave
 import glob
 import caffe
 import numpy as np
-import matplotlib as mpl
-mpl.use('Agg')
 
 
 def CheckOrCreate(path):
@@ -74,7 +75,7 @@ def LoadData(input_fold, range_min=0, range_max=None):
 
 def all_in_one(net, input_fold, ouput, range_min=0, range_max=None):
 
-    files, data = LoadData(input_fold)
+    files, data = LoadData(input_fold, range_min, range_max)
     data_batch_size = len(files)
     net.blobs['data'].reshape(data_batch_size, 3, 512, 512)
 
@@ -148,9 +149,8 @@ if __name__ == "__main__":
     n = len(files)
     i_old = 0
     for i in range(int(options.batch), n, int(options.batch)):
-        all_in_one(net, options.input, options.ouput,
+        all_in_one(net, options.input, options.output,
                    range_min=i_old, range_max=i)
-        print i, i_old
         i_old = i
         ########################################
 
