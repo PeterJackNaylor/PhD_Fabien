@@ -30,7 +30,7 @@ def Out(loss_image):
 
 
 def All(weight_file, image_array):
-    net = Net(weights_files[-1], len(image_array))
+    net = Net(weight_file, len(image_array))
     transformer = Transformer(net)
     score = GetScoreVectors(net, image_array, transformer, "score")
     pred_img = np.zeros(shape=(score.shape[0], score.shape[2], score.shape[3]))
