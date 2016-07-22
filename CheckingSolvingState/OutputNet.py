@@ -1,6 +1,6 @@
 import matplotlib as mpl
 
-mpl.use('Agg')
+# mpl.use('Agg')
 
 import os
 import glob
@@ -50,11 +50,11 @@ def LoadDataIntoNet(net, data, transformer):
     net.blobs['data'].data[...] = transformed_image_array
 
 
-def GetScoreVectors(net, data, transformer):
+def GetScoreVectors(net, data, transformer, layer="score2"):
 
     LoadDataIntoNet(net, data, transformer)
     output = net.forward()
-    score = output['score']
+    score = output[layer]
 
     return score
 
