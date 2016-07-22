@@ -54,7 +54,7 @@ def GetScoreVectors(net, data, transformer):
 
     LoadDataIntoNet(net, data, transformer)
     output = net.forward()
-    score = output['score2']
+    score = output['score']
 
     return score
 
