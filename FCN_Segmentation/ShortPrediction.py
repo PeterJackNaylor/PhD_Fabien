@@ -29,10 +29,10 @@ def Out(loss_image):
     return painted
 
 
-def All(model_def, weight_file, image_array):
+def All(model_def, weight_file, image_array, score_layer="score"):
     net = Net(model_def, weight_file, len(image_array))
     transformer = Transformer(net)
-    score = GetScoreVectors(net, image_array, transformer, "score")
+    score = GetScoreVectors(net, image_array, transformer, score_layer)
     pred_img = np.zeros(shape=(score.shape[0], score.shape[2], score.shape[3]))
     for i in range(score.shape[0]):
         pred_img[i, :, :] = Out(score[i, :, :, :])
