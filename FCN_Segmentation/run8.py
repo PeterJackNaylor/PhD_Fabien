@@ -140,7 +140,9 @@ if __name__ == "__main__":
         FCN8.make_net(os.path.join(options.wd, options.cn),
                       data_train, data_test,
                       classifier_name=options.cn,
-                      classifier_name1="score_fr1")
+                      classifier_name1="score_fr1",
+                      classifier_name2="upscore2",
+                      classifier_name3="score_pool4")
 
     solver_path = os.path.join(options.wd, options.cn, "solver8.prototxt")
     outsnap = os.path.join(options.wd, options.cn, "snapshot", "snapshot")
