@@ -3,7 +3,7 @@ import numpy as np
 from CheckingSolvingState.OutputNet import Transformer, GetScoreVectors
 
 
-def Net(weights, data_batch_size):
+def Net(model_def, weights, data_batch_size):
     net = caffe.Net(model_def,      # defines the structure of the model
                     weights,  # contains the trained weights
                     caffe.TEST)
@@ -29,8 +29,8 @@ def Out(loss_image):
     return painted
 
 
-def All(weight_file, image_array):
-    net = Net(weight_file, len(image_array))
+def All(model_def, weight_file, image_array):
+    net = Net(model_def, weight_file, len(image_array))
     transformer = Transformer(net)
     score = GetScoreVectors(net, image_array, transformer, "score")
     pred_img = np.zeros(shape=(score.shape[0], score.shape[2], score.shape[3]))
