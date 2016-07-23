@@ -18,11 +18,10 @@ import ImageTransf as Transf
 import caffe
 import os
 
-from solver import solver
+from solver import solver, run_solvers, run_solvers_IU
 import FCN32
 import numpy as np
 import time
-import score
 from optparse import OptionParser
 
 import pdb
@@ -32,62 +31,6 @@ def CheckOrCreate(path):
     if not os.path.isdir(path):
         os.makedirs(path)
 
-
-def run_solvers_IU(niter, solvers, res_fold, disp_interval, val, layer):
-
-    blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc')
-    number_of_loops = niter / disp_interval
-
-    loss, acc, acc1, iu, fwavacc = ({name: np.zeros(number_of_loops) for name, _ in solvers}
-                                    for _ in blobs)
-    for it in range(number_of_loops):
-        for name, s in solvers:
-            # pdb.set_trace()
-            s.step(disp_interval)  # run a single SGD step in Caffe
-            # DEFINE VAL is validation test set, it computes it independently
-            # ...
-            loss[name][it], acc[name][it], acc1[name][it], iu[name][it], fwavacc[
-                name][it] = score.seg_tests(s, False, val, layer=layer)
-    # Save the learned weights from both nets.
-    if not os.path.isdir(res_fold):
-        os.mkdir(res_fold)
-    weight_dir = res_fold
-    weights = {}
-    for name, s in solvers:
-        filename = 'weights.%s.caffemodel' % name
-        weights[name] = os.path.join(weight_dir, filename)
-        s.net.save(weights[name])
-    return loss, acc, acc1, iu, fwavacc, weights
-
-
-def run_solvers(niter, solvers, res_fold, disp_interval=10):
-    """Run solvers for niter iterations,
-       returning the loss and accuracy recorded each iteration.
-       `solvers` is a list of (name, solver) tuples."""
-    blobs = ('loss', 'acc')
-    loss, acc = ({name: np.zeros(niter) for name, _ in solvers}
-                 for _ in blobs)
-    for it in range(niter):
-        for name, s in solvers:
-            # pdb.set_trace()
-            s.step(1)  # run a single SGD step in Caffe
-            loss[name][it], acc[name][it] = [s.net.blobs[b].data.copy()
-                                             for b in blobs]
-        if it % disp_interval == 0 or it + 1 == niter:
-            loss_disp = '; '.join('%s: loss=%.3f, acc=%2d%%' %
-                                  (n, loss[n][it], np.round(100 * acc[n][it]))
-                                  for n, _ in solvers)
-            print '%3d) %s' % (it, loss_disp)
-    # Save the learned weights from both nets.
-    if not os.path.isdir(res_fold):
-        os.mkdir(res_fold)
-    weight_dir = res_fold
-    weights = {}
-    for name, s in solvers:
-        filename = 'weights.%s.caffemodel' % name
-        weights[name] = os.path.join(weight_dir, filename)
-        s.net.save(weights[name])
-    return loss, acc, weights
 
 if __name__ == "__main__":
 
@@ -222,7 +165,12 @@ if __name__ == "__main__":
     val = os.path.join(options.wd, "files", "test.txt")
     loss, acc, acc1, iu, fwavacc, weights = run_solvers_IU(
         niter, solvers, res_fold, int(options.disp_interval), val, options.scorelayer)
+    np.save(os.path.join(res_fold, "loss.txt"), loss[options.cn])
 
+    np.save(os.path.join(res_fold, "acc.txt"), acc[options.cn])
+    np.save(os.path.join(res_fold, "acc1.txt"), acc1[options.cn])
+    np.save(os.path.join(res_fold, "iu.txt"), iu[options.cn])
+    np.save(os.path.join(res_fold, "fwavacc.txt"), fwavacc[options.cn])
     print 'Done.'
 
     diff_time = time.time() - start_time

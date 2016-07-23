@@ -80,6 +80,12 @@ if __name__ == "__main__":
     parser.add_option("--niter", dest="niter",
                       help="Number of iterations")
 
+    parser.add_option("--disp_interval", dest="disp_interval",
+                      help=" Diplay interval for training the network", default="10")
+
+    parser.add_option("--layer_score", dest="scorelayer",
+                      help="name of score layer", default="score")
+
     parser.add_option('--gpu', dest="gpu",
                       help="Which GPU to use.")
     (options, args) = parser.parse_args()
@@ -110,7 +116,8 @@ if __name__ == "__main__":
     print "Weight file (init): | " + options.weight
     print "Number of iteration | " + options.niter
     print "Which GPU         : | " + options.gpu
-
+    print "display interval  : | " + options.disp_interval
+    print "score layer name  : | " + options.scorelayer
     options.niter = int(options.niter)
 
     create_dataset = False
@@ -176,8 +183,16 @@ if __name__ == "__main__":
     solvers = [('pretrained', my_solver)]
 
     res_fold = os.path.join(options.wd, options.cn, "temp_files")
-    loss, acc, weights = run_solvers(niter, solvers, res_fold)
+    val = os.path.join(options.wd, "files", "test.txt")
+    loss, acc, acc1, iu, fwavacc, weights = run_solvers_IU(
+        niter, solvers, res_fold, int(options.disp_interval), val, options.scorelayer)
 
+    np.save(os.path.join(res_fold, "loss.txt"), loss[options.cn])
+
+    np.save(os.path.join(res_fold, "acc.txt"), acc[options.cn])
+    np.save(os.path.join(res_fold, "acc1.txt"), acc1[options.cn])
+    np.save(os.path.join(res_fold, "iu.txt"), iu[options.cn])
+    np.save(os.path.join(res_fold, "fwavacc.txt"), fwavacc[options.cn])
     print 'Done.'
 
     diff_time = time.time() - start_time
