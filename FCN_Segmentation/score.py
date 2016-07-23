@@ -36,9 +36,9 @@ def compute_hist(net, save_dir, dataset, layer='score', gt='label'):
 def seg_tests(solver, save_format, dataset, layer='score', gt='label'):
     print '>>>', datetime.now(), 'Begin seg tests'
     solver.test_nets[0].share_with(solver.net)
-    hist, loss, acc, np.nanmean(acc), np.nanmean(iu), fwavacc = do_seg_tests(solver.test_nets[0], solver.iter,
-                                                                             save_format, dataset, layer, gt)
-    return loss, acc, np.nanmean(acc), np.nanmean(iu), fwavacc
+    hist, loss, acc, acc1, iu, fwavacc = do_seg_tests(solver.test_nets[0], solver.iter,
+                                                      save_format, dataset, layer, gt)
+    return loss, acc, acc1, iu, fwavacc
 
 
 def do_seg_tests(net, iter, save_format, dataset, layer='score', gt='label'):
