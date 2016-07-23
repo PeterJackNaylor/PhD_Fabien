@@ -38,8 +38,8 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, val, layer):
     blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc')
     number_of_loops = niter / disp_interval
 
-    loss, acc = ({name: np.zeros(number_of_loops) for name, _ in solvers}
-                 for _ in blobs)
+    loss, acc, acc1, iu, fwavacc = ({name: np.zeros(number_of_loops) for name, _ in solvers}
+                                    for _ in blobs)
     for it in range(number_of_loops):
         for name, s in solvers:
             # pdb.set_trace()
