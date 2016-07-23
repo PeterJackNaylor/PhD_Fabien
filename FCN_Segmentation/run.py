@@ -220,11 +220,11 @@ if __name__ == "__main__":
 
     res_fold = os.path.join(options.wd, options.cn, "temp_files")
     val = os.path.join(options.wd, "files", "test.txt")
-    loss, acc, acc1, iu, fwavacc, weights = run_solvers_IU(niter, solvers, res_fold, disp_interval=int(options.disp_interval), val, options.scorelayer))
+    loss, acc, acc1, iu, fwavacc, weights = run_solvers_IU(niter, solvers, res_fold, disp_interval=int(options.disp_interval), val, options.scorelayer)
 
     print 'Done.'
 
-    diff_time=time.time() - start_time
+    diff_time = time.time() - start_time
 
     print ' \n '
     print 'Time for slide:'
@@ -232,5 +232,5 @@ if __name__ == "__main__":
 
     print ' \n '
     print "Average time per image: (have to put number of images.. "
-    diff_time=diff_time / 10
+    diff_time = diff_time / 10
     print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
