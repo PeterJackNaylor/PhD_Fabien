@@ -220,7 +220,8 @@ if __name__ == "__main__":
 
     res_fold = os.path.join(options.wd, options.cn, "temp_files")
     val = os.path.join(options.wd, "files", "test.txt")
-    loss, acc, acc1, iu, fwavacc, weights = run_solvers_IU(niter, solvers, res_fold, disp_interval=int(options.disp_interval), val, options.scorelayer)
+    loss, acc, acc1, iu, fwavacc, weights = run_solvers_IU(
+        niter, solvers, res_fold, int(options.disp_interval), val, options.scorelayer)
 
     print 'Done.'
 
