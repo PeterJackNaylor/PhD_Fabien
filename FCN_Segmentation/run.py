@@ -197,7 +197,7 @@ if __name__ == "__main__":
                                           "train.prototxt"),
                              test_net_path=os.path.join(
                                  options.wd, options.cn, "test.prototxt"),
-                             base_lr=0.000001,
+                             base_lr=0.00000001,
                              out_snap=outsnap)
         # name_solver is solver_path.....
     weights = options.weight

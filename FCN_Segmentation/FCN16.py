@@ -20,8 +20,7 @@ def max_pool(bottom, ks=2, stride=2):
 
 
 def fcn(split, data_train, data_test, classifier_name="FCN16",
-        classifier_name1="score_fr", classifier_name2="upscore",
-        classifier_name3="score_fr2", classifier_name4="upscore2"):
+        classifier_name1="score_fr"):
     n = caffe.NetSpec()
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
                          seed=1337, classifier_name=classifier_name)
