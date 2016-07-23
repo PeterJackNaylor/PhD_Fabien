@@ -8,7 +8,7 @@ export WEIGHT=/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal
 export WD=/data/users/pnaylor/Documents/Python/FCN
 export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
 
---rawdata $RAWDATA --wd $WD --cn FCN1 --weight $WEIGHT --niter 200 
+--rawdata $RAWDATA --wd $WD --cn FCN1 --weight $WEIGHT --niter 200
 
 """
 
@@ -22,7 +22,7 @@ from solver import solver
 import FCN32
 import numpy as np
 import time
-
+import score
 from optparse import OptionParser
 
 import pdb
@@ -31,6 +31,33 @@ import pdb
 def CheckOrCreate(path):
     if not os.path.isdir(path):
         os.makedirs(path)
+
+
+def run_solvers_IU(niter, solvers, res_fold, disp_interval=10, val, layer):
+
+    blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc')
+    number_of_loops = niter / disp_interval
+
+    loss, acc = ({name: np.zeros(number_of_loops) for name, _ in solvers}
+                 for _ in blobs)
+    for it in range(number_of_loops):
+        for name, s in solvers:
+            # pdb.set_trace()
+            s.step(disp_interval)  # run a single SGD step in Caffe
+            # DEFINE VAL is validation test set, it computes it independently
+            # ...
+            loss[name][it], acc[name][it], acc1[name][it], iu[name][it], fwavacc[
+                name][it] = score.seg_tests(s, False, val, layer=layer)
+    # Save the learned weights from both nets.
+    if not os.path.isdir(res_fold):
+        os.mkdir(res_fold)
+    weight_dir = res_fold
+    weights = {}
+    for name, s in solvers:
+        filename = 'weights.%s.caffemodel' % name
+        weights[name] = os.path.join(weight_dir, filename)
+        s.net.save(weights[name])
+    return loss, acc, acc1, iu, fwavacc, weights
 
 
 def run_solvers(niter, solvers, res_fold, disp_interval=10):
@@ -81,6 +108,12 @@ if __name__ == "__main__":
     parser.add_option("--niter", dest="niter",
                       help="Number of iterations")
 
+    parser.add_option("--disp_interval", dest="disp_interval",
+                      help=" Diplay interval for training the network", default="10")
+
+    parser.add_option("--layer_score", dest="scorelayer",
+                      help="name of score layer", default="score")
+
     parser.add_option('--gpu', dest="gpu",
                       help="Which GPU to use.")
     (options, args) = parser.parse_args()
@@ -111,6 +144,8 @@ if __name__ == "__main__":
     print "Weight file (init): | " + options.weight
     print "Number of iteration | " + options.niter
     print "Which GPU         : | " + options.gpu
+    print "display interval  : | " + options.disp_interval
+    print "score layer name  : | " + options.scorelayer
 
     options.niter = int(options.niter)
 
@@ -181,14 +216,15 @@ if __name__ == "__main__":
     start_time = time.time()
     print 'Running solvers for %d iterations...' % niter
 
-    solvers = [('pretrained', my_solver)]
+    solvers = [(options.cn, my_solver)]
 
     res_fold = os.path.join(options.wd, options.cn, "temp_files")
-    loss, acc, weights = run_solvers(niter, solvers, res_fold)
+    val = os.path.join(options.wd, "files", "test.txt")
+    loss, acc, acc1, iu, fwavacc, weights = run_solvers_IU(niter, solvers, res_fold, disp_interval=int(options.disp_interval), val, options.scorelayer))
 
     print 'Done.'
 
-    diff_time = time.time() - start_time
+    diff_time=time.time() - start_time
 
     print ' \n '
     print 'Time for slide:'
@@ -196,5 +232,5 @@ if __name__ == "__main__":
 
     print ' \n '
     print "Average time per image: (have to put number of images.. "
-    diff_time = diff_time / 10
+    diff_time=diff_time / 10
     print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
