@@ -50,7 +50,7 @@ def LoadDataIntoNet(net, data, transformer):
     net.blobs['data'].data[...] = transformed_image_array
 
 
-def GetScoreVectors(net, data, transformer, layer="score2"):
+def GetScoreVectors(net, data, transformer, layer="score"):
 
     LoadDataIntoNet(net, data, transformer)
     output = net.forward()

@@ -16,8 +16,8 @@ from DataToLMDB import MakeDataLikeFCN
 import ImageTransf as Transf
 import caffe
 import os
+from solver import solver, run_solvers, run_solvers_IU
 
-from solver import solver
 import FCN16
 import numpy as np
 import time

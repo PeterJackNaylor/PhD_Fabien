@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     options.niter = int(options.niter)
 
-    create_dataset = True
+    create_dataset = False
     create_solver = True
     create_net = True
 
