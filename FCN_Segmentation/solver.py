@@ -7,7 +7,7 @@ Created on Mon Jun 27 16:07:56 2016
 import os
 from caffe.proto import caffe_pb2
 import pdb
-import numpy
+import numpy as np
 
 import score
 
