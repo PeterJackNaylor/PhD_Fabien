@@ -154,11 +154,18 @@ if __name__ == "__main__":
     start_time = time.time()
     print 'Running solvers for %d iterations...' % niter
 
-    solvers = [('pretrained', my_solver)]
+    solvers = [(options.cn, my_solver)]
 
-    res_fold = os.path.join(options.wd, options.cn, "temp_files")
-    loss, acc, weights = run_solvers(niter, solvers, res_fold)
+    val = os.path.join(options.wd, "files", "test.txt")
+    loss, acc, acc1, iu, fwavacc, weights = run_solvers_IU(
+        niter, solvers, res_fold, int(options.disp_interval), val, options.scorelayer)
 
+    np.save(os.path.join(res_fold, "loss.txt"), loss[options.cn])
+
+    np.save(os.path.join(res_fold, "acc.txt"), acc[options.cn])
+    np.save(os.path.join(res_fold, "acc1.txt"), acc1[options.cn])
+    np.save(os.path.join(res_fold, "iu.txt"), iu[options.cn])
+    np.save(os.path.join(res_fold, "fwavacc.txt"), fwavacc[options.cn])
     print 'Done.'
 
     diff_time = time.time() - start_time

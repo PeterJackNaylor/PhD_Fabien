@@ -150,7 +150,7 @@ if __name__ == "__main__":
     start_time = time.time()
     print 'Running solvers for %d iterations...' % niter
 
-    solvers = [('pretrained', my_solver)]
+    solvers = [(options.cn, my_solver)]
 
     res_fold = os.path.join(options.wd, options.cn, "temp_files")
     val = os.path.join(options.wd, "files", "test.txt")
