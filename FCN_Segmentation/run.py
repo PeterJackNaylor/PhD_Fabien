@@ -33,7 +33,7 @@ def CheckOrCreate(path):
         os.makedirs(path)
 
 
-def run_solvers_IU(niter, solvers, res_fold, disp_interval=10, val, layer):
+def run_solvers_IU(niter, solvers, res_fold, disp_interval, val, layer):
 
     blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc')
     number_of_loops = niter / disp_interval
