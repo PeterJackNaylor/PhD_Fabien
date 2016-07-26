@@ -58,8 +58,7 @@ def MakeDataLikeFCN(path, output_dir, transform_list,
             scipy.misc.imsave(os.path.join(
                 img_train_path, name_img + ".png"), img)
             if normalize_to_bin:
-                img_gt = img_gt > 0
-                img_gt = img_gt + 0
+                img_gt[img_gt > 0] = 1
             scipy.misc.imsave(os.path.join(
                 lab_train_path, name_img + ".png"), img_gt)
             myfile.write(name_img + "\n")
@@ -80,8 +79,7 @@ def MakeDataLikeFCN(path, output_dir, transform_list,
             scipy.misc.imsave(os.path.join(
                 img_test_path, name_img + ".png"), img)
             if normalize_to_bin:
-                img_gt = img_gt > 0
-                img_gt = img_gt + 0
+                img_gt[img_gt > 0] = 1
             scipy.misc.imsave(os.path.join(
                 lab_test_path, name_img + ".png"), img_gt)
             myfile.write(name_img + "\n")
