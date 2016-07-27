@@ -5,6 +5,7 @@ from CheckingSolvingState.OutputNet import Transformer, GetScoreVectors
 from Datamanager import DataManager
 from optparse import OptionParser
 import time
+from score import fast_hist
 
 
 def Pred(net, img, transformer):
