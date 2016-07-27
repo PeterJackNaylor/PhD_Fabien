@@ -155,7 +155,7 @@ if __name__ == "__main__":
     print 'Running solvers for %d iterations...' % niter
 
     solvers = [(options.cn, my_solver)]
-
+    res_fold = os.path.join(options.wd, options.cn, "temp_files")
     val = os.path.join(options.wd, "files", "test.txt")
     loss, acc, acc1, iu, fwavacc, weights = run_solvers_IU(
         niter, solvers, res_fold, int(options.disp_interval), val, options.scorelayer)
