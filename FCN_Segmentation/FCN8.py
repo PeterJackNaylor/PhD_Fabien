@@ -117,7 +117,7 @@ def fcn(split, data_train, data_test, classifier_name="FCN8",
 
 def make_net(wd, data_train, data_test, classifier_name="FCN16",
              classifier_name1="score_fr", classifier_name2="upscore2",
-                      classifier_name3="score_pool4")):
+             classifier_name3="score_pool4"):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
         f.write(str(fcn('train', data_train, data_test, classifier_name,
                         classifier_name1, classifier_name2, classifier_name3)))
