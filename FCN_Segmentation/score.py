@@ -11,13 +11,14 @@ def fast_hist(a, b, n):
     k = (a >= 0) & (a < n)
     return np.bincount(n * a[k].astype(int) + b[k], minlength=n**2).reshape(n, n)
 
-
+import pdb
 def compute_hist(net, save_dir, dataset, layer='score', gt='label'):
     n_cl = net.blobs[layer].channels
     if save_dir:
         os.mkdir(save_dir)
     hist = np.zeros((n_cl, n_cl))
     loss = 0
+    pdb.set_trace()
     for idx in dataset:
         net.forward()
         hist += fast_hist(net.blobs[gt].data[0, 0].flatten(),

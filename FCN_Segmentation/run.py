@@ -116,7 +116,7 @@ if __name__ == "__main__":
         transform_list.append(Transf.ElasticDeformation(0, 30, num_points=4))
 
     if create_dataset:
-        MakeDataLikeFCN(options.rawdata, options.wd, transform_list)
+        MakeDataLikeFCN(options.rawdata, options.wd, transform_list, val_num = 6)
 
     if create_net:
         data_train = options.wd  # os.path.join(options.wd, "train")
