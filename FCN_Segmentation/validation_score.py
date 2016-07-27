@@ -109,7 +109,7 @@ if __name__ == "__main__":
     data_batch_size = 1
     net = Net(options.model_def, options.weight, data_batch_size)
     transformer = Transformer(net)
-    hist = compute_hist_VAL(net, DataManagerForVal, layer=options.score)
+    hist = compute_hist_VAL(net, DataManagerForVal, layer=options.scorelayer)
     acc, acc1, iu, fwavacc = Metrics(hist)
 
     print 'Done.'
