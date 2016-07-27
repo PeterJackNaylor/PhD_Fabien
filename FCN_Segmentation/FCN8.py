@@ -19,7 +19,7 @@ def max_pool(bottom, ks=2, stride=2):
     return L.Pooling(bottom, pool=P.Pooling.MAX, kernel_size=ks, stride=stride)
 
 
-def fcn(split, data_train, data_test, classifier_name="FCN16",
+def fcn(split, data_train, data_test, classifier_name="FCN8",
         classifier_name1="score_fr", classifier_name2="upscore2",
         classifier_name3="score_pool4"):
     n = caffe.NetSpec()
@@ -110,21 +110,22 @@ def fcn(split, data_train, data_test, classifier_name="FCN16",
     n.score = crop(n.upscore8, n.data)
     if split != "val":
         n.loss = L.SoftmaxWithLoss(n.score, n.label,
-                                   loss_param=dict(normalize=False, ignore_label=255))
+                                   loss_param=dict(normalize=False))  # , ignore_label=255))
         n.acc = L.Accuracy(n.score, n.label)
     return n.to_proto()
 
 
 def make_net(wd, data_train, data_test, classifier_name="FCN16",
-             classifier_name1="score_fr"):
+             classifier_name1="score_fr", classifier_name2="upscore2",
+                      classifier_name3="score_pool4")):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
         f.write(str(fcn('train', data_train, data_test, classifier_name,
-                        classifier_name1)))
+                        classifier_name1, classifier_name2, classifier_name3)))
 
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
         f.write(str(fcn('test', data_train, data_test, classifier_name,
-                        classifier_name1)))
+                        classifier_name1, classifier_name2, classifier_name3)))
 
     with open(os.path.join(wd, 'deploy.prototxt'), 'w') as f:
         f.write(str(fcn('val', data_train, data_test, classifier_name,
-                        classifier_name1)))
+                        classifier_name1, classifier_name2, classifier_name3)))
