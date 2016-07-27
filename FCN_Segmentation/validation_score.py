@@ -46,8 +46,8 @@ def compute_hist_VAL(net, dataM, layer="score"):
     hist = np.zeros((n_cl, n_cl))
 
     for img, img_gt, name in dataM.TrainingIteratorLeaveValOut():
-    	img_pred = Pred(net, img, transformer)
-    	hist += ComputeHist(img_pred, img_gt, hist, n_cl)
+        img_pred = Pred(net, img, transformer)
+        hist += ComputeHist(img_pred, img_gt, hist, n_cl)
 
     return hist
 
@@ -60,7 +60,7 @@ def SetupDataManager(path):
 
 
 def Metrics(hist):
-	acc = np.diag(hist).sum() / hist.sum()
+    acc = np.diag(hist).sum() / hist.sum()
     print '>>>', 'overall accuracy', acc
     # per-class accuracy
     acc1 = np.diag(hist) / hist.sum(1)
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     parser.add_option("--layer_score", dest="scorelayer",
                       help="name of score layer", default="score")
     parser.add_option("--model_def", dest="model_def",
-    				  help="Model definition, prototxt file")
+                      help="Model definition, prototxt file")
 
     (options, args) = parser.parse_args()
 
