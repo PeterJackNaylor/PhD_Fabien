@@ -69,7 +69,7 @@ def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_s
 
 
 def run_solvers_IU(niter, solvers, res_fold, disp_interval, val, layer):
-
+    val = np.loadtxt(val, dtype=str)
     blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc')
     number_of_loops = niter / disp_interval
 

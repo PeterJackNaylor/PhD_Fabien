@@ -3,11 +3,11 @@ import numpy as np
 from CheckingSolvingState.OutputNet import Transformer, GetScoreVectors
 
 
-def Net(model_def, weights, data_batch_size):
+def Net(model_def, weights, data_batch_size, height=512, width=512):
     net = caffe.Net(model_def,      # defines the structure of the model
                     weights,  # contains the trained weights
                     caffe.TEST)
-    net.blobs['data'].reshape(data_batch_size, 3, 512, 512)
+    net.blobs['data'].reshape(data_batch_size, 3, height, width)
     return net
 
 
