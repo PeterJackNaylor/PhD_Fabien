@@ -53,7 +53,7 @@ def compute_hist_VAL(net, dataM, layer="score"):
 
 
 def SetupDataManager(path):
-    datatest = Dm.DataManager(path)
+    datatest = DataManager(path)
     datatest.prepare_sets(leave_out=0)
     datatest.SetTransformation(None)
     return datatest
