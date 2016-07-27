@@ -106,6 +106,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     DataManagerForVal = SetupDataManager(options.path)
+    data_batch_size = 1
     net = Net(options.model_def, options.weight, data_batch_size)
     transformer = Transformer(net)
     hist = compute_hist_VAL(net, DataManagerForVal, layer=options.score)
