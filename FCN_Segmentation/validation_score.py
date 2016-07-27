@@ -53,10 +53,11 @@ def compute_hist_VAL(net, dataM, layer="score"):
 
 
 def SetupDataManager(path):
-	datatest = Dm.DataManager(path)
+    datatest = Dm.DataManager(path)
     datatest.prepare_sets(leave_out=0)
     datatest.SetTransformation(None)
     return datatest
+
 
 def Metrics(hist):
 	acc = np.diag(hist).sum() / hist.sum()
@@ -101,7 +102,7 @@ if __name__ == "__main__":
     print "Width             : | " + options.width
     print "score layer name  : | " + options.scorelayer
     print "Weight file (init): | " + options.weight
-
+    print "Model definition  : | " + options.model_def
     start_time = time.time()
 
     DataManagerForVal = SetupDataManager(options.path)
