@@ -59,6 +59,10 @@ if __name__ == "__main__":
 
     parser.add_option('--gpu', dest="gpu",
                       help="Which GPU to use.")
+    parser.add_option('--val_test', dest="val_num", default="6",
+                      help="Number of images in test (times crop).")
+    parser.add_option('--crop', dest="crop", default="1",
+                      help="Number of crops by image, divided equally")
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -89,9 +93,14 @@ if __name__ == "__main__":
     print "Which GPU         : | " + options.gpu
     print "display interval  : | " + options.disp_interval
     print "score layer name  : | " + options.scorelayer
+    print "Images in test    : | " + options.val_num
+    print "Number of crops   : | " + options.crop
 
     options.niter = int(options.niter)
-
+    if options.crop == "1":
+        crop = None
+    else:
+        crop = int(options.crop)
     create_dataset = False
     create_solver = True
     create_net = True
