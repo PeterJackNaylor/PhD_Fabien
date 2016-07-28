@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import caffe
+#import caffe
 import lmdb
 import numpy as np
 import os
@@ -17,9 +17,9 @@ def CheckOrCreate(path):
 
 
 def MakeDataLikeFCN(path, output_dir, transform_list,
-                    val_num=2, normalize_to_bin=True,
+                    val_num=2, crop=None, normalize_to_bin=True,
                     count=False):
-    test = Dm.DataManager(path)
+    test = Dm.DataManager(path, crop)
     test.prepare_sets(leave_out=val_num)
 
     test.SetTransformation(transform_list)
@@ -183,11 +183,15 @@ if __name__ == "__main__":
     parser.add_option("-o", "--out", dest="out",
                       help="Where to store the lmdb files")
     parser.add_option('-n', '--leaveout', dest="leaveout", default="2",
-                      help="Resolution")
-    parser.add_option('-w', '--width', dest="width", default="512",
-                      help="width")
-    parser.add_option('--heigth', dest="heigth", default="512",
-                      help="heigth")
+                      help="Leave out")
+    parser.add_option('--crop', dest="crop", default="Not defined",
+                      help="Dividing the image")
+    parser.add_option('--normalize', dest="normalize", default="Not defined",
+                      help="Standarize the label values to 0 or 1<")
+#    parser.add_option('-w', '--width', dest="width", default="512",
+#                      help="width")
+#    parser.add_option('--heigth', dest="heigth", default="512",
+#                      help="heigth")
     (options, args) = parser.parse_args()
 
     if options.path is None:
@@ -206,8 +210,20 @@ if __name__ == "__main__":
     print "Input file        : | " + path
     print "Output folder     : | " + output_dir
     print "Leave out         : | " + options.leaveout
-    print "Heigth            : | " + options.heigth
-    print "Width             : | " + options.width
+    print "Division of img   : | " + options.crop
+    print "Normalize to bin  : | " + options.normalize
+#    print "Heigth            : | " + options.heigth
+#    print "Width             : | " + options.width
+
+    if options.crop == "Not defined":
+        crop = None
+    else:
+        crop = int(options.crop)
+
+    if options.normalize == "Not defined":
+        normalized_to_bin = True
+    else:
+        normalized_to_bin = bool(options.normalize)
 
     val_num = int(options.leaveout)
     enlarge = False
@@ -226,19 +242,23 @@ if __name__ == "__main__":
     print "Beginning analyse:"
 
     start_time = time.time()
+
 # Core of the code
 ########################################
 
-    number = MakeLMDB(path, output_dir,
-                      transform_list,
-                      img_width=int(options.width),
-                      img_height=int(options.heigth),
-                      val_num=val_num,
-                      count=True)
+    MakeDataLikeFCN(path, output_dir, transform_list,
+                    val_num=val_num, crop=crop, normalize_to_bin=normalized_to_bin,
+                    count=False)
+#    number = MakeLMDB(path, output_dir,
+#                      transform_list,
+#                      img_width=int(options.width),
+#                      img_height=int(options.heigth),
+#                      val_num=val_num,
+#                      count=True)
 ########################################
 
     diff_time = time.time() - start_time
-
+    number = 800
     print ' \n '
     print 'Time for all:'
     print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
