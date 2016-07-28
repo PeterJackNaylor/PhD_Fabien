@@ -4,15 +4,18 @@ import random
 from sklearn.cross_validation import KFold
 from scipy import misc
 import nibabel as ni
+import pdb
+from itertools import chain
 
 
 class DataManager(object):
 
-    def __init__(self, path, name="optionnal"):
+    def __init__(self, path, crop=None, name="optionnal"):
 
         self.path = path
         self.name = name
         self.transforms = None
+        self.crop = crop
 
     def TrainingIteratorFold(self, fold):
         try:
@@ -22,14 +25,32 @@ class DataManager(object):
             train_paths, test_paths = self.ValScheme[fold]
         if self.transforms is None:
             for path_nii in np.array(self.nii)[train_paths]:
-                yield self.LoadGTAndImage(path_nii)
+                img, img_gt = self.LoadGTAndImage(path_nii)
+                if Normal:
+                    yield img, img_gt, "Id"
+                else:
+                    i = 0
+                    for subimg, subimg_gt in zip(self.DivideImage(img), self.DivideImage(img_gt)):
+                        yield subimg, subimg_gt, "Id_sub_{}".format(i)
+                        i += 1
         else:
             for path_nii in np.array(self.nii)[train_paths]:
                 img, img_gt = self.LoadGTAndImage(path_nii)
-                for f in self.transforms:
-                    yield f._apply_(img), f._apply_(img_gt), f.name
+                if Normal:
+                    for f in self.transforms:
+                        yield f._apply_(img), f._apply_(img_gt), f.name
+                else:
+                    for f in self.transforms:
+                        i = 0
+                        for subimg, subimg_gt in zip(self.DivideImage(f._apply_(img)), self.DivideImage(f._apply_(img_gt))):
+                            yield subimg, subimg_gt, f.name + "_{}".format(i)
+                            i += 1
 
     def TrainingIteratorLeaveValOut(self):
+        if self.crop is None:
+            Normal = True
+        else:
+            Normal = False
         fold = 0
         try:
             train_paths, test_paths = self.ValScheme[fold]
@@ -40,17 +61,37 @@ class DataManager(object):
         if self.transforms is None:
             for path_nii in np.array(self.nii)[all_paths]:
                 img, img_gt = self.LoadGTAndImage(path_nii)
-                yield img, img_gt, "Id"
+                if Normal:
+                    yield img, img_gt, "Id"
+                else:
+                    i = 0
+                    for subimg, subimg_gt in self.CropIterator(img, img_gt):
+                        yield subimg, subimg_gt, "Id_sub_{}".format(i)
+                        i += 1
         else:
             for path_nii in np.array(self.nii)[all_paths]:
                 img, img_gt = self.LoadGTAndImage(path_nii)
-                for f in self.transforms:
-                    yield f._apply_(img), f._apply_(img_gt), f.name
+                if Normal:
+                    for f in self.transforms:
+                        yield f._apply_(img), f._apply_(img_gt), f.name
+                else:
+                    for f in self.transforms:
+                        i = 0
+                        for subimg, subimg_gt in zip(self.DivideImage(f._apply_(img)),
+                                                     self.DivideImage(f._apply_(img_gt))):
+                            yield subimg, subimg_gt, f.name + "_{}".format(i)
+                            i += 1
 
     def ValIterator(self):
         for path_nii in np.array(self.nii)[np.array(self.ValScheme['score_set'])]:
             img, img_gt = self.LoadGTAndImage(path_nii)
-            yield img, img_gt, "Id"
+            if self.crop is None:
+                yield img, img_gt, "Id"
+            else:
+                i = 0
+                for subimg, subimg_gt in zip(self.DivideImage(img), self.DivideImage(img_gt)):
+                    yield subimg, subimg_gt, "Id_sub_{}".format(i)
+                    i += 1
 
     def get_files(self, path):
         # Getting all nii.gz and png files in a 2 fold directory
@@ -117,10 +158,44 @@ class DataManager(object):
             image = image[:, :, 0:3]
         return image
 
+    def DivideImage(self, img):
+        if True:
+            x = img.shape[0]
+            y = img.shape[1]
+            num_per_side = int(np.sqrt(self.crop))
+
+            x_step = x / num_per_side
+            y_step = y / num_per_side
+            i_old = 0
+            for i in range(x_step, x + 1, x_step):
+                j_old = 0
+                for j in range(y_step, y + 1, y_step):
+                    sub_image = img[i_old:i, j_old:j]
+                    j_old = j
+                    # pdb.set_trace()
+                    yield sub_image
+                i_old = i
+
+    def CropIterator(self, img, img_gt):
+        ImgImgIterator = chain(self.DivideImage(img), self.DivideImage(img_gt))
+        return ImgImgIterator
+
+
+def is_square(apositiveint):
+    x = apositiveint // 2
+    seen = set([x])
+    while x * x != apositiveint:
+        x = (x + (apositiveint // x)) // 2
+        if x in seen:
+            return False
+        seen.add(x)
+    return True
+
 
 if __name__ == "__main__":
     import ImageTransf as Transf
     import matplotlib.pylab as plt
+    import os
 # Useful plotting function
 
     def plot_comparison(original, modified, modification):
@@ -135,10 +210,15 @@ if __name__ == "__main__":
         ax2.set_title(modification)
         ax2.axis('off')
         ax2.set_adjustable('box-forced')
+
     path = '/home/naylor/Bureau/ToAnnotate'
     path = '/Users/naylorpeter/Documents/Python/ToAnnotate'
+    out = "~/test/"
 
-    test = DataManager(path)
+    crop = None
+    crop = 4
+
+    test = DataManager(path, crop)
     test.prepare_sets()
 
     # Transf.ElasticDeformation(0,30,4)]#,
@@ -147,5 +227,6 @@ if __name__ == "__main__":
         45, enlarge=True), Transf.Flip(1)]
     test.SetTransformation(transform_list)
     i = 0
-    for img, img_gt in test.TrainingIterator(fold=1):
-        i += 1
+    for img, img_gt, name in test.TrainingIterator(fold=1):
+        save_name = os.path.join
+        im.save(save_name)
