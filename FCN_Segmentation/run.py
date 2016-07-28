@@ -59,9 +59,9 @@ if __name__ == "__main__":
 
     parser.add_option('--gpu', dest="gpu",
                       help="Which GPU to use.")
-    parser.add_option('--val_test', dest="val_num", default="1"
+    parser.add_option('--val_test', dest="val_num", default="6",
                       help="Number of images in test (times crop).")
-    parser.add_option('--crop', dest="crop",
+    parser.add_option('--crop', dest="crop", default="1",
                       help="Number of crops by image, divided equally")
     (options, args) = parser.parse_args()
 
