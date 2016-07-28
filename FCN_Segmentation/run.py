@@ -59,6 +59,10 @@ if __name__ == "__main__":
 
     parser.add_option('--gpu', dest="gpu",
                       help="Which GPU to use.")
+    parser.add_option('--val_test', dest="val_num", default="1"
+                      help="Number of images in test (times crop).")
+    parser.add_option('--crop', dest="crop",
+                      help="Number of crops by image, divided equally")
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -89,6 +93,13 @@ if __name__ == "__main__":
     print "Which GPU         : | " + options.gpu
     print "display interval  : | " + options.disp_interval
     print "score layer name  : | " + options.scorelayer
+    print "Images in test    : | " + options.val_num
+    print "Number of crops   : | " + options.crop
+
+    if options.crop == "1":
+        crop = None
+    else:
+        crop = int(options.crop)
 
     options.niter = int(options.niter)
 
@@ -116,7 +127,10 @@ if __name__ == "__main__":
         transform_list.append(Transf.ElasticDeformation(0, 30, num_points=4))
 
     if create_dataset:
-        MakeDataLikeFCN(options.rawdata, options.wd, transform_list)
+        MakeDataLikeFCN(options.rawdata, options.wd, transform_list,
+                        int(options.val_num),
+                        crop=crop, normalize_to_bin=True,
+                        count=False)
 
     if create_net:
         data_train = options.wd  # os.path.join(options.wd, "train")
