@@ -54,8 +54,11 @@ def compute_hist_VAL(net, dataM, layer="score"):
     return hist
 
 
-def SetupDataManager(path):
-    datatest = DataManager(path)
+def SetupDataManager(path, crop="1"):
+    if crop == "1":
+        datatest = DataManager(path)
+    else:
+        datatest = DataManager(path, int(crop))
     datatest.prepare_sets(leave_out=0)
     datatest.SetTransformation(None)
     return datatest
@@ -88,10 +91,8 @@ if __name__ == "__main__":
 
     parser.add_option("-p", "--path", dest="path",
                       help="Input path (raw data)")
-    parser.add_option('-w', '--width', dest="width", default="512",
-                      help="width")
-    parser.add_option('--heigth', dest="heigth", default="512",
-                      help="heigth")
+    parser.add_option('--crop', dest="crop", default="1",
+                      help="crop")
     parser.add_option("--weight", dest="weight",
                       help="Where to find the weight file")
     parser.add_option("--layer_score", dest="scorelayer",
@@ -105,8 +106,7 @@ if __name__ == "__main__":
     print "Input paramters to Validation score:"
     print " \n "
     print "Input file        : | " + options.path
-    print "Heigth            : | " + options.heigth
-    print "Width             : | " + options.width
+    print "Crop              : | " + options.crop
     print "score layer name  : | " + options.scorelayer
     print "Weight file (init): | " + options.weight
     print "Model definition  : | " + options.model_def
