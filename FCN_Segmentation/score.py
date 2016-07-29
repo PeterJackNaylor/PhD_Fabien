@@ -85,8 +85,8 @@ def compute_hist_VAL(net, dataset, layer='score', gt='label'):
 def seg_tests(solver, save_format, dataset, layer='score', gt='label'):
     print '>>>', datetime.now(), 'Begin seg tests'
     solver.test_nets[0].share_with(solver.net)
-    hist, loss, acc, acc1, iu, fwavacc = do_seg_tests(solver.test_nets[0], solver.iter,
-                                                      save_format, dataset, layer, gt)
+    hist, loss, acc, acc1, iu, fwavacc, recall, precision = do_seg_tests(solver.test_nets[0], solver.iter,
+                                                                         save_format, dataset, layer, gt)
     return loss, acc, acc1, iu, fwavacc
 
 
@@ -109,5 +109,8 @@ def do_seg_tests(net, iter, save_format, dataset, layer='score', gt='label'):
     freq = hist.sum(1) / hist.sum()
     fwavacc = (freq[freq > 0] * iu[freq > 0]).sum()
     print '>>>', datetime.now(), 'Iteration', iter, 'fwavacc', fwavacc
-
-    return hist, loss, acc, np.nanmean(acc1), np.nanmean(iu), fwavacc
+    recall = (hist[1, 1] + 0.0) / (hist[1, 0] + hist[1, 1])
+    precision = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1])
+    print '>>>', 'recall', recall
+    print '>>>', 'precision', precision
+    return hist, loss, acc, np.nanmean(acc1), np.nanmean(iu), fwavacc, recall, precision
