@@ -8,7 +8,7 @@ import time
 from score import fast_hist
 
 
-def Pred(net, img, transformer):
+def Pred(net, img, transformer, layer="score"):
         # image =
         # caffe.io.load_image('../data/pascal-voc2010/JPEGImages/2007_000241.jpg')
     transformed_image = transformer.preprocess('data', img)
@@ -16,7 +16,7 @@ def Pred(net, img, transformer):
     net.blobs['data'].data[...] = transformed_image
     output = net.forward()
 
-    score = output['score'][0]
+    score = output[layer][0]
     classed = np.argmax(score, axis=0)
 
     all_labels = ["0: Background"] + ["1: Cell"]
@@ -47,7 +47,7 @@ def compute_hist_VAL(net, dataM, layer="score"):
     hist = np.zeros((n_cl, n_cl))
 
     for img, img_gt, name in dataM.TrainingIteratorLeaveValOut():
-        img_pred = Pred(net, img, transformer)
+        img_pred = Pred(net, img, transformer, layer)
         hist += ComputeHist(img_pred, img_gt, hist, n_cl)
 
     return hist
