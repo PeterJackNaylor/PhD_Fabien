@@ -63,6 +63,8 @@ if __name__ == "__main__":
                       help="Number of images in test (times crop).")
     parser.add_option('--crop', dest="crop", default="1",
                       help="Number of crops by image, divided equally")
+    parser.add_option('--solverrate', dest="solverrate", default="0.000001",
+                      help="Initial rate of the solver at 10e-6")
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -78,10 +80,14 @@ if __name__ == "__main__":
         options.niter = "200"
 
     if options.cn is None:
-        options.cn = 'fcn8'
+        options.cn = 'fcn32'
 
     if options.gpu is None:
         options.gpu = "0"
+
+    if options.solverrate != "0.000001":
+        solverrate = 0.000001 * float(options.solverrate)
+        options.solverrate = str(solverrate)
 
     print "Input paramters to run:"
     print " \n "
@@ -95,6 +101,7 @@ if __name__ == "__main__":
     print "score layer name  : | " + options.scorelayer
     print "Images in test    : | " + options.val_num
     print "Number of crops   : | " + options.crop
+    print "Solver rate       : | " + options.solverrate
 
     options.niter = int(options.niter)
     if options.crop == "1":
@@ -144,7 +151,7 @@ if __name__ == "__main__":
                                           "train.prototxt"),
                              test_net_path=os.path.join(
                                  options.wd, options.cn, "test.prototxt"),
-                             base_lr=0.000000001,
+                             base_lr=solverrate,
                              out_snap=outsnap)
         # name_solver is solver_path.....
     weights = options.weight
