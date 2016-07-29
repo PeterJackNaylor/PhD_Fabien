@@ -70,11 +70,11 @@ def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_s
 
 def run_solvers_IU(niter, solvers, res_fold, disp_interval, val, layer):
     val = np.loadtxt(val, dtype=str)
-    blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc')
+    blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc', 'recall', 'precision')
     number_of_loops = niter / disp_interval
 
-    loss, acc, acc1, iu, fwavacc = ({name: np.zeros(number_of_loops) for name, _ in solvers}
-                                    for _ in blobs)
+    loss, acc, acc1, iu, fwavacc, recall, precision = ({name: np.zeros(number_of_loops) for name, _ in solvers}
+                                                       for _ in blobs)
     for it in range(number_of_loops):
         for name, s in solvers:
             # pdb.set_trace()
@@ -82,6 +82,7 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, val, layer):
             # DEFINE VAL is validation test set, it computes it independently
             # ...
             loss[name][it], acc[name][it], acc1[name][it], iu[name][it], fwavacc[
+                name][it], recall[name][it], precision[
                 name][it] = score.seg_tests(s, False, val, layer=layer)
     # Save the learned weights from all nets.
     if not os.path.isdir(res_fold):
@@ -92,7 +93,7 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, val, layer):
         filename = 'weights.%s.caffemodel' % name
         weights[name] = os.path.join(weight_dir, filename)
         s.net.save(weights[name])
-    return loss, acc, acc1, iu, fwavacc, weights
+    return loss, acc, acc1, iu, fwavacc, recall, precision, weights
 
 
 def run_solvers(niter, solvers, res_fold, disp_interval=10):
