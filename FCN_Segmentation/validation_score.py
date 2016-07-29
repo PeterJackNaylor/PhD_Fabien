@@ -65,7 +65,6 @@ def Metrics(hist):
     acc = np.diag(hist).sum() / hist.sum()
     print '>>>', 'overall accuracy', acc
     # per-class accuracy
-    pdb.set_trace()
     acc1 = np.diag(hist) / hist.sum(1)
     print '>>>', 'mean accuracy', np.nanmean(acc1)
     # per-class IU
@@ -79,6 +78,7 @@ def Metrics(hist):
     precision = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1])
     print '>>>', 'recall', recall
     print '>>>', 'precision', precision
+    # i have to add precision and recall everywhere....
     return acc, np.nanmean(acc1), np.nanmean(iu), fwavacc
 
 
