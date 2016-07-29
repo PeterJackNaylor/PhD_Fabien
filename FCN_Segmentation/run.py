@@ -136,6 +136,7 @@ if __name__ == "__main__":
         transform_list.append(Transf.OutOfFocus(sig))
     for i in range(20):
         transform_list.append(Transf.ElasticDeformation(0, 30, num_points=4))
+        transform_list.append(Transf.ElasticDeformation(0, 10, num_points=9))
 
     if create_dataset:
         MakeDataLikeFCN(options.rawdata, options.wd, transform_list)
