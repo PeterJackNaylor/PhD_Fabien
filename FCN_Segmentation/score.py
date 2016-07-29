@@ -88,7 +88,7 @@ def seg_tests(solver, save_format, dataset, layer='score', gt='label'):
     solver.test_nets[0].share_with(solver.net)
     hist, loss, acc, acc1, iu, fwavacc, recall, precision = do_seg_tests(solver.test_nets[0], solver.iter,
                                                                          save_format, dataset, layer, gt)
-    return loss, acc, acc1, iu, fwavacc
+    return loss, acc, acc1, iu, fwavacc, recall, precision
 
 
 def do_seg_tests(net, iter, save_format, dataset, layer='score', gt='label'):
