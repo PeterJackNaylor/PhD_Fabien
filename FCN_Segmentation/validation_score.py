@@ -82,7 +82,7 @@ def Metrics(hist):
     print '>>>', 'recall', recall
     print '>>>', 'precision', precision
     # i have to add precision and recall everywhere....
-    return acc, np.nanmean(acc1), np.nanmean(iu), fwavacc
+    return acc, np.nanmean(acc1), np.nanmean(iu), fwavacc, recall, precision
 
 
 if __name__ == "__main__":
