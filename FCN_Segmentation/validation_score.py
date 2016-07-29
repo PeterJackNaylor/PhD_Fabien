@@ -64,6 +64,7 @@ def Metrics(hist):
     acc = np.diag(hist).sum() / hist.sum()
     print '>>>', 'overall accuracy', acc
     # per-class accuracy
+    pdb.set_trace()
     acc1 = np.diag(hist) / hist.sum(1)
     print '>>>', 'mean accuracy', np.nanmean(acc1)
     # per-class IU
