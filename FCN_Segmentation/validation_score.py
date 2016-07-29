@@ -6,6 +6,7 @@ from Datamanager import DataManager
 from optparse import OptionParser
 import time
 from score import fast_hist
+import pdb
 
 
 def Pred(net, img, transformer, layer="score"):
