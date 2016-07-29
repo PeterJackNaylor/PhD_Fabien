@@ -8,7 +8,7 @@ export WEIGHT=/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal
 export WD=/data/users/pnaylor/Documents/Python/FCN
 export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
 
---rawdata $RAWDATA --wd $WD --cn FCN1 --weight $WEIGHT --niter 200 
+--rawdata $RAWDATA --wd $WD --cn FCN1 --weight $WEIGHT --niter 200
 
 """
 
@@ -18,11 +18,10 @@ import ImageTransf as Transf
 import caffe
 import os
 
-from solver import solver
+from solver import solver, run_solvers, run_solvers_IU
 import FCN32
 import numpy as np
 import time
-
 from optparse import OptionParser
 
 import pdb
@@ -32,35 +31,6 @@ def CheckOrCreate(path):
     if not os.path.isdir(path):
         os.makedirs(path)
 
-
-def run_solvers(niter, solvers, res_fold, disp_interval=10):
-    """Run solvers for niter iterations,
-       returning the loss and accuracy recorded each iteration.
-       `solvers` is a list of (name, solver) tuples."""
-    blobs = ('loss', 'acc')
-    loss, acc = ({name: np.zeros(niter) for name, _ in solvers}
-                 for _ in blobs)
-    for it in range(niter):
-        for name, s in solvers:
-            # pdb.set_trace()
-            s.step(1)  # run a single SGD step in Caffe
-            loss[name][it], acc[name][it] = [s.net.blobs[b].data.copy()
-                                             for b in blobs]
-        if it % disp_interval == 0 or it + 1 == niter:
-            loss_disp = '; '.join('%s: loss=%.3f, acc=%2d%%' %
-                                  (n, loss[n][it], np.round(100 * acc[n][it]))
-                                  for n, _ in solvers)
-            print '%3d) %s' % (it, loss_disp)
-    # Save the learned weights from both nets.
-    if not os.path.isdir(res_fold):
-        os.mkdir(res_fold)
-    weight_dir = res_fold
-    weights = {}
-    for name, s in solvers:
-        filename = 'weights.%s.caffemodel' % name
-        weights[name] = os.path.join(weight_dir, filename)
-        s.net.save(weights[name])
-    return loss, acc, weights
 
 if __name__ == "__main__":
 
@@ -81,8 +51,18 @@ if __name__ == "__main__":
     parser.add_option("--niter", dest="niter",
                       help="Number of iterations")
 
+    parser.add_option("--disp_interval", dest="disp_interval",
+                      help=" Diplay interval for training the network", default="10")
+
+    parser.add_option("--layer_score", dest="scorelayer",
+                      help="name of score layer", default="score")
+
     parser.add_option('--gpu', dest="gpu",
                       help="Which GPU to use.")
+    parser.add_option('--val_test', dest="val_num", default="6",
+                      help="Number of images in test (times crop).")
+    parser.add_option('--crop', dest="crop", default="1",
+                      help="Number of crops by image, divided equally")
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -111,10 +91,19 @@ if __name__ == "__main__":
     print "Weight file (init): | " + options.weight
     print "Number of iteration | " + options.niter
     print "Which GPU         : | " + options.gpu
+    print "display interval  : | " + options.disp_interval
+    print "score layer name  : | " + options.scorelayer
+    print "Images in test    : | " + options.val_num
+    print "Number of crops   : | " + options.crop
+
+    if options.crop == "1":
+        crop = None
+    else:
+        crop = int(options.crop)
 
     options.niter = int(options.niter)
 
-    create_dataset = True
+    create_dataset = False
     create_solver = True
     create_net = True
 
@@ -139,7 +128,10 @@ if __name__ == "__main__":
         transform_list.append(Transf.ElasticDeformation(0, 10, num_points=9))
 
     if create_dataset:
-        MakeDataLikeFCN(options.rawdata, options.wd, transform_list)
+        MakeDataLikeFCN(options.rawdata, options.wd, transform_list,
+                        int(options.val_num),
+                        crop=crop, normalize_to_bin=True,
+                        count=False)
 
     if create_net:
         data_train = options.wd  # os.path.join(options.wd, "train")
@@ -182,11 +174,18 @@ if __name__ == "__main__":
     start_time = time.time()
     print 'Running solvers for %d iterations...' % niter
 
-    solvers = [('pretrained', my_solver)]
+    solvers = [(options.cn, my_solver)]
 
     res_fold = os.path.join(options.wd, options.cn, "temp_files")
-    loss, acc, weights = run_solvers(niter, solvers, res_fold)
+    val = os.path.join(options.wd, "files", "test.txt")
+    loss, acc, acc1, iu, fwavacc, weights = run_solvers_IU(
+        niter, solvers, res_fold, int(options.disp_interval), val, options.scorelayer)
+    np.save(os.path.join(res_fold, "loss.txt"), loss[options.cn])
 
+    np.save(os.path.join(res_fold, "acc.txt"), acc[options.cn])
+    np.save(os.path.join(res_fold, "acc1.txt"), acc1[options.cn])
+    np.save(os.path.join(res_fold, "iu.txt"), iu[options.cn])
+    np.save(os.path.join(res_fold, "fwavacc.txt"), fwavacc[options.cn])
     print 'Done.'
 
     diff_time = time.time() - start_time
