@@ -75,6 +75,10 @@ def Metrics(hist):
     fwavacc = (freq[freq > 0] * iu[freq > 0]).sum()
     print '>>>', 'fwavacc', fwavacc
 
+    recall = (hist[1, 1] + 0.0) / (hist[1, 0] + hist[1, 1])
+    precision = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1])
+    print '>>>', 'recall', recall
+    print '>>>', 'precision', precision
     return acc, np.nanmean(acc1), np.nanmean(iu), fwavacc
 
 
