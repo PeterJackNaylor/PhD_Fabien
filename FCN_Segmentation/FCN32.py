@@ -91,16 +91,16 @@ def fcn(split, data_path, classifier_name="FCN32",
     return n.to_proto()
 
 
-def make_net(wd, data_train, data_test, classifier_name="FCN32",
+def make_net(wd, data_path, classifier_name="FCN32",
              classifier_name1="score_fr", classifier_name2="upscore"):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(fcn('train', data_train, data_test, classifier_name,
+        f.write(str(fcn('train', data_path, classifier_name,
                         classifier_name1, classifier_name2)))
 
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(fcn('test', data_train, data_test, classifier_name,
+        f.write(str(fcn('test', data_path, classifier_name,
                         classifier_name1, classifier_name2)))
 
     with open(os.path.join(wd, 'deploy.prototxt'), 'w') as f:
-        f.write(str(fcn('val', data_train, data_test, classifier_name,
+        f.write(str(fcn('val', data_path, classifier_name,
                         classifier_name1, classifier_name2)))
