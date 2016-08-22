@@ -129,11 +129,10 @@ if __name__ == "__main__":
         MakeDataLikeFCN(options.rawdata, options.wd, transform_list)
 
     if create_net:
-        data_train = options.wd  # os.path.join(options.wd, "train")
-        data_test = options.wd  # os.path.join(options.wd, "test")
+        data_path = options.wd  # os.path.join(options.wd, "test")
         CheckOrCreate(os.path.join(options.wd, options.cn))
         FCN8.make_net(os.path.join(options.wd, options.cn),
-                      data_train, data_test,
+                      data_path,
                       classifier_name=options.cn,
                       classifier_name1="score_fr1",
                       classifier_name2="upscore2",

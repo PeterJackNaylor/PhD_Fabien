@@ -1,25 +1,15 @@
-# -*- coding: utf-8 -*-
-
-"""
-
-line for kepler:
-
-export WEIGHT=/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel
-export WD=/data/users/pnaylor/Documents/Python/FCN
-export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
-
---rawdata $RAWDATA --wd $WD --cn FCN1 --weight $WEIGHT --niter 200
-
-"""
-
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pylab as plt
 
 from DataToLMDB import MakeDataLikeFCN
 import ImageTransf as Transf
 import caffe
 import os
-
 from solver import solver, run_solvers, run_solvers_IU
 import FCN32
+import FCN16
+import FCN8
 import numpy as np
 import time
 from optparse import OptionParser
@@ -30,7 +20,6 @@ import pdb
 def CheckOrCreate(path):
     if not os.path.isdir(path):
         os.makedirs(path)
-
 
 if __name__ == "__main__":
 
@@ -43,7 +32,7 @@ if __name__ == "__main__":
                       help="Working directory")
 
     parser.add_option("--cn", dest="cn",
-                      help="Classifier name, like FCN32")
+                      help="Name of procedure")
 
     parser.add_option("--weight", dest="weight",
                       help="Where to find the weight file")
@@ -84,7 +73,7 @@ if __name__ == "__main__":
         options.niter = "200"
 
     if options.cn is None:
-        options.cn = 'NewClass'
+        options.cn = 'fcn32'
 
     if options.gpu is None:
         options.gpu = "0"
@@ -144,28 +133,47 @@ if __name__ == "__main__":
                         count=False)
 
     if create_net:
-        data_path = options.wd  # os.path.join(options.wd, "train")
-        CheckOrCreate(os.path.join(options.wd, options.cn))
-        FCN32.make_net(os.path.join(options.wd, options.cn),
+        data_path = options.wd  # os.path.join(options.wd, "test")
+        CheckOrCreate(os.path.join(options.wd, options.cn, "FCN32"))
+        FCN32.make_net(os.path.join(options.wd, options.cn, "FCN32"),
                        data_path,
                        classifier_name=options.cn,
                        classifier_name1="score_fr1",
                        classifier_name2="upscore1")
+        CheckOrCreate(os.path.join(options.wd, options.cn, "FCN16"))
+        FCN16.make_net(os.path.join(options.wd, options.cn, "FCN16"),
+                       data_path,
+                       classifier_name=options.cn,
+                       classifier_name1="score_fr1")
+        CheckOrCreate(os.path.join(options.wd, options.cn, "FCN8"))
+        FCN8.make_net(os.path.join(options.wd, options.cn, "FCN8"),
+                      data_path,
+                      classifier_name=options.cn,
+                      classifier_name1="score_fr1",
+                      classifier_name2="upscore2",
+                      classifier_name3="score_pool4")
 
     solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
-    outsnap = os.path.join(options.wd, options.cn, "snapshot", "snapshot")
+    outsnap = os.path.join(options.wd, options.cn, "snapshot")
 
     CheckOrCreate(os.path.join(options.wd, options.cn))
     CheckOrCreate(outsnap)
 
     if create_solver:
-        name_solver = solver(solver_path,
-                             os.path.join(options.wd, options.cn,
-                                          "train.prototxt"),
-                             test_net_path=os.path.join(
-                                 options.wd, options.cn, "test.prototxt"),
-                             base_lr=solverrate,
-                             out_snap=outsnap)
+        for pref in ["FCN32", "FCN16", "FCN8"]:
+            solver_path = os.path.join(
+                options.wd, options.cn, pref, "solver.prototxt")
+            outsnap = os.path.join(
+                options.wd, options.cn, pref, "snapshot", "snapshot")
+            CheckOrCreate(os.path.join(options.wd, options.cn, pref))
+            CheckOrCreate(outsnap)
+            name_solver = solver(solver_path,
+                                 os.path.join(options.wd, options.cn, pref,
+                                              "train.prototxt"),
+                                 test_net_path=os.path.join(
+                                     options.wd, options.cn, pref, "test.prototxt"),
+                                 base_lr=solverrate,
+                                 out_snap=outsnap)
         # name_solver is solver_path.....
     weights = options.weight
     assert os.path.exists(weights)
@@ -175,37 +183,42 @@ if __name__ == "__main__":
 
     niter = options.niter
 
+    def res_fold(stride):
+        return os.path.join(options.wd, options.cn, stride, "temp_files")
     # pdb.set_trace()
-    my_solver = caffe.get_solver(solver_path)
-    # pdb.set_trace()
-    my_solver.net.copy_from(weights)
+    w_d = {"FCN32": weights,
+           "FCN16": os.path.join(res_fold("FCN32"), "weights.FCN32.caffemodel"),
+           "FCN8":  os.path.join(res_fold("FCN16"), "weights.FCN16.caffemodel")}
+    r_f = {"FCN32": res_fold("FCN32"),
+           "FCN16": res_fold("FCN16"),
+           "FCN8":  res_fold("FCN8")}
+
+    def solv_path(stride):
+        return os.path.join(options.wd, options.cn, stride, "solver.prototxt")
+    s_d = {"FCN32": solv_path("FCN32"), "FCN16": solv_path(
+        "FCN16"), "FCN8": solv_path("FCN8")}
 
     start_time = time.time()
     print 'Running solvers for %d iterations...' % niter
 
-    solvers = [(options.cn, my_solver)]
+    range_iter = range(int(options.disp_interval), niter + int(options.disp_interval),
+                       int(options.disp_interval))
 
-    res_fold = os.path.join(options.wd, options.cn, "temp_files")
-    val = os.path.join(options.wd, "files", "test.txt")
-    loss, acc, acc1, iu, fwavacc, recall, precision, weights = run_solvers_IU(
-        niter, solvers, res_fold, int(options.disp_interval), val, options.scorelayer)
-    np.save(os.path.join(res_fold, "loss"), loss[options.cn])
+    for pref in ["FCN32", "FCN16", "FCN8"]:
+        my_solver = caffe.get_solver(s_d[pref])
+        # pdb.set_trace()
+        my_solver.net.copy_from(w_d[pref])
 
-    np.save(os.path.join(res_fold, "acc"), acc[options.cn])
-    np.save(os.path.join(res_fold, "acc1"), acc1[options.cn])
-    np.save(os.path.join(res_fold, "iu"), iu[options.cn])
-    np.save(os.path.join(res_fold, "fwavacc"), fwavacc[options.cn])
-    np.save(os.path.join(res_fold, "precision"), precision[options.cn])
-    np.save(os.path.join(res_fold, "recall"), recall[options.cn])
-    print 'Done.'
-
-    diff_time = time.time() - start_time
-
-    print ' \n '
-    print 'Time for slide:'
-    print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
-
-    print ' \n '
-    print "Average time per image: (have to put number of images.. "
-    diff_time = diff_time / 10
-    print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
+        solvers = [(pref, my_solver)]
+        val = os.path.join(options.wd, "files", "test.txt")
+        loss, acc, acc1, iu, fwavacc, recall, precision, weights = run_solvers_IU(
+            niter, solvers, r_f[pref], int(options.disp_interval), val, options.scorelayer)
+        plt.plot(range_iter, loss[pref])
+        plt.savefig(os.path.join(r_f[pref], "loss"))
+        plt.plot(range_iter, acc[pref], "-r")
+        plt.plot(range_iter, acc1[pref], "-y")
+        plt.plot(range_iter, iu[pref], "-g")
+        plt.plot(range_iter, fwavacc[pref], "-b")
+        plt.plot(range_iter, recall[pref], "-c")
+        plt.plot(range_iter, precision[pref], "-m")
+        plt.savefig(os.path.join(r_f[pref], "alltogethernow"))

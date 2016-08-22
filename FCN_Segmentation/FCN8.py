@@ -19,7 +19,7 @@ def max_pool(bottom, ks=2, stride=2):
     return L.Pooling(bottom, pool=P.Pooling.MAX, kernel_size=ks, stride=stride)
 
 
-def fcn(split, data_train, data_test, classifier_name="FCN8",
+def fcn(split, data_path, classifier_name="FCN8",
         classifier_name1="score_fr", classifier_name2="upscore2",
         classifier_name3="score_pool4"):
     n = caffe.NetSpec()
@@ -27,10 +27,10 @@ def fcn(split, data_train, data_test, classifier_name="FCN8",
                          seed=1337, classifier_name=classifier_name)
 
     if split == 'train':
-        pydata_params['dir'] = data_train
+        pydata_params['dir'] = data_path
         pylayer = 'FCNdatalayer'
     elif split == "test":
-        pydata_params['dir'] = data_test
+        pydata_params['dir'] = data_path
         pylayer = 'FCNdatalayer'
 
     if split != "val":
@@ -111,7 +111,7 @@ def fcn(split, data_train, data_test, classifier_name="FCN8",
     if split != "val":
         n.loss = L.SoftmaxWithLoss(n.score, n.label,
                                    loss_param=dict(normalize=False))  # , ignore_label=255))
-        n.acc = L.Accuracy(n.score, n.label)
+        #n.acc = L.Accuracy(n.score, n.label)
     return n.to_proto()
 
 

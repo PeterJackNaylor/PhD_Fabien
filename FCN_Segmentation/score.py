@@ -88,6 +88,14 @@ def seg_tests(solver, save_format, dataset, layer='score', gt='label'):
     solver.test_nets[0].share_with(solver.net)
     hist, loss, acc, acc1, iu, fwavacc, recall, precision = do_seg_tests(solver.test_nets[0], solver.iter,
                                                                          save_format, dataset, layer, gt)
+#    if validation_set is not None:
+#        DataManagerForVal = SetupDataManager(options.path)
+#        data_batch_size = 1
+#        net = Net(model, options.weight, data_batch_size)
+#        transformer = Transformer(net)
+#        hist = compute_hist_VAL(net, DataManagerForVal,
+#                                layer=options.scorelayer)
+#        acc_, acc1_, iu_, fwavacc_, recall_, precision_ = Metrics(hist)
     return loss, acc, acc1, iu, fwavacc, recall, precision
 
 
