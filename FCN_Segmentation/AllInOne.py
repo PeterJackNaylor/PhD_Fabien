@@ -213,6 +213,7 @@ if __name__ == "__main__":
         val = os.path.join(options.wd, "files", "test.txt")
         loss, acc, acc1, iu, fwavacc, recall, precision, weights = run_solvers_IU(
             niter, solvers, r_f[pref], int(options.disp_interval), val, options.scorelayer)
+        plt.close()
         plt.plot(range_iter, loss[pref])
         plt.savefig(os.path.join(r_f[pref], "loss"))
         plt.plot(range_iter, acc[pref], "-r")
