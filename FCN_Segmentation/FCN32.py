@@ -85,7 +85,7 @@ def fcn(split, data_path, classifier_name="FCN32",
     n.score = crop(upscore, n.data)
 
     if split != "val":
-        n.loss = L.SoftmaxWithLoss(n.score2, n.label,
+        n.loss = L.SoftmaxWithLoss(n.score, n.label,
                                    loss_param=dict(normalize=False))  # , ignore_label=255))
         #n.acc = L.Accuracy(n.score2, n.label)
     return n.to_proto()
