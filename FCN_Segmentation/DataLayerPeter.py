@@ -35,6 +35,7 @@ class DataLayerPeter(caffe.Layer):
         self.classifier_name = params['classifier_name']
         self.mean = np.array(params['mean'])
 
+        self.normalize = params.get('normalize', True)
         self.random = params.get('randomize', True)
         self.seed = params.get('seed', None)
 
@@ -60,7 +61,7 @@ class DataLayerPeter(caffe.Layer):
 
     def reshape(self, bottom, top):
         # load image + label image pair
-        self.data, self.label = self.datagen[self.key]
+        self.data, self.label = self.loadImageAndGT(self.key)
         # reshape tops to fit (leading 1 is for batch dimension)
         top[0].reshape(1, *self.data.shape)
         top[1].reshape(1, *self.label.shape)
@@ -78,6 +79,18 @@ class DataLayerPeter(caffe.Layer):
 
     def backward(self, top, propagate_down, bottom):
         pass
+
+    def loadImageAndGT(self, key):
+        im, label = self.datagen[key]
+        in_ = np.array(im, dtype=np.float32)
+        in_ = in_[:, :, ::-1]
+        in_ -= self.mean
+        in_ = in_.transpose((2, 0, 1))
+
+        if self.normalize:
+            label[label > 0] = 1
+        return in_, label
+
 
 import glob
 import numpy as np
@@ -153,7 +166,7 @@ class DataGen(object):
                     i += 1
         if len_key > 2:
             f = self.transforms[key[2]]
-            pdb.set_trace()
+
             img = f._apply_(img)
             lbl = f._apply_(lbl)
 
@@ -200,7 +213,6 @@ class DataGen(object):
         new_img = np.zeros(shape=(img.shape[1], img.shape[0], 1))
         new_img[:, :, 0] = img[:, :, 0].transpose()
         new_img = new_img.astype("uint8")
-        new_img[new_img > 0] = 1
         return new_img
 
     def LoadImage(self, path):
