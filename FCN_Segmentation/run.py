@@ -18,6 +18,7 @@ import ImageTransf as Transf
 import caffe
 import os
 
+from DataLayerPeter import DataGen
 from solver import solver, run_solvers, run_solvers_IU
 import FCN32
 import numpy as np
@@ -114,7 +115,7 @@ if __name__ == "__main__":
 
     options.niter = int(options.niter)
 
-    create_dataset = False
+    create_dataset = True
     create_solver = True
     create_net = True
 
@@ -136,15 +137,25 @@ if __name__ == "__main__":
         transform_list.append(Transf.OutOfFocus(sig))
     for i in range(20):
         transform_list.append(Transf.ElasticDeformation(0, 30, num_points=4))
-
     if create_dataset:
-        MakeDataLikeFCN(options.rawdata, options.wd, transform_list,
-                        int(options.val_num),
-                        crop=crop, normalize_to_bin=True,
-                        count=False)
+        path_modelgen = os.path.join(options.wd, options.cn, "model")
+        CheckOrCreate(path_modelgen)
+        data_generator_train = DataGen(options.rawdata, crop=crop,
+                                       transforms=transform_list, split="train", leave_out=int(options.val_num), seed=42)
+        pkl.save(
+            open(os.path.join(path_modelgen, "data_generator.pkl"), "rb"), data_generator_train)
+        data_generator_test = DataGen(options.rawdata, crop=crop,
+                                      transforms=transform_list, split="test", leave_out=int(options.val_num), seed=42)
+        pkl.save(
+            open(os.path.join(path_modelgen, "data_generator.pkl"), "rb"), data_generator_test)
+        # MakeDataLikeFCN(options.rawdata, options.wd, transform_list,
+        #                int(options.val_num),
+        #                crop=crop, normalize_to_bin=True,
+        #                count=False)
 
     if create_net:
-        data_path = options.wd  # os.path.join(options.wd, "train")
+        # os.path.join(options.wd, "train")
+        datagen_path = os.path.join(path_modelgen, "data_generator.pkl")
         CheckOrCreate(os.path.join(options.wd, options.cn))
         FCN32.make_net(os.path.join(options.wd, options.cn),
                        data_path,

@@ -192,6 +192,12 @@ def is_square(apositiveint):
     return True
 
 
+class DataManagerLayer(DataManager):
+
+    def __init__(path, crop=None, name="optionnal"):
+        DataManager.__init__(self, path, crop, name)
+
+
 if __name__ == "__main__":
     import ImageTransf as Transf
     import matplotlib.pylab as plt
