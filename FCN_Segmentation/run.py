@@ -143,11 +143,11 @@ if __name__ == "__main__":
         data_generator_train = DataGen(options.rawdata, crop=crop,
                                        transforms=transform_list, split="train", leave_out=int(options.val_num), seed=42)
         pkl.dump(
-            data_generator_train, open(os.path.join(path_modelgen, "data_generator_train.pkl"), "rb"))
+            data_generator_train, open(os.path.join(path_modelgen, "data_generator_train.pkl"), "wb"))
         data_generator_test = DataGen(options.rawdata, crop=crop,
                                       transforms=transform_list, split="test", leave_out=int(options.val_num), seed=42)
         pkl.dump(
-            data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "rb"))
+            data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "wb"))
         # MakeDataLikeFCN(options.rawdata, options.wd, transform_list,
         #                int(options.val_num),
         #                crop=crop, normalize_to_bin=True,
