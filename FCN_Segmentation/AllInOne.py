@@ -2,7 +2,9 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pylab as plt
 
-from DataToLMDB import MakeDataLikeFCN
+import cPickle as pkl
+from DataLayerPeter import DataGen
+
 import ImageTransf as Transf
 import caffe
 import os
@@ -103,51 +105,58 @@ if __name__ == "__main__":
 
     options.niter = int(options.niter)
 
-    create_dataset = False
+    create_dataset = True
     create_solver = True
     create_net = True
 
     enlarge = False  # create symetry if the image becomes black ?
 
     transform_list = [Transf.Identity(),
-                      Transf.Rotation(45, enlarge=enlarge),
-                      Transf.Rotation(90, enlarge=enlarge),
-                      Transf.Rotation(135, enlarge=enlarge),
                       Transf.Flip(0),
                       Transf.Flip(1),
                       Transf.OutOfFocus(5),
                       Transf.OutOfFocus(10),
                       Transf.ElasticDeformation(0, 30, num_points=4),
                       Transf.ElasticDeformation(0, 30, num_points=4)]
-    for rot in [15, 30, 60, 75, 105, 120, 150, 165]:
-        transform_list.append(Transf.Rotation(45, enlarge=enlarge))
-    for sig in [1, 2, 3, 4, 6, 7, 8, 9]:
+
+    for rot in range(1, 360):
+        transform_list.append(Transf.Rotation(rot, enlarge=enlarge))
+    for sig in [1, 2, 3, 4]:
         transform_list.append(Transf.OutOfFocus(sig))
     for i in range(20):
         transform_list.append(Transf.ElasticDeformation(0, 30, num_points=4))
 
     if create_dataset:
-        MakeDataLikeFCN(options.rawdata, options.wd, transform_list,
-                        int(options.val_num),
-                        crop=crop, normalize_to_bin=True,
-                        count=False)
+        path_modelgen = os.path.join(options.wd, options.cn, "model")
+        CheckOrCreate(path_modelgen)
+        data_generator_train = DataGen(options.rawdata, crop=crop,
+                                       transforms=transform_list, split="train", leave_out=int(options.val_num), seed=42)
+        pkl.dump(
+            data_generator_train, open(os.path.join(path_modelgen, "data_generator_train.pkl"), "wb"))
+        data_generator_test = DataGen(options.rawdata, crop=crop,
+                                      transforms=transform_list, split="test", leave_out=int(options.val_num), seed=42)
+        pkl.dump(
+            data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "wb"))
 
     if create_net:
         data_path = options.wd  # os.path.join(options.wd, "test")
         CheckOrCreate(os.path.join(options.wd, options.cn, "FCN32"))
         FCN32.make_net(os.path.join(options.wd, options.cn, "FCN32"),
-                       data_path,
+                       datagen_path,
+                       os.path.join(path_modelgen, "data_generator_test.pkl"),
                        classifier_name=options.cn,
                        classifier_name1="score_fr1",
                        classifier_name2="upscore1")
         CheckOrCreate(os.path.join(options.wd, options.cn, "FCN16"))
         FCN16.make_net(os.path.join(options.wd, options.cn, "FCN16"),
-                       data_path,
+                       datagen_path,
+                       os.path.join(path_modelgen, "data_generator_test.pkl"),
                        classifier_name=options.cn,
                        classifier_name1="score_fr1")
         CheckOrCreate(os.path.join(options.wd, options.cn, "FCN8"))
         FCN8.make_net(os.path.join(options.wd, options.cn, "FCN8"),
-                      data_path,
+                      datagen_path,
+                      os.path.join(path_modelgen, "data_generator_test.pkl"),
                       classifier_name=options.cn,
                       classifier_name1="score_fr1",
                       classifier_name2="upscore2",

@@ -122,9 +122,6 @@ if __name__ == "__main__":
     enlarge = False  # create symetry if the image becomes black ?
 
     transform_list = [Transf.Identity(),
-                      Transf.Rotation(45, enlarge=enlarge),
-                      Transf.Rotation(90, enlarge=enlarge),
-                      Transf.Rotation(135, enlarge=enlarge),
                       Transf.Flip(0),
                       Transf.Flip(1),
                       Transf.OutOfFocus(5),
@@ -132,7 +129,7 @@ if __name__ == "__main__":
                       Transf.ElasticDeformation(0, 30, num_points=4),
                       Transf.ElasticDeformation(0, 30, num_points=4)]
     for rot in [15, 30, 60, 75, 105, 120, 150, 165]:
-        transform_list.append(Transf.Rotation(45, enlarge=enlarge))
+        transform_list.append(Transf.Rotation(rot, enlarge=enlarge))
     for sig in [1, 2, 3, 4, 6, 7, 8, 9]:
         transform_list.append(Transf.OutOfFocus(sig))
     for i in range(20):
@@ -148,10 +145,6 @@ if __name__ == "__main__":
                                       transforms=transform_list, split="test", leave_out=int(options.val_num), seed=42)
         pkl.dump(
             data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "wb"))
-        # MakeDataLikeFCN(options.rawdata, options.wd, transform_list,
-        #                int(options.val_num),
-        #                crop=crop, normalize_to_bin=True,
-        #                count=False)
 
     if create_net:
         # os.path.join(options.wd, "train")
