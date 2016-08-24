@@ -17,7 +17,7 @@ from DataToLMDB import MakeDataLikeFCN
 import ImageTransf as Transf
 import caffe
 import os
-
+import cPickle as pkl
 from DataLayerPeter import DataGen
 from solver import solver, run_solvers, run_solvers_IU
 import FCN32
