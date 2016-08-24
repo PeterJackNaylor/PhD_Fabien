@@ -193,12 +193,14 @@ class DataGen(object):
     def SetTransformation(self, list_object):
         self.transforms = list_object
 
-    def LoadGT(self, path):
+    def LoadGT(self, path, normalize=True):
         image = ni.load(path)
         img = image.get_data()
         new_img = np.zeros(shape=(img.shape[1], img.shape[0], 1))
         new_img[:, :, 0] = img[:, :, 0].transpose()
         new_img = new_img.astype("uint8")
+        new_img = new_img > 0
+        new_img = new_img + 0
         return new_img
 
     def LoadImage(self, path):
