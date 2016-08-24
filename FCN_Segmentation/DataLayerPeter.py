@@ -153,6 +153,7 @@ class DataGen(object):
                     i += 1
         if len_key > 2:
             f = self.transforms[key[2]]
+            pdb.set_trace()
             img = f._apply_(img)
             lbl = f._apply_(lbl)
 
