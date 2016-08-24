@@ -199,8 +199,7 @@ class DataGen(object):
         new_img = np.zeros(shape=(img.shape[1], img.shape[0], 1))
         new_img[:, :, 0] = img[:, :, 0].transpose()
         new_img = new_img.astype("uint8")
-        new_img = new_img > 0
-        new_img = new_img + 0
+        new_img[new_img > 0] = 1
         return new_img
 
     def LoadImage(self, path):
