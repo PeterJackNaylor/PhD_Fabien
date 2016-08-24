@@ -139,7 +139,7 @@ if __name__ == "__main__":
             data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "wb"))
 
     if create_net:
-        data_path = options.wd  # os.path.join(options.wd, "test")
+        datagen_path = os.path.join(path_modelgen, "data_generator_train.pkl")
         CheckOrCreate(os.path.join(options.wd, options.cn, "FCN32"))
         FCN32.make_net(os.path.join(options.wd, options.cn, "FCN32"),
                        datagen_path,
