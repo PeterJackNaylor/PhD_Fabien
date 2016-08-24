@@ -168,7 +168,7 @@ if __name__ == "__main__":
                              os.path.join(options.wd, options.cn,
                                           "train.prototxt"),
                              test_net_path=os.path.join(
-                                 options.wd, options.cn, "test.prototxt"),
+                                 options.wd, options.cn, "train.prototxt"),
                              base_lr=solverrate,
                              out_snap=outsnap)
         # name_solver is solver_path.....
