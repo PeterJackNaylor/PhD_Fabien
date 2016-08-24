@@ -34,7 +34,6 @@ class DataLayerPeter(caffe.Layer):
         self.split = params['split']
         self.classifier_name = params['classifier_name']
         self.mean = np.array(params['mean'])
-        self.crop = np.array(params['crop'])
 
         self.random = params.get('randomize', True)
         self.seed = params.get('seed', None)
