@@ -142,12 +142,12 @@ if __name__ == "__main__":
         CheckOrCreate(path_modelgen)
         data_generator_train = DataGen(options.rawdata, crop=crop,
                                        transforms=transform_list, split="train", leave_out=int(options.val_num), seed=42)
-        pkl.save(
-            open(os.path.join(path_modelgen, "data_generator.pkl"), "rb"), data_generator_train)
+        pkl.dump(
+            data_generator_train, open(os.path.join(path_modelgen, "data_generator_train.pkl"), "rb"))
         data_generator_test = DataGen(options.rawdata, crop=crop,
                                       transforms=transform_list, split="test", leave_out=int(options.val_num), seed=42)
-        pkl.save(
-            open(os.path.join(path_modelgen, "data_generator.pkl"), "rb"), data_generator_test)
+        pkl.dump(
+            data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "rb"))
         # MakeDataLikeFCN(options.rawdata, options.wd, transform_list,
         #                int(options.val_num),
         #                crop=crop, normalize_to_bin=True,
@@ -155,7 +155,7 @@ if __name__ == "__main__":
 
     if create_net:
         # os.path.join(options.wd, "train")
-        datagen_path = os.path.join(path_modelgen, "data_generator.pkl")
+        datagen_path = os.path.join(path_modelgen, "data_generator_train.pkl")
         CheckOrCreate(os.path.join(options.wd, options.cn))
         FCN32.make_net(os.path.join(options.wd, options.cn),
                        data_path,
