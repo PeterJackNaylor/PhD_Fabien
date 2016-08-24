@@ -15,7 +15,6 @@ class DataLayerPeter(caffe.Layer):
         """
         Setup data layer according to parameters:
 
-        - dir: path to image folder dir
         - split: train / val / test
         - mean: tuple of mean values to subtract
         - randomize: load in random order (default: True)
@@ -32,7 +31,6 @@ class DataLayerPeter(caffe.Layer):
 
         # config
         params = eval(self.param_str)
-        self.dir = params['dir']
         self.split = params['split']
         self.classifier_name = params['classifier_name']
         self.mean = np.array(params['mean'])
