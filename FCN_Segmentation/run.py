@@ -158,7 +158,7 @@ if __name__ == "__main__":
         datagen_path = os.path.join(path_modelgen, "data_generator_train.pkl")
         CheckOrCreate(os.path.join(options.wd, options.cn))
         FCN32.make_net(os.path.join(options.wd, options.cn),
-                       datagen_path_train,
+                       data_generator_train,
                        data_generator_test,
                        classifier_name=options.cn,
                        classifier_name1="score_fr1",
