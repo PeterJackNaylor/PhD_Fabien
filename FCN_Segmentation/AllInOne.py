@@ -212,7 +212,7 @@ if __name__ == "__main__":
 
     range_iter = range(int(options.disp_interval), niter + int(options.disp_interval),
                        int(options.disp_interval))
-
+    pdb.set_trace()
     for pref in ["FCN32", "FCN16", "FCN8"]:
         my_solver = caffe.get_solver(s_d[pref])
         # pdb.set_trace()
