@@ -140,7 +140,7 @@ class DataGen(object):
         lbl_path = img_path.replace("Slide", "GT").replace(".png", ".nii.gz")
 
         img = self.LoadImage(img_path)
-        lbl = self.LoadGT(lbl_path)[:, :, 0]
+        lbl = self.LoadGT(lbl_path)
 
         i = 0
         if len_key == 4:
@@ -157,7 +157,7 @@ class DataGen(object):
             img = f._apply_(img)
             lbl = f._apply_(lbl)
 
-        return img, lbl
+        return img, lbl[:, :, 0]
 
     def get_patients(self, path, seed):
         # pdb.set_trace()
