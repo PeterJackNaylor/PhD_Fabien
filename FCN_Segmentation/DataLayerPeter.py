@@ -157,7 +157,7 @@ class DataGen(object):
             img = f._apply_(img)
             lbl = f._apply_(lbl)
 
-        return img, lbl[:, :, 0]
+        return img, lbl
 
     def get_patients(self, path, seed):
         # pdb.set_trace()
