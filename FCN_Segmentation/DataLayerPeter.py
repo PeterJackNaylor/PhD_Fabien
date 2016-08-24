@@ -140,7 +140,7 @@ class DataGen(object):
         lbl_path = img_path.replace("Slide", "GT").replace(".png", ".nii.gz")
 
         img = self.LoadImage(img_path)
-        lbl = self.LoadGT(lbl_path)
+        lbl = self.LoadGT(lbl_path)[:, :, 0]
 
         i = 0
         if len_key == 4:
