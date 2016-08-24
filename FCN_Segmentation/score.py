@@ -14,8 +14,6 @@ def fast_hist(a, b, n):
 
 def compute_hist(net, number_of_test, layer='score', gt='label'):
     n_cl = net.blobs[layer].channels
-    if save_dir:
-        os.mkdir(save_dir)
     hist = np.zeros((n_cl, n_cl))
     loss = 0
     for idx in range(number_of_test):
