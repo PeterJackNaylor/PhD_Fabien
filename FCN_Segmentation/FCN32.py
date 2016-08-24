@@ -19,17 +19,24 @@ def max_pool(bottom, ks=2, stride=2):
     return L.Pooling(bottom, pool=P.Pooling.MAX, kernel_size=ks, stride=stride)
 
 
-def fcn(split, data_path, classifier_name="FCN32",
+def fcn(split, data_gene_train, data_gene_test, classifier_name="FCN32",
         classifier_name1="score_fr", classifier_name2="upscore"):
     n = caffe.NetSpec()
-    pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
-                         seed=1337, classifier_name=classifier_name)
-#    pydata_params['dir'] = data_path
-    pylayer = 'DataLayerPeter'
-    pydata_params["datagen"] = data_path
+
     if split != "val":
+        pydata_params = dict(split="train", mean=(104.00699, 116.66877, 122.67892),
+                             seed=1337, classifier_name=classifier_name)
+#    pydata_params['dir'] = data_path
+        pylayer = 'DataLayerPeter'
+        pydata_params["datagen"] = data_gene_train
         n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
-                                   ntop=2, param_str=str(pydata_params))
+                                   ntop=2, param_str=str(pydata_params),
+                                   include={'phase': caffe.TRAIN})
+        pydata_params["datagen"] = data_gene_test
+        pydata_params["split"] = "test"
+        n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
+                                   ntop=2, param_str=str(pydata_params),
+                                   include={'phase': caffe.TEST})
     else:
         n.data = L.Data(input_param=dict(shape=dict(dim=[1, 3, 512, 512])))
         # the base net
@@ -86,16 +93,12 @@ def fcn(split, data_path, classifier_name="FCN32",
     return n.to_proto()
 
 
-def make_net(wd, data_path, classifier_name="FCN32",
+def make_net(wd, data_gene_train, data_gene_test, classifier_name="FCN32",
              classifier_name1="score_fr", classifier_name2="upscore"):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(fcn('train', data_path, classifier_name,
-                        classifier_name1, classifier_name2)))
-
-    with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(fcn('test', data_path, classifier_name,
+        f.write(str(fcn('train', data_gene_train, data_gene_test, classifier_name,
                         classifier_name1, classifier_name2)))
 
     with open(os.path.join(wd, 'deploy.prototxt'), 'w') as f:
-        f.write(str(fcn('val', data_path, classifier_name,
+        f.write(str(fcn('val', data_gene_train, data_gene_test, classifier_name,
                         classifier_name1, classifier_name2)))

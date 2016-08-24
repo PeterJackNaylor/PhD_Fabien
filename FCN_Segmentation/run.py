@@ -197,9 +197,10 @@ if __name__ == "__main__":
     solvers = [(options.cn, my_solver)]
 
     res_fold = os.path.join(options.wd, options.cn, "temp_files")
-    val = os.path.join(options.wd, "files", "test.txt")
+
     loss, acc, acc1, iu, fwavacc, recall, precision, weights = run_solvers_IU(
         niter, solvers, res_fold, int(options.disp_interval), val, options.scorelayer)
+
     np.save(os.path.join(res_fold, "loss"), loss[options.cn])
 
     np.save(os.path.join(res_fold, "acc"), acc[options.cn])
