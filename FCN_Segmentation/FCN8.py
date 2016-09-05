@@ -123,7 +123,7 @@ def make_net(wd, data_gene_train, data_gene_test, classifier_name="FCN8",
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
         f.write(str(fcn('train', data_gene_train, classifier_name,
                         classifier_name1, classifier_name2, classifier_name3)))
-    with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
+    with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
         f.write(str(fcn('test', data_gene_test, classifier_name,
                         classifier_name1, classifier_name2, classifier_name3)))
     with open(os.path.join(wd, 'deploy.prototxt'), 'w') as f:
