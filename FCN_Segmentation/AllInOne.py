@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
     create_dataset = True
     create_solver = True
-    create_net = True
+    create_net = False
 
     enlarge = False  # create symetry if the image becomes black ?
 
