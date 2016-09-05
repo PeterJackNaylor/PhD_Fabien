@@ -19,8 +19,8 @@ def compute_hist(net, number_of_test, layer='score', gt='label'):
     loss = 0
     for idx in range(number_of_test):
         net.forward()
-        pdb.set_trace()
-        hist += fast_hist(net.blobs[gt].data[0, 0].flatten(),
+        # pdb.set_trace()
+        hist += fast_hist(net.blobs[gt].data[0].flatten(),  # this was changed from .data[0,0].flatten()
                           net.blobs[layer].data[0].argmax(0).flatten(),
                           n_cl)
 
