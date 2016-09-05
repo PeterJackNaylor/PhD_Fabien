@@ -9,6 +9,7 @@ from PIL import Image
 
 def fast_hist(a, b, n):
     k = (a >= 0) & (a < n)
+    pdb.set_trace()
     return np.bincount(n * a[k].astype(int) + b[k], minlength=n**2).reshape(n, n)
 
 

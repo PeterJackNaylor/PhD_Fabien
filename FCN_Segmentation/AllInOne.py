@@ -140,23 +140,25 @@ if __name__ == "__main__":
 
     if create_net:
         datagen_path = os.path.join(path_modelgen, "data_generator_train.pkl")
+        datagen_path_test = os.path.join(
+            path_modelgen, "data_generator_test.pkl")
         CheckOrCreate(os.path.join(options.wd, options.cn, "FCN32"))
         FCN32.make_net(os.path.join(options.wd, options.cn, "FCN32"),
                        datagen_path,
-                       os.path.join(path_modelgen, "data_generator_test.pkl"),
+                       datagen_path_test,
                        classifier_name=options.cn,
                        classifier_name1="score_fr1",
                        classifier_name2="upscore1")
         CheckOrCreate(os.path.join(options.wd, options.cn, "FCN16"))
         FCN16.make_net(os.path.join(options.wd, options.cn, "FCN16"),
                        datagen_path,
-                       os.path.join(path_modelgen, "data_generator_test.pkl"),
+                       datagen_path_test,
                        classifier_name=options.cn,
                        classifier_name1="score_fr1")
         CheckOrCreate(os.path.join(options.wd, options.cn, "FCN8"))
         FCN8.make_net(os.path.join(options.wd, options.cn, "FCN8"),
                       datagen_path,
-                      os.path.join(path_modelgen, "data_generator_test.pkl"),
+                      datagen_path_test,
                       classifier_name=options.cn,
                       classifier_name1="score_fr1",
                       classifier_name2="upscore2",
@@ -179,8 +181,8 @@ if __name__ == "__main__":
             name_solver = solver(solver_path,
                                  os.path.join(options.wd, options.cn, pref,
                                               "train.prototxt"),
-                                 test_net_path=os.path.join(
-                                     options.wd, options.cn, pref, "train.prototxt"),
+                                 # os.path.join(options.wd, options.cn, pref, "train.prototxt"),
+                                 test_net_path=None,
                                  base_lr=solverrate,
                                  out_snap=outsnap)
         # name_solver is solver_path.....
