@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
     create_dataset = True
     create_solver = True
-    create_net = True
+    create_net = True  # False
 
     enlarge = False  # create symetry if the image becomes black ?
 
@@ -221,7 +221,7 @@ if __name__ == "__main__":
         my_solver.net.copy_from(w_d[pref])
 
         solvers = [(pref, my_solver)]
-        number_of_test = data_generator_train.length
+        number_of_test = data_generator_test.length
         loss, acc, acc1, iu, fwavacc, recall, precision, weights = run_solvers_IU(
             niter, solvers, r_f[pref], int(options.disp_interval), number_of_test, options.scorelayer)
         plt.plot(range_iter, loss[pref])
