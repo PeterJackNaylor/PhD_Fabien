@@ -54,7 +54,7 @@ def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_s
 
     # Snapshots are files used to store networks we've trained.  Here, we'll
     # snapshot every 10K iterations -- ten times during training.
-    s.snapshot = 10000
+    s.snapshot = 100000
     if not os.path.isdir(out_snap):
         os.mkdir(out_snap)
     s.snapshot_prefix = out_snap
@@ -68,21 +68,22 @@ def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_s
         return f.name
 
 
-def run_solvers_IU(niter, solvers, res_fold, disp_interval, val, layer):
-    val = np.loadtxt(val, dtype=str)
-    blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc')
+def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test, layer):
+    blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc', 'recall', 'precision')
     number_of_loops = niter / disp_interval
 
-    loss, acc, acc1, iu, fwavacc = ({name: np.zeros(number_of_loops) for name, _ in solvers}
-                                    for _ in blobs)
+    loss, acc, acc1, iu, fwavacc, recall, precision = ({name: np.zeros(number_of_loops) for name, _ in solvers}
+                                                       for _ in blobs)
     for it in range(number_of_loops):
         for name, s in solvers:
             # pdb.set_trace()
             s.step(disp_interval)  # run a single SGD step in Caffe
             # DEFINE VAL is validation test set, it computes it independently
             # ...
+	    print name
             loss[name][it], acc[name][it], acc1[name][it], iu[name][it], fwavacc[
-                name][it] = score.seg_tests(s, False, val, layer=layer)
+                name][it], recall[name][it], precision[
+                name][it] = score.seg_tests(s, number_of_test, layer=layer)
     # Save the learned weights from all nets.
     if not os.path.isdir(res_fold):
         os.mkdir(res_fold)
@@ -92,7 +93,7 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, val, layer):
         filename = 'weights.%s.caffemodel' % name
         weights[name] = os.path.join(weight_dir, filename)
         s.net.save(weights[name])
-    return loss, acc, acc1, iu, fwavacc, weights
+    return loss, acc, acc1, iu, fwavacc, recall, precision, weights
 
 
 def run_solvers(niter, solvers, res_fold, disp_interval=10):

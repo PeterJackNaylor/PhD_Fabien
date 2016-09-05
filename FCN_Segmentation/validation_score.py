@@ -6,9 +6,10 @@ from Datamanager import DataManager
 from optparse import OptionParser
 import time
 from score import fast_hist
+import pdb
 
 
-def Pred(net, img, transformer):
+def Pred(net, img, transformer, layer="score"):
         # image =
         # caffe.io.load_image('../data/pascal-voc2010/JPEGImages/2007_000241.jpg')
     transformed_image = transformer.preprocess('data', img)
@@ -16,7 +17,7 @@ def Pred(net, img, transformer):
     net.blobs['data'].data[...] = transformed_image
     output = net.forward()
 
-    score = output['score'][0]
+    score = output[layer][0]
     classed = np.argmax(score, axis=0)
 
     all_labels = ["0: Background"] + ["1: Cell"]
@@ -47,14 +48,17 @@ def compute_hist_VAL(net, dataM, layer="score"):
     hist = np.zeros((n_cl, n_cl))
 
     for img, img_gt, name in dataM.TrainingIteratorLeaveValOut():
-        img_pred = Pred(net, img, transformer)
+        img_pred = Pred(net, img, transformer, layer)
         hist += ComputeHist(img_pred, img_gt, hist, n_cl)
 
     return hist
 
 
-def SetupDataManager(path):
-    datatest = DataManager(path)
+def SetupDataManager(path, crop="1"):
+    if crop == "1":
+        datatest = DataManager(path)
+    else:
+        datatest = DataManager(path, int(crop))
     datatest.prepare_sets(leave_out=0)
     datatest.SetTransformation(None)
     return datatest
@@ -73,7 +77,12 @@ def Metrics(hist):
     fwavacc = (freq[freq > 0] * iu[freq > 0]).sum()
     print '>>>', 'fwavacc', fwavacc
 
-    return acc, np.nanmean(acc1), np.nanmean(iu), fwavacc
+    recall = (hist[1, 1] + 0.0) / (hist[1, 0] + hist[1, 1])
+    precision = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1])
+    print '>>>', 'recall', recall
+    print '>>>', 'precision', precision
+    # i have to add precision and recall everywhere....
+    return acc, np.nanmean(acc1), np.nanmean(iu), fwavacc, recall, precision
 
 
 if __name__ == "__main__":
@@ -82,10 +91,8 @@ if __name__ == "__main__":
 
     parser.add_option("-p", "--path", dest="path",
                       help="Input path (raw data)")
-    parser.add_option('-w', '--width', dest="width", default="512",
-                      help="width")
-    parser.add_option('--heigth', dest="heigth", default="512",
-                      help="heigth")
+    parser.add_option('--crop', dest="crop", default="1",
+                      help="crop")
     parser.add_option("--weight", dest="weight",
                       help="Where to find the weight file")
     parser.add_option("--layer_score", dest="scorelayer",
@@ -99,8 +106,7 @@ if __name__ == "__main__":
     print "Input paramters to Validation score:"
     print " \n "
     print "Input file        : | " + options.path
-    print "Heigth            : | " + options.heigth
-    print "Width             : | " + options.width
+    print "Crop              : | " + options.crop
     print "score layer name  : | " + options.scorelayer
     print "Weight file (init): | " + options.weight
     print "Model definition  : | " + options.model_def
@@ -111,7 +117,7 @@ if __name__ == "__main__":
     net = Net(options.model_def, options.weight, data_batch_size)
     transformer = Transformer(net)
     hist = compute_hist_VAL(net, DataManagerForVal, layer=options.scorelayer)
-    acc, acc1, iu, fwavacc = Metrics(hist)
+    acc, acc1, iu, fwavacc, recall, precision = Metrics(hist)
 
     print 'Done.'
 

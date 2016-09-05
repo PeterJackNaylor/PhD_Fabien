@@ -29,8 +29,9 @@ def Out(loss_image):
     return painted
 
 
-def All(model_def, weight_file, image_array, score_layer="score"):
-    net = Net(model_def, weight_file, len(image_array))
+def All(model_def, weight_file, image_array, score_layer="score", height=512, width=512):
+    net = Net(model_def, weight_file, len(
+        image_array), height=height, width=width)
     transformer = Transformer(net)
     score = GetScoreVectors(net, image_array, transformer, score_layer)
     pred_img = np.zeros(shape=(score.shape[0], score.shape[2], score.shape[3]))

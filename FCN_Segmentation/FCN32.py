@@ -19,22 +19,24 @@ def max_pool(bottom, ks=2, stride=2):
     return L.Pooling(bottom, pool=P.Pooling.MAX, kernel_size=ks, stride=stride)
 
 
-def fcn(split, data_train, data_test, classifier_name="FCN32",
+def fcn(split, data_gene, classifier_name="FCN32",
         classifier_name1="score_fr", classifier_name2="upscore"):
     n = caffe.NetSpec()
-    pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
-                         seed=1337, classifier_name=classifier_name)
-
-    if split == 'train':
-        pydata_params['dir'] = data_train
-        pylayer = 'FCNdatalayer'
-    elif split == "test":
-        pydata_params['dir'] = data_test
-        pylayer = 'FCNdatalayer'
 
     if split != "val":
-        n.data, n.label = L.Python(module='dataLayerFCN', layer=pylayer,
-                                   ntop=2, param_str=str(pydata_params))
+        pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
+                             seed=1337, classifier_name=classifier_name)
+#    pydata_params['dir'] = data_path
+        pylayer = 'DataLayerPeter'
+        pydata_params["datagen"] = data_gene
+        n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
+                                   ntop=2, param_str=str(pydata_params))  # ,
+        #                           include={'phase': caffe.TRAIN})
+        #pydata_params["datagen"] = data_gene_test
+        #pydata_params["split"] = "test"
+        # n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
+        #                           ntop=2, param_str=str(pydata_params),
+        #                           include={'phase': caffe.TEST})
     else:
         n.data = L.Data(input_param=dict(shape=dict(dim=[1, 3, 512, 512])))
         # the base net
@@ -82,25 +84,23 @@ def fcn(split, data_train, data_test, classifier_name="FCN32",
                               param=[dict(lr_mult=1)])
     n.__setattr__(classifier_name2, upscore)
 
-    n.score2 = crop(upscore, n.data)
+    n.score = crop(upscore, n.data)
 
     if split != "val":
-        n.loss = L.SoftmaxWithLoss(n.score2, n.label,
+        n.loss = L.SoftmaxWithLoss(n.score, n.label,
                                    loss_param=dict(normalize=False))  # , ignore_label=255))
-        n.acc = L.Accuracy(n.score2, n.label)
+        #n.acc = L.Accuracy(n.score2, n.label)
     return n.to_proto()
 
 
-def make_net(wd, data_train, data_test, classifier_name="FCN32",
+def make_net(wd, data_gene_train, data_gene_test, classifier_name="FCN32",
              classifier_name1="score_fr", classifier_name2="upscore"):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(fcn('train', data_train, data_test, classifier_name,
+        f.write(str(fcn('train', data_gene_train, classifier_name,
                         classifier_name1, classifier_name2)))
-
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(fcn('test', data_train, data_test, classifier_name,
+        f.write(str(fcn('test',  data_gene_test, classifier_name,
                         classifier_name1, classifier_name2)))
-
     with open(os.path.join(wd, 'deploy.prototxt'), 'w') as f:
-        f.write(str(fcn('val', data_train, data_test, classifier_name,
+        f.write(str(fcn('val', data_gene_train, classifier_name,
                         classifier_name1, classifier_name2)))

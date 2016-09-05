@@ -63,6 +63,8 @@ if __name__ == "__main__":
                       help="Number of images in test (times crop).")
     parser.add_option('--crop', dest="crop", default="1",
                       help="Number of crops by image, divided equally")
+    parser.add_option('--solverrate', dest="solverrate", default="0.000001",
+                      help="Initial rate of the solver at 10e-6")
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -78,10 +80,14 @@ if __name__ == "__main__":
         options.niter = "200"
 
     if options.cn is None:
-        options.cn = 'fcn8'
+        options.cn = 'fcn32'
 
     if options.gpu is None:
         options.gpu = "0"
+
+    if options.solverrate != "0.000001":
+        solverrate = 0.000001 * float(options.solverrate)
+        options.solverrate = str(solverrate)
 
     print "Input paramters to run:"
     print " \n "
@@ -95,6 +101,7 @@ if __name__ == "__main__":
     print "score layer name  : | " + options.scorelayer
     print "Images in test    : | " + options.val_num
     print "Number of crops   : | " + options.crop
+    print "Solver rate       : | " + options.solverrate
 
     options.niter = int(options.niter)
     if options.crop == "1":
@@ -122,11 +129,10 @@ if __name__ == "__main__":
         MakeDataLikeFCN(options.rawdata, options.wd, transform_list)
 
     if create_net:
-        data_train = options.wd  # os.path.join(options.wd, "train")
-        data_test = options.wd  # os.path.join(options.wd, "test")
+        data_path = options.wd  # os.path.join(options.wd, "test")
         CheckOrCreate(os.path.join(options.wd, options.cn))
         FCN8.make_net(os.path.join(options.wd, options.cn),
-                      data_train, data_test,
+                      data_path,
                       classifier_name=options.cn,
                       classifier_name1="score_fr1",
                       classifier_name2="upscore2",
@@ -144,7 +150,7 @@ if __name__ == "__main__":
                                           "train.prototxt"),
                              test_net_path=os.path.join(
                                  options.wd, options.cn, "test.prototxt"),
-                             base_lr=0.000000001,
+                             base_lr=solverrate,
                              out_snap=outsnap)
         # name_solver is solver_path.....
     weights = options.weight
@@ -166,15 +172,16 @@ if __name__ == "__main__":
     solvers = [(options.cn, my_solver)]
     res_fold = os.path.join(options.wd, options.cn, "temp_files")
     val = os.path.join(options.wd, "files", "test.txt")
-    loss, acc, acc1, iu, fwavacc, weights = run_solvers_IU(
+    loss, acc, acc1, iu, fwavacc, recall, precision, weights = run_solvers_IU(
         niter, solvers, res_fold, int(options.disp_interval), val, options.scorelayer)
+    np.save(os.path.join(res_fold, "loss"), loss[options.cn])
 
-    np.save(os.path.join(res_fold, "loss.txt"), loss[options.cn])
-
-    np.save(os.path.join(res_fold, "acc.txt"), acc[options.cn])
-    np.save(os.path.join(res_fold, "acc1.txt"), acc1[options.cn])
-    np.save(os.path.join(res_fold, "iu.txt"), iu[options.cn])
-    np.save(os.path.join(res_fold, "fwavacc.txt"), fwavacc[options.cn])
+    np.save(os.path.join(res_fold, "acc"), acc[options.cn])
+    np.save(os.path.join(res_fold, "acc1"), acc1[options.cn])
+    np.save(os.path.join(res_fold, "iu"), iu[options.cn])
+    np.save(os.path.join(res_fold, "fwavacc"), fwavacc[options.cn])
+    np.save(os.path.join(res_fold, "precision"), precision[options.cn])
+    np.save(os.path.join(res_fold, "recall"), recall[options.cn])
     print 'Done.'
 
     diff_time = time.time() - start_time
