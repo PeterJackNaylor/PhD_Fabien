@@ -189,19 +189,22 @@ class DataGen(object):
         test_patient = random.sample(self.patient_num, self.leave_out)
         train_patient = [
             el for el in self.patient_num if el not in test_patient]
-
+        if self.transforms is None:
+            number_of_transforms = 1
+        else:
+            number_of_transforms = len(self.transforms)
         if self.split == "train":
             if self.crop is None:
                 self.crop = 1
             self.length = np.sum([len(glob.glob(self.path + "/Slide_{}".format(el) + "/*.png"))
-                                  for el in train_patient]) * self.crop * len(self.transforms)
+                                  for el in train_patient]) * self.crop * number_of_transforms
 
             self.patients_iter = train_patient
         else:
             if self.crop is None:
                 self.crop = 1
             self.length = np.sum([len(glob.glob(
-                self.path + "/Slide_{}".format(el) + "/*.png")) for el in test_patient]) * self.crop * len(self.transforms)
+                self.path + "/Slide_{}".format(el) + "/*.png")) for el in test_patient]) * self.crop * number_of_transforms
             self.patients_iter = test_patient
 
     def SetTransformation(self, list_object):
