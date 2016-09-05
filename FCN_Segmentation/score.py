@@ -5,6 +5,7 @@ import os
 import sys
 from datetime import datetime
 from PIL import Image
+import pdb
 
 
 def fast_hist(a, b, n):
