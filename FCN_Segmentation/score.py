@@ -10,7 +10,6 @@ import pdb
 
 def fast_hist(a, b, n):
     k = (a >= 0) & (a < n)
-    pdb.set_trace()
     return np.bincount(n * a[k].astype(int) + b[k], minlength=n**2).reshape(n, n)
 
 
@@ -20,6 +19,7 @@ def compute_hist(net, number_of_test, layer='score', gt='label'):
     loss = 0
     for idx in range(number_of_test):
         net.forward()
+        pdb.set_trace()
         hist += fast_hist(net.blobs[gt].data[0, 0].flatten(),
                           net.blobs[layer].data[0].argmax(0).flatten(),
                           n_cl)
