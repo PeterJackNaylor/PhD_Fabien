@@ -19,7 +19,7 @@ def max_pool(bottom, ks=2, stride=2):
     return L.Pooling(bottom, pool=P.Pooling.MAX, kernel_size=ks, stride=stride)
 
 
-def fcn(split, data_gene_train, data_gene_test, classifier_name="FCN8",
+def fcn(split, data_gene, classifier_name="FCN8",
         classifier_name1="score_fr", classifier_name2="upscore2",
         classifier_name3="score_pool4"):
     n = caffe.NetSpec()
