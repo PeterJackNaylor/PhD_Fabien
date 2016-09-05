@@ -80,6 +80,7 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test, laye
             s.step(disp_interval)  # run a single SGD step in Caffe
             # DEFINE VAL is validation test set, it computes it independently
             # ...
+	    print name
             loss[name][it], acc[name][it], acc1[name][it], iu[name][it], fwavacc[
                 name][it], recall[name][it], precision[
                 name][it] = score.seg_tests(s, number_of_test, layer=layer)
