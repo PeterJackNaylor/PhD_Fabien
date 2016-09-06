@@ -12,6 +12,9 @@ export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
 
 """
 
+import DeconvNet
+DeconvNet.switch_caffe_path()
+
 
 from DataToLMDB import MakeDataLikeFCN
 import ImageTransf as Transf
@@ -20,7 +23,7 @@ import os
 import cPickle as pkl
 from DataLayerPeter import DataGen
 from solver import solver, run_solvers, run_solvers_IU
-import DeconvNet
+
 import numpy as np
 import time
 from optparse import OptionParser
