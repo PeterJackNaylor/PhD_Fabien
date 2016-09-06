@@ -11,7 +11,7 @@ def switch_caffe_path():
     sys.path = sys_path + [caffe_path]
 
 
-switch_caffe_path()
+# switch_caffe_path()
 
 import caffe
 from caffe import layers as L, params as P
