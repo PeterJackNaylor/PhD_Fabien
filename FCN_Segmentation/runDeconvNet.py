@@ -170,12 +170,12 @@ if __name__ == "__main__":
         template_valpath = os.path.join(
             options.template, "template_valDeconvNet.prototxt")
         datagen_path = os.path.join(path_modelgen, "data_generator_train.pkl")
-        DeconvNet.make_net(os.path.join(options.wd, options.cn),
-                           datagen_path,
-                           os.path.join(
-                               path_modelgen, "data_generator_test.pkl"),
-                           template_path, template_valpath,
-                           classifier_name=options.cn)
+        DeconvNet_cheat.make_net(os.path.join(options.wd, options.cn),
+                                 datagen_path,
+                                 os.path.join(
+            path_modelgen, "data_generator_test.pkl"),
+            template_path, template_valpath,
+            classifier_name=options.cn)
 
     solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
     outsnap = os.path.join(options.wd, options.cn, "snapshot", "snapshot")
