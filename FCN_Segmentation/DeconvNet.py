@@ -73,7 +73,8 @@ def DeconvBnRelu(bottom, nout, ks=3, pad=0, weight_filler=Gaussian_fil, bias_fil
 
 
 def max_pool(bottom, ks=2, stride=2):
-    return L.Pooling(bottom, pool=P.Pooling.MAX, kernel_size=ks, stride=stride)
+	layer = L.Pooling(bottom, pool=P.Pooling.MAX, kernel_size=ks, stride=stride)
+    return layer, layer
 
 
 def max_unpool(bottom1, bottom2, unpool_size=14, ks=2, stride=2):
