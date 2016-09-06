@@ -40,13 +40,16 @@ def Deconv(bottom, nout, ks, pad, weight_filler, bias_filler):
                                                     bias_filler=bias_filler))
     return deconv
 
+# had to improvise with respect to bn_mode=INFERENCE
+
 
 def BatchNormalizer(bottom):
+
     scale_filler = dict(type="constant", value=1)
     shift_filler = dict(type="constant", value=0.001)
     bn_param = dict(scale_filler=scale_filler,
                     shift_filler=shift_filler,
-                    bn_mode=caffe.INFERENCE)
+                    bn_mode="INFERENCE")
     bn = L.BN(bottom, bn_param=bn_param)
     return bn
 
