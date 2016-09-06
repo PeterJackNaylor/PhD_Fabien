@@ -14,7 +14,7 @@ export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
 
 import DeconvNet
 DeconvNet.switch_caffe_path()
-
+import DeconvNet_cheat
 
 from DataToLMDB import MakeDataLikeFCN
 import ImageTransf as Transf
@@ -73,6 +73,8 @@ if __name__ == "__main__":
     parser.add_option('--solverrate', dest="solverrate", default="0.000001",
                       help="Initial rate of the solver at 10e-6")
 
+    parser.add_option('--template', dest="template",
+                      help="Folder where the tempaltes are")
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -110,6 +112,7 @@ if __name__ == "__main__":
     print "Patients in test  : | " + options.val_num
     print "Number of crops   : | " + options.crop
     print "Solver rate       : | " + options.solverrate
+    print "path to template  : | " + options.template
 
     if options.crop == "1":
         crop = None
@@ -120,7 +123,8 @@ if __name__ == "__main__":
 
     create_dataset = True
     create_solver = True
-    create_net = True  # False
+    create_net = False  # False
+    create_net_cheat = True
 
     enlarge = False  # create symetry if the image becomes black ?
 
@@ -152,12 +156,25 @@ if __name__ == "__main__":
             data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "wb"))
     if create_net:
         # os.path.join(options.wd, "train")
+
         datagen_path = os.path.join(path_modelgen, "data_generator_train.pkl")
         CheckOrCreate(os.path.join(options.wd, options.cn))
         DeconvNet.make_net(os.path.join(options.wd, options.cn),
                            datagen_path,
                            os.path.join(
                                path_modelgen, "data_generator_test.pkl"),
+                           classifier_name=options.cn)
+    if create_net_cheat:
+        template_path = os.path.join(
+            options.template, "template_DeconvNet.prototxt")
+        template_valpath = os.path.join(
+            options.template, "template_valDeconvNet.prototxt")
+        datagen_path = os.path.join(path_modelgen, "data_generator_train.pkl")
+        DeconvNet.make_net(os.path.join(options.wd, options.cn),
+                           datagen_path,
+                           os.path.join(
+                               path_modelgen, "data_generator_test.pkl"),
+                           template_path, template_valpath,
                            classifier_name=options.cn)
 
     solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
