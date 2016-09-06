@@ -19,8 +19,11 @@ def make_net(wd, data_gene_train, data_gene_test,
              path_train, path_val,
              classifier_name="DeconvNet", nber_output="2"):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(DeconvNet('train', data_gene_train, classifier_name, nber_output)))
+        f.write(str(DeconvNet(path_train, 'train',
+                              data_gene_train, classifier_name, nber_output)))
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(DeconvNet('test', data_gene_test, classifier_name, nber_output)))
+        f.write(str(DeconvNet(path_train, 'test',
+                              data_gene_test, classifier_name, nber_output)))
     with open(os.path.join(wd, 'deploy.prototxt'), 'w') as f:
-        f.write(str(DeconvNet('val', data_gene_train, classifier_name, nber_output)))
+        f.write(
+            str(DeconvNet(path_val, 'val', data_gene_train, classifier_name, nber_output)))
