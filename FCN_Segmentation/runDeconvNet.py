@@ -158,9 +158,7 @@ if __name__ == "__main__":
                            datagen_path,
                            os.path.join(
                                path_modelgen, "data_generator_test.pkl"),
-                           classifier_name=options.cn,
-                           classifier_name1="score_fr1",
-                           classifier_name2="upscore1")
+                           classifier_name=options.cn)
 
     solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
     outsnap = os.path.join(options.wd, options.cn, "snapshot", "snapshot")
