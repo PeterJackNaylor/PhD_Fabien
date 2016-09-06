@@ -170,13 +170,12 @@ def DeconvNet(split, data_gene, classifier_name="DeconvNet"):
     n.deconv1_2, n.debn1_2, n.derelu1_2 = DeconvBnRelu(
         n.derelu1_1, 64, ks=3, pad=1)
 
-    n.score = Conv(n.derelu1_2, 2, ks=1, stride=1, pad=1)
-        n.score = L.Convolution(n.derelu1_2, kernel_size=ks, stride=1,
-                                num_output=2, pad=1,
-                                param=[dict(lr_mult=1, decay_mult=1), dict(
-                                    lr_mult=2, decay_mult=0)],
-                                weight_filler=Gaussian_fil,
-                                bias_filler=Constant_fil)
+    n.score = L.Convolution(n.derelu1_2, kernel_size=ks, stride=1,
+                            num_output=2, pad=1,
+                            param=[dict(lr_mult=1, decay_mult=1), dict(
+                                lr_mult=2, decay_mult=0)],
+                            weight_filler=Gaussian_fil,
+                            bias_filler=Constant_fil)
     if split != "val":
         n.loss = L.SoftmaxWithLoss(n.score, n.label,
                                    loss_param=dict(normalize=False, ignore_label=255))
