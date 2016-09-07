@@ -81,7 +81,7 @@ def max_pool(bottom, ks=2, stride=2):
 
 
 def max_unpool(bottom1, bottom2, unpool_size=14, ks=2, stride=2):
-    unpooling_param = dict(unpool=P.Pooling.MAX, kernel_size=ks,
+    unpooling_param = dict(pool=P.Pooling.MAX, kernel_size=ks,
                            stride=stride)
     # should be unpooling?
     print 'unpool'
