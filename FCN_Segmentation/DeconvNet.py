@@ -44,7 +44,7 @@ def Deconv(bottom, nout, ks, pad, weight_filler, bias_filler):
 
 
 def BatchNormalizer(bottom):
-	noth = dict(lr_mult=0)
+    noth = dict(lr_mult=0)
     param = [noth, noth, noth]
     bn = L.BatchNorm(bottom, param=param)
     return bn
