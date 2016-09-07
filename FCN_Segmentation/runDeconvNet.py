@@ -12,7 +12,7 @@ export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
 
 """
 
-# import DeconvNet
+import DeconvNet
 # DeconvNet.switch_caffe_path()
 import DeconvNet_cheat
 
@@ -21,7 +21,7 @@ import ImageTransf as Transf
 import caffe
 import os
 import cPickle as pkl
-# from DataLayerPeter import DataGen
+from DataLayerPeter import DataGen
 from solver import solver, run_solvers, run_solvers_IU
 
 import numpy as np
@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
     options.niter = int(options.niter)
 
-    create_dataset = False
+    create_dataset = True
     create_solver = True
     create_net = True  # False
     create_net_cheat = False
