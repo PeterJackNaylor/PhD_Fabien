@@ -123,8 +123,8 @@ if __name__ == "__main__":
 
     create_dataset = False
     create_solver = True
-    create_net = False  # False
-    create_net_cheat = True
+    create_net = True  # False
+    create_net_cheat = False
 
     enlarge = False  # create symetry if the image becomes black ?
 
