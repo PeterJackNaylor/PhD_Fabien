@@ -2,6 +2,10 @@
 
 import sys
 
+sys.path.append(
+    "/data/users/pnaylor/Documents/Python/PhD_Fabien/UsefulFunctions/")
+sys.path[4] = "/data/users/pnaylor/Documents/Python/caffe_unpool/caffe/python"
+
 
 def switch_caffe_path():
     sys_path = [el for el in sys.path if 'caffe' not in el]
@@ -78,10 +82,10 @@ def max_pool(bottom, ks=2, stride=2):
 
 def max_unpool(bottom1, bottom2, unpool_size=14, ks=2, stride=2):
     unpooling_param = dict(unpool=P.Pooling.MAX, kernel_size=ks,
-                           unpool_size=unpool_size)
+                           stride=stride)
     # should be unpooling?
     print 'unpool'
-    return L.Unpooling(bottom1, bottom2, param=unpooling_param)
+    return L.Unpooling(bottom1, bottom2, pooling_param=unpooling_param)
 
 
 def DeconvNet(split, data_gene, classifier_name="DeconvNet"):
