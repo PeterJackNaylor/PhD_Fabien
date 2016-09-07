@@ -20,7 +20,7 @@ def switch_caffe_path():
 import caffe
 from caffe import layers as L, params as P
 import os
-
+import pdb
 
 Gaussian_fil = dict(type="gaussian", std=0.01)
 Constant_fil = dict(type="constant", value=0)
@@ -111,6 +111,7 @@ def DeconvNet(split, data_gene, classifier_name="DeconvNet"):
     n.conv3_2, n.bn3_2, n.relu3_2 = ConvBnRelu(n.relu3_1, 256, 3, 1, 1)
     n.conv3_3, n.bn3_3, n.relu3_3 = ConvBnRelu(n.relu3_2, 256, 3, 1, 1)
 
+    pdb.set_trace()
     n.pool3, n.pool3_mask = max_pool(n.relu3_3, ks=2, stride=2)
 
     n.conv4_1, n.bn4_1, n.relu4_1 = ConvBnRelu(n.pool3, 512, 3, 1, 1)
@@ -126,13 +127,13 @@ def DeconvNet(split, data_gene, classifier_name="DeconvNet"):
     n.pool5, n.pool5_mask = max_pool(n.relu5_3, ks=2, stride=2)
 
     n.fc6, n.bn6, n.relu6 = ConvBnRelu(n.pool5, 4096, ks=7, stride=1, pad=0)
-    n.drop6 = L.Dropout(n.relu6, dropout_ratio=0.5, in_place=True)
+    #n.drop6 = L.Dropout(n.relu6, dropout_ratio=0.5, in_place=True)
 
-    n.fc7, n.bn7, n.relu7 = ConvBnRelu(n.drop6, 4096, ks=1, stride=1, pad=0)
-    n.drop7 = L.Dropout(n.relu7, dropout_ratio=0.5, in_place=True)
-
+    n.fc7, n.bn7, n.relu7 = ConvBnRelu(n.relu6, 4096, ks=1, stride=1, pad=0)
+    #n.drop7 = L.Dropout(n.relu7, dropout_ratio=0.5, in_place=True)
+    # no need for dropout as we have batch normalization!
     n.deconv_fc6, n.deconv_fc6_bn, n.deconv_fc6_relu = DeconvBnRelu(
-        n.drop7, 512, ks=7)
+        n.relu7, 512, ks=7)
 
     n.unpool5 = max_unpool(n.deconv_fc6_relu, n.pool5_mask, unpool_size=14)
 
