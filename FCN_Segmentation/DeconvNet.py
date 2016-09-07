@@ -26,6 +26,7 @@ def Conv(bottom, nout, ks=3, stride=1, pad=1):
     conv = L.Convolution(bottom, kernel_size=ks, stride=stride,
                          num_output=nout, pad=pad,
                          param=[dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)])
+    print 'conv'
     return conv
 
 
@@ -71,6 +72,7 @@ def DeconvBnRelu(bottom, nout, ks=3, pad=0, weight_filler=Gaussian_fil, bias_fil
 def max_pool(bottom, ks=2, stride=2):
     layer = L.Pooling(bottom, pool=P.Pooling.MAX,
                       kernel_size=ks, stride=stride)
+    print 'pool'
     return layer, layer
 
 
@@ -78,6 +80,7 @@ def max_unpool(bottom1, bottom2, unpool_size=14, ks=2, stride=2):
     unpooling_param = dict(unpool=P.Pooling.MAX, kernel_size=ks,
                            stride=stride, unpool_size=unpool_size)
     # should be unpooling?
+    print 'unpool'
     return L.Unpooling(bottom1, bottom2, param=unpooling_param)
 
 
