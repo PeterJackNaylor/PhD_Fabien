@@ -213,7 +213,7 @@ if __name__ == "__main__":
     solvers = [(options.cn, my_solver)]
 
     res_fold = os.path.join(options.wd, options.cn, "temp_files")
-    number_of_test = data_generator_train.length
+    number_of_test = data_generator_test.length
     loss, acc, acc1, iu, fwavacc, recall, precision, weights = run_solvers_IU(
         niter, solvers, res_fold, int(options.disp_interval), number_of_test, options.scorelayer)
 
