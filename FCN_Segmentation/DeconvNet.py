@@ -94,7 +94,7 @@ def DeconvNet(split, data_gene, classifier_name="DeconvNet"):
     pydata_params["datagen"] = data_gene
     n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
                                ntop=2, param_str=str(pydata_params))
-    n.conv1_1, n.bn1_1, n.relu1_1 = ConvBnRelu(n.data, 64, 3, 1, 1)
+    n.conv1_1, n.BatchNormalize1_1, n.relu1_1 = ConvBnRelu(n.data, 64, 3, 1, 1)
     n.conv1_2, n.BatchNormalize1_2, n.relu1_2 = ConvBnRelu(
         n.relu1_1, 64, 3, 1, 1)
 
