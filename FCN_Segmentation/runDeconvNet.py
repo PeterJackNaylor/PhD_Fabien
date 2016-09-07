@@ -12,16 +12,16 @@ export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
 
 """
 
-import DeconvNet
-DeconvNet.switch_caffe_path()
+# import DeconvNet
+# DeconvNet.switch_caffe_path()
 import DeconvNet_cheat
 
-from DataToLMDB import MakeDataLikeFCN
+# from DataToLMDB import MakeDataLikeFCN
 import ImageTransf as Transf
 import caffe
 import os
 import cPickle as pkl
-from DataLayerPeter import DataGen
+# from DataLayerPeter import DataGen
 from solver import solver, run_solvers, run_solvers_IU
 
 import numpy as np
@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
     options.niter = int(options.niter)
 
-    create_dataset = True
+    create_dataset = False
     create_solver = True
     create_net = False  # False
     create_net_cheat = True
@@ -155,6 +155,7 @@ if __name__ == "__main__":
         pkl.dump(
             data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "wb"))
     if create_net:
+        path_modelgen = os.path.join(options.wd, options.cn, "model")
         # os.path.join(options.wd, "train")
 
         datagen_path = os.path.join(path_modelgen, "data_generator_train.pkl")
@@ -165,6 +166,7 @@ if __name__ == "__main__":
                                path_modelgen, "data_generator_test.pkl"),
                            classifier_name=options.cn)
     if create_net_cheat:
+        path_modelgen = os.path.join(options.wd, options.cn, "model")
         template_path = os.path.join(
             options.template, "template_DeconvNet.prototxt")
         template_valpath = os.path.join(
@@ -200,7 +202,7 @@ if __name__ == "__main__":
 
     niter = options.niter
 
-    # pdb.set_trace()
+    pdb.set_trace()
     my_solver = caffe.get_solver(solver_path)
     # pdb.set_trace()
     my_solver.net.copy_from(weights)
