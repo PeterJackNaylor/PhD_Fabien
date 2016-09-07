@@ -123,8 +123,8 @@ if __name__ == "__main__":
 
     create_dataset = True
     create_solver = True
-    create_net = False  # False
-    create_net_cheat = True
+    create_net = True  # False
+    create_net_cheat = False
 
     enlarge = False  # create symetry if the image becomes black ?
 
@@ -165,6 +165,7 @@ if __name__ == "__main__":
                                path_modelgen, "data_generator_test.pkl"),
                            classifier_name=options.cn)
     if create_net_cheat:
+        path_modelgen = os.path.join(options.wd, options.cn, "model")
         template_path = os.path.join(
             options.template, "template_DeconvNet.prototxt")
         template_valpath = os.path.join(
@@ -200,7 +201,7 @@ if __name__ == "__main__":
 
     niter = options.niter
 
-    # pdb.set_trace()
+    pdb.set_trace()
     my_solver = caffe.get_solver(solver_path)
     # pdb.set_trace()
     my_solver.net.copy_from(weights)
