@@ -50,7 +50,7 @@ def Deconv(bottom, nout, ks, pad, weight_filler, bias_filler):
 def BatchNormalizer(bottom):
     noth = dict(lr_mult=0)
     param = [noth, noth, noth]
-    bn = L.BatchNorm(bottom, param=param)
+    bn = L.BatchNorm(bottom, param=param, in_place=True)
     return bn
 
 
@@ -95,38 +95,51 @@ def DeconvNet(split, data_gene, classifier_name="DeconvNet"):
     n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
                                ntop=2, param_str=str(pydata_params))
     n.conv1_1, n.bn1_1, n.relu1_1 = ConvBnRelu(n.data, 64, 3, 1, 1)
-    n.conv1_2, n.bn1_2, n.relu1_2 = ConvBnRelu(n.relu1_1, 64, 3, 1, 1)
+    n.conv1_2, n.BatchNormalize1_2, n.relu1_2 = ConvBnRelu(
+        n.relu1_1, 64, 3, 1, 1)
 
     n.pool1, n.pool1_mask, n.pool1_count = max_pool(n.relu1_2, ks=2, stride=2)
 
-    n.conv2_1, n.bn2_1, n.relu2_1 = ConvBnRelu(n.pool1, 128, 3, 1, 1)
-    n.conv2_2, n.bn2_2, n.relu2_2 = ConvBnRelu(n.relu2_1, 128, 3, 1, 1)
+    n.conv2_1, n.BatchNormalize2_1, n.relu2_1 = ConvBnRelu(
+        n.pool1, 128, 3, 1, 1)
+    n.conv2_2, n.BatchNormalize2_2, n.relu2_2 = ConvBnRelu(
+        n.relu2_1, 128, 3, 1, 1)
 
     n.pool2, n.pool2_mask, n.pool2_count = max_pool(n.relu2_2, ks=2, stride=2)
 
-    n.conv3_1, n.bn3_1, n.relu3_1 = ConvBnRelu(n.pool2, 256, 3, 1, 1)
-    n.conv3_2, n.bn3_2, n.relu3_2 = ConvBnRelu(n.relu3_1, 256, 3, 1, 1)
-    n.conv3_3, n.bn3_3, n.relu3_3 = ConvBnRelu(n.relu3_2, 256, 3, 1, 1)
+    n.conv3_1, n.BatchNormalize3_1, n.relu3_1 = ConvBnRelu(
+        n.pool2, 256, 3, 1, 1)
+    n.conv3_2, n.BatchNormalize3_2, n.relu3_2 = ConvBnRelu(
+        n.relu3_1, 256, 3, 1, 1)
+    n.conv3_3, n.BatchNormalize3_3, n.relu3_3 = ConvBnRelu(
+        n.relu3_2, 256, 3, 1, 1)
 
-    pdb.set_trace()
     n.pool3, n.pool3_mask, n.pool3_count = max_pool(n.relu3_3, ks=2, stride=2)
 
-    n.conv4_1, n.bn4_1, n.relu4_1 = ConvBnRelu(n.pool3, 512, 3, 1, 1)
-    n.conv4_2, n.bn4_2, n.relu4_2 = ConvBnRelu(n.relu4_1, 512, 3, 1, 1)
-    n.conv4_3, n.bn4_3, n.relu4_3 = ConvBnRelu(n.relu4_2, 512, 3, 1, 1)
+    n.conv4_1, n.BatchNormalize4_1, n.relu4_1 = ConvBnRelu(
+        n.pool3, 512, 3, 1, 1)
+    n.conv4_2, n.BatchNormalize4_2, n.relu4_2 = ConvBnRelu(
+        n.relu4_1, 512, 3, 1, 1)
+    n.conv4_3, n.BatchNormalize4_3, n.relu4_3 = ConvBnRelu(
+        n.relu4_2, 512, 3, 1, 1)
 
     n.pool4, n.pool4_mask, n.pool4_count = max_pool(n.relu4_3, ks=2, stride=2)
 
-    n.conv5_1, n.bn5_1, n.relu5_1 = ConvBnRelu(n.pool4, 512, 3, 1, 1)
-    n.conv5_2, n.bn5_2, n.relu5_2 = ConvBnRelu(n.relu5_1, 512, 3, 1, 1)
-    n.conv5_3, n.bn5_3, n.relu5_3 = ConvBnRelu(n.relu5_2, 512, 3, 1, 1)
+    n.conv5_1, n.BatchNormalize5_1, n.relu5_1 = ConvBnRelu(
+        n.pool4, 512, 3, 1, 1)
+    n.conv5_2, n.BatchNormalize5_2, n.relu5_2 = ConvBnRelu(
+        n.relu5_1, 512, 3, 1, 1)
+    n.conv5_3, n.BatchNormalize5_3, n.relu5_3 = ConvBnRelu(
+        n.relu5_2, 512, 3, 1, 1)
 
     n.pool5, n.pool5_mask, n.pool5_count = max_pool(n.relu5_3, ks=2, stride=2)
 
-    n.fc6, n.bn6, n.relu6 = ConvBnRelu(n.pool5, 4096, ks=7, stride=1, pad=0)
+    n.fc6, n.BatchNormalize6, n.relu6 = ConvBnRelu(
+        n.pool5, 4096, ks=7, stride=1, pad=0)
     #n.drop6 = L.Dropout(n.relu6, dropout_ratio=0.5, in_place=True)
 
-    n.fc7, n.bn7, n.relu7 = ConvBnRelu(n.relu6, 4096, ks=1, stride=1, pad=0)
+    n.fc7, n.BatchNormalize7, n.relu7 = ConvBnRelu(
+        n.relu6, 4096, ks=1, stride=1, pad=0)
     #n.drop7 = L.Dropout(n.relu7, dropout_ratio=0.5, in_place=True)
     # no need for dropout as we have batch normalization!
     n.deconv_fc6, n.deconv_fc6_bn, n.deconv_fc6_relu = DeconvBnRelu(
