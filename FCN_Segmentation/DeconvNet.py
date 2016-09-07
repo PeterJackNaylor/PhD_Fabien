@@ -97,7 +97,7 @@ def DeconvNet(split, data_gene, classifier_name="DeconvNet"):
     n.conv1_1, n.bn1_1, n.relu1_1 = ConvBnRelu(n.data, 64, 3, 1, 1)
     n.conv1_2, n.bn1_2, n.relu1_2 = ConvBnRelu(n.relu1_1, 64, 3, 1, 1)
 
-    n.pool1, n.pool1_mask = max_pool(n.relu1_2, ks=2, stride=2)
+    n.pool1, n.pool1_mask, n.pool1_count = max_pool(n.relu1_2, ks=2, stride=2)
 
     n.conv2_1, n.bn2_1, n.relu2_1 = ConvBnRelu(n.pool1, 128, 3, 1, 1)
     n.conv2_2, n.bn2_2, n.relu2_2 = ConvBnRelu(n.relu2_1, 128, 3, 1, 1)
