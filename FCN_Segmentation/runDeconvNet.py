@@ -190,7 +190,7 @@ if __name__ == "__main__":
                                           "train.prototxt"),
                              test_net_path=os.path.join(
                                  options.wd, options.cn, "train.prototxt"),
-                             batch_size=int(options.batch_size),
+                             # batch_size=int(options.batch_size),
                              base_lr=solverrate,
                              out_snap=outsnap)
         # name_solver is solver_path.....

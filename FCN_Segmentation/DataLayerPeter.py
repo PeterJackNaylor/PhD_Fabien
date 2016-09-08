@@ -38,6 +38,7 @@ class DataLayerPeter(caffe.Layer):
         self.normalize = params.get('normalize', True)
         self.random = params.get('randomize', True)
         self.seed = params.get('seed', None)
+        self.batch_size = params.get('batch_size', 1)
 
         self.datagen = pkl.load(open(params['datagen'], 'rb'))
         self.datagen.ReLoad(self.split)
@@ -61,10 +62,27 @@ class DataLayerPeter(caffe.Layer):
 
     def reshape(self, bottom, top):
         # load image + label image pair
-        self.data, self.label = self.loadImageAndGT(self.key)
-        # reshape tops to fit (leading 1 is for batch dimension)
-        top[0].reshape(1, *self.data.shape)
-        top[1].reshape(1, *self.label.shape)
+        if self.batch_size == 1:
+            self.data, self.label = self.loadImageAndGT(self.key)
+            top[0].reshape(self.batch_size, *self.data.shape)
+            top[1].reshape(self.batch_size, *self.label.shape)
+
+        else:
+            data, label = self.loadImageAndGT(self.key)
+            x, y, z = data.shape
+            x_l, y_l = label.shape
+
+            self.data = np.zeros(shape=(self.batch_size, x, y, z))
+            self.label = np.zeros(shape=(self.batch_size, x_l, y_l))
+
+            self.data[0], self.label[0] = data, label
+
+            for i in range(1, self.batch_size):
+                self.Nextkey()
+                self.data[i], self.label[i] = self.loadImageAndGT(self.key)
+                # reshape tops to fit (leading 1 is for batch dimension)
+            top[0].reshape(self.batch_size, *data.shape)
+            top[1].reshape(self.batch_size, *label.shape)
 
     def forward(self, bottom, top):
         # assign output
@@ -72,13 +90,16 @@ class DataLayerPeter(caffe.Layer):
         top[1].data[...] = self.label
 
         # pick next input
+        self.Nextkey()
+
+    def backward(self, top, propagate_down, bottom):
+        pass
+
+    def Nextkey():
         if self.random:
             self.key = self.datagen.RandomKey(True)
         else:
             self.key = self.datagen.NextKey(self.key)
-
-    def backward(self, top, propagate_down, bottom):
-        pass
 
     def loadImageAndGT(self, key):
         im, label = self.datagen[key]
@@ -182,7 +203,8 @@ class DataGen(object):
         random.shuffle(patient_num)
 
         self.patient_num = patient_num
-        self.patient_img = {el: glob.glob(self.path + "/Slide_{}".format(el) + "/*.png") for el in patient_num}
+        self.patient_img = {el: glob.glob(
+            self.path + "/Slide_{}".format(el) + "/*.png") for el in patient_num}
 
     def Sort_patients(self):
         n = len(self.patient_num)
