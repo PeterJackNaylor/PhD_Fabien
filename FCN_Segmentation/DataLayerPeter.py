@@ -73,7 +73,7 @@ class DataLayerPeter(caffe.Layer):
             x_l, y_l = label.shape
 
             self.data = np.zeros(shape=(self.batch_size, x, y, z))
-            self.label = np.zeros(shape=(self.batch_size, x_l, y_l))
+            self.label = np.zeros(shape=(self.batch_size, 1, x_l, y_l))
 
             self.data[0], self.label[0] = data, label
 
@@ -107,6 +107,10 @@ class DataLayerPeter(caffe.Layer):
         in_ = in_[:, :, ::-1]
         in_ -= self.mean
         in_ = in_.transpose((2, 0, 1))
+
+        lab = np.array(label, dtype=np.float32)
+        lab = lab[:, :, ::-1]
+        lab = lab.transpose((2, 0, 1))
 
         if self.normalize:
             label[label > 0] = 1
