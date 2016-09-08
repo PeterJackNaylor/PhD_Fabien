@@ -85,14 +85,14 @@ def max_unpool(bottom1, bottom2, bottom3, unpool_size=14, ks=2, stride=2):
     return L.Unpooling(bottom1, bottom2, bottom3, pooling_param=unpooling_param)
 
 
-def DeconvNet(split, data_gene, classifier_name="DeconvNet"):
+def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet"):
     n = caffe.NetSpec()
 
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
                          seed=1337, classifier_name=classifier_name)
     pylayer = 'DataLayerPeter'
     pydata_params["datagen"] = data_gene
-    n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
+    n.data, n.label = L.Python(batch_size=batch_size, module='DataLayerPeter', layer=pylayer,
                                ntop=2, param_str=str(pydata_params))
     n.conv1_1, n.BatchNormalize1_1, n.relu1_1 = ConvBnRelu(n.data, 64, 3, 1, 1)
     n.conv1_2, n.BatchNormalize1_2, n.relu1_2 = ConvBnRelu(
@@ -203,10 +203,10 @@ def DeconvNet(split, data_gene, classifier_name="DeconvNet"):
     return n.to_proto()
 
 
-def make_net(wd, data_gene_train, data_gene_test, classifier_name="DeconvNet"):
+def make_net(wd, data_gene_train, data_gene_test, batch_size=1, classifier_name="DeconvNet"):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(DeconvNet('train', data_gene_train, classifier_name)))
+        f.write(str(DeconvNet('train', data_gene_train, batch_size, classifier_name)))
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(DeconvNet('test', data_gene_test, classifier_name)))
+        f.write(str(DeconvNet('test', data_gene_test, 1, classifier_name)))
     # with open(os.path.join(wd, 'deploy.prototxt'), 'w') as f:
     #    f.write(str(DeconvNet('val', data_gene_train, classifier_name)))

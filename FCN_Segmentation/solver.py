@@ -40,7 +40,7 @@ def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_s
     # every `stepsize` iterations.
     s.lr_policy = 'step'
     s.gamma = 0.1
-    s.stepsize = 20000
+    s.stepsize = 7000
 
     # Set other SGD hyperparameters. Setting a non-zero `momentum` takes a
     # weighted average of the current gradient and previous gradients to make
@@ -80,7 +80,7 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test, laye
             s.step(disp_interval)  # run a single SGD step in Caffe
             # DEFINE VAL is validation test set, it computes it independently
             # ...
-	    print name
+            print name
             loss[name][it], acc[name][it], acc1[name][it], iu[name][it], fwavacc[
                 name][it], recall[name][it], precision[
                 name][it] = score.seg_tests(s, number_of_test, layer=layer)

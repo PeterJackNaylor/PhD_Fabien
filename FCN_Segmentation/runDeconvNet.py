@@ -64,9 +64,6 @@ if __name__ == "__main__":
     parser.add_option("--layer_score", dest="scorelayer",
                       help="name of score layer", default="score")
 
-    parser.add_option('--gpu', dest="gpu",
-                      help="Which GPU to use.")
-
     parser.add_option('--val_test', dest="val_num", default="6",
                       help="Number of images in test (times crop).")
 
@@ -76,8 +73,11 @@ if __name__ == "__main__":
     parser.add_option('--solverrate', dest="solverrate", default="0.000001",
                       help="Initial rate of the solver at 10e-6")
 
-    parser.add_option('--template', dest="template",
+    parser.add_option('--template', dest="template", default="None",
                       help="Folder where the tempaltes are")
+
+    parser.add_option('--batch_size', dest="batch_size", default="1",
+                      help="Size of the batches")
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -95,9 +95,6 @@ if __name__ == "__main__":
     if options.cn is None:
         options.cn = 'NewClass'
 
-    if options.gpu is None:
-        options.gpu = "0"
-
     if options.solverrate != "0.000001":
         solverrate = 0.000001 * float(options.solverrate)
         options.solverrate = str(solverrate)
@@ -109,14 +106,13 @@ if __name__ == "__main__":
     print "Classifier name   : | " + options.cn
     print "Weight file (init): | " + options.weight
     print "Number of iteration | " + options.niter
-    print "Which GPU         : | " + options.gpu
     print "display interval  : | " + options.disp_interval
     print "score layer name  : | " + options.scorelayer
     print "Patients in test  : | " + options.val_num
     print "Number of crops   : | " + options.crop
     print "Solver rate       : | " + options.solverrate
     print "path to template  : | " + options.template
-
+    print "Sizes of batches  : | " + options.batch_size
     if options.crop == "1":
         crop = None
     else:
@@ -167,6 +163,7 @@ if __name__ == "__main__":
                            datagen_path,
                            os.path.join(
                                path_modelgen, "data_generator_test.pkl"),
+                           int(options.batch_size),
                            classifier_name=options.cn)
     if create_net_cheat:
         path_modelgen = os.path.join(options.wd, options.cn, "model")
@@ -200,7 +197,7 @@ if __name__ == "__main__":
     weights = options.weight
     assert os.path.exists(weights)
 
-    caffe.set_device(int(options.gpu))
+    caffe.set_device(0)
     caffe.set_mode_gpu()
 
     niter = options.niter
@@ -231,6 +228,7 @@ if __name__ == "__main__":
 
     range_iter = range(int(options.disp_interval), niter + int(options.disp_interval),
                        int(options.disp_interval))
+    pref = options.cn
     plt.plot(range_iter, loss[pref])
     plt.savefig(os.path.join(res_fold, "loss"))
     plt.close()
