@@ -78,7 +78,7 @@ class DataLayerPeter(caffe.Layer):
             self.data[0], self.label[0] = data, label
 
             for i in range(1, self.batch_size):
-                self.Nextkey(self.key)
+                self.Nextkey()
                 self.data[i], self.label[i] = self.loadImageAndGT(self.key)
                 # reshape tops to fit (leading 1 is for batch dimension)
             top[0].reshape(self.batch_size, *data.shape)
@@ -90,12 +90,12 @@ class DataLayerPeter(caffe.Layer):
         top[1].data[...] = self.label
 
         # pick next input
-        self.Nextkey(self.key)
+        self.Nextkey()
 
     def backward(self, top, propagate_down, bottom):
         pass
 
-    def Nextkey():
+    def Nextkey(self):
         if self.random:
             self.key = self.datagen.RandomKey(True)
         else:
