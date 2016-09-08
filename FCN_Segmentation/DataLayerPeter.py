@@ -108,13 +108,12 @@ class DataLayerPeter(caffe.Layer):
         in_ -= self.mean
         in_ = in_.transpose((2, 0, 1))
 
-        lab = np.array(label, dtype=np.float32)
-        lab = lab[:, :, ::-1]
-        lab = lab.transpose((2, 0, 1))
+        new_lab = np.zeros(shape=(label.shape[0], label.shape[1], 1))
+        new_lab = new_lab.transpose((2, 0, 1))
 
         if self.normalize:
-            label[label > 0] = 1
-        return in_, label
+            new_lab[new_lab > 0] = 1
+        return in_, new_lab
 
 
 import glob
