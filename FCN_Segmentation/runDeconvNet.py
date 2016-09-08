@@ -11,6 +11,9 @@ export RAWDATA=/data/users/pnaylor/Bureau/ToAnnotate
 --rawdata $RAWDATA --wd $WD --cn FCN1 --weight $WEIGHT --niter 200
 
 """
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pylab as plt
 
 import DeconvNet
 DeconvNet.switch_caffe_path()
@@ -224,6 +227,19 @@ if __name__ == "__main__":
     np.save(os.path.join(res_fold, "fwavacc"), fwavacc[options.cn])
     np.save(os.path.join(res_fold, "precision"), precision[options.cn])
     np.save(os.path.join(res_fold, "recall"), recall[options.cn])
+
+    range_iter = range(int(options.disp_interval), niter + int(options.disp_interval),
+                       int(options.disp_interval))
+    plt.plot(range_iter, loss[pref])
+    plt.savefig(os.path.join(res_fold, "loss"))
+    plt.close()
+    plt.plot(range_iter, acc[pref], "-r")
+    plt.plot(range_iter, acc1[pref], "-y")
+    plt.plot(range_iter, iu[pref], "-g")
+    plt.plot(range_iter, fwavacc[pref], "-b")
+    plt.plot(range_iter, recall[pref], "-c")
+    plt.plot(range_iter, precision[pref], "-m")
+    plt.savefig(os.path.join(res_fold, "alltogethernow"))
     print 'Done.'
 
     diff_time = time.time() - start_time
