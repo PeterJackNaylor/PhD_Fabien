@@ -51,7 +51,8 @@ def BatchNormalizer(bottom):
     noth = dict(lr_mult=0)
     param = [noth, noth, noth]
     bn = L.BatchNorm(bottom, param=param, in_place=True)
-    return bn
+    sl = L.ScaleLayer(bn, scale_param=dict(bias_term="true"), in_place=True)
+    return bn, sl
 
 
 def Relu(bottom):
@@ -60,16 +61,16 @@ def Relu(bottom):
 
 def ConvBnRelu(bottom, nout, ks=3, stride=1, pad=1):
     conv = Conv(bottom, nout, ks, stride, pad)
-    bn = BatchNormalizer(conv)
-    relu = Relu(bn)
-    return conv, bn, relu
+    bn, sl = BatchNormalizer(conv)
+    relu = Relu(sl)
+    return conv, bn, sl, relu
 
 
 def DeconvBnRelu(bottom, nout, ks=3, pad=0, weight_filler=Gaussian_fil, bias_filler=Constant_fil):
     deconv = Deconv(bottom, nout, ks, pad, weight_filler, bias_filler)
-    bn = BatchNormalizer(deconv)
-    relu = Relu(bn)
-    return deconv, bn, relu
+    bn, sl = BatchNormalizer(deconv)
+    relu = Relu(sl)
+    return deconv, bn, sl, relu
 
 
 def max_pool(bottom, ks=2, stride=2):

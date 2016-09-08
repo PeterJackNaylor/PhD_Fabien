@@ -12,9 +12,7 @@ import numpy as np
 import score
 
 
-def solver(solver_name, train_net_path, test_net_path=None,
-           batch_size=1,
-           base_lr=0.001, out_snap="./temp_snapshot"):
+def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_snap="./temp_snapshot"):
     # pdb.set_trace()
     s = caffe_pb2.SolverParameter()
     s.train_net = train_net_path
@@ -26,7 +24,7 @@ def solver(solver_name, train_net_path, test_net_path=None,
     # The number of iterations over which to average the gradient.
     # Effectively boosts the training batch size by the given factor, without
     # affecting memory utilization.
-    s.iter_size = batch_size
+    s.iter_size = 1
 
     s.max_iter = 50000    # # of times to update the net (training iterations)
 
