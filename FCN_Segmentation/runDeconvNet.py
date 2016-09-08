@@ -163,7 +163,6 @@ if __name__ == "__main__":
                            datagen_path,
                            os.path.join(
                                path_modelgen, "data_generator_test.pkl"),
-                           int(options.batch_size),
                            classifier_name=options.cn)
     if create_net_cheat:
         path_modelgen = os.path.join(options.wd, options.cn, "model")
@@ -191,6 +190,7 @@ if __name__ == "__main__":
                                           "train.prototxt"),
                              test_net_path=os.path.join(
                                  options.wd, options.cn, "train.prototxt"),
+                             batch_size=int(options.batch_size),
                              base_lr=solverrate,
                              out_snap=outsnap)
         # name_solver is solver_path.....
