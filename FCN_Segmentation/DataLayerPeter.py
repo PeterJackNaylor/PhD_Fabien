@@ -70,10 +70,10 @@ class DataLayerPeter(caffe.Layer):
         else:
             data, label = self.loadImageAndGT(self.key)
             x, y, z = data.shape
-            x_l, y_l, z_l = label.shape
+            x_l, y_l = label.shape
 
             self.data = np.zeros(shape=(self.batch_size, x, y, z))
-            self.label = np.zeros(shape=(self.batch_size, x_l, y_l, z_l))
+            self.label = np.zeros(shape=(self.batch_size, x_l, y_l))
 
             self.data[0], self.label[0] = data, label
 
@@ -108,12 +108,9 @@ class DataLayerPeter(caffe.Layer):
         in_ -= self.mean
         in_ = in_.transpose((2, 0, 1))
 
-        new_lab = np.zeros(shape=(label.shape[0], label.shape[1], 1))
-        new_lab = new_lab.transpose((2, 0, 1))
-
         if self.normalize:
-            new_lab[new_lab > 0] = 1
-        return in_, new_lab
+            label[label > 0] = 1
+        return in_, label
 
 
 import glob
