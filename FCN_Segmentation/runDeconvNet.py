@@ -163,6 +163,7 @@ if __name__ == "__main__":
                            datagen_path,
                            os.path.join(
                                path_modelgen, "data_generator_test.pkl"),
+                           batch_size=int(options.batch_size),
                            classifier_name=options.cn)
     if create_net_cheat:
         path_modelgen = os.path.join(options.wd, options.cn, "model")
