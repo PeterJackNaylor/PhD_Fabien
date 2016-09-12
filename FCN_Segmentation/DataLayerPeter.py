@@ -121,11 +121,12 @@ from scipy import misc
 import nibabel as ni
 import pdb
 from itertools import chain
+import sys
 
 
 class DataGen(object):
 
-    def __init__(self, path, crop=None, transforms=None, split="train", leave_out=1, seed=42, name="optionnal"):
+    def __init__(self, path, crop=None, size=None, transforms=None, split="train", leave_out=1, seed=42, name="optionnal"):
 
         self.path = path
         self.name = name
@@ -136,6 +137,11 @@ class DataGen(object):
         self.seed = seed
         self.get_patients(path, seed)
         self.Sort_patients()
+        if size is not None:
+            self.random_crop = True
+            self.size = size
+        else:
+            self.random_crop = False
 
     def ReLoad(self, split):
         self.split = split
@@ -143,7 +149,6 @@ class DataGen(object):
         self.Sort_patients()
 
     def __getitem__(self, key):
-
         if self.transforms is None:
             len_key = 2
         elif self.crop == 1 or self.crop is None:
@@ -185,6 +190,10 @@ class DataGen(object):
                     break
                 else:
                     i += 1
+        if self.random_crop:
+            seed = random.randint(sys.maxint)
+            img = self.random_crop(img, self.size, seed=seed)
+            lbl = self.random_crop(lbl, self.size, seed=seed)
         if len_key > 2:
             f = self.transforms[key[2]]
 
@@ -263,6 +272,19 @@ class DataGen(object):
                     # pdb.set_trace()
                     yield sub_image
                 i_old = i
+
+    def random_crop(self, img, size, seed=None):
+        if seed is not None:
+            random.seed(seed)
+        dim = img.shape
+        x = dim[0]
+        y = dim[1]
+        x_prime = size[0]
+        y_prime = size[1]
+        x_rand = random.randint(0, x - x_prime)
+        y_rand = random.randint(0, y - y_prime)
+
+        return img[x_rand:(x_rand + x_prime), y_rand:(y_rand + y_prime)]
 
     def CropIterator(self, img, img_gt):
         # pdb.set_trace()

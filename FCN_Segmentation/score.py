@@ -66,3 +66,21 @@ def do_seg_tests(net, iter, number_of_test, layer='score', gt='label'):
     print '>>>', 'recall', recall
     print '>>>', 'precision', precision
     return hist, loss, acc, np.nanmean(acc1), np.nanmean(iu), fwavacc, recall, precision
+
+
+def score_print(label_data, pred_bin):
+    n_cl = len(np.unique(label_data))
+    hist = fast_hist(label_data, pred_bin, n_cl)
+    acc = (np.diag(hist).sum() + 0.0) / hist.sum()
+    print '>>>', 'overall accuracy', acc
+    acc1 = (np.diag(hist) + 0.0) / hist.sum(1)
+    print '>>>', 'mean accuracy', np.nanmean(acc1)
+    iu = np.diag(hist) / (0.0 + hist.sum(1) + hist.sum(0) - np.diag(hist))
+    print '>>>', 'mean IU', np.nanmean(iu)
+    freq = (hist.sum(1) + 0.0) / hist.sum()
+    fwavacc = (freq[freq > 0] * iu[freq > 0]).sum()
+    print '>>>', 'fwavacc', fwavacc
+    recall = (hist[1, 1] + 0.0) / (hist[1, 0] + hist[1, 1])
+    precision = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1])
+    print '>>>', 'recall', recall
+    print '>>>', 'precision', precision
