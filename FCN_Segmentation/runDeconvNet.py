@@ -79,7 +79,7 @@ if __name__ == "__main__":
     parser.add_option('--batch_size', dest="batch_size", default="1",
                       help="Size of the batches")
     parser.add_option('--size_x', dest="size_x", default=None)
-    parser.add_option('__size_y', dest="size_y", default=None)
+    parser.add_option('--size_y', dest="size_y", default=None)
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
