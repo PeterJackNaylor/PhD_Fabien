@@ -192,8 +192,8 @@ class DataGen(object):
                     i += 1
         if self.random_crop:
             seed = random.randint(0, sys.maxint)
-            img = self.random_crop(img, self.size, seed=seed)
-            lbl = self.random_crop(lbl, self.size, seed=seed)
+            img = self.RandomCropGen(img, self.size, seed=seed)
+            lbl = self.RandomCropGen(lbl, self.size, seed=seed)
         if len_key > 2:
             f = self.transforms[key[2]]
 
@@ -273,7 +273,7 @@ class DataGen(object):
                     yield sub_image
                 i_old = i
 
-    def random_crop(self, img, size, seed=None):
+    def RandomCropGen(self, img, size, seed=None):
         if seed is not None:
             random.seed(seed)
         dim = img.shape
