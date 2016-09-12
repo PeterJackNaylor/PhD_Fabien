@@ -191,7 +191,7 @@ class DataGen(object):
                 else:
                     i += 1
         if self.random_crop:
-            seed = random.randint(sys.maxint)
+            seed = random.randint(0, sys.maxint)
             img = self.random_crop(img, self.size, seed=seed)
             lbl = self.random_crop(lbl, self.size, seed=seed)
         if len_key > 2:
