@@ -63,6 +63,7 @@ class DataLayerPeter(caffe.Layer):
 
     def reshape(self, bottom, top):
         # load image + label image pair
+        pdb.set_trace()
         if self.batch_size == 1:
             self.data, self.label = self.loadImageAndGT(self.key)
             top[0].reshape(self.batch_size, *self.data.shape)
