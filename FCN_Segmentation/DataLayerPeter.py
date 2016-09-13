@@ -190,16 +190,15 @@ class DataGen(object):
                     break
                 else:
                     i += 1
-        if self.random_crop:
-            seed = random.randint(0, sys.maxint)
-            img = self.RandomCropGen(img, self.size, seed=seed)
-            lbl = self.RandomCropGen(lbl, self.size, seed=seed)
         if len_key > 2:
             f = self.transforms[key[2]]
 
             img = f._apply_(img)
             lbl = f._apply_(lbl)
-
+        if self.random_crop:
+            seed = random.randint(0, sys.maxint)
+            img = self.RandomCropGen(img, self.size, seed=seed)
+            lbl = self.RandomCropGen(lbl, self.size, seed=seed)
         return img, lbl
 
     def get_patients(self, path, seed):
@@ -247,6 +246,7 @@ class DataGen(object):
         new_img = np.zeros(shape=(img.shape[1], img.shape[0], 1))
         new_img[:, :, 0] = img[:, :, 0].transpose()
         new_img = new_img.astype("uint8")
+# check with this line        new_img = new_img[np.newaxis, ...]
         return new_img
 
     def LoadImage(self, path):
