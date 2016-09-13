@@ -73,13 +73,14 @@ class DataLayerPeter(caffe.Layer):
             x_l, y_l = label.shape
 
             self.data = np.zeros(shape=(self.batch_size, x, y, z))
-            self.label = np.zeros(shape=(self.batch_size, x_l, y_l))
+            self.label = np.zeros(shape=(self.batch_size, 1, x_l, y_l))
 
             self.data[0], self.label[0] = data, label
 
             for i in range(1, self.batch_size):
                 self.Nextkey()
-                self.data[i], self.label[i] = self.loadImageAndGT(self.key)
+                self.data[i], label = self.loadImageAndGT(self.key)
+                self.label[i, 0] = label
                 # reshape tops to fit (leading 1 is for batch dimension)
             top[0].reshape(self.batch_size, *data.shape)
             top[1].reshape(self.batch_size, *label.shape)
