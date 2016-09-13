@@ -285,7 +285,7 @@ class DataGen(object):
         y_rand = random.randint(0, y - y_prime)
         return self.RandomCropGen(img, (x_prime, y_prime), (x_rand, y_rand)), self. RandomCropGen(lbl, (x_prime, y_prime), (x_rand, y_rand))
 
-    def RandomCropGen(self, img, size, shit):
+    def RandomCropGen(self, img, size, shift):
         x_prime = size[0]
         y_prime = size[1]
         x_rand = shift[0]
