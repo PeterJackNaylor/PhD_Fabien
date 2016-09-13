@@ -3,6 +3,7 @@ from UsefulFunctions.usefulPloting import Contours
 import caffe
 import matplotlib.pylab as plt
 
+
 class DataLayerPeter(caffe.Layer):
     """
     Load (input image, label image) pairs from PASCAL VOC
@@ -282,8 +283,7 @@ class DataGen(object):
         y_prime = size[1]
         x_rand = random.randint(0, x - x_prime)
         y_rand = random.randint(0, y - y_prime)
-        return RandomCropGen(img, (x_prime, y_prime), (x_rand, y_rand)),
-            RandomCropGen(lbl, (x_prime, y_prime), (x_rand, y_rand))
+        return self.RandomCropGen(img, (x_prime, y_prime), (x_rand, y_rand)), self.RandomCropGen(lbl, (x_prime, y_prime), (x_rand, y_rand))
 
     def RandomCropGen(self, img, size, shit):
         x_prime = size[0]
