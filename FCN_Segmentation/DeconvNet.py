@@ -81,7 +81,7 @@ def DeconvBnRelu(bottom, nout, ks=3, pad=0, weight_filler=Gaussian_fil, bias_fil
     # bn, sl = BatchNormalizer(deconv)
     # relu = Relu(sl)
     # return deconv, bn, sl, relu
-        bn = BatchNormalizer(deconv)
+    bn = BatchNormalizer(deconv)
     relu = Relu(bn)
     return deconv, bn, relu
 
