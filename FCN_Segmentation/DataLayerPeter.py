@@ -122,11 +122,12 @@ from scipy import misc
 import nibabel as ni
 import pdb
 from itertools import chain
+import sys
 
 
 class DataGen(object):
 
-    def __init__(self, path, crop=None, transforms=None, split="train", leave_out=1, seed=42, name="optionnal"):
+    def __init__(self, path, crop=None, size=None, transforms=None, split="train", leave_out=1, seed=42, name="optionnal"):
 
         self.path = path
         self.name = name
@@ -137,6 +138,11 @@ class DataGen(object):
         self.seed = seed
         self.get_patients(path, seed)
         self.Sort_patients()
+        if size is not None:
+            self.random_crop = True
+            self.size = size
+        else:
+            self.random_crop = False
 
     def ReLoad(self, split):
         self.split = split
@@ -144,7 +150,6 @@ class DataGen(object):
         self.Sort_patients()
 
     def __getitem__(self, key):
-
         if self.transforms is None:
             len_key = 2
         elif self.crop == 1 or self.crop is None:
@@ -191,7 +196,10 @@ class DataGen(object):
 
             img = f._apply_(img)
             lbl = f._apply_(lbl)
-
+        if self.random_crop:
+            seed = random.randint(0, sys.maxint)
+            img = self.RandomCropGen(img, self.size, seed=seed)
+            lbl = self.RandomCropGen(lbl, self.size, seed=seed)
         return img, lbl
 
     def get_patients(self, path, seed):
@@ -239,6 +247,7 @@ class DataGen(object):
         new_img = np.zeros(shape=(img.shape[1], img.shape[0], 1))
         new_img[:, :, 0] = img[:, :, 0].transpose()
         new_img = new_img.astype("uint8")
+# check with this line        new_img = new_img[np.newaxis, ...]
         return new_img
 
     def LoadImage(self, path):
@@ -264,6 +273,19 @@ class DataGen(object):
                     # pdb.set_trace()
                     yield sub_image
                 i_old = i
+
+    def RandomCropGen(self, img, size, seed=None):
+        if seed is not None:
+            random.seed(seed)
+        dim = img.shape
+        x = dim[0]
+        y = dim[1]
+        x_prime = size[0]
+        y_prime = size[1]
+        x_rand = random.randint(0, x - x_prime)
+        y_rand = random.randint(0, y - y_prime)
+
+        return img[x_rand:(x_rand + x_prime), y_rand:(y_rand + y_prime)]
 
     def CropIterator(self, img, img_gt):
         # pdb.set_trace()
