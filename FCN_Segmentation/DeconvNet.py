@@ -70,7 +70,7 @@ def ConvBnRelu(bottom, nout, ks=3, stride=1, pad=1):
     conv = Conv(bottom, nout, ks, stride, pad)
     # bn = BatchNormalizer(conv)
     # relu = Relu(bn)
-    return conv, bn, relu
+    # return conv, bn, relu
     bn, sl = BatchNormalizer(conv)
     relu = Relu(sl)
     return conv, bn, sl, relu
