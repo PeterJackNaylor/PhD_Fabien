@@ -93,7 +93,7 @@ def max_unpool(bottom1, bottom2, bottom3, ks=2, stride=2):
     return L.Unpooling(bottom1, bottom2, bottom3, pooling_param=unpooling_param)
 
 
-def DeconvNet(split, data_gene, classifier_name="DeconvNet"):
+def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet"):
     n = caffe.NetSpec()
 
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
