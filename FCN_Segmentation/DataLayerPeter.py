@@ -1,7 +1,7 @@
 import cPickle as pkl
-
+from UsefulFunctions.usefulPloting import Contours
 import caffe
-
+import matplotlib.pylab as plt
 
 class DataLayerPeter(caffe.Layer):
     """
@@ -199,7 +199,6 @@ class DataGen(object):
 
             img = f._apply_(img)
             lbl = f._apply_(lbl)
-
         return img, lbl
 
     def get_patients(self, path, seed):
@@ -283,7 +282,6 @@ class DataGen(object):
         y_prime = size[1]
         x_rand = random.randint(0, x - x_prime)
         y_rand = random.randint(0, y - y_prime)
-
         return img[x_rand:(x_rand + x_prime), y_rand:(y_rand + y_prime)]
 
     def CropIterator(self, img, img_gt):
