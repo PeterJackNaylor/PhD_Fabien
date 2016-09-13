@@ -279,7 +279,7 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet"):
         n.relu7, 512, ks=7)
 
     n.unpool5 = max_unpool(n.deconv_fc6_relu, n.pool5_mask,
-                           n.pool5_count, unpool_size=14)
+                           n.pool5_count)
 
     n.deconv5_1, n.DeBatchNormalize5_1, n.derelu5_1 = DeconvBnRelu(
         n.unpool5, 512, ks=3, pad=1)
@@ -289,7 +289,7 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet"):
         n.derelu5_2, 512, ks=3, pad=1)
 
     n.unpool4 = max_unpool(n.derelu5_3, n.pool4_mask,
-                           n.pool4_count, unpool_size=28)
+                           n.pool4_count)
 
     n.deconv4_1, n.DeBatchNormalize4_1, n.derelu4_1 = DeconvBnRelu(
         n.unpool4, 512, ks=3, pad=1)
@@ -299,7 +299,7 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet"):
         n.derelu4_2, 256, ks=3, pad=1)
 
     n.unpool3 = max_unpool(n.derelu4_3, n.pool3_mask,
-                           n.pool3_count, unpool_size=56)
+                           n.pool3_count)
 
     n.deconv3_1, n.DeBatchNormalize3_1, n.derelu3_1 = DeconvBnRelu(
         n.unpool3, 256, ks=3, pad=1)
@@ -309,7 +309,7 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet"):
         n.derelu3_2, 128, ks=3, pad=1)
 
     n.unpool2 = max_unpool(n.derelu3_3, n.pool2_mask,
-                           n.pool2_count, unpool_size=112)
+                           n.pool2_count)
 
     n.deconv2_1, n.DeBatchNormalize2_1, n.derelu2_1 = DeconvBnRelu(
         n.unpool2, 128, ks=3, pad=1)
@@ -317,7 +317,7 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet"):
         n.derelu2_1, 64, ks=3, pad=1)
 
     n.unpool1 = max_unpool(n.derelu2_2, n.pool1_mask,
-                           n.pool1_count, unpool_size=224)
+                           n.pool1_count)
 
     n.deconv1_1, n.DeBatchNormalize1_1, n.derelu1_1 = DeconvBnRelu(
         n.unpool1, 64, ks=3, pad=1)
