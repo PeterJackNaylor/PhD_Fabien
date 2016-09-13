@@ -197,7 +197,7 @@ class DataGen(object):
             img = f._apply_(img)
             lbl = f._apply_(lbl)
         if self.random_crop:
-            img, lbl = self.RandomCropGen(img, lbl, self.size)
+            img, lbl = self.CropImgLbl(img, lbl, self.size)
         return img, lbl
 
     def get_patients(self, path, seed):
