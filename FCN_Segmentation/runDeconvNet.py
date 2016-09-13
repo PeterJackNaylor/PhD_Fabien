@@ -16,10 +16,10 @@ mpl.use('Agg')
 import matplotlib.pylab as plt
 
 import DeconvNet
-DeconvNet.switch_caffe_path()
+# DeconvNet.switch_caffe_path()
 import DeconvNet_cheat
 
-from DataToLMDB import MakeDataLikeFCN
+# from DataToLMDB import MakeDataLikeFCN
 import ImageTransf as Transf
 import caffe
 import os
@@ -165,6 +165,7 @@ if __name__ == "__main__":
         pkl.dump(
             data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "wb"))
     if create_net:
+        path_modelgen = os.path.join(options.wd, options.cn, "model")
         # os.path.join(options.wd, "train")
 
         datagen_path = os.path.join(path_modelgen, "data_generator_train.pkl")
