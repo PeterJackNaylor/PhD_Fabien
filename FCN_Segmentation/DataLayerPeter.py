@@ -197,9 +197,7 @@ class DataGen(object):
             img = f._apply_(img)
             lbl = f._apply_(lbl)
         if self.random_crop:
-            seed = random.randint(0, sys.maxint)
-            img = self.RandomCropGen(img, self.size, seed=seed)
-            lbl = self.RandomCropGen(lbl, self.size, seed=seed)
+            img, lbl = self.RandomCropGen(img, lbl, self.size)
         return img, lbl
 
     def get_patients(self, path, seed):
@@ -247,7 +245,7 @@ class DataGen(object):
         new_img = np.zeros(shape=(img.shape[1], img.shape[0], 1))
         new_img[:, :, 0] = img[:, :, 0].transpose()
         new_img = new_img.astype("uint8")
-# check with this line        new_img = new_img[np.newaxis, ...]
+        new_img = new_img[np.newaxis, ...]
         return new_img
 
     def LoadImage(self, path):
@@ -274,7 +272,7 @@ class DataGen(object):
                     yield sub_image
                 i_old = i
 
-    def RandomCropGen(self, img, size, seed=None):
+    def CropImgLbl(self, img, lbl, size, seed=None):
         if seed is not None:
             random.seed(seed)
         dim = img.shape
@@ -284,6 +282,14 @@ class DataGen(object):
         y_prime = size[1]
         x_rand = random.randint(0, x - x_prime)
         y_rand = random.randint(0, y - y_prime)
+        return RandomCropGen(img, (x_prime, y_prime), (x_rand, y_rand)),
+            RandomCropGen(lbl, (x_prime, y_prime), (x_rand, y_rand))
+
+    def RandomCropGen(self, img, size, shit):
+        x_prime = size[0]
+        y_prime = size[1]
+        x_rand = shift[0]
+        y_rand = shift[1]
 
         return img[x_rand:(x_rand + x_prime), y_rand:(y_rand + y_prime)]
 
