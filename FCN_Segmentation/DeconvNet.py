@@ -211,8 +211,6 @@ def DeconvNet(split, data_gene, classifier_name="DeconvNet"):
                                    loss_param=dict(normalize=False, ignore_label=255))
     return n.to_proto()
 
-#  WITHOUT scalelayer
-
 
 # def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet"):
 #     n = caffe.NetSpec()
