@@ -112,6 +112,7 @@ class DataLayerPeter(caffe.Layer):
 
         if self.normalize:
             label[label > 0] = 1
+        label = label[np.newaxis, ...]
         return in_, label
 
 
@@ -246,7 +247,6 @@ class DataGen(object):
         new_img = np.zeros(shape=(img.shape[1], img.shape[0], 1))
         new_img[:, :, 0] = img[:, :, 0].transpose()
         new_img = new_img.astype("uint8")
-        new_img = new_img[np.newaxis, ...]
         return new_img
 
     def LoadImage(self, path):
@@ -283,7 +283,7 @@ class DataGen(object):
         y_prime = size[1]
         x_rand = random.randint(0, x - x_prime)
         y_rand = random.randint(0, y - y_prime)
-        return self.RandomCropGen(img, (x_prime, y_prime), (x_rand, y_rand)), self.RandomCropGen(lbl, (x_prime, y_prime), (x_rand, y_rand))
+        return self.RandomCropGen(img, (x_prime, y_prime), (x_rand, y_rand)), self. RandomCropGen(lbl, (x_prime, y_prime), (x_rand, y_rand))
 
     def RandomCropGen(self, img, size, shit):
         x_prime = size[0]
