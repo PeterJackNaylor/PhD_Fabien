@@ -58,7 +58,7 @@ def BatchNormalizer(bottom):
     noth = dict(lr_mult=0)
     param = [noth, noth, noth]
     bn = L.BatchNorm(bottom, param=param, in_place=True)
-    sl = L.ScaleLayer(bn, scale_param=dict(bias_term="true"), in_place=True)
+    sl = L.ScaleLayer(bn, scale_param=dict(bias_term="True"), in_place=True)
     return bn, sl
 
 
