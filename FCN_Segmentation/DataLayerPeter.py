@@ -112,7 +112,7 @@ class DataLayerPeter(caffe.Layer):
 
         if self.normalize:
             label[label > 0] = 1
-        #label = label[np.newaxis, ...]
+        label = label[np.newaxis, ...]
         return in_, label
 
 
@@ -160,6 +160,8 @@ class DataGen(object):
             len_key = 4
 
         if len(key) != len_key:
+            print "key given: ", key
+            print "key length %d" % len_key
             raise Exception('Wrong number of keys')
 
         if key[0] > len(self.patients_iter):
