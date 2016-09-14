@@ -74,7 +74,7 @@ class DataLayerPeter(caffe.Layer):
             x_l, y_l, z_l = label.shape
 
             self.data = np.zeros(shape=(self.batch_size, x, y, z))
-            self.label = np.zeros(shape=(self.batch_size, z_l, x_l, y_l))
+            self.label = np.zeros(shape=(self.batch_size, x_l, y_l, z_l))
 
             self.data[0], self.label[0] = data, label
 
