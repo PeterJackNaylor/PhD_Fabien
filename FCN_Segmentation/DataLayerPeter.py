@@ -90,7 +90,7 @@ class DataLayerPeter(caffe.Layer):
         # assign output
         top[0].data[...] = self.data
         top[1].data[...] = self.label
-
+        pdb.set_trace()
         # pick next input
         self.Nextkey()
 
