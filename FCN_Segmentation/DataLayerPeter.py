@@ -59,7 +59,7 @@ class DataLayerPeter(caffe.Layer):
         # randomization: seed and pick
         if self.random:
             random.seed(self.seed)
-            self.key = self.datagen.RandomKey(True)
+            self.key = self.datagen.RandomKey(True)self
 
     def reshape(self, bottom, top):
         # load image + label image pair
@@ -80,9 +80,7 @@ class DataLayerPeter(caffe.Layer):
 
             for i in range(1, self.batch_size):
                 self.Nextkey()
-                self.data[i], label = self.loadImageAndGT(self.key)
-                self.label[i, 0] = label
-                # reshape tops to fit (leading 1 is for batch dimension)
+                self.data[i], self.label[i] = self.loadImageAndGT(self.key)
             top[0].reshape(self.batch_size, *data.shape)
             top[1].reshape(self.batch_size, *label.shape)
 
@@ -90,7 +88,6 @@ class DataLayerPeter(caffe.Layer):
         # assign output
         top[0].data[...] = self.data
         top[1].data[...] = self.label
-        pdb.set_trace()
         # pick next input
         self.Nextkey()
 
