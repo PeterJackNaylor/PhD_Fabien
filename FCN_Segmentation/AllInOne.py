@@ -225,6 +225,16 @@ if __name__ == "__main__":
         number_of_test = data_generator_test.length
         loss, acc, acc1, iu, fwavacc, recall, precision, weights = run_solvers_IU(
             niter, solvers, r_f[pref], int(options.disp_interval), number_of_test, options.scorelayer)
+
+        np.save(os.path.join(r_f[pref], "loss"), loss[pref])
+
+        np.save(os.path.join(r_f[pref], "acc"), acc[pref])
+        np.save(os.path.join(r_f[pref], "acc1"), acc1[pref])
+        np.save(os.path.join(r_f[pref], "iu"), iu[pref])
+        np.save(os.path.join(r_f[pref], "fwavacc"), fwavacc[pref])
+        np.save(os.path.join(r_f[pref], "precision"), precision[pref])
+        np.save(os.path.join(r_f[pref], "recall"), recall[pref])
+
         plt.plot(range_iter, loss[pref])
         plt.savefig(os.path.join(r_f[pref], "loss"))
         plt.close()
