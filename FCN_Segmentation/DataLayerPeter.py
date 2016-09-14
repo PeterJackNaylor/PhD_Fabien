@@ -110,10 +110,12 @@ class DataLayerPeter(caffe.Layer):
         in_ = in_[:, :, ::-1]
         in_ -= self.mean
         in_ = in_.transpose((2, 0, 1))
-
+        if len(label.shape) == 3:
+            label = label.transpose((2, 0, 1))
+        else:
+            label = label[np.newaxis, ...]
         if self.normalize:
             label[label > 0] = 1
-        label = label[np.newaxis, ...]
         return in_, label
 
 
