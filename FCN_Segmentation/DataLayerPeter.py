@@ -112,7 +112,7 @@ class DataLayerPeter(caffe.Layer):
 
         if self.normalize:
             label[label > 0] = 1
-        #label = label[np.newaxis, ...]
+        label = label[np.newaxis, ...]
         return in_, label
 
 
