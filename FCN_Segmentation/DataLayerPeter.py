@@ -65,17 +65,16 @@ class DataLayerPeter(caffe.Layer):
         # load image + label image pair
         if self.batch_size == 1:
             self.data, self.label = self.loadImageAndGT(self.key)
-            pdb.set_trace()
             top[0].reshape(self.batch_size, *self.data.shape)
             top[1].reshape(self.batch_size, *self.label.shape)
 
         else:
             data, label = self.loadImageAndGT(self.key)
             x, y, z = data.shape
-            x_l, y_l = label.shape
+            x_l, y_l, z_l = label.shape
 
             self.data = np.zeros(shape=(self.batch_size, x, y, z))
-            self.label = np.zeros(shape=(self.batch_size, 1, x_l, y_l))
+            self.label = np.zeros(shape=(self.batch_size, z_l, x_l, y_l))
 
             self.data[0], self.label[0] = data, label
 
