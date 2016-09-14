@@ -62,7 +62,10 @@ if __name__ == "__main__":
 
     parser.add_option('--solverrate', dest="solverrate", default="0.000001",
                       help="Initial rate of the solver at 10e-6")
-
+    parser.add_option('--batch_size', dest="batch_size", default="1",
+                      help="Size of the batches")
+    parser.add_option('--size_x', dest="size_x", default=None)
+    parser.add_option('--size_y', dest="size_y", default=None)
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -86,7 +89,12 @@ if __name__ == "__main__":
     if options.solverrate != "0.000001":
         solverrate = 0.000001 * float(options.solverrate)
         options.solverrate = str(solverrate)
-
+    if options.size_x is None:
+        crop_size = None
+        print_crop = "No random cropping"
+    else:
+        crop_size = (int(options.size_x), int(options.size_y))
+        print_crop = options.size_x + " x " + options.size_y
     print "Input paramters to run:"
     print " \n "
     print "Raw data direct   : | " + options.rawdata
@@ -100,6 +108,8 @@ if __name__ == "__main__":
     print "Images in test    : | " + options.val_num
     print "Number of crops   : | " + options.crop
     print "Solver rate       : | " + options.solverrate
+    print "Sizes of batches  : | " + options.batch_size
+    print "random crop size  : | " + print_crop
 
     if options.crop == "1":
         crop = None
@@ -132,15 +142,14 @@ if __name__ == "__main__":
     if create_dataset:
         path_modelgen = os.path.join(options.wd, options.cn, "model")
         CheckOrCreate(path_modelgen)
-        data_generator_train = DataGen(options.rawdata, crop=crop,
+        data_generator_train = DataGen(options.rawdata, crop=crop, size=crop_size,
                                        transforms=transform_list, split="train", leave_out=int(options.val_num), seed=42)
         pkl.dump(
             data_generator_train, open(os.path.join(path_modelgen, "data_generator_train.pkl"), "wb"))
-        data_generator_test = DataGen(options.rawdata, crop=crop,
+        data_generator_test = DataGen(options.rawdata, crop=crop, size=crop_size,
                                       transforms=[Transf.Identity()], split="test", leave_out=int(options.val_num), seed=42)
         pkl.dump(
             data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "wb"))
-
     if create_net:
         datagen_path = os.path.join(path_modelgen, "data_generator_train.pkl")
         datagen_path_test = os.path.join(
