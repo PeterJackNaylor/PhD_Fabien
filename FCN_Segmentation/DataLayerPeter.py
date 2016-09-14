@@ -65,7 +65,6 @@ class DataLayerPeter(caffe.Layer):
         # load image + label image pair
         if self.batch_size == 1:
             self.data, self.label = self.loadImageAndGT(self.key)
-            pdb.set_trace()
             top[0].reshape(self.batch_size, *self.data.shape)
             top[1].reshape(self.batch_size, *self.label.shape)
 
@@ -114,6 +113,7 @@ class DataLayerPeter(caffe.Layer):
         if self.normalize:
             label[label > 0] = 1
         label = label[np.newaxis, ...]
+        pdb.set_trace()
         return in_, label
 
 
