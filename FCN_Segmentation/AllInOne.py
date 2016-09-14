@@ -2,12 +2,12 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pylab as plt
 
-import cPickle as pkl
-from DataLayerPeter import DataGen
 
 import sys
 sys.path[4] = '/data/users/pnaylor/Documents/Python/caffe_peter/python'
 
+import cPickle as pkl
+from DataLayerPeter import DataGen
 import ImageTransf as Transf
 import caffe
 import os
