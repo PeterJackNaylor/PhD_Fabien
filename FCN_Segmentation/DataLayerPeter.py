@@ -129,7 +129,7 @@ import sys
 
 class DataGen(object):
 
-    def __init__(self, path, crop=None, size=None, transforms=None, split="train", leave_out=1, seed=42, name="optionnal"):
+    def __init__(self, path, crop=None, size=None, transforms=None, split="train", leave_out=1, seed=None, name="optionnal"):
 
         self.path = path
         self.name = name
@@ -206,7 +206,8 @@ class DataGen(object):
 
     def get_patients(self, path, seed):
         # pdb.set_trace()
-        random.seed(seed)
+        if seed is not None:
+            random.seed(seed)
         folders = glob.glob(path + "/Slide_*")
         patient_num = []
         for el in folders:
