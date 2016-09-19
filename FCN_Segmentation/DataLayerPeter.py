@@ -2,6 +2,7 @@ import cPickle as pkl
 from UsefulFunctions.usefulPloting import Contours
 import caffe
 import matplotlib.pylab as plt
+from sys import maxint
 
 
 class DataLayerPeter(caffe.Layer):
@@ -218,6 +219,8 @@ class DataGen(object):
         self.patient_img = {el: glob.glob(
             self.path + "/Slide_{}".format(el) + "/*.png") for el in patient_num}
 
+        random.seed(random.randint(0, maxint - 1))
+
     def Sort_patients(self):
         n = len(self.patient_num)
         test_patient = random.sample(self.patient_num, self.leave_out)
@@ -278,6 +281,7 @@ class DataGen(object):
 
     def CropImgLbl(self, img, lbl, size, seed=None):
         if seed is not None:
+            print "I set the seed here"
             random.seed(seed)
         dim = img.shape
         x = dim[0]

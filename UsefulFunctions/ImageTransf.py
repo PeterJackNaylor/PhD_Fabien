@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from skimage.transform import PiecewiseAffineTransform, warp
 from skimage import img_as_ubyte
+from sys import maxint
 #==============================================================================
 #
 # def flip_vertical(picture):
@@ -254,8 +255,7 @@ class ElasticDeformation(Transf):
         Transf.__init__(self, "ElasticDeform_" + str(mu) +
                         "_" + str(sigma) + "_" + str(num_points))
         self.params = {"mu": mu, "sigma": sigma, "num_points": num_points}
-        if seed is None:
-            seed = np.random.randint(0, 1000000)
+
         self.seed = seed
 
     def grid(self, rows, cols, num_points):
@@ -277,19 +277,26 @@ class ElasticDeformation(Transf):
 
         src = self.grid(rows, cols, num_points)
         # add gaussian displacement to row coordinates
-        np.random.seed(self.seed)
-        dst_rows = src[:, 1] - sigma * np.random.randn(src.shape[0]) + mu
-        dst_cols = src[:, 0] - sigma * np.random.randn(src.shape[0]) + mu
 
-        # Delimiting points to the grid space
-        for point_ind in range(src.shape[0]):
-            dst_rows[point_ind] = min(max(dst_rows[point_ind], 0), rows)
-            dst_cols[point_ind] = min(max(dst_cols[point_ind], 0), cols)
+        if not hasattr(self, "dst"):
+            np.random.seed(self.seed)
 
-        dst = np.vstack([dst_cols, dst_rows]).T
+            dst_rows = src[:, 1] - sigma * np.random.randn(src.shape[0]) + mu
+            dst_cols = src[:, 0] - sigma * np.random.randn(src.shape[0]) + mu
+
+            # Delimiting points to the grid space
+            for point_ind in range(src.shape[0]):
+                dst_rows[point_ind] = min(max(dst_rows[point_ind], 0), rows)
+                dst_cols[point_ind] = min(max(dst_cols[point_ind], 0), cols)
+
+            self.dst = np.vstack([dst_cols, dst_rows]).T
+
+            if self.seed is not None:
+                a = np.random.randint(0, maxint - 1)
+                np.random.seed(a)
 
         tform = PiecewiseAffineTransform()
-        tform.estimate(src, dst)
+        tform.estimate(src, self.dst)
 
         out_rows = rows
         out_cols = cols

@@ -44,27 +44,28 @@ def seg_tests(solver, number_of_test, layer='score', gt='label'):
     return loss, acc, acc1, iu, fwavacc, recall, precision
 
 
-def do_seg_tests(net, iter, number_of_test, layer='score', gt='label'):
+def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', verbose=True):
+
     n_cl = net.blobs[layer].channels
+
     hist, loss = compute_hist(net, number_of_test, layer, gt)
-    # mean loss
-    print '>>>', datetime.now(), 'Iteration', iter, 'loss', loss
-    # overall accuracy
     acc = np.diag(hist).sum() / hist.sum()
-    print '>>>', datetime.now(), 'Iteration', iter, 'overall accuracy', acc
-    # per-class accuracy
     acc1 = np.diag(hist) / hist.sum(1)
-    print '>>>', datetime.now(), 'Iteration', iter, 'mean accuracy', np.nanmean(acc1)
-    # per-class IU
     iu = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
-    print '>>>', datetime.now(), 'Iteration', iter, 'mean IU', np.nanmean(iu)
     freq = hist.sum(1) / hist.sum()
     fwavacc = (freq[freq > 0] * iu[freq > 0]).sum()
-    print '>>>', datetime.now(), 'Iteration', iter, 'fwavacc', fwavacc
     recall = (hist[1, 1] + 0.0) / (hist[1, 0] + hist[1, 1])
     precision = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1])
-    print '>>>', 'recall', recall
-    print '>>>', 'precision', precision
+
+    if verbose:
+        print '>>>', datetime.now(), 'Iteration', iter, 'loss', loss
+        print '>>>', datetime.now(), 'Iteration', iter, 'overall accuracy', acc
+        print '>>>', datetime.now(), 'Iteration', iter, 'mean accuracy', np.nanmean(acc1)
+        print '>>>', datetime.now(), 'Iteration', iter, 'mean IU', np.nanmean(iu)
+        print '>>>', datetime.now(), 'Iteration', iter, 'fwavacc', fwavacc
+        print '>>>', 'recall', recall
+        print '>>>', 'precision', precision
+
     return hist, loss, acc, np.nanmean(acc1), np.nanmean(iu), fwavacc, recall, precision
 
 
