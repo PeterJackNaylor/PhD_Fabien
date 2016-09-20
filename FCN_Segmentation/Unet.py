@@ -58,7 +58,7 @@ def DeconvReCropConcatConvReConvRe(bottom1, bridge2, val, deconv_out=None):
                                     dict(lr_mult=2, decay_mult=0)],
                              )
     relu1 = Relu(deconv)
-    croped = crop(bridge2, relu1)
+    croped = crop(relu1, bridge2)
     concat = L.Concat(relu1, croped)
     conv2, relu2 = conv_relu(concat, val)
     conv3, relu3 = conv_relu(conv2, val)
