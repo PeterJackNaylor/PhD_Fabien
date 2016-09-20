@@ -3,6 +3,7 @@ from UsefulFunctions.usefulPloting import Contours
 import caffe
 import matplotlib.pylab as plt
 from sys import maxint
+import FIMM_histo.deconvolution as deconv
 
 
 class DataLayerPeter(caffe.Layer):
@@ -130,7 +131,9 @@ import sys
 
 class DataGen(object):
 
-    def __init__(self, path, crop=None, size=None, transforms=None, split="train", leave_out=1, seed=None, name="optionnal"):
+    def __init__(self, path, crop=None, size=None, transforms=None,
+                 split="train", leave_out=1, seed=None, name="optionnal",
+                 img_format="RGB"):
 
         self.path = path
         self.name = name
@@ -141,6 +144,7 @@ class DataGen(object):
         self.seed = seed
         self.get_patients(path, seed)
         self.Sort_patients()
+        self.img_format = img_format
         if size is not None:
             self.random_crop = True
             self.size = size
@@ -256,9 +260,31 @@ class DataGen(object):
         return new_img
 
     def LoadImage(self, path):
+        if not hasattr(self, "img_format"):
+            self.img_format = "RGB"
         image = misc.imread(path)
         if image.shape[2] == 4:
             image = image[:, :, 0:3]
+
+        if self.img_format == "HEDab":
+            dec = deconv.Deconvolution()
+            dec.params['image_type'] = 'HEDab'
+
+            np_img = np.array(image)
+            dec_img = dec.colorDeconv(np_img[:, :, :3])
+
+            image = dec_img.astype('uint8')
+
+        elif self.img_format == "HE":
+            dec = deconv.Deconvolution()
+            dec.params['image_type'] = 'HEDab'
+
+            np_img = np.array(image)
+            dec_img = dec.colorDeconv(np_img[:, :, :3])
+
+            image = dec_img.astype('uint8')
+            #image[:, :, 2] = image[:, :, 0]
+
         return image
 
     def DivideImage(self, img):

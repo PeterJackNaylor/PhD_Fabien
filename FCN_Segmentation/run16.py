@@ -58,12 +58,19 @@ if __name__ == "__main__":
 
     parser.add_option('--gpu', dest="gpu",
                       help="Which GPU to use.")
+
     parser.add_option('--val_test', dest="val_num", default="6",
                       help="Number of images in test (times crop).")
+
     parser.add_option('--crop', dest="crop", default="1",
                       help="Number of crops by image, divided equally")
+
     parser.add_option('--solverrate', dest="solverrate", default="0.000001",
                       help="Initial rate of the solver at 10e-6")
+
+    parser.add_option('--img_channel', dest="img_format", default="RGB",
+                      help="Display image in RGB, HE or HEDab")
+
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -101,7 +108,7 @@ if __name__ == "__main__":
     print "Images in test    : | " + options.val_num
     print "Number of crops   : | " + options.crop
     print "Solver rate       : | " + options.solverrate
-
+    print "Image format      ; | " + options.img_format
     options.niter = int(options.niter)
     if options.crop == "1":
         crop = None

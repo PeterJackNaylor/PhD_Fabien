@@ -78,6 +78,10 @@ if __name__ == "__main__":
                       help="Size of the batches")
     parser.add_option('--size_x', dest="size_x", default=None)
     parser.add_option('--size_y', dest="size_y", default=None)
+
+    parser.add_option('--img_format', dest="img_format", default="RGB",
+                      help="Display image in RGB, HE or HEDab")
+
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -121,7 +125,7 @@ if __name__ == "__main__":
     print "path to template  : | " + options.template
     print "Sizes of batches  : | " + options.batch_size
     print "random crop size  : | " + print_crop
-
+    print "Image format      ; | " + options.img_format
     if options.crop == "1":
         crop = None
     else:
@@ -155,11 +159,11 @@ if __name__ == "__main__":
         path_modelgen = os.path.join(options.wd, options.cn, "model")
         CheckOrCreate(path_modelgen)
         data_generator_train = DataGen(options.rawdata, crop=crop, size=crop_size,
-                                       transforms=transform_list, split="train", leave_out=int(options.val_num), seed=42)
+                                       transforms=transform_list, split="train", leave_out=int(options.val_num), seed=42, img_format=options.img_format)
         pkl.dump(
             data_generator_train, open(os.path.join(path_modelgen, "data_generator_train.pkl"), "wb"))
         data_generator_test = DataGen(options.rawdata, crop=crop, size=crop_size,
-                                      transforms=[Transf.Identity()], split="test", leave_out=int(options.val_num), seed=42)
+                                      transforms=[Transf.Identity()], split="test", leave_out=int(options.val_num), seed=42, img_format=options.img_format)
         pkl.dump(
             data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "wb"))
     if create_net:
