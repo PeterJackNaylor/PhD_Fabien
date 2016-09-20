@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser.add_option("--cn", dest="cn",
                       help="Classifier name, like FCN32")
 
-    parser.add_option("--weight", dest="weight", default="None"
+    parser.add_option("--weight", dest="weight", default="None",
                       help="Where to find the weight file")
 
     parser.add_option("--niter", dest="niter",
