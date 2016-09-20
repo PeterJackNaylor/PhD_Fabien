@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
         datagen_path = os.path.join(path_modelgen, "data_generator_train.pkl")
         CheckOrCreate(os.path.join(options.wd, options.cn))
-        UNet.make_net(os.path.join(options.wd, options.cn),
+        Unet.make_net(os.path.join(options.wd, options.cn),
                       datagen_path,
                       os.path.join(
             path_modelgen, "data_generator_test.pkl"),
