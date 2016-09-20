@@ -1,6 +1,9 @@
 
 import sys
 
+
+Constant_fil = dict(type="constant", value=0)
+
 sys.path.append(
     "/data/users/pnaylor/Documents/Python/PhD_Fabien/UsefulFunctions/")
 sys.path[4] = "/data/users/pnaylor/Documents/Python/caffe_peter/python"
@@ -33,12 +36,11 @@ def conv_relu(bottom, nout, ks=3, stride=1, pad=1):
     return conv, L.ReLU(conv, in_place=True)
 
 
-def Deconv(bottom, nout, ks, pad, weight_filler, bias_filler):
+def Deconv(bottom, nout, ks, weight_filler, bias_filler):
     deconv = L.Deconvolution(bottom,
                              param=[dict(lr_mult=1, decay_mult=1),
                                     dict(lr_mult=2, decay_mult=0)],
                              convolution_param=dict(num_output=nout,
-                                                    pad=pad,
                                                     kernel_size=ks,
                                                     weight_filler=weight_filler,
                                                     bias_filler=bias_filler))
@@ -51,13 +53,7 @@ def DeconvReCropConcatConvReConvRe(bottom1, bridge2, val, deconv_out=None):
     if deconv_out is None:
         deconv_out = val
 
-    deconv = L.Deconvolution(bottom1,
-                             convolution_param=dict(num_output=deconv_out, kernel_size=2, stride=2,
-                                                    bias_term=False),
-                             weight_filler=dict(type="bilinear"),
-                             param=[dict(lr_mult=1)])  # , decay_mult=1),
-    #       dict(lr_mult=2, decay_mult=0)]
-    #)
+    deconv = Deconv(bottom1, deconv_out, 2, dict(type="xavier"), Constant_fil)
     relu1 = Relu(deconv)
     croped = crop(bridge2, relu1)
     concat = L.Concat(relu1, croped)
@@ -65,21 +61,6 @@ def DeconvReCropConcatConvReConvRe(bottom1, bridge2, val, deconv_out=None):
     conv3, relu3 = conv_relu(conv2, val)
 
     return deconv, relu1, croped, concat, conv2, relu2, conv3, relu3
-
-
-def BatchNormalizer(bottom):
-    noth = dict(lr_mult=0)
-    param = [noth, noth, noth]
-    bn = L.BatchNorm(bottom, param=param, in_place=True)
-    return bn
-
-
-def BatchNormalizer(bottom):
-    noth = dict(lr_mult=0)
-    param = [noth, noth, noth]
-    bn = L.BatchNorm(bottom, param=param, in_place=True)
-    sl = L.Scale(bn, scale_param=dict(bias_term=True), in_place=True)
-    return bn, sl
 
 
 def Relu(bottom):
@@ -90,13 +71,6 @@ def max_pool(bottom, ks=2, stride=2):
     layer = L.Pooling(bottom, pool=P.Pooling.MAX,
                       kernel_size=ks, stride=stride)
     return layer
-
-
-def max_unpool(bottom1, bottom2, bottom3, ks=2, stride=2):
-    unpooling_param = dict(pool=P.Pooling.MAX, kernel_size=ks,
-                           stride=stride)
-    # should be unpooling?
-    return L.Unpooling(bottom1, bottom2, bottom3, pooling_param=unpooling_param)
 
 
 def UNet(split, data_gene, batch_size, classifier_name="UNet"):
