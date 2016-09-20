@@ -15,7 +15,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pylab as plt
 
-import UNet
+import Unet
 
 # from DataToLMDB import MakeDataLikeFCN
 import ImageTransf as Transf
