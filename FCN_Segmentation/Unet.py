@@ -58,12 +58,12 @@ def DeconvReCropConcatConvReConvRe(bottom1, bridge2, val, deconv_out=None):
                                     dict(lr_mult=2, decay_mult=0)],
                              )
     relu1 = Relu(deconv)
-    crop = crop(bridge2, relu1)
-    concat = L.Concat(relu1, crop)
+    croped = crop(bridge2, relu1)
+    concat = L.Concat(relu1, croped)
     conv2, relu2 = conv_relu(concat, val)
     conv3, relu3 = conv_relu(conv2, val)
 
-    return deconv, relu1, crop, concat, conv2, relu2, conv3, relu3
+    return deconv, relu1, croped, concat, conv2, relu2, conv3, relu3
 
 
 def BatchNormalizer(bottom):
