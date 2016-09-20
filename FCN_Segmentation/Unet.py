@@ -55,7 +55,7 @@ def DeconvReCropConcatConvReConvRe(bottom1, bridge2, val, deconv_out=None):
                              convolution_param=dict(num_output=deconv_out, kernel_size=2, stride=2,
                                                     bias_term=False, weight_filler=dict(type="xavier")),
                              param=[dict(lr_mult=1, decay_mult=1),
-                                    dict(lr_mult=2, decay_mult=0)],
+                                    dict(lr_mult=2, decay_mult=0)]
                              )
     relu1 = Relu(deconv)
     croped = crop(bridge2, relu1)
