@@ -156,6 +156,6 @@ def UNet(split, data_gene, classifier_name="UNet"):
 
 def make_net(wd, data_gene_train, data_gene_test, classifier_name="UNet"):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(DeconvNet('train', data_gene_train, batch_size, classifier_name)))
+        f.write(str(UNet('train', data_gene_train, batch_size, classifier_name)))
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(DeconvNet('test', data_gene_test, 1, classifier_name)))
+        f.write(str(UNet('test', data_gene_test, 1, classifier_name)))
