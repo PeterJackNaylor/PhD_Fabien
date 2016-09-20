@@ -36,14 +36,21 @@ def conv_relu(bottom, nout, ks=3, stride=1, pad=1):
     return conv, L.ReLU(conv, in_place=True)
 
 
-def Deconv(bottom, nout, ks, weight_filler, bias_filler):
+def Deconv(bottom, nout, ks, stride, weight_filler, bias_filler):
     deconv = L.Deconvolution(bottom,
                              param=[dict(lr_mult=1, decay_mult=1),
                                     dict(lr_mult=2, decay_mult=0)],
                              convolution_param=dict(num_output=nout,
                                                     kernel_size=ks,
+                                                    stride=stride,
                                                     weight_filler=weight_filler,
                                                     bias_filler=bias_filler))
+#    deconv = L.Deconvolution(bottom1,
+#                             convolution_param=dict(num_output=deconv_out, kernel_size=ks, stride=stride,
+#                                                    bias_term=False),
+#                             weight_filler=dict(type="bilinear"),
+#                             param=[dict(lr_mult=1)])
+
     return deconv
 
 # had to improvise with respect to bn_mode=INFERENCE
@@ -53,7 +60,8 @@ def DeconvReCropConcatConvReConvRe(bottom1, bridge2, val, deconv_out=None):
     if deconv_out is None:
         deconv_out = val
 
-    deconv = Deconv(bottom1, deconv_out, 2, dict(type="xavier"), Constant_fil)
+    deconv = Deconv(bottom1, deconv_out, 2, 2,
+                    dict(type="xavier"), Constant_fil)
     relu1 = Relu(deconv)
     croped = crop(bridge2, relu1)
     concat = L.Concat(relu1, croped)
