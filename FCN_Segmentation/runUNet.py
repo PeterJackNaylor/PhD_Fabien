@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser.add_option("--cn", dest="cn",
                       help="Classifier name, like FCN32")
 
-    parser.add_option("--weight", dest="weight",
+    parser.add_option("--weight", dest="weight", default="None"
                       help="Where to find the weight file")
 
     parser.add_option("--niter", dest="niter",
@@ -190,8 +190,6 @@ if __name__ == "__main__":
                              base_lr=solverrate,
                              out_snap=outsnap)
         # name_solver is solver_path.....
-    weights = options.weight
-    assert os.path.exists(weights)
 
     caffe.set_device(0)
     caffe.set_mode_gpu()
@@ -201,7 +199,11 @@ if __name__ == "__main__":
     pdb.set_trace()
     my_solver = caffe.get_solver(solver_path)
     # pdb.set_trace()
-    my_solver.net.copy_from(weights)
+
+    if options.weight != "None":
+        weights = options.weight
+        assert os.path.exists(weights)
+        my_solver.net.copy_from(weights)
 
     start_time = time.time()
     print 'Running solvers for %d iterations...' % niter
