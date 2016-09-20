@@ -98,7 +98,7 @@ def max_unpool(bottom1, bottom2, bottom3, ks=2, stride=2):
     return L.Unpooling(bottom1, bottom2, bottom3, pooling_param=unpooling_param)
 
 
-def UNet(split, data_gene, classifier_name="UNet"):
+def UNet(split, data_gene, batch_size, classifier_name="UNet"):
     n = caffe.NetSpec()
 
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
@@ -156,6 +156,6 @@ def UNet(split, data_gene, classifier_name="UNet"):
 
 def make_net(wd, data_gene_train, data_gene_test, classifier_name="UNet"):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(UNet('train', data_gene_train, batch_size, classifier_name)))
+        f.write(str(UNet('train', data_gene_train, 1, classifier_name)))
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
         f.write(str(UNet('test', data_gene_test, 1, classifier_name)))
