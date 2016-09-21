@@ -50,10 +50,14 @@ def Preprocessing(image_RGB):
 
 
 def Deprocessing4Visualisation(image_blob):
-    new = image_blob[0, :, :, :].transpose(1, 2, 0)
+    # pdb.set_trace()
+    new = image_blob[0, :, :, :].transpose(1, 2, 0).copy()
     new = new[:, :, ::-1]
     new += np.array([104.00698793, 116.66876762, 122.67891434])
+    new[new > 255] = 255
+    new[new < 0] = 0
     new = new.astype(np.uint8)
+
     return new
 
 
@@ -98,8 +102,7 @@ def OutputNet(image_blob, method="binary"):
         maxint = sys.maxint - 100
         res = np.zeros(l1.shape[0] * l2.shape[1] * 2)
         res[0:(l1.shape[0] * l2.shape[1])] = l1.flatten()
-        res[(l1.shape[0] * l2.shape[1])
-             :(l1.shape[0] * l2.shape[1] * 2)] = l2.flatten()
+        res[(l1.shape[0] * l2.shape[1])            :(l1.shape[0] * l2.shape[1] * 2)] = l2.flatten()
         mu = np.mean(res)
         sig = np.std(res)
 
