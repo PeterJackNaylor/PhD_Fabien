@@ -40,7 +40,7 @@ def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_s
     # every `stepsize` iterations.
     s.lr_policy = 'step'
     s.gamma = 0.1
-    s.stepsize = 7000
+    s.stepsize = 5000
 
     # Set other SGD hyperparameters. Setting a non-zero `momentum` takes a
     # weighted average of the current gradient and previous gradients to make

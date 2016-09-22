@@ -194,6 +194,8 @@ if __name__ == "__main__":
                 options.wd, options.cn, pref, "snapshot", "snapshot")
             CheckOrCreate(os.path.join(options.wd, options.cn, pref))
             CheckOrCreate(outsnap)
+            if pref == "FCN16":
+                solverrate = solverrate * 0.1
             name_solver = solver(solver_path,
                                  os.path.join(options.wd, options.cn, pref,
                                               "train.prototxt"),
