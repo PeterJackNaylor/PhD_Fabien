@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from skimage.transform import PiecewiseAffineTransform, warp
 from skimage import img_as_ubyte
-from sys import maxint
+
 #==============================================================================
 #
 # def flip_vertical(picture):
@@ -292,7 +292,7 @@ class ElasticDeformation(Transf):
             self.dst = np.vstack([dst_cols, dst_rows]).T
 
             if self.seed is not None:
-                a = np.random.randint(0, maxint - 1)
+                a = np.random.randint(0, 4294967295 - 1)
                 np.random.seed(a)
 
         tform = PiecewiseAffineTransform()
