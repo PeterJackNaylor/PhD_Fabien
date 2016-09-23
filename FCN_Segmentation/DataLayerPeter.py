@@ -45,9 +45,19 @@ class DataLayerPeter(caffe.Layer):
 
         self.datagen = pkl.load(open(params['datagen'], 'rb'))
         self.datagen.ReLoad(self.split)
+
+        if not hasattr(self.datagen, "Weight"):
+            self.datagen.Weight = False
+        if self.datagen.Weight:
+            n_tops = 2
+            n_tops_str = "two"
+        else:
+            n_tops = 3
+            n_tops_str = "three"
         # two tops: data and label
-        if len(top) != 2:
-            raise Exception("Need to define two tops: data and label.")
+        if len(top) != n_tops:
+            raise Exception(
+                "Need to define {} tops: data and label.".format(n_tops_str))
         # data layers have no bottoms
         if len(bottom) != 0:
             raise Exception("Do not define a bottom.")
@@ -65,32 +75,52 @@ class DataLayerPeter(caffe.Layer):
 
     def reshape(self, bottom, top):
         # load image + label image pair
+        IsTheirWeights = top.shape[0] == 3
+
         if self.batch_size == 1:
-            self.data, self.label = self.loadImageAndGT(self.key)
+            if not IsTheirWeights:
+                self.data, self.label = self.loadImageAndGT(self.key)
+            else:
+                self.data, self.label, self.weight = self.loadWithWeight(
+                    self.key)
+                top[2].reshape(self.batch_size, *self.weight.shape)
+
             top[0].reshape(self.batch_size, *self.data.shape)
             top[1].reshape(self.batch_size, *self.label.shape)
 
         else:
-            data, label = self.loadImageAndGT(self.key)
+            if not IsTheirWeights:
+                data, label = self.loadImageAndGT(self.key)
+            else:
+                data, label, weight = self.loadWithWeight(self.key)
+
             x, y, z = data.shape
             x_l, y_l, z_l = label.shape
 
             self.data = np.zeros(shape=(self.batch_size, x, y, z))
             self.label = np.zeros(shape=(self.batch_size, x_l, y_l, z_l))
-
+            if IsTheirWeights:
+                self.weight = np.zeros(shape=(self.batch_size, x_l, y_l, z_l))
             self.data[0], self.label[0] = data, label
 
             for i in range(1, self.batch_size):
                 self.Nextkey()
                 self.data[i], self.label[i] = self.loadImageAndGT(self.key)
+                if IsTheirWeights:
+                    self.weight[i] = self.loadWeight(self.key)
                 # reshape tops to fit (leading 1 is for batch dimension)
             top[0].reshape(self.batch_size, *data.shape)
             top[1].reshape(self.batch_size, *label.shape)
+
+            if IsTheirWeights:
+                top[2].reshape(self.batch_size, *weight.shape)
 
     def forward(self, bottom, top):
         # assign output
         top[0].data[...] = self.data
         top[1].data[...] = self.label
+        if top.shape[0] == 3:
+            top[2].data[...] = self.weight
         # pick next input
         self.Nextkey()
 
@@ -103,19 +133,36 @@ class DataLayerPeter(caffe.Layer):
         else:
             self.key = self.datagen.NextKey(self.key)
 
-    def loadImageAndGT(self, key):
-        im, label = self.datagen[key]
+    def PrepareImg(self, img):
         in_ = np.array(im, dtype=np.float32)
         in_ = in_[:, :, ::-1]
         in_ -= self.mean
         in_ = in_.transpose((2, 0, 1))
-        if len(label.shape) == 3:
-            label = label.transpose((2, 0, 1))
+        return in_
+
+    def Prepare2DImage(self, img):
+        if len(img) == 3:
+            img = img.transpose((2, 0, 1))
         else:
-            label = label[np.newaxis, ...]
+            img = img[np.newaxis, ...]
+        return img
+
+    def loadImageAndGT(self, key):
+        im, label = self.datagen[key]
+        in_ = self.PrepareImg(img)
+        label = self.Prepare2DImage(label)
         if self.normalize:
             label[label > 0] = 1
         return in_, label
+
+    def loadWithWeight(self, key):
+        im, label, weight = self.datagen[key]
+        in_ = self.PrepareImg(img)
+        label = self.Prepare2DImage(label)
+        weight = self.Prepare2DImage(weight)
+        if self.normalize:
+            label[label > 0] = 1
+        return in_, label, weight
 
 
 import glob
@@ -133,7 +180,7 @@ class DataGen(object):
 
     def __init__(self, path, crop=None, size=None, transforms=None,
                  split="train", leave_out=1, seed=None, name="optionnal",
-                 img_format="RGB"):
+                 img_format="RGB", Weight=False):
 
         self.path = path
         self.name = name
@@ -145,6 +192,7 @@ class DataGen(object):
         self.get_patients(path, seed)
         self.Sort_patients()
         self.img_format = img_format
+        self.Weight = Weight
         if size is not None:
             self.random_crop = True
             self.size = size
@@ -205,9 +253,33 @@ class DataGen(object):
 
             img = f._apply_(img)
             lbl = f._apply_(lbl)
+
+        if self.Weight:
+            wgt_path = img_path.replace("Slide", "WeightMap")
+            weight = self.LoadWeight(wgt_path)
+
+            i = 0
+            if len_key == 4:
+                for sub_weight in self.DivideImage(weight):
+                    if i == key[3]:
+                        weight = sub_weight
+                        break
+                    else:
+                        i += 1
+            if len_key > 2:
+                f = self.transforms[key[2]]
+                weight = f._apply_(weight)
+
         if self.random_crop:
-            img, lbl = self.CropImgLbl(img, lbl, self.size)
-        return img, lbl
+            if self.Weight:
+                img, lbl = self.CropImgLbl(img, lbl, self.size)
+            else:
+                img, lbl, wgt = self.CropImgLbl(
+                    img, lbl, self.size, wgt=weight)
+        if self.Weight:
+            return img, lbl
+        else:
+            return img, lbl, weight
 
     def get_patients(self, path, seed):
         # pdb.set_trace()
@@ -305,7 +377,7 @@ class DataGen(object):
                     yield sub_image
                 i_old = i
 
-    def CropImgLbl(self, img, lbl, size, seed=None):
+    def CropImgLbl(self, img, lbl, size, wgt=None, seed=None):
         if seed is not None:
             print "I set the seed here"
             random.seed(seed)
@@ -316,7 +388,10 @@ class DataGen(object):
         y_prime = size[1]
         x_rand = random.randint(0, x - x_prime)
         y_rand = random.randint(0, y - y_prime)
-        return self.RandomCropGen(img, (x_prime, y_prime), (x_rand, y_rand)), self. RandomCropGen(lbl, (x_prime, y_prime), (x_rand, y_rand))
+        if wgt is None:
+            return self.RandomCropGen(img, (x_prime, y_prime), (x_rand, y_rand)), self. RandomCropGen(lbl, (x_prime, y_prime), (x_rand, y_rand))
+        else:
+            return self.RandomCropGen(img, (x_prime, y_prime), (x_rand, y_rand)), self. RandomCropGen(lbl, (x_prime, y_prime), (x_rand, y_rand)), self.RandomCropGen(wgt, (x_prime, y_prime), (x_rand, y_rand))
 
     def RandomCropGen(self, img, size, shift):
         x_prime = size[0]
@@ -435,6 +510,96 @@ def softmax(x):
     e_x = np.exp(x - np.max(x))
     out = e_x / e_x.sum()
     return out
+
+
+class WeightGen(object):
+
+    def __init__(self, path, crop=None, size=None, transforms=None,
+                 split="train", leave_out=1, seed=None, name="optionnal",
+                 img_format="RGB", Weight=False):
+
+        self.path = path
+        self.name = name
+        self.transforms = transforms
+        self.crop = crop
+        self.split = split
+        self.leave_out = leave_out
+        self.seed = seed
+        self.get_patients(path, seed)
+        self.Sort_patients()
+        self.img_format = img_format
+        self.Weight = Weight
+        if size is not None:
+            self.random_crop = True
+            self.size = size
+        else:
+            self.random_crop = False
+
+    def ReLoad(self, split):
+        self.split = split
+        self.get_patients(self.path, self.seed)
+        self.Sort_patients()
+
+    def __getitem__(self, key):
+        # patients iter
+        # patient_img weight
+        # self.transforms
+        # self.split
+        # self.loadWeigth
+        # self.random_crop
+        # self.CropIterator
+        # self.CropImgLbl
+        if self.transforms is None:
+            len_key = 2
+        elif self.crop == 1 or self.crop is None:
+            len_key = 3
+        else:
+            len_key = 4
+
+        if len(key) != len_key:
+            print "key given: ", key
+            print "key length %d" % len_key
+            raise Exception('Wrong number of keys')
+
+        if key[0] > len(self.patients_iter):
+            raise Exception(
+                "Value exceed number of patients available for {}ing.".format(self.split))
+        numero = self.patients_iter[key[0]]
+        n_patient = len(self.patient_weight[numero])
+        if key[1] > n_patient:
+            raise Exception(
+                "Patient {} doesn't have {} possible images.".format(self.patients_iter[key[0]], key[1]))
+        if len_key > 2:
+            if key[2] > len(self.transforms):
+                raise Exception(
+                    "Value exceed number of possible transformation for {}ing".format(self.split))
+        if len_key == 4:
+            if key[3] > self.crop - 1:
+                raise Exception("Value exceed number of crops")
+
+        img_path = self.patient_weight[numero][key[1]]
+        lbl_path = img_path.replace("Slide", "GT").replace(".png", ".nii.gz")
+
+        img = self.LoadImage(img_path)
+        lbl = self.LoadGT(lbl_path)
+
+        i = 0
+        if len_key == 4:
+            for sub_image, sub_image_gt in self.CropIterator(img, lbl):
+                if i == key[3]:
+                    img = sub_image
+                    lbl = sub_image_gt
+                    break
+                else:
+                    i += 1
+        if len_key > 2:
+            f = self.transforms[key[2]]
+
+            img = f._apply_(img)
+            lbl = f._apply_(lbl)
+        if self.random_crop:
+            img, lbl = self.CropImgLbl(img, lbl, self.size)
+        return img, lbl
 
 
 class WeigthedLossLayer(caffe.Layer):
