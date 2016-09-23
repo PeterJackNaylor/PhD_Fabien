@@ -162,6 +162,7 @@ class DataLayerPeter(caffe.Layer):
         weight = self.Prepare2DImage(weight)
         if self.normalize:
             label[label > 0] = 1
+        pdb.set_trace()
         return in_, label, weight
 
 
