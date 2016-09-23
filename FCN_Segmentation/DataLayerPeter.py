@@ -134,7 +134,7 @@ class DataLayerPeter(caffe.Layer):
             self.key = self.datagen.NextKey(self.key)
 
     def PrepareImg(self, img):
-        in_ = np.array(im, dtype=np.float32)
+        in_ = np.array(img, dtype=np.float32)
         in_ = in_[:, :, ::-1]
         in_ -= self.mean
         in_ = in_.transpose((2, 0, 1))
@@ -157,7 +157,7 @@ class DataLayerPeter(caffe.Layer):
 
     def loadWithWeight(self, key):
         im, label, weight = self.datagen[key]
-        in_ = self.PrepareImg(img)
+        in_ = self.PrepareImg(im)
         label = self.Prepare2DImage(label)
         weight = self.Prepare2DImage(weight)
         if self.normalize:
@@ -513,7 +513,7 @@ def is_square(apositiveint):
 
 def softmax(x):
     e_x = np.exp(x - np.max(x))
-    out = e_x / e_x.sum()
+    out = e_x / e_x.sum(axis=0)
     return out
 
 
@@ -530,11 +530,11 @@ class WeigthedLossLayer(caffe.Layer):
 
     def reshape(self, bottom, top):
         # check input dimensions match
-        if bottom[0].count != bottom[1].count:
+        if bottom[0].count != 2 * bottom[1].count:
             raise Exception("Inputs 0 and 1 must have the same dimension.")
         if bottom[1].count != bottom[2].count:
             raise Exception("Inputs 1 and 2 must have the same dimension.")
-        if bottom[0].count != bottom[2].count:
+        if bottom[0].count * 2 != bottom[2].count:
             raise Exception("Inputs 0 and 2 must have the same dimension.")
         # difference is shape of inputs
         self.diff = np.zeros_like(bottom[0].data, dtype=np.float32)
@@ -542,8 +542,9 @@ class WeigthedLossLayer(caffe.Layer):
         top[0].reshape(1)
 
     def forward(self, bottom, top):
-        self.diff[...] = softmax(bottom[0].data, bottom[
-                                 1].data) * bottom[3].data
+        blob_score = bottom[0].data[...]
+        pdb.set_trace()
+        self.diff[...] = softmax(blob_score) * bottom[3].data
         top[0].data[...] = np.sum(self.diff**2) / bottom[0].num / 2.
 
     def backward(self, top, propagate_down, bottom):
