@@ -357,6 +357,8 @@ class DataGen(object):
             image = dec_img.astype('uint8')
             #image[:, :, 2] = image[:, :, 0]
 
+    def LoadWeight(self, path):
+        image = misc.imread(path)
         return image
 
     def DivideImage(self, img):
