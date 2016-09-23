@@ -563,6 +563,8 @@ class WeigthedLossLayer(caffe.Layer):
     def forward(self, bottom, top):
         blob_score = bottom[0].data[...]
         label_batch = bottom[1].data[...].sum(axis=1)
+        if len(label_batch.shape) > 3:
+            label_batch = label_batch.sum(axis=3)
         weight_batch = bottom[2].data[...].sum(axis=1)
 
 	pdb.set_trace()
