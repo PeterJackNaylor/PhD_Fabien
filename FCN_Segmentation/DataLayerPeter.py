@@ -48,7 +48,7 @@ class DataLayerPeter(caffe.Layer):
 
         if not hasattr(self.datagen, "Weight"):
             self.datagen.Weight = False
-        if self.datagen.Weight:
+        if not self.datagen.Weight:
             n_tops = 2
             n_tops_str = "two"
         else:
