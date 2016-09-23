@@ -356,6 +356,7 @@ class DataGen(object):
 
             image = dec_img.astype('uint8')
             #image[:, :, 2] = image[:, :, 0]
+        return image
 
     def LoadWeight(self, path):
         image = misc.imread(path)
