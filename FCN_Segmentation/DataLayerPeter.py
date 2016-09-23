@@ -276,7 +276,7 @@ class DataGen(object):
             else:
                 img, lbl, wgt = self.CropImgLbl(
                     img, lbl, self.size, wgt=weight)
-        if self.Weight:
+        if not self.Weight:
             return img, lbl
         else:
             return img, lbl, weight
