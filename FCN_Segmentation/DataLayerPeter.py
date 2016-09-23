@@ -534,7 +534,7 @@ class WeigthedLossLayer(caffe.Layer):
             raise Exception("Inputs 0 and 1 must have the same dimension.")
         if bottom[1].count != bottom[2].count:
             raise Exception("Inputs 1 and 2 must have the same dimension.")
-        if bottom[0].count * 2 != bottom[2].count:
+        if bottom[0].count != 2 * bottom[2].count:
             raise Exception("Inputs 0 and 2 must have the same dimension.")
         # difference is shape of inputs
         self.diff = np.zeros_like(bottom[0].data, dtype=np.float32)
