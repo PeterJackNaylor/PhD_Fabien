@@ -513,8 +513,24 @@ def is_square(apositiveint):
 
 def softmax(x):
     e_x = np.exp(x - np.max(x))
-    out = e_x / e_x.sum(axis=0)
+    out = e_x / e_x.sum(axis=1)
     return out
+
+
+def Duplicate(label_blob, inverse=False):
+    batch, sizex, sizey = label_blob.shape
+    new_blob = np.zeros(shape=(batch, 2, sizex, sizey))
+    for i in batch:
+        new_blob[i, 0] = label_blob[i, 0]
+        if inverse:
+            new_blob[i, 1] = 1 - label_blob[i, 1]
+        else:
+            new_blob[i, 1] = label_blob[i, 1]
+    return label_blob
+
+
+def neg_log(loss_blob):
+    return -np.log(loss_blob)
 
 
 class WeigthedLossLayer(caffe.Layer):
@@ -534,7 +550,7 @@ class WeigthedLossLayer(caffe.Layer):
             raise Exception("Inputs 0 and 1 must have the same dimension.")
         if bottom[1].count != bottom[2].count:
             raise Exception("Inputs 1 and 2 must have the same dimension.")
-        if bottom[0].count * 2 != bottom[2].count:
+        if bottom[0].count != 2 * bottom[2].count:
             raise Exception("Inputs 0 and 2 must have the same dimension.")
         # difference is shape of inputs
         self.diff = np.zeros_like(bottom[0].data, dtype=np.float32)
@@ -543,9 +559,17 @@ class WeigthedLossLayer(caffe.Layer):
 
     def forward(self, bottom, top):
         blob_score = bottom[0].data[...]
-        pdb.set_trace()
-        self.diff[...] = softmax(blob_score) * bottom[3].data
-        top[0].data[...] = np.sum(self.diff**2) / bottom[0].num / 2.
+        label_batch = bottom[1].data[...].sum(axis=1)
+        weight_batch = bottom[2].data[...].sum(axis=1)
+
+        loss_batch = softmax(blob_score)
+        log_loss_batch = neg_log(loss_batch)
+        label_batch2 = Duplicate(label_batch, inverse=1)
+        weight_batch2 = Duplicate(weight_batch, inverse=0)
+
+        self.diff = log_loss_batch * label_batch2 * weight_batch2
+
+        top[0].data[...] = np.sum(self.diff)
 
     def backward(self, top, propagate_down, bottom):
         for i in range(3):
