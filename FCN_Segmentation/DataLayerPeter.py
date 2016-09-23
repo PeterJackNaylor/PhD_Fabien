@@ -518,9 +518,12 @@ def softmax(x):
 
 
 def Duplicate(label_blob, inverse=False):
-    batch, sizex, sizey = label_blob.shape
+    try:
+        batch, sizex, sizey = label_blob.shape
+    except:
+        pdb.set_trace()
     new_blob = np.zeros(shape=(batch, 2, sizex, sizey))
-    for i in batch:
+    for i in range(batch):
         new_blob[i, 0] = label_blob[i, 0]
         if inverse:
             new_blob[i, 1] = 1 - label_blob[i, 1]
