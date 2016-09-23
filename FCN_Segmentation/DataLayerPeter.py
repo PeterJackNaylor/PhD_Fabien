@@ -134,7 +134,7 @@ class DataLayerPeter(caffe.Layer):
             self.key = self.datagen.NextKey(self.key)
 
     def PrepareImg(self, img):
-        in_ = np.array(im, dtype=np.float32)
+        in_ = np.array(img, dtype=np.float32)
         in_ = in_[:, :, ::-1]
         in_ -= self.mean
         in_ = in_.transpose((2, 0, 1))
@@ -157,7 +157,7 @@ class DataLayerPeter(caffe.Layer):
 
     def loadWithWeight(self, key):
         im, label, weight = self.datagen[key]
-        in_ = self.PrepareImg(img)
+        in_ = self.PrepareImg(im)
         label = self.Prepare2DImage(label)
         weight = self.Prepare2DImage(weight)
         if self.normalize:
