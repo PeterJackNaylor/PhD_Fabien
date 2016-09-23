@@ -81,16 +81,22 @@ def max_pool(bottom, ks=2, stride=2):
     return layer
 
 
-def UNet(split, data_gene, batch_size, classifier_name="UNet"):
+def UNet(split, data_gene, batch_size, classifier_name="UNet", loss_layer="softmax"):
     n = caffe.NetSpec()
 
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
                          seed=1337, batch_size=batch_size, classifier_name=classifier_name)
     pylayer = 'DataLayerPeter'
     pydata_params["datagen"] = data_gene
-    n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
-                               ntop=2, param_str=str(pydata_params))
-
+    if loss_layer == "softmax":
+        n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
+                                   ntop=2, param_str=str(pydata_params))
+    elif:
+        loss_layer == "weight":
+        n.data, n.label, n.weight = L.Python(module='DataLayerPeter', layer=pylayer,
+                                             ntop=3, param_str=str(pydata_params))
+    else:
+        raise Exception("No loss layer attributed to {}".format(loss_layer))
     n.conv_d0a, n.relu_d0b = conv_relu(n.data, 64)
     n.conv_d0b, n.relu_d0c = conv_relu(n.relu_d0b, 64)
     n.pool_d0c = max_pool(n.relu_d0c)
@@ -131,14 +137,18 @@ def UNet(split, data_gene, batch_size, classifier_name="UNet"):
                                 lr_mult=2, decay_mult=0)],
                             weight_filler=dict(type="xavier"))
 
-    if split != "val":
+    if loss_layer == "softmax":
         n.loss = L.SoftmaxWithLoss(n.score, n.label,
                                    loss_param=dict(normalize=False, ignore_label=255))
+    elif loss_layer == "weight":
+        n.loss = L.Python(n.score, n.label, n.weight,
+                          module='DataLayerPeter', layer="WeigthedLossLayer")
     return n.to_proto()
 
 
-def make_net(wd, data_gene_train, data_gene_test, classifier_name="UNet"):
+def make_net(wd, data_gene_train, data_gene_test, classifier_name="UNet",
+             loss_layer="softmax"):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(UNet('train', data_gene_train, 1, classifier_name)))
+        f.write(str(UNet('train', data_gene_train, 1, classifier_name, loss_layer)))
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(UNet('test', data_gene_test, 1, classifier_name)))
+        f.write(str(UNet('test', data_gene_test, 1, classifier_name, loss_layer)))

@@ -81,7 +81,8 @@ if __name__ == "__main__":
 
     parser.add_option('--img_format', dest="img_format", default="RGB",
                       help="Display image in RGB, HE or HEDab")
-
+    parser.add_option('--loss', dest="loss", default="softmax",
+                      help="loss possible: softmax or weight")
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -126,6 +127,7 @@ if __name__ == "__main__":
     print "Sizes of batches  : | " + options.batch_size
     print "random crop size  : | " + print_crop
     print "Image format      ; | " + options.img_format
+    print "loss layer        : | " + options.loss
     if options.crop == "1":
         crop = None
     else:
@@ -158,12 +160,20 @@ if __name__ == "__main__":
     if create_dataset:
         path_modelgen = os.path.join(options.wd, options.cn, "model")
         CheckOrCreate(path_modelgen)
+        if options.loss == "weight":
+            Weight = True
+        else:
+            Weight = False
         data_generator_train = DataGen(options.rawdata, crop=crop, size=crop_size,
-                                       transforms=transform_list, split="train", leave_out=int(options.val_num), seed=42, img_format=options.img_format)
+                                       transforms=transform_list, split="train",
+                                       leave_out=int(options.val_num), seed=42,
+                                       img_format=options.img_format, Weight=Weight)
         pkl.dump(
             data_generator_train, open(os.path.join(path_modelgen, "data_generator_train.pkl"), "wb"))
         data_generator_test = DataGen(options.rawdata, crop=crop, size=crop_size,
-                                      transforms=[Transf.Identity()], split="test", leave_out=int(options.val_num), seed=42, img_format=options.img_format)
+                                      transforms=[Transf.Identity()], split="test",
+                                      leave_out=int(options.val_num), seed=42,
+                                      img_format=options.img_format, Weight=Weight)
         pkl.dump(
             data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "wb"))
     if create_net:
@@ -176,7 +186,8 @@ if __name__ == "__main__":
                       datagen_path,
                       os.path.join(
             path_modelgen, "data_generator_test.pkl"),
-            classifier_name=options.cn)
+            classifier_name=options.cn
+            loss_layer=options.loss)
 
     solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
     outsnap = os.path.join(options.wd, options.cn, "snapshot", "snapshot")
