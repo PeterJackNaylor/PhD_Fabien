@@ -48,7 +48,7 @@ class DataLayerPeter(caffe.Layer):
 
         if not hasattr(self.datagen, "Weight"):
             self.datagen.Weight = False
-        if self.datagen.Weight:
+        if not self.datagen.Weight:
             n_tops = 2
             n_tops_str = "two"
         else:
@@ -75,7 +75,7 @@ class DataLayerPeter(caffe.Layer):
 
     def reshape(self, bottom, top):
         # load image + label image pair
-        IsTheirWeights = top.shape[0] == 3
+        IsTheirWeights = self.datagen.Weight
 
         if self.batch_size == 1:
             if not IsTheirWeights:
@@ -119,7 +119,7 @@ class DataLayerPeter(caffe.Layer):
         # assign output
         top[0].data[...] = self.data
         top[1].data[...] = self.label
-        if top.shape[0] == 3:
+        if self.datagen.Weight:
             top[2].data[...] = self.weight
         # pick next input
         self.Nextkey()

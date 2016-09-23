@@ -186,7 +186,7 @@ if __name__ == "__main__":
                       datagen_path,
                       os.path.join(
             path_modelgen, "data_generator_test.pkl"),
-            classifier_name=options.cn
+            classifier_name=options.cn,
             loss_layer=options.loss)
 
     solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
