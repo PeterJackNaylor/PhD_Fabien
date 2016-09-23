@@ -197,6 +197,7 @@ if __name__ == "__main__":
 
     caffe.set_device(0)
     caffe.set_mode_gpu()
+    #caffe.set_mode_cpu()	
 
     niter = options.niter
 
