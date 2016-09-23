@@ -520,7 +520,7 @@ def softmax(x):
 def Duplicate(label_blob, inverse=False):
     batch, sizex, sizey = label_blob.shape
     new_blob = np.zeros(shape=(batch, 2, sizex, sizey))
-    for i in batch:
+    for i in range(batch):
         new_blob[i, 0] = label_blob[i, 0]
         if inverse:
             new_blob[i, 1] = 1 - label_blob[i, 1]
@@ -562,6 +562,7 @@ class WeigthedLossLayer(caffe.Layer):
         label_batch = bottom[1].data[...].sum(axis=1)
         weight_batch = bottom[2].data[...].sum(axis=1)
 
+	pdb.set_trace()
         loss_batch = softmax(blob_score)
         log_loss_batch = neg_log(loss_batch)
         label_batch2 = Duplicate(label_batch, inverse=1)
