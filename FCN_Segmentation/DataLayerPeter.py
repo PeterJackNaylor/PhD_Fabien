@@ -100,7 +100,8 @@ class DataLayerPeter(caffe.Layer):
             self.data = np.zeros(shape=(self.batch_size, x, y, z))
             self.label = np.zeros(shape=(self.batch_size, x_l, y_l, z_l))
             if IsTheirWeights:
-                self.weight = np.zeros(shape=(self.batch_size, x_l, y_l, z_l))
+                self.weight = np.zeros(
+                    shape=(self.batch_size, x_l, y_l, z_l), dtype=np.float32)
             self.data[0], self.label[0] = data, label
 
             for i in range(1, self.batch_size):
@@ -120,6 +121,7 @@ class DataLayerPeter(caffe.Layer):
         top[0].data[...] = self.data
         top[1].data[...] = self.label
         if self.datagen.Weight:
+            pdb.set_trace()
             top[2].data[...] = self.weight
         # pick next input
         self.Nextkey()
@@ -162,6 +164,7 @@ class DataLayerPeter(caffe.Layer):
         weight = self.Prepare2DImage(weight)
         if self.normalize:
             label[label > 0] = 1
+        pdb.set_trace()
         return in_, label, weight
 
 
@@ -565,9 +568,9 @@ class WeigthedLossLayer(caffe.Layer):
         label_batch = bottom[1].data[...].sum(axis=1)
         if len(label_batch.shape) > 3:
             label_batch = label_batch.sum(axis=3)
+        weight_batch = bottom[2].data[...].sum(axis=1)
         if len(weight_batch.shape) > 3:
             weight_batch = weight_batch.sum(axis=3)
-        weight_batch = bottom[2].data[...].sum(axis=1)
 
         loss_batch = softmax(blob_score)
         log_loss_batch = neg_log(loss_batch)
