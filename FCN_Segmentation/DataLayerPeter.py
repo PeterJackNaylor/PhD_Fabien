@@ -282,6 +282,7 @@ class DataGen(object):
         if not self.Weight:
             return img, lbl
         else:
+	    pdb.set_trace()
             return img, lbl, weight
 
     def get_patients(self, path, seed):
