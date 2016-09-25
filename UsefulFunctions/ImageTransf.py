@@ -103,13 +103,11 @@ class Transf(object):
 
     def OutputType(self, image):
         if len(image.shape) == 2:
-            img = image > 0
-            img.dtype = 'uint8'
-            return img
+            image.dtype = 'uint8'
+            return image
         elif image.shape[2] == 1:
-            img = image > 0
-            img.dtype = 'uint8'
-            return img
+            image.dtype = 'uint8'
+            return image
         return image
 
 
@@ -308,11 +306,9 @@ class ElasticDeformation(Transf):
 
     def OutputType(self, image):
         if len(image.shape) == 2:
-            img = image > 0
             img.dtype = 'uint8'
             return img
         elif image.shape[2] == 1:
-            img = image > 0
             img.dtype = 'uint8'
             return img
         else:

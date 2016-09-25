@@ -140,6 +140,8 @@ class DataLayerPeter(caffe.Layer):
         in_ = in_[:, :, ::-1]
         in_ -= self.mean
         in_ = in_.transpose((2, 0, 1))
+        if len(in_.shape) == 4:
+            in_ = in_[:, :, :, 0]
         return in_
 
     def Prepare2DImage(self, img):
@@ -147,6 +149,8 @@ class DataLayerPeter(caffe.Layer):
             img = img.transpose((2, 0, 1))
         else:
             img = img[np.newaxis, ...]
+        if len(img.shape) == 4:
+            img = img[:, :, :, 0]
         return img
 
     def loadImageAndGT(self, key):
@@ -277,11 +281,12 @@ class DataGen(object):
             if self.Weight:
                 img, lbl = self.CropImgLbl(img, lbl, self.size)
             else:
-                img, lbl, wgt = self.CropImgLbl(
+                img, lbl, weight = self.CropImgLbl(
                     img, lbl, self.size, wgt=weight)
         if not self.Weight:
             return img, lbl
         else:
+            pdb.set_trace()
             return img, lbl, weight
 
     def get_patients(self, path, seed):
