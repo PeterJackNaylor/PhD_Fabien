@@ -187,7 +187,7 @@ class DataGen(object):
 
     def __init__(self, path, crop=None, size=None, transforms=None,
                  split="train", leave_out=1, seed=None, name="optionnal",
-                 img_format="RGB", Weight=False, WeightOnes=WeightOnes):
+                 img_format="RGB", Weight=False, WeightOnes=False):
 
         self.path = path
         self.name = name

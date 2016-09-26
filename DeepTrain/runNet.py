@@ -102,7 +102,7 @@ if __name__ == "__main__":
             arg_datagen['loss'] = options.loss
         if options.crop != "1":
             arg_datagen['crop'] = int(options.crop)
-        if options.size_x is None:
+        if options.size_x is not None:
             arg_datagen['crop_size'] = (
                 int(options.size_x), int(options.size_y))
         if options.img_format != "RGB":
