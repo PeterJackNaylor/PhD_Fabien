@@ -121,7 +121,7 @@ class DataLayerPeter(caffe.Layer):
         top[0].data[...] = self.data
         top[1].data[...] = self.label
         if self.datagen.Weight:
-            #pdb.set_trace()
+            # pdb.set_trace()
             top[2].data[...] = self.weight
         # pick next input
         self.Nextkey()
@@ -168,7 +168,7 @@ class DataLayerPeter(caffe.Layer):
         weight = self.Prepare2DImage(weight)
         if self.normalize:
             label[label > 0] = 1
-        #pdb.set_trace()
+        # pdb.set_trace()
         return in_, label, weight
 
 
@@ -187,7 +187,7 @@ class DataGen(object):
 
     def __init__(self, path, crop=None, size=None, transforms=None,
                  split="train", leave_out=1, seed=None, name="optionnal",
-                 img_format="RGB", Weight=False):
+                 img_format="RGB", Weight=False, WeightOnes=WeightOnes):
 
         self.path = path
         self.name = name
@@ -200,6 +200,7 @@ class DataGen(object):
         self.Sort_patients()
         self.img_format = img_format
         self.Weight = Weight
+        self.WeightOnes = WeightOnes
         if size is not None:
             self.random_crop = True
             self.size = size
@@ -369,6 +370,8 @@ class DataGen(object):
         image = misc.imread(path)
         if len(image.shape) == 2:
             image = image[..., np.newaxis]
+        if self.WeightOnes:
+            return np.ones_like(image)
         return image
 
     def DivideImage(self, img):

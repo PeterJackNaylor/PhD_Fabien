@@ -82,7 +82,8 @@ if __name__ == "__main__":
     parser.add_option('--size_y', dest="size_y", default=None)
     parser.add_option('--img_format', dest="img_format", default="RGB",
                       help="Display image in RGB, HE or HEDab")
-
+    parser.add_option('--loss', dest="loss", default="softmax",
+                      help="loss possible: softmax or weight, or weight1")
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -127,6 +128,7 @@ if __name__ == "__main__":
     print "Sizes of batches  : | " + options.batch_size
     print "random crop size  : | " + print_crop
     print "Image format      ; | " + options.img_format
+    print "loss layer        : | " + options.loss
 
     if options.crop == "1":
         crop = None
@@ -179,7 +181,8 @@ if __name__ == "__main__":
                            os.path.join(
                                path_modelgen, "data_generator_test.pkl"),
                            batch_size=int(options.batch_size),
-                           classifier_name=options.cn)
+                           classifier_name=options.cn,
+                           loss_layer=options.loss)
     if create_net_cheat:
         path_modelgen = os.path.join(options.wd, options.cn, "model")
         template_path = os.path.join(

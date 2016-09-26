@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser.add_option('--img_format', dest="img_format", default="RGB",
                       help="Display image in RGB, HE or HEDab")
     parser.add_option('--loss', dest="loss", default="softmax",
-                      help="loss possible: softmax or weight")
+                      help="loss possible: softmax or weight, or weight1")
     (options, args) = parser.parse_args()
 
     if options.rawdata is None:
@@ -144,11 +144,7 @@ if __name__ == "__main__":
 
     transform_list = [Transf.Identity(),
                       Transf.Flip(0),
-                      Transf.Flip(1),
-                      Transf.OutOfFocus(5),
-                      Transf.OutOfFocus(10),
-                      Transf.ElasticDeformation(0, 30, num_points=4),
-                      Transf.ElasticDeformation(0, 30, num_points=4)]
+                      Transf.Flip(1)]
 
     for rot in range(1, 360):
         transform_list.append(Transf.Rotation(rot, enlarge=enlarge))
@@ -162,18 +158,25 @@ if __name__ == "__main__":
         CheckOrCreate(path_modelgen)
         if options.loss == "weight":
             Weight = True
+            WeightOnes = False
+        elif options.loss == "weight1":
+            Weight = True
+            WeightOnes = True
         else:
             Weight = False
+            WeightOnes = False
         data_generator_train = DataGen(options.rawdata, crop=crop, size=crop_size,
                                        transforms=transform_list, split="train",
                                        leave_out=int(options.val_num), seed=42,
-                                       img_format=options.img_format, Weight=Weight)
+                                       img_format=options.img_format, Weight=Weight,
+                                       WeightOnes=WeightOnes)
         pkl.dump(
             data_generator_train, open(os.path.join(path_modelgen, "data_generator_train.pkl"), "wb"))
         data_generator_test = DataGen(options.rawdata, crop=crop, size=crop_size,
                                       transforms=[Transf.Identity()], split="test",
                                       leave_out=int(options.val_num), seed=42,
-                                      img_format=options.img_format, Weight=Weight)
+                                      img_format=options.img_format, Weight=Weight,
+                                      WeightOnes=WeightOnes)
         pkl.dump(
             data_generator_test, open(os.path.join(path_modelgen, "data_generator_test.pkl"), "wb"))
     if create_net:
@@ -190,7 +193,7 @@ if __name__ == "__main__":
             loss_layer=options.loss)
 
     solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
-    outsnap = os.path.join(options.wd, options.cn, "snapshot", "snapshot")
+    outsnap = os.path.join(options.wd, options.cn, "snapshot")
 
     CheckOrCreate(os.path.join(options.wd, options.cn))
     CheckOrCreate(outsnap)
@@ -208,7 +211,7 @@ if __name__ == "__main__":
 
     caffe.set_device(0)
     caffe.set_mode_gpu()
-    #caffe.set_mode_cpu()	
+    # caffe.set_mode_cpu()
 
     niter = options.niter
 
