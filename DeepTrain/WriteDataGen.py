@@ -9,7 +9,7 @@ def CheckOrCreate(path):
         os.makedirs(path)
 
 
-def WriteDataGen(**kwargs):
+def WriteDataGen(kwargs):
     """
     Compulsory arguments:
         wd : work directory

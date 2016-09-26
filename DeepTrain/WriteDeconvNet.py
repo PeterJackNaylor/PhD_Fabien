@@ -1,4 +1,5 @@
 import DeconvNet
+import os
 
 
 def CheckOrCreate(path):
@@ -6,7 +7,7 @@ def CheckOrCreate(path):
         os.makedirs(path)
 
 
-def WriteDeconvNet(**kwargs):
+def WriteDeconvNet(kwargs):
     """
     Compulsory arguments:
       wd : work directory
@@ -28,7 +29,7 @@ def WriteDeconvNet(**kwargs):
         loss = 'softmax'
 
     if 'batch_size' in kwargs.keys():
-        batch_size = batch_size
+        batch_size = kwargs['batch_size']
     else:
         batch_size = 1
 

@@ -6,7 +6,7 @@ def CheckOrCreate(path):
         os.makedirs(path)
 
 
-def WriteUnet(**kwargs):
+def WriteUnet(kwargs):
     """
     Compulsory arguments:
         wd : work directory
