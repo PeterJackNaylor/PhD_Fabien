@@ -9,7 +9,7 @@ from solver import solver, run_solvers, run_solvers_IU
 import numpy as np
 
 
-def trainNet(cn, wd, niter, solver_path, weight, disp_interval):
+def trainNet(kwargs):
     """
     options: cn : classifier name
              wd : work directory
