@@ -1,4 +1,4 @@
-
+import os
 import numpy as np
 from optparse import OptionParser
 
@@ -8,6 +8,11 @@ create_dataset = True
 create_net = True
 create_solver = True
 train = True
+
+
+def CheckOrCreate(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
 
 if __name__ == "__main__":
 
@@ -133,9 +138,10 @@ if __name__ == "__main__":
             WriteDeconvNet(arg_net)
 
     if create_solver:
+	from solver import solver, run_solvers, run_solvers_IU
         solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
         outsnap = os.path.join(options.wd, options.cn, "snapshot")
-
+	solverrate = float(options.solverrate)
         CheckOrCreate(os.path.join(options.wd, options.cn))
         CheckOrCreate(outsnap)
 

@@ -22,7 +22,7 @@ def trainNet(cn, wd, niter, solver_path, weight, disp_interval):
     path_modelgen = os.path.join(path_, "model")
     datagen_path = os.path.join(path_modelgen, "data_generator_test.pkl")
 
-    datagen_test = pkl.load(open(datagen_path, "wb"))
+    datagen_test = pkl.load(open(datagen_path, "rb"))
     number_of_test = datagen_test.length
 
     caffe.set_device(0)
