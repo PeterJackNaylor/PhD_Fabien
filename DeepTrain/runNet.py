@@ -4,6 +4,10 @@ from optparse import OptionParser
 
 import pdb
 
+create_dataset = True
+create_net = True
+create_solver = True
+train = True
 
 if __name__ == "__main__":
 
@@ -13,6 +17,7 @@ if __name__ == "__main__":
                       help="net architecture possible: FCN, DeconvNet, UNet")
 
     parser.add_option("--rawdata", dest="rawdata",
+                      default='/home/naylor/Bureau/ToAnnotate',
                       help="raw data folder, with respect to datamanager.py")
 
     parser.add_option("--wd", dest="wd",
@@ -30,7 +35,7 @@ if __name__ == "__main__":
     parser.add_option("--disp_interval", dest="disp_interval",
                       help=" Diplay interval for training the network", default="10")
 
-    parser.add_option('--val_test', dest="val_num", default="6",
+    parser.add_option('--val_num', dest="val_num", default="1",
                       help="Number of images in test (times crop).")
 
     parser.add_option('--crop', dest="crop", default="1",
@@ -53,9 +58,6 @@ if __name__ == "__main__":
                       help="loss possible: softmax or weight, or weight1")
 
     (options, args) = parser.parse_args()
-
-    if options.rawdata is None:
-        options.rawdata = '/home/naylor/Bureau/ToAnnotate'
 
     if options.wd is None:
         options.wd = '/home/naylor/Documents/Python/PhD/dataFCN'
@@ -83,7 +85,6 @@ if __name__ == "__main__":
     print "Number of crops   : | " + options.crop
     print "Solver rate       : | " + options.solverrate
     print "Sizes of batches  : | " + options.batch_size
-    print "random crop size  : | " + print_crop
     print "Image format      ; | " + options.img_format
     print "loss layer        : | " + options.loss
 
