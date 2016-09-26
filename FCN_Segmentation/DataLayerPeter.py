@@ -121,7 +121,7 @@ class DataLayerPeter(caffe.Layer):
         top[0].data[...] = self.data
         top[1].data[...] = self.label
         if self.datagen.Weight:
-            pdb.set_trace()
+            #pdb.set_trace()
             top[2].data[...] = self.weight
         # pick next input
         self.Nextkey()
@@ -155,7 +155,7 @@ class DataLayerPeter(caffe.Layer):
 
     def loadImageAndGT(self, key):
         im, label = self.datagen[key]
-        in_ = self.PrepareImg(img)
+        in_ = self.PrepareImg(im)
         label = self.Prepare2DImage(label)
         if self.normalize:
             label[label > 0] = 1
@@ -168,7 +168,7 @@ class DataLayerPeter(caffe.Layer):
         weight = self.Prepare2DImage(weight)
         if self.normalize:
             label[label > 0] = 1
-        pdb.set_trace()
+        #pdb.set_trace()
         return in_, label, weight
 
 
