@@ -155,11 +155,10 @@ if __name__ == "__main__":
 
     if train:
         from trainNet import trainNet
-        arg_train = {}
-        cn = options.cn
-        wd = options.wd
-        niter = int(options.niter)
-        solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
-        weight = options.weight
-        disp_interval = int(options.disp_interval)
-        trainNet(cn, wd, niter, solver_path, weight, disp_interval)
+        arg_train = arg_net
+        arg_train['niter'] = int(options.niter)
+        arg_train['solver_path'] = os.path.join(
+            options.wd, options.cn, "solver.prototxt")
+        arg_train['weight'] = weight
+        arg_train['disp_interval'] = int(options.disp_interval)
+        trainNet(arg_train)
