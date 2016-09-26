@@ -586,7 +586,7 @@ class WeigthedLossLayer(caffe.Layer):
 
         self.diff = log_loss_batch * label_batch2 * weight_batch2
 
-        top[0].data[...] = np.sum(self.diff) / bottom[i].num
+        top[0].data[...] = np.sum(self.diff) / bottom[0].num
 
     def backward(self, top, propagate_down, bottom):
         for i in range(3):
