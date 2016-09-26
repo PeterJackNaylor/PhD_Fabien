@@ -6,6 +6,7 @@ import time
 import os
 import cPickle as pkl
 from solver import solver, run_solvers, run_solvers_IU
+import numpy as np
 
 
 def trainNet(cn, wd, niter, solver_path, weight, disp_interval):
@@ -18,6 +19,12 @@ def trainNet(cn, wd, niter, solver_path, weight, disp_interval):
              number_of_test: number of images in one epoch
 
     """
+    cn = kwargs['cn']
+    wd = kwargs['wd']
+    niter = kwargs['niter']
+    solver_path = kwargs['solver_path']
+    weight = kwargs['weight']
+    disp_interval = kwargs['disp_interval']
     path_ = os.path.join(wd, cn)
     path_modelgen = os.path.join(path_, "model")
     datagen_path = os.path.join(path_modelgen, "data_generator_test.pkl")
