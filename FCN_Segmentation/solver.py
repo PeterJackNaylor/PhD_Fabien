@@ -68,7 +68,7 @@ def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_s
         return f.name
 
 
-def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test, layer):
+def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test):
     blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc', 'recall', 'precision')
     number_of_loops = niter / disp_interval
 
@@ -83,7 +83,7 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test, laye
             print name
             loss[name][it], acc[name][it], acc1[name][it], iu[name][it], fwavacc[
                 name][it], recall[name][it], precision[
-                name][it] = score.seg_tests(s, number_of_test, layer=layer)
+                name][it] = score.seg_tests(s, number_of_test)
     # Save the learned weights from all nets.
     if not os.path.isdir(res_fold):
         os.mkdir(res_fold)
