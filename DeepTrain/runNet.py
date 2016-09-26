@@ -17,7 +17,7 @@ if __name__ == "__main__":
                       help="net architecture possible: FCN, DeconvNet, UNet")
 
     parser.add_option("--rawdata", dest="rawdata",
-                      default='/home/naylor/Bureau/ToAnnotate',
+                      default='/data/users/pnaylor/Bureau/ToAnnotate',
                       help="raw data folder, with respect to datamanager.py")
 
     parser.add_option("--wd", dest="wd",
