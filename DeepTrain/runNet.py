@@ -83,7 +83,6 @@ if __name__ == "__main__":
     print "Number of crops   : | " + options.crop
     print "Solver rate       : | " + options.solverrate
     print "Sizes of batches  : | " + options.batch_size
-    print "random crop size  : | " + print_crop
     print "Image format      ; | " + options.img_format
     print "loss layer        : | " + options.loss
 
