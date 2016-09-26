@@ -6,7 +6,7 @@ import time
 import os
 import cPickle as pkl
 from solver import solver, run_solvers, run_solvers_IU
-
+import numpy as np
 
 def trainNet(cn, wd, niter, solver_path, weight, disp_interval):
     """

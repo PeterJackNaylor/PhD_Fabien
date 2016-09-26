@@ -279,7 +279,7 @@ class DataGen(object):
                 weight = f._apply_(weight)
 
         if self.random_crop:
-            if self.Weight:
+            if not self.Weight:
                 img, lbl = self.CropImgLbl(img, lbl, self.size)
             else:
                 img, lbl, weight = self.CropImgLbl(
