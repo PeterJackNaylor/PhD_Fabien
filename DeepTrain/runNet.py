@@ -159,6 +159,6 @@ if __name__ == "__main__":
         arg_train['niter'] = int(options.niter)
         arg_train['solver_path'] = os.path.join(
             options.wd, options.cn, "solver.prototxt")
-        arg_train['weight'] = weight
+        arg_train['weight'] = options.weight
         arg_train['disp_interval'] = int(options.disp_interval)
         trainNet(arg_train)
