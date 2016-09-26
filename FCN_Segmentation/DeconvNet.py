@@ -107,8 +107,14 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet",
                          seed=1337, batch_size=batch_size, classifier_name=classifier_name)
     pylayer = 'DataLayerPeter'
     pydata_params["datagen"] = data_gene
-    n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
-                               ntop=2, param_str=str(pydata_params))
+    if loss_layer == "softmax":
+        n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
+                                   ntop=2, param_str=str(pydata_params))
+    elif loss_layer == "weight":
+        n.data, n.label, n.weight = L.Python(module='DataLayerPeter', layer=pylayer,
+                                             ntop=3, param_str=str(pydata_params))
+    else:
+        raise Exception("No loss layer attributed to {}".format(loss_layer))
     n.conv1_1, n.BatchNormalize1_1, n.scaler1_1, n.relu1_1 = ConvBnRelu(
         n.data, 64, 3, 1, 1)
     n.conv1_2, n.BatchNormalize1_2, n.scaler1_2, n.relu1_2 = ConvBnRelu(
