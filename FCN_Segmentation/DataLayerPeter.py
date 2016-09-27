@@ -539,7 +539,7 @@ def Duplicate(label_blob, inverse=False):
             new_blob[i, 1] = 1 - label_blob[i, 1]
         else:
             new_blob[i, 1] = label_blob[i, 1]
-    return label_blob
+    return new_blob
 
 
 def log(loss_blob):
@@ -582,9 +582,13 @@ class WeigthedLossLayer(caffe.Layer):
         loss_batch = softmax(blob_score)
         log_loss_batch = log(loss_batch)
         label_batch2 = Duplicate(label_batch, inverse=1)
+        label_batch2[:, 0, :, :] = label_batch2[
+            :, 0, :, :] * weight_batch[:, :, :]
+        label_batch2[:, 1, :, :] = label_batch2[
+            :, 1, :, :] * weight_batch[:, :, :]
         weight_batch2 = Duplicate(weight_batch, inverse=0)
 
-        self.diff = log_loss_batch * label_batch2 * weight_batch2
+        self.diff = log_loss_batch * weight_batch2
 
         top[0].data[...] = np.sum(self.diff) / bottom[0].num
 
