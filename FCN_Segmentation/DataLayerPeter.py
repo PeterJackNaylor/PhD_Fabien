@@ -4,7 +4,7 @@ import caffe
 import matplotlib.pylab as plt
 from sys import maxint
 import FIMM_histo.deconvolution as deconv
-
+import pdb
 
 class DataLayerPeter(caffe.Layer):
     """
@@ -45,7 +45,7 @@ class DataLayerPeter(caffe.Layer):
 
         self.datagen = pkl.load(open(params['datagen'], 'rb'))
         self.datagen.ReLoad(self.split)
-
+	#pdb.set_trace()
         if not hasattr(self.datagen, "Weight"):
             self.datagen.Weight = False
         if not self.datagen.Weight:
@@ -124,6 +124,7 @@ class DataLayerPeter(caffe.Layer):
             # pdb.set_trace()
             top[2].data[...] = self.weight
         # pick next input
+	#pdb.set_trace()
         self.Nextkey()
 
     def backward(self, top, propagate_down, bottom):
@@ -539,7 +540,7 @@ def Duplicate(label_blob, inverse=False):
             new_blob[i, 1] = 1 - label_blob[i, 1]
         else:
             new_blob[i, 1] = label_blob[i, 1]
-    return label_blob
+    return new_blob
 
 
 def log(loss_blob):
@@ -558,7 +559,7 @@ class WeigthedLossLayer(caffe.Layer):
                 "Need three inputs to weighted softmax. 3: weight image")
 
     def reshape(self, bottom, top):
-        # check input dimensions match
+       # check input dimensions match
         if bottom[0].count != 2 * bottom[1].count:
             raise Exception("Inputs 0 and 1 must have the same dimension.")
         if bottom[1].count != bottom[2].count:
@@ -571,6 +572,9 @@ class WeigthedLossLayer(caffe.Layer):
         top[0].reshape(1)
 
     def forward(self, bottom, top):
+	if not np.isnan(bottom[0].data[...][0,0,0,0]):
+	    pdb.set_trace()
+	#pdb.set_trace()
         blob_score = bottom[0].data[...]
         label_batch = bottom[1].data[...].sum(axis=1)
         if len(label_batch.shape) > 3:
@@ -578,7 +582,7 @@ class WeigthedLossLayer(caffe.Layer):
         weight_batch = bottom[2].data[...].sum(axis=1)
         if len(weight_batch.shape) > 3:
             weight_batch = weight_batch.sum(axis=3)
-
+	# pdb.set_trace()
         loss_batch = softmax(blob_score)
         log_loss_batch = log(loss_batch)
         label_batch2 = Duplicate(label_batch, inverse=1)
