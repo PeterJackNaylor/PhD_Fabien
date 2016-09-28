@@ -6,6 +6,7 @@ from sys import maxint
 import FIMM_histo.deconvolution as deconv
 import pdb
 
+
 class DataLayerPeter(caffe.Layer):
     """
     Load (input image, label image) pairs from PASCAL VOC
@@ -45,7 +46,7 @@ class DataLayerPeter(caffe.Layer):
 
         self.datagen = pkl.load(open(params['datagen'], 'rb'))
         self.datagen.ReLoad(self.split)
-	#pdb.set_trace()
+        # pdb.set_trace()
         if not hasattr(self.datagen, "Weight"):
             self.datagen.Weight = False
         if not self.datagen.Weight:
@@ -123,7 +124,7 @@ class DataLayerPeter(caffe.Layer):
         if self.datagen.Weight:
             top[2].data[...] = self.weight
         # pick next input
-	#pdb.set_trace()
+        # pdb.set_trace()
         self.Nextkey()
 
     def backward(self, top, propagate_down, bottom):
@@ -574,37 +575,43 @@ class WeigthedLossLayer(caffe.Layer):
         top[0].reshape(1)
 
     def forward(self, bottom, top):
-	if np.isnan(bottom[0].data[...][0,0,0,0]):
-	    def replace_nan(a,b):
-		if np.isnan(a):
-		    return b
-		else:
-		    return a
-	    v_replace_nan = np.vectorize(replace_nan)
-	    bottom[0].data[...] = v_replace_nan(bottom[0].data[...], 0)
-	# pdb.set_trace()
+        if np.isnan(bottom[0].data[...][0, 0, 0, 0]):
+            def replace_nan(a, b):
+                if np.isnan(a):
+                    return b
+                else:
+                    return a
+            v_replace_nan = np.vectorize(replace_nan)
+            bottom[0].data[...] = v_replace_nan(bottom[0].data[...], 0)
+        # pdb.set_trace()
         blob_score = bottom[0].data[...]
-        label_batch = bottom[1].data[...]#.sum(axis=1)
+        label_batch = bottom[1].data[...]  # .sum(axis=1)
         if len(label_batch.shape) > 4:
             label_batch = label_batch.sum(axis=4)
         weight_batch = bottom[2].data[...].sum(axis=1)
         if len(weight_batch.shape) > 3:
             weight_batch = weight_batch.sum(axis=3)
-	# pdb.set_trace()
+        inv_label_batch = (1 - label_batch)
         loss_batch = softmax(blob_score)
-        loss_batch[:,0,:,:] = loss_batch[:,0,:,:] * (1 - label_batch)
-	loss_batch[:,1,:,:] = loss_batch[:,1,:,:] * label_batch
-	loss_batch2 = loss_batch.sum(axis=1)
-	log_loss_batch = log(loss_batch2)
+        loss_batch[:, 0, :, :] = loss_batch[:, 0, :, :] * inv_label_batch
+        loss_batch[:, 1, :, :] = loss_batch[:, 1, :, :] * label_batch
+
+        self.diff[:, 0, :, :] = (
+            loss_batch[:, 0, :, :] - inv_label_batch) * weight_batch
+        self.diff[:, 1, :, :] = (
+            loss_batch[:, 1, :, :] - label_batch) * weight_batch
+
+        loss_batch2 = loss_batch.sum(axis=1)
+        log_loss_batch = log(loss_batch2)
 
         if 0 in weight_batch:
-	    weight_batch[ weight_batch == 0] = 1 
-        self.diff = log_loss_batch * weight_batch
-	#pdb.set_trace()
-        top[0].data[...] = np.sum(self.diff) / bottom[0].num
+            weight_batch[weight_batch == 0] = 1
+        loss_matrix = log_loss_batch * weight_batch
+
+        top[0].data[...] = np.sum(loss_matrix) / np.sum(weight_batch)
 
     def backward(self, top, propagate_down, bottom):
-	pdb.set_trace()
+        pdb.set_trace()
         for i in range(3):
             if not propagate_down[i]:
                 continue
