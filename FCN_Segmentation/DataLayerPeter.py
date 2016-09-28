@@ -543,6 +543,9 @@ def Duplicate(label_blob, inverse=False):
 
 
 def log(loss_blob):
+    epsilon = 0.00001
+    if 0 in loss_blob:
+        loss_blob[loss_blob == 0] = epsilon
     return np.log(loss_blob)
 
 
@@ -571,25 +574,29 @@ class WeigthedLossLayer(caffe.Layer):
         top[0].reshape(1)
 
     def forward(self, bottom, top):
+        if not np.isnan(bottom[0].data[...][0, 0, 0, 0]):
+            pdb.set_trace()
+        # pdb.set_trace()
         blob_score = bottom[0].data[...]
-        label_batch = bottom[1].data[...].sum(axis=1)
-        if len(label_batch.shape) > 3:
-            label_batch = label_batch.sum(axis=3)
+        label_batch = bottom[1].data[...]  # .sum(axis=1)
+        if len(label_batch.shape) > 4:
+            label_batch = label_batch.sum(axis=4)
         weight_batch = bottom[2].data[...].sum(axis=1)
         if len(weight_batch.shape) > 3:
             weight_batch = weight_batch.sum(axis=3)
-
+        # pdb.set_trace()
         loss_batch = softmax(blob_score)
+        b, c, x, y = np.where(label_batch == 0)
+        c1 = np.ones_like(c)
+        loss_batch[b, c1, x, y] = 0.
+        b, c, x, y = np.where(label_batch == 1)
+        c0 = np.zeros_like(c)
+        loss_batch[b, c0, x, y] = 0.
+        loss_batch = loss_batch.sum(axis=1)
         log_loss_batch = log(loss_batch)
-        label_batch2 = Duplicate(label_batch, inverse=1)
-        label_batch2[:, 0, :, :] = label_batch2[
-            :, 0, :, :] * weight_batch[:, :, :]
-        label_batch2[:, 1, :, :] = label_batch2[
-            :, 1, :, :] * weight_batch[:, :, :]
-        weight_batch2 = Duplicate(weight_batch, inverse=0)
 
-        self.diff = log_loss_batch * weight_batch2
-
+        self.diff = log_loss_batch * weight_batch
+        # pdb.set_trace()
         top[0].data[...] = np.sum(self.diff) / bottom[0].num
 
     def backward(self, top, propagate_down, bottom):
