@@ -4,7 +4,7 @@ import caffe
 import matplotlib.pylab as plt
 from sys import maxint
 import FIMM_histo.deconvolution as deconv
-
+import pdb
 
 class DataLayerPeter(caffe.Layer):
     """
@@ -45,7 +45,7 @@ class DataLayerPeter(caffe.Layer):
 
         self.datagen = pkl.load(open(params['datagen'], 'rb'))
         self.datagen.ReLoad(self.split)
-
+	#pdb.set_trace()
         if not hasattr(self.datagen, "Weight"):
             self.datagen.Weight = False
         if not self.datagen.Weight:
@@ -121,9 +121,9 @@ class DataLayerPeter(caffe.Layer):
         top[0].data[...] = self.data
         top[1].data[...] = self.label
         if self.datagen.Weight:
-            # pdb.set_trace()
             top[2].data[...] = self.weight
         # pick next input
+	#pdb.set_trace()
         self.Nextkey()
 
     def backward(self, top, propagate_down, bottom):
@@ -155,7 +155,7 @@ class DataLayerPeter(caffe.Layer):
 
     def loadImageAndGT(self, key):
         im, label = self.datagen[key]
-        in_ = self.PrepareImg(img)
+        in_ = self.PrepareImg(im)
         label = self.Prepare2DImage(label)
         if self.normalize:
             label[label > 0] = 1
@@ -546,7 +546,7 @@ def log(loss_blob):
     epsilon = 0.00001
     if 0 in loss_blob:
         loss_blob[loss_blob == 0] = epsilon
-    return np.log(loss_blob)
+    return -np.log(loss_blob)
 
 
 class WeigthedLossLayer(caffe.Layer):
@@ -561,7 +561,7 @@ class WeigthedLossLayer(caffe.Layer):
                 "Need three inputs to weighted softmax. 3: weight image")
 
     def reshape(self, bottom, top):
-        # check input dimensions match
+       # check input dimensions match
         if bottom[0].count != 2 * bottom[1].count:
             raise Exception("Inputs 0 and 1 must have the same dimension.")
         if bottom[1].count != bottom[2].count:
@@ -574,32 +574,37 @@ class WeigthedLossLayer(caffe.Layer):
         top[0].reshape(1)
 
     def forward(self, bottom, top):
-        if not np.isnan(bottom[0].data[...][0, 0, 0, 0]):
-            pdb.set_trace()
-        # pdb.set_trace()
+	if np.isnan(bottom[0].data[...][0,0,0,0]):
+	    def replace_nan(a,b):
+		if np.isnan(a):
+		    return b
+		else:
+		    return a
+	    v_replace_nan = np.vectorize(replace_nan)
+	    bottom[0].data[...] = v_replace_nan(bottom[0].data[...], 0)
+	# pdb.set_trace()
         blob_score = bottom[0].data[...]
-        label_batch = bottom[1].data[...]  # .sum(axis=1)
+        label_batch = bottom[1].data[...]#.sum(axis=1)
         if len(label_batch.shape) > 4:
             label_batch = label_batch.sum(axis=4)
         weight_batch = bottom[2].data[...].sum(axis=1)
         if len(weight_batch.shape) > 3:
             weight_batch = weight_batch.sum(axis=3)
-        # pdb.set_trace()
+	# pdb.set_trace()
         loss_batch = softmax(blob_score)
-        b, c, x, y = np.where(label_batch == 0)
-        c1 = np.ones_like(c)
-        loss_batch[b, c1, x, y] = 0.
-        b, c, x, y = np.where(label_batch == 1)
-        c0 = np.zeros_like(c)
-        loss_batch[b, c0, x, y] = 0.
-        loss_batch = loss_batch.sum(axis=1)
-        log_loss_batch = log(loss_batch)
+        loss_batch[:,0,:,:] = loss_batch[:,0,:,:] * (1 - label_batch)
+	loss_batch[:,1,:,:] = loss_batch[:,1,:,:] * label_batch
+	loss_batch2 = loss_batch.sum(axis=1)
+	log_loss_batch = log(loss_batch2)
 
+        if 0 in weight_batch:
+	    weight_batch[ weight_batch == 0] = 1 
         self.diff = log_loss_batch * weight_batch
-        # pdb.set_trace()
+	#pdb.set_trace()
         top[0].data[...] = np.sum(self.diff) / bottom[0].num
 
     def backward(self, top, propagate_down, bottom):
+	pdb.set_trace()
         for i in range(3):
             if not propagate_down[i]:
                 continue

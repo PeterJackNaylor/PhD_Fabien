@@ -138,10 +138,10 @@ if __name__ == "__main__":
             WriteDeconvNet(arg_net)
 
     if create_solver:
-        from solver import solver, run_solvers, run_solvers_IU
+	from solver import solver, run_solvers, run_solvers_IU
         solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
         outsnap = os.path.join(options.wd, options.cn, "snapshot")
-        solverrate = float(options.solverrate)
+	solverrate = float(options.solverrate)
         CheckOrCreate(os.path.join(options.wd, options.cn))
         CheckOrCreate(outsnap)
 
