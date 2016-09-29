@@ -108,9 +108,9 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet",
     pylayer = 'DataLayerPeter'
     pydata_params["datagen"] = data_gene
     if loss_layer == "softmax":
-	n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
+        n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
                                    ntop=2, param_str=str(pydata_params))
-    elif loss_layer == "weight":
+    elif "weight" in loss_layer:
         n.data, n.label, n.weight = L.Python(module='DataLayerPeter', layer=pylayer,
                                              ntop=3, param_str=str(pydata_params))
     else:
@@ -225,6 +225,9 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet",
     elif loss_layer == "weight":
         n.loss = L.Python(n.score, n.label, n.weight,
                           module='DataLayerPeter', layer="WeigthedLossLayer")
+    elif loss_layer == "weightcpp":
+        n.loss = L.WeigthedSoftmaxLoss(n.score, n.label, n.weight,
+                                       loss_param=dict(normalize=False, ignore_label=255))
     return n.to_proto()
 
 

@@ -288,6 +288,8 @@ class DataGen(object):
         if not self.Weight:
             return img, lbl
         else:
+            if 0 in weight:
+                weight[weight == 0] = 1
             return img, lbl, weight
 
     def get_patients(self, path, seed):
@@ -603,9 +605,6 @@ class WeigthedLossLayer(caffe.Layer):
 
         loss_batch2 = loss_batch.sum(axis=1)
         log_loss_batch = log(loss_batch2)
-
-        if 0 in weight_batch:
-            weight_batch[weight_batch == 0] = 1
         loss_matrix = log_loss_batch * weight_batch
 
         top[0].data[...] = np.sum(loss_matrix) / np.sum(weight_batch)
@@ -619,7 +618,8 @@ class WeigthedLossLayer(caffe.Layer):
                 sign = 1
             else:
                 sign = -1
-            bottom[i].diff[...] = sign * self.diff / bottom[i].num
+            bottom[i].diff[...] = sign * self.diff / \
+                np.sum(bottom[2].diff[...])
 
 
 if __name__ == "__main__":
