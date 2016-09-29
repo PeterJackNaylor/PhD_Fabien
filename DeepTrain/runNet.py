@@ -1,7 +1,9 @@
 import os
 import numpy as np
 from optparse import OptionParser
-
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pylab as plt
 import pdb
 
 create_dataset = True

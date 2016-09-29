@@ -107,9 +107,10 @@ class DataLayerPeter(caffe.Layer):
 
             for i in range(1, self.batch_size):
                 self.Nextkey()
-                self.data[i], self.label[i] = self.loadImageAndGT(self.key)
-                if IsTheirWeights:
-                    self.weight[i] = self.loadWeight(self.key)
+                if not IsTheirWeights:
+                    self.data[i], self.label[i] = self.loadImageAndGT(self.key)
+                else:
+		    self.data[i], self.label[i], self.weight[i] = self.loadWithWeight(self.key)
                 # reshape tops to fit (leading 1 is for batch dimension)
             top[0].reshape(self.batch_size, *data.shape)
             top[1].reshape(self.batch_size, *label.shape)
@@ -521,10 +522,13 @@ def is_square(apositiveint):
         seen.add(x)
     return True
 
+def duplicate_channel(blob, n_c):
+    return np.tile(blob, (n_c,1,1,1)).transpose((1,0,2,3))
 
 def softmax(x):
     e_x = np.exp(x - np.max(x))
-    out = e_x / e_x.sum(axis=1)
+    n_c = x.shape[1]
+    out = e_x / duplicate_channel(e_x.sum(axis=1), n_c)
     return out
 
 
@@ -585,7 +589,7 @@ class WeigthedLossLayer(caffe.Layer):
             bottom[0].data[...] = v_replace_nan(bottom[0].data[...], 0)
         # pdb.set_trace()
         blob_score = bottom[0].data[...]
-        label_batch = bottom[1].data[...]  # .sum(axis=1)
+        label_batch = bottom[1].data[...].sum(axis=1)
         if len(label_batch.shape) > 4:
             label_batch = label_batch.sum(axis=4)
         weight_batch = bottom[2].data[...].sum(axis=1)
@@ -593,13 +597,13 @@ class WeigthedLossLayer(caffe.Layer):
             weight_batch = weight_batch.sum(axis=3)
         inv_label_batch = (1 - label_batch)
         loss_batch = softmax(blob_score)
-        loss_batch[:, 0, :, :] = loss_batch[:, 0, :, :] * inv_label_batch
-        loss_batch[:, 1, :, :] = loss_batch[:, 1, :, :] * label_batch
-
         self.diff[:, 0, :, :] = (
-            loss_batch[:, 0, :, :] - inv_label_batch) * weight_batch
+            loss_batch[:, 0, :, :] - inv_label_batch ) * weight_batch
         self.diff[:, 1, :, :] = (
             loss_batch[:, 1, :, :] - label_batch) * weight_batch
+        loss_batch[:, 0, :, :] = loss_batch[:, 0, :, :] * inv_label_batch
+        loss_batch[:, 1, :, :] = loss_batch[:, 1, :, :] * label_batch
+	#pdb.set_trace()
 
         loss_batch2 = loss_batch.sum(axis=1)
         log_loss_batch = log(loss_batch2)
