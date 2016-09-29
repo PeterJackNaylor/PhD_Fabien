@@ -21,6 +21,7 @@ def trainNet(kwargs):
     """
     cn = kwargs['cn']
     wd = kwargs['wd']
+    gpu = kwargs['gpu']
     niter = kwargs['niter']
     solver_path = kwargs['solver_path']
     weight = kwargs['weight']
@@ -33,7 +34,10 @@ def trainNet(kwargs):
     number_of_test = datagen_test.length
 
     caffe.set_device(0)
-    caffe.set_mode_gpu()
+    if gpu == "gpu":
+        caffe.set_mode_gpu()
+    else:
+        caffe.set_mode_cpu()
 
     my_solver = caffe.get_solver(solver_path)
     # pdb.set_trace()

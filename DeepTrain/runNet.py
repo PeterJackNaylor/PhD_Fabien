@@ -62,6 +62,8 @@ if __name__ == "__main__":
     parser.add_option('--loss', dest="loss", default="softmax",
                       help="loss possible: softmax or weight, or weight1")
 
+    parser.add_option('--gpu', dest="gpu", default="gpu",
+                      help="gpu or cpu")
     (options, args) = parser.parse_args()
 
     if options.wd is None:
@@ -92,6 +94,7 @@ if __name__ == "__main__":
     print "Sizes of batches  : | " + options.batch_size
     print "Image format      ; | " + options.img_format
     print "loss layer        : | " + options.loss
+    print "gpu or cpu        : | " + options.gpu
 
     if create_dataset:
 
@@ -138,10 +141,10 @@ if __name__ == "__main__":
             WriteDeconvNet(arg_net)
 
     if create_solver:
-	from solver import solver, run_solvers, run_solvers_IU
+        from solver import solver, run_solvers, run_solvers_IU
         solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
         outsnap = os.path.join(options.wd, options.cn, "snapshot")
-	solverrate = float(options.solverrate)
+        solverrate = float(options.solverrate)
         CheckOrCreate(os.path.join(options.wd, options.cn))
         CheckOrCreate(outsnap)
 
@@ -161,4 +164,5 @@ if __name__ == "__main__":
             options.wd, options.cn, "solver.prototxt")
         arg_train['weight'] = options.weight
         arg_train['disp_interval'] = int(options.disp_interval)
+        arg_train['gpu'] = options.gpu
         trainNet(arg_train)
