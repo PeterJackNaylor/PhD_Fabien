@@ -291,6 +291,7 @@ class DataGen(object):
         else:
             if 0 in weight:
                 weight[weight == 0] = 1
+            pdb.set_trace()
             return img, lbl, weight
 
     def get_patients(self, path, seed):
@@ -375,7 +376,7 @@ class DataGen(object):
         if len(image.shape) == 2:
             image = image[..., np.newaxis]
         if self.WeightOnes:
-            return np.ones_like(image)
+            image = np.ones_like(image)
         return image
 
     def DivideImage(self, img):
