@@ -606,8 +606,8 @@ class WeigthedLossLayer(caffe.Layer):
         loss_batch2 = loss_batch.sum(axis=1)
         log_loss_batch = log(loss_batch2)
         loss_matrix = log_loss_batch * weight_batch
-
-        top[0].data[...] = np.sum(loss_matrix) / np.sum(weight_batch)
+        # pdb.set_trace()
+        top[0].data[...] = np.sum(loss_matrix) / bottom[0].num
 
     def backward(self, top, propagate_down, bottom):
         pdb.set_trace()
