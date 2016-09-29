@@ -54,12 +54,13 @@ def WriteDataGen(kwargs):
     if 'loss' in kwargs.keys():
         loss = kwargs['loss']
         print "loss ----   {}   -----".format(str(loss))
-        if loss == "weight":
+        if loss == "weight" or loss == "weightcpp":
             Weight = True
             WeightOnes = False
-        elif loss == "weight1":
+        elif loss == "weight1" or loss == "weightcpp1":
             Weight = True
             WeightOnes = True
+
     else:
         loss = 'softmax'
 
