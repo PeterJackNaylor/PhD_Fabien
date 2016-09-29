@@ -298,7 +298,8 @@ class ElasticDeformation(Transf):
 
         out_rows = rows
         out_cols = cols
-        res = warp(image, tform, output_shape=(out_rows, out_cols))
+        res = warp(image, tform, output_shape=(out_rows, out_cols),
+                   order=0)  # order 0 is nearest-neighbor
 
         res = self.OutputType(res)
 
