@@ -103,6 +103,7 @@ class DataLayerPeter(caffe.Layer):
             if IsTheirWeights:
                 self.weight = np.zeros(
                     shape=(self.batch_size, x_l, y_l, z_l), dtype=np.float32)
+                self.weight[0] = weight
             self.data[0], self.label[0] = data, label
 
             for i in range(1, self.batch_size):
