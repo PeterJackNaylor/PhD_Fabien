@@ -292,6 +292,7 @@ class DataGen(object):
         else:
             if 0 in weight:
                 weight[weight == 0] = 1
+	    pdb.set_trace()
             return img, lbl, weight
 
     def get_patients(self, path, seed):
@@ -376,7 +377,9 @@ class DataGen(object):
         if len(image.shape) == 2:
             image = image[..., np.newaxis]
         if self.WeightOnes:
-            return np.ones_like(image)
+            image = np.ones_like(image)
+	if 16 in image:
+	    pdb.set_trace()
         return image
 
     def DivideImage(self, img):
@@ -612,7 +615,7 @@ class WeigthedLossLayer(caffe.Layer):
         log_loss_batch = log(loss_batch2)
         loss_matrix = log_loss_batch * weight_batch
         print "valid_count : %d" % np.sum(weight_batch)
-        pdb.set_trace()
+        #pdb.set_trace()
         top[0].data[...] = np.sum(loss_matrix) / np.sum(weight_batch)
 
     def backward(self, top, propagate_down, bottom):
