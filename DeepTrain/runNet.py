@@ -162,7 +162,7 @@ if __name__ == "__main__":
         from WriteSolver import WriteSolver
 
         arg_solver = arg_net
-        arg_solver["solverrate"] = solverrate
+        arg_solver["solverrate"] = options.solverrate
         if options.net == "FCN":
             archi = [int(el) for el in options.archi.split('_')]
             if len(archi) != 1:
