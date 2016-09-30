@@ -125,6 +125,8 @@ class DataLayerPeter(caffe.Layer):
         top[0].data[...] = self.data
         top[1].data[...] = self.label
         if self.datagen.Weight:
+            if np.sum(self.weight) > 60000:
+                pdb.set_trace()
             top[2].data[...] = self.weight
         # pick next input
        # pdb.set_trace()
