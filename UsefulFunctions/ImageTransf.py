@@ -114,7 +114,11 @@ class Identity(Transf):
         Transf.__init__(self, "identity")
 
     def _apply_(self, image):
-        image = self.OutputType(image)
+        try:
+            image = self.OutputType(image)
+        except:
+            pdb.set_trace()
+
         return image
 
 
@@ -287,7 +291,7 @@ class ElasticDeformation(Transf):
             if self.seed is not None:
                 a = np.random.randint(0, 4294967295 - 1)
                 np.random.seed(a)
-	#pdb.set_trace()
+        # pdb.set_trace()
         tform = PiecewiseAffineTransform()
         tform.estimate(src, self.dst)
 
