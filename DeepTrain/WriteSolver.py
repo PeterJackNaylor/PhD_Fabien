@@ -28,8 +28,6 @@ def WriteSolver(kwargs):
     cn = kwargs['cn']
     solverrate = kwargs['solverrate']
 
-    CheckOrCreate(path_modelgen)
-
     print 'wd        ----   {}   ------'.format(str(wd))
     print 'cn        ----   {}   ------'.format(str(cn))
     print 'solverrate----   {}   ------'.format(str(solverrate))
