@@ -295,7 +295,8 @@ class DataGen(object):
         else:
             if 0 in weight:
                 weight[weight == 0] = 1
-            # pdb.set_trace()
+            if np.sum(weight) > 60000:
+                pdb.set_trace()            # pdb.set_trace()
             return img, lbl, weight
 
     def get_patients(self, path, seed):
