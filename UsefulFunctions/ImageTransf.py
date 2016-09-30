@@ -216,7 +216,6 @@ class Flip(Transf):
     def _apply_(self, image):
 
         hori = self.params["hori"]
-        pdb.set_trace()
         if hori == 1:
             res = flip_horizontal(image)
         else:
@@ -226,7 +225,11 @@ class Flip(Transf):
         return res
 
     def OutputType(self, img):
-        img.dtype = np.uint8
+        if len(np.unique(img)) == 1:
+            img = img_as_ubyte(img)
+            img[img == 255] = 1
+        else:
+            img.dtype = np.uint8
         return img
 
 
