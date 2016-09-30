@@ -15,7 +15,6 @@ def WriteFCN(kwargs):
 
     Optionnal:
       loss : loss wished, specifically for the weight generations
-      batch_size : size of the batches to give to the network
     """
 
     if 'loss' in kwargs.keys():
@@ -27,10 +26,6 @@ def WriteFCN(kwargs):
     else:
         loss = 'softmax'
 
-    if 'batch_size' in kwargs.keys():
-        batch_size = kwargs['batch_size']
-    else:
-        batch_size = 1
     print 'architectures :' + str(kwargs["archi"])
 
     path_ = os.path.join(kwargs['wd'], kwargs['cn'])
@@ -50,7 +45,6 @@ def WriteFCN(kwargs):
             FCN8.make_net(temp_path_,
                           datagen_path,
                           datagen_test_path,
-                          batch_size=batch_size,
                           classifier_name=kwargs['cn'],
                           loss_layer=loss)
         if arc == 16:
@@ -62,7 +56,6 @@ def WriteFCN(kwargs):
             FCN16.make_net(temp_path_,
                            datagen_path,
                            datagen_test_path,
-                           batch_size=batch_size,
                            classifier_name=kwargs['cn'],
                            loss_layer=loss)
         if arc == 32:
@@ -74,6 +67,5 @@ def WriteFCN(kwargs):
             FCN32.make_net(temp_path_,
                            datagen_path,
                            datagen_test_path,
-                           batch_size=batch_size,
                            classifier_name=kwargs['cn'],
                            loss_layer=loss)

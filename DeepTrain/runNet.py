@@ -167,7 +167,7 @@ if __name__ == "__main__":
             archi = [int(el) for el in options.archi.split('_')]
             if len(archi) != 1:
                 arg_solver['archi'] = [int(el)
-                                      for el in options.archi.split('_')]
+                                       for el in options.archi.split('_')]
 
         WriteSolver(arg_solver)
 
@@ -177,13 +177,13 @@ if __name__ == "__main__":
         arg_train['niter'] = int(options.niter)
         arg_train['solver_path'] = os.path.join(
             options.wd, options.cn, "solver.prototxt")
-        arg_train['weight']=options.weight
-        arg_train['disp_interval']=int(options.disp_interval)
-        arg_train['gpu']=options.gpu
+        arg_train['weight'] = options.weight
+        arg_train['disp_interval'] = int(options.disp_interval)
+        arg_train['gpu'] = options.gpu
         if options.net == "FCN":
-            archi=[int(el) for el in options.archi.split('_')]
+            archi = [int(el) for el in options.archi.split('_')]
             if len(archi) != 1:
-                arg_train['archi']=[int(el)
+                arg_train['archi'] = [int(el)
                                       for el in options.archi.split('_')]
 
         trainNet(arg_train)
