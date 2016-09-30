@@ -46,6 +46,20 @@ def WriteSolver(kwargs):
                                  wd, cn, "train.prototxt"),
                              base_lr=solverrate,
                              out_snap=outsnap)
+    elif len(kwargs['archi']) == 1:
+        solver_path = os.path.join(wd, cn, "solver.prototxt")
+        outsnap = os.path.join(wd, cn, "snapshot")
+
+        CheckOrCreate(os.path.join(wd, cn))
+        CheckOrCreate(outsnap)
+
+        name_solver = solver(solver_path,
+                             os.path.join(wd, cn, "train.prototxt"),
+                             test_net_path=os.path.join(
+                                 wd, cn, "train.prototxt"),
+                             base_lr=solverrate,
+                             out_snap=outsnap)
+
     else:
         for num in kwargs["archi"]:
             fcn_num = "FCN{}".format(num)
