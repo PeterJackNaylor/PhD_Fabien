@@ -103,10 +103,11 @@ class Transf(object):
         return(enlarged_image)
 
     def OutputType(self, image):
-        try:
+        if np.max(image) > 1
+            image.dtype = np.uint8
+            return image.dtype
+        else:
             img = img_as_ubyte(image)
-        except:
-            pdb.set_trace()
         return img
 
 
