@@ -103,7 +103,10 @@ class Transf(object):
         return(enlarged_image)
 
     def OutputType(self, image):
-        img = img_as_ubyte(image)
+        try:
+            img = img_as_ubyte(image)
+        except:
+            pdb.set_trace()
         return img
 
 
@@ -114,11 +117,7 @@ class Identity(Transf):
         Transf.__init__(self, "identity")
 
     def _apply_(self, image):
-        try:
-            image = self.OutputType(image)
-        except:
-            pdb.set_trace()
-
+        image = self.OutputType(image)
         return image
 
 
