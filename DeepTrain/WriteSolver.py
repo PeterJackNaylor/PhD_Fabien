@@ -1,4 +1,5 @@
 from solver import solver, run_solvers, run_solvers_IU
+import os
 
 
 def CheckOrCreate(path):
