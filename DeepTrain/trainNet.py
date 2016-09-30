@@ -43,12 +43,13 @@ def trainNet(kwargs):
         train(solver_path, weight, wd, cn, n_iter,
               disp_interval, number_of_test)
     else:
-        arg_train['archi'].sort()[::-1]
+        kwargs['archi'].sort()
+        kwargs['archi'] = kwargs['archi'][::-1]
         first = True
-        for num in arg_train['archi']:
+        for num in kwargs['archi']:
             fcn_num = "FCN{}".format(num)
             solver_path = os.path.join(
-                options.wd, options.cn, fcn_num, "solver.prototxt")
+                wd, cn, fcn_num, "solver.prototxt")
             if first:
                 weight = weight
                 before = fcn_num
