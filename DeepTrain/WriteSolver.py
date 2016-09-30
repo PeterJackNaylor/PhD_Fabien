@@ -33,7 +33,7 @@ def WriteSolver(kwargs):
     print 'cn        ----   {}   ------'.format(str(cn))
     print 'solverrate----   {}   ------'.format(str(solverrate))
 
-    if "archi" in kwargs.keys():
+    if "archi" not in kwargs.keys():
         solver_path = os.path.join(wd, cn, "solver.prototxt")
         outsnap = os.path.join(wd, cn, "snapshot")
 
