@@ -38,10 +38,10 @@ def WriteDataGen(kwargs):
 
     CheckOrCreate(path_modelgen)
 
-    print 'wd     ----   {}   ------'.format(str(wd))
-    print 'cn     ----   {}   ------'.format(str(cn))
-    print 'leaveout     ----   {}   ------'.format(str(leaveout))
-    print 'rawdata     ----   {}   ------'.format(str(rawdata))
+    print 'wd        ----   {}   ------'.format(str(wd))
+    print 'cn        ----   {}   ------'.format(str(cn))
+    print 'leaveout  ----   {}   ------'.format(str(leaveout))
+    print 'rawdata   ----   {}   ------'.format(str(rawdata))
 
     if 'enlarge' in kwargs.keys():
         enlarge = kwargs['enlarge']
@@ -53,7 +53,7 @@ def WriteDataGen(kwargs):
     WeightOnes = False
     if 'loss' in kwargs.keys():
         loss = kwargs['loss']
-        print "loss ----   {}   -----".format(str(loss))
+        print "loss    ----   {}   -----".format(str(loss))
         if loss == "weight" or loss == "weightcpp":
             Weight = True
             WeightOnes = False
@@ -66,7 +66,7 @@ def WriteDataGen(kwargs):
 
     if 'crop' in kwargs.keys():
         crop = kwargs['crop']
-        print "crop ----   {}   -----".format(str(crop))
+        print "crop    ----   {}   -----".format(str(crop))
     else:
         crop = None
 
@@ -78,13 +78,15 @@ def WriteDataGen(kwargs):
 
     if 'img_format' in kwargs.keys():
         img_format = kwargs['img_format']
-        print "img_format ----   {}   -----".format(str(img_format))
+        print "img_format----   {}   -----".format(str(img_format))
+
     else:
         img_format = "RGB"
 
     if 'seed' in kwargs.keys():
         seed = kwargs['seed']
-        print "seed ----   {}   -----".format(str(seed))
+        print "seed      ----   {}   -----".format(str(seed))
+
     else:
         seed = 42
 
