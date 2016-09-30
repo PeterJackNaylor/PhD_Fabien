@@ -103,7 +103,7 @@ class Transf(object):
         return(enlarged_image)
 
     def OutputType(self, image):
-        if np.max(image) > 1
+        if np.max(image) > 1:
             image.dtype = np.uint8
             return image.dtype
         else:
