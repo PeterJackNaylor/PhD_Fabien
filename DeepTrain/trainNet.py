@@ -22,7 +22,7 @@ def trainNet(kwargs):
     cn = kwargs['cn']
     wd = kwargs['wd']
     gpu = kwargs['gpu']
-    niter = kwargs['niter']
+    n_iter = kwargs['niter']
     solver_path = kwargs['solver_path']
     weight = kwargs['weight']
     disp_interval = kwargs['disp_interval']
@@ -63,7 +63,7 @@ def trainNet(kwargs):
                   disp_interval, number_of_test)
 
 
-def train(solver_path, weight, wd, cn, n_iter, disp_interval, number_of_test):
+def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test):
     my_solver = caffe.get_solver(solver_path)
     # pdb.set_trace()
 
