@@ -20,26 +20,24 @@ def max_pool(bottom, ks=2, stride=2):
 
 
 def fcn(split, data_gene, classifier_name="FCN32",
-        classifier_name1="score_fr", classifier_name2="upscore"):
+        classifier_name1="score_fr", classifier_name2="upscore", loss_layer='softmax'):
     n = caffe.NetSpec()
 
-    if split != "val":
-        pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
-                             seed=1337, classifier_name=classifier_name)
+    pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
+                         seed=1337, classifier_name=classifier_name)
 #    pydata_params['dir'] = data_path
-        pylayer = 'DataLayerPeter'
-        pydata_params["datagen"] = data_gene
+    pylayer = 'DataLayerPeter'
+    pydata_params["datagen"] = data_gene
+
+    if loss_layer == "softmax":
         n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
-                                   ntop=2, param_str=str(pydata_params))  # ,
-        #                           include={'phase': caffe.TRAIN})
-        #pydata_params["datagen"] = data_gene_test
-        #pydata_params["split"] = "test"
-        # n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
-        #                           ntop=2, param_str=str(pydata_params),
-        #                           include={'phase': caffe.TEST})
+                                   ntop=2, param_str=str(pydata_params))
+    elif "weight" in loss_layer:
+        n.data, n.label, n.weight = L.Python(module='DataLayerPeter', layer=pylayer,
+                                             ntop=3, param_str=str(pydata_params))
     else:
-        n.data = L.Data(input_param=dict(shape=dict(dim=[1, 3, 512, 512])))
-        # the base net
+        raise Exception("No loss layer attributed to {}".format(loss_layer))
+
     n.conv1_1, n.relu1_1 = conv_relu(n.data, 64, pad=100)
     n.conv1_2, n.relu1_2 = conv_relu(n.relu1_1, 64)
     n.pool1 = max_pool(n.relu1_2)
@@ -86,21 +84,24 @@ def fcn(split, data_gene, classifier_name="FCN32",
 
     n.score = crop(upscore, n.data)
 
-    if split != "val":
+    if loss_layer == "softmax":
         n.loss = L.SoftmaxWithLoss(n.score, n.label,
-                                   loss_param=dict(normalize=False))  # , ignore_label=255))
-        #n.acc = L.Accuracy(n.score2, n.label)
+                                   loss_param=dict(normalize=False, ignore_label=255))
+    elif loss_layer == "weight":
+        n.loss = L.Python(n.score, n.label, n.weight,
+                          module='DataLayerPeter', layer="WeigthedLossLayer")
+    elif loss_layer == "weightcpp":
+        n.loss = L.WeigthedSoftmaxLoss(n.score, n.label, n.weight,
+                                       loss_param=dict(normalize=True, ignore_label=255))
+        #n.acc = L.Accuracy(n.score, n.label)
     return n.to_proto()
 
 
 def make_net(wd, data_gene_train, data_gene_test, classifier_name="FCN32",
-             classifier_name1="score_fr", classifier_name2="upscore"):
+             classifier_name1="score_fr", classifier_name2="upscore", loss_layer="softmax"):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
         f.write(str(fcn('train', data_gene_train, classifier_name,
-                        classifier_name1, classifier_name2)))
+                        classifier_name1, classifier_name2, loss_layer)))
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
         f.write(str(fcn('test',  data_gene_test, classifier_name,
-                        classifier_name1, classifier_name2)))
-    with open(os.path.join(wd, 'deploy.prototxt'), 'w') as f:
-        f.write(str(fcn('val', data_gene_train, classifier_name,
-                        classifier_name1, classifier_name2)))
+                        classifier_name1, classifier_name2, loss_layer)))

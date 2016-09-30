@@ -66,6 +66,11 @@ if __name__ == "__main__":
 
     parser.add_option('--gpu', dest="gpu", default="gpu",
                       help="gpu or cpu")
+
+    parser.add_option('--archi', dest="archi", default="32_16_8",
+                      help=" you can specify, this parameter is only taken into account for \
+                      FCN and valid : 32_16_8")
+
     (options, args) = parser.parse_args()
 
     if options.wd is None:
@@ -136,27 +141,35 @@ if __name__ == "__main__":
             WriteUnet(arg_net)
 
         if options.net == "DeconvNet":
+
             from WriteDeconvNet import WriteDeconvNet
 
             arg_net['batch_size'] = int(options.batch_size)
 
             WriteDeconvNet(arg_net)
 
-    if create_solver:
-        from solver import solver, run_solvers, run_solvers_IU
-        solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
-        outsnap = os.path.join(options.wd, options.cn, "snapshot")
-        solverrate = float(options.solverrate)
-        CheckOrCreate(os.path.join(options.wd, options.cn))
-        CheckOrCreate(outsnap)
+        if options.net == "FCN":
 
-        name_solver = solver(solver_path,
-                             os.path.join(options.wd, options.cn,
-                                          "train.prototxt"),
-                             test_net_path=os.path.join(
-                                 options.wd, options.cn, "train.prototxt"),
-                             base_lr=solverrate,
-                             out_snap=outsnap)
+            from WriteFCN import WriteFCN
+
+            archi = [int(el) for el in options.archi.split('_')]
+            arg_net['batch_size'] = int(options.batch_size)
+            arg_net['archi'] = archi
+
+            WriteFCN(arg_net)
+
+    if create_solver:
+        from WriteSolver import WriteSolver
+
+        arg_solver = arg_net
+        arg_solver["solverrate"] = float(options.solverrate)
+        if options.net == "FCN":
+            archi = [int(el) for el in options.archi.split('_')]
+            if len(archi) != 1:
+                arg_solver'archi'] = [int(el)
+                                      for el in options.archi.split('_')]
+
+        WriteSolver(arg_solver)
 
     if train:
         from trainNet import trainNet
@@ -164,7 +177,13 @@ if __name__ == "__main__":
         arg_train['niter'] = int(options.niter)
         arg_train['solver_path'] = os.path.join(
             options.wd, options.cn, "solver.prototxt")
-        arg_train['weight'] = options.weight
-        arg_train['disp_interval'] = int(options.disp_interval)
-        arg_train['gpu'] = options.gpu
+        arg_train['weight']=options.weight
+        arg_train['disp_interval']=int(options.disp_interval)
+        arg_train['gpu']=options.gpu
+        if options.net == "FCN":
+            archi=[int(el) for el in options.archi.split('_')]
+            if len(archi) != 1:
+                arg_train['archi']=[int(el)
+                                      for el in options.archi.split('_')]
+
         trainNet(arg_train)

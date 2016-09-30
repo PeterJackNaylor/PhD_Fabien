@@ -39,6 +39,30 @@ def trainNet(kwargs):
     else:
         caffe.set_mode_cpu()
 
+    if 'archi' not in kwargs.keys():
+        train(solver_path, weight, wd, cn, n_iter,
+              disp_interval, number_of_test)
+    else:
+        arg_train['archi'].sort()[::-1]
+        first = True
+        for num in arg_train['archi']:
+            fcn_num = "FCN{}".format(num)
+            solver_path = os.path.join(
+                options.wd, options.cn, fcn_num, "solver.prototxt")
+            if first:
+                weight = weight
+                before = fcn_num
+                first = False
+            else:
+                weight = os.path.join(
+                    wd, cn, before, "temp_files", "weights." + before + ".caffemodel")
+                before = fcn_num
+
+            train(solver_path, weight, wd, cn + '/' + fcn_num, n_iter,
+                  disp_interval, number_of_test)
+
+
+def train(solver_path, weight, wd, cn, n_iter, disp_interval, number_of_test):
     my_solver = caffe.get_solver(solver_path)
     # pdb.set_trace()
 

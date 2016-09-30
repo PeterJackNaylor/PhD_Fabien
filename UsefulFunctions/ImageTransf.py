@@ -103,13 +103,8 @@ class Transf(object):
         return(enlarged_image)
 
     def OutputType(self, image):
-        if len(image.shape) == 2:
-            image.dtype = 'uint8'
-            return image
-        elif image.shape[2] == 1:
-            image.dtype = 'uint8'
-            return image
-        return image
+        img = img_as_ubyte(image)
+        return img
 
 
 class Identity(Transf):
