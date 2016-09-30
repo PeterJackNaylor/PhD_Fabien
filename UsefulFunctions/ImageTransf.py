@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from skimage.transform import PiecewiseAffineTransform, warp
 from skimage import img_as_ubyte
+import pdb
 
 #==============================================================================
 #
@@ -265,7 +266,6 @@ class ElasticDeformation(Transf):
         return src
 
     def _apply_(self, image):
-
         mu = self.params["mu"]
         sigma = self.params["sigma"]
         num_points = self.params["num_points"]
@@ -292,7 +292,7 @@ class ElasticDeformation(Transf):
             if self.seed is not None:
                 a = np.random.randint(0, 4294967295 - 1)
                 np.random.seed(a)
-
+	#pdb.set_trace()
         tform = PiecewiseAffineTransform()
         tform.estimate(src, self.dst)
 
@@ -306,12 +306,5 @@ class ElasticDeformation(Transf):
         return res
 
     def OutputType(self, image):
-        if len(image.shape) == 2:
-            image.dtype = 'uint8'
-            return image
-        elif image.shape[2] == 1:
-            image.dtype = 'uint8'
-            return image
-        else:
-            img = img_as_ubyte(image)
-            return img
+        img = img_as_ubyte(image)
+        return img
