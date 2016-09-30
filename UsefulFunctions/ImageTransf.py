@@ -225,6 +225,10 @@ class Flip(Transf):
         res = self.OutputType(res)
         return res
 
+    def OutputType(img):
+        img.dtype = np.uint8
+        return image
+
 
 class OutOfFocus(Transf):
 
