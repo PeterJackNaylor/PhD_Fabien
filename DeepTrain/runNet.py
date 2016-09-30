@@ -166,7 +166,7 @@ if __name__ == "__main__":
         if options.net == "FCN":
             archi = [int(el) for el in options.archi.split('_')]
             if len(archi) != 1:
-                arg_solver'archi'] = [int(el)
+                arg_solver['archi'] = [int(el)
                                       for el in options.archi.split('_')]
 
         WriteSolver(arg_solver)
