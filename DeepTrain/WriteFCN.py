@@ -46,6 +46,9 @@ def WriteFCN(kwargs):
                           datagen_path,
                           datagen_test_path,
                           classifier_name=kwargs['cn'],
+                          classifier_name1="score_fr_2",
+                          classifier_name2="upscore2",
+                          classifier_name3="score_pool4",
                           loss_layer=loss)
         if arc == 16:
             import FCN16
@@ -57,6 +60,7 @@ def WriteFCN(kwargs):
                            datagen_path,
                            datagen_test_path,
                            classifier_name=kwargs['cn'],
+                           classifier_name1="score_fr_2",
                            loss_layer=loss)
         if arc == 32:
             import FCN32
