@@ -16,10 +16,11 @@ def WriteFCN(kwargs):
     Optionnal:
       loss : loss wished, specifically for the weight generations
     """
-
     if 'loss' in kwargs.keys():
         loss = kwargs['loss']
-        if "weight" in loss:
+        if "weightcpp" in loss:
+            loss = 'weightcpp'
+        elif "weight" in loss:
             loss = 'weight'
         print "loss ----   {}   -----".format(str(loss))
 
