@@ -226,7 +226,7 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet",
         n.loss = L.Python(n.score, n.label, n.weight,
                           module='DataLayerPeter', layer="WeigthedLossLayer")
     elif loss_layer == "weightcpp":
-        n.loss = L.WeigthedSoftmaxLoss(n.score, n.label, n.weight,
+        n.loss = L.WeightedSoftmaxLoss(n.score, n.label, n.weight,
                                        loss_param=dict(normalize=True, ignore_label=255))
     return n.to_proto()
 

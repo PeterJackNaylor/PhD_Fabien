@@ -101,7 +101,7 @@ def fcn(split, data_gene, classifier_name="FCN16",
         n.loss = L.Python(n.score, n.label, n.weight,
                           module='DataLayerPeter', layer="WeigthedLossLayer")
     elif loss_layer == "weightcpp":
-        n.loss = L.WeigthedSoftmaxLoss(n.score, n.label, n.weight,
+        n.loss = L.WeightedSoftmaxLoss(n.score, n.label, n.weight,
                                        loss_param=dict(normalize=True, ignore_label=255))
         #n.acc = L.Accuracy(n.score, n.label)
     return n.to_proto()

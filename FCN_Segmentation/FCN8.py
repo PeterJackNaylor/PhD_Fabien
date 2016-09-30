@@ -116,7 +116,7 @@ def fcn(split, data_gene, classifier_name="FCN8",
                           module='DataLayerPeter', layer="WeigthedLossLayer")
     elif loss_layer == "weightcpp":
       # cpp version of the above layer with gpu implementation
-        n.loss = L.WeigthedSoftmaxLoss(n.score, n.label, n.weight,
+        n.loss = L.WeightedSoftmaxLoss(n.score, n.label, n.weight,
                                        loss_param=dict(normalize=True, ignore_label=255))
         #n.acc = L.Accuracy(n.score, n.label)
     return n.to_proto()
