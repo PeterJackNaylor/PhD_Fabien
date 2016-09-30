@@ -105,7 +105,7 @@ class Transf(object):
     def OutputType(self, image):
         if np.max(image) > 1:
             image.dtype = np.uint8
-            return image.dtype
+            return image
         else:
             img = img_as_ubyte(image)
         return img
