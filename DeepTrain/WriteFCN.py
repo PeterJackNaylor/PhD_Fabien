@@ -41,7 +41,7 @@ def WriteFCN(kwargs):
             if len(kwargs["archi"]) == 1:
                 temp_path_ = path_
             else:
-                temp_path_ = os.path.join(path_, "FCN8")
+                temp_path_ = path_
             FCN8.make_net(temp_path_,
                           datagen_path,
                           datagen_test_path,
@@ -55,7 +55,7 @@ def WriteFCN(kwargs):
             if len(kwargs["archi"]) == 1:
                 temp_path_ = path_
             else:
-                temp_path_ = os.path.join(path_, "FCN16")
+                temp_path_ = path_
             FCN16.make_net(temp_path_,
                            datagen_path,
                            datagen_test_path,
@@ -67,7 +67,7 @@ def WriteFCN(kwargs):
             if len(kwargs["archi"]) == 1:
                 temp_path_ = path_
             else:
-                temp_path_ = os.path.join(path_, "FCN32")
+                temp_path_ = path_
             FCN32.make_net(temp_path_,
                            datagen_path,
                            datagen_test_path,
