@@ -34,33 +34,30 @@ def WriteSolver(kwargs):
     print 'solverrate----   {}   ------'.format(str(solverrate))
 
     if "archi" in kwargs.keys():
-        solver_path = os.path.join(options.wd, options.cn, "solver.prototxt")
-        outsnap = os.path.join(options.wd, options.cn, "snapshot")
+        solver_path = os.path.join(wd, cn, "solver.prototxt")
+        outsnap = os.path.join(wd, cn, "snapshot")
 
-        CheckOrCreate(os.path.join(options.wd, options.cn))
+        CheckOrCreate(os.path.join(wd, cn))
         CheckOrCreate(outsnap)
 
         name_solver = solver(solver_path,
-                             os.path.join(options.wd, options.cn,
-                                          "train.prototxt"),
+                             os.path.join(wd, cn, "train.prototxt"),
                              test_net_path=os.path.join(
-                                 options.wd, options.cn, "train.prototxt"),
+                                 wd, cn, "train.prototxt"),
                              base_lr=solverrate,
                              out_snap=outsnap)
     else:
         for num in kwargs["archi"]:
             fcn_num = "FCN{}".format(num)
-            solver_path = os.path.join(
-                options.wd, options.cn, fcn_num, "solver.prototxt")
-            outsnap = os.path.join(options.wd, options.cn, fcn_num, "snapshot")
+            solver_path = os.path.join(wd, cn, fcn_num, "solver.prototxt")
+            outsnap = os.path.join(wd, cn, fcn_num, "snapshot")
 
-            CheckOrCreate(os.path.join(options.wd, options.cn, fcn_num))
+            CheckOrCreate(os.path.join(wd, cn, fcn_num))
             CheckOrCreate(outsnap)
 
             name_solver = solver(solver_path,
-                                 os.path.join(options.wd, options.cn,
-                                              "train.prototxt"),
+                                 os.path.join(wd, cn, "train.prototxt"),
                                  test_net_path=os.path.join(
-                                     options.wd, options.cn, "train.prototxt"),
+                                     wd, cn, "train.prototxt"),
                                  base_lr=solverrate,
                                  out_snap=outsnap)
