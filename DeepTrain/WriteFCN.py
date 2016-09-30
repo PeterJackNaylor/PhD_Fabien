@@ -68,4 +68,6 @@ def WriteFCN(kwargs):
                            datagen_path,
                            datagen_test_path,
                            classifier_name=kwargs['cn'],
+                           classifier_name1="score_fr_2",
+                           classifier_name2="upscore_2",
                            loss_layer=loss)
