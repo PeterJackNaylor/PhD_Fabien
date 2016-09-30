@@ -216,7 +216,7 @@ class Flip(Transf):
     def _apply_(self, image):
 
         hori = self.params["hori"]
-
+        pdb.set_trace()
         if hori == 1:
             res = flip_horizontal(image)
         else:
