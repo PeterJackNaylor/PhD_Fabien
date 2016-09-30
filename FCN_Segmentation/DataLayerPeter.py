@@ -594,7 +594,7 @@ class WeigthedLossLayer(caffe.Layer):
                     return a
             v_replace_nan = np.vectorize(replace_nan)
             bottom[0].data[...] = v_replace_nan(bottom[0].data[...], 0)
-        pdb.set_trace()
+        # pdb.set_trace()
         blob_score = bottom[0].data[...]
         label_batch = bottom[1].data[...].sum(axis=1)
         if len(label_batch.shape) > 4:
