@@ -42,6 +42,9 @@ def trainNet(kwargs):
     if 'archi' not in kwargs.keys():
         train(solver_path, weight, wd, cn, n_iter,
               disp_interval, number_of_test)
+    elif len(kwargs['archi']) == 1:
+        train(solver_path, weight, wd, cn, n_iter,
+              disp_interval, number_of_test)
     else:
         kwargs['archi'].sort()
         kwargs['archi'] = kwargs['archi'][::-1]
