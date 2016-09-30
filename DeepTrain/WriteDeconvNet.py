@@ -1,6 +1,7 @@
 import DeconvNet
 import os
 
+
 def CheckOrCreate(path):
     if not os.path.isdir(path):
         os.makedirs(path)
@@ -20,7 +21,9 @@ def WriteDeconvNet(kwargs):
 
     if 'loss' in kwargs.keys():
         loss = kwargs['loss']
-        if "weight" in loss:
+        if "weightcpp" in loss:
+            loss = 'weightcpp'
+        elif "weight" in loss:
             loss = 'weight'
         print "loss ----   {}   -----".format(str(loss))
 
