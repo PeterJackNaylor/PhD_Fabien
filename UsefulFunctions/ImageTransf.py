@@ -306,11 +306,11 @@ class ElasticDeformation(Transf):
 
     def OutputType(self, image):
         if len(image.shape) == 2:
-            img.dtype = 'uint8'
-            return img
+            image.dtype = 'uint8'
+            return image
         elif image.shape[2] == 1:
-            img.dtype = 'uint8'
-            return img
+            image.dtype = 'uint8'
+            return image
         else:
             img = img_as_ubyte(image)
             return img
