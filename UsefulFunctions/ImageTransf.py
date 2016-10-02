@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from skimage.transform import PiecewiseAffineTransform, warp
 from skimage import img_as_ubyte
+import pdb
 
 #==============================================================================
 #
@@ -102,13 +103,12 @@ class Transf(object):
         return(enlarged_image)
 
     def OutputType(self, image):
-        if len(image.shape) == 2:
-            image.dtype = 'uint8'
+        if np.max(image) > 1:
+            image.dtype = np.uint8
             return image
-        elif image.shape[2] == 1:
-            image.dtype = 'uint8'
-            return image
-        return image
+        else:
+            img = img_as_ubyte(image)
+        return img
 
 
 class Identity(Transf):
@@ -216,7 +216,6 @@ class Flip(Transf):
     def _apply_(self, image):
 
         hori = self.params["hori"]
-
         if hori == 1:
             res = flip_horizontal(image)
         else:
@@ -224,6 +223,14 @@ class Flip(Transf):
 
         res = self.OutputType(res)
         return res
+
+    def OutputType(self, img):
+        if len(np.unique(img)) == 1:
+            img = img_as_ubyte(img)
+            img[img == 255] = 1
+        else:
+            img.dtype = np.uint8
+        return img
 
 
 class OutOfFocus(Transf):
@@ -265,7 +272,6 @@ class ElasticDeformation(Transf):
         return src
 
     def _apply_(self, image):
-
         mu = self.params["mu"]
         sigma = self.params["sigma"]
         num_points = self.params["num_points"]
@@ -292,19 +298,21 @@ class ElasticDeformation(Transf):
             if self.seed is not None:
                 a = np.random.randint(0, 4294967295 - 1)
                 np.random.seed(a)
-
+        # pdb.set_trace()
         tform = PiecewiseAffineTransform()
         tform.estimate(src, self.dst)
 
         out_rows = rows
         out_cols = cols
-        res = warp(image, tform, output_shape=(out_rows, out_cols))
+        res = warp(image, tform, output_shape=(out_rows, out_cols),
+                   order=0)  # order 0 is nearest-neighbor
 
         res = self.OutputType(res)
 
         return res
 
     def OutputType(self, image):
+<<<<<<< HEAD
         if len(image.shape) == 2:
             image.dtype = 'uint8'
             return image
@@ -314,3 +322,7 @@ class ElasticDeformation(Transf):
         else:
             img = img_as_ubyte(image)
             return img
+=======
+        img = img_as_ubyte(image)
+        return img
+>>>>>>> 37c5b99825259522eb104656173168906b330050

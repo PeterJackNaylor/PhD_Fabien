@@ -142,6 +142,9 @@ def UNet(split, data_gene, batch_size, classifier_name="UNet", loss_layer="softm
     elif loss_layer == "weight":
         n.loss = L.Python(n.score, n.label, n.weight,
                           module='DataLayerPeter', layer="WeigthedLossLayer")
+    elif loss_layer == "weightcpp":
+        n.loss = L.WeightedSoftmaxLoss(n.score, n.label, n.weight,
+                                       loss_param=dict(normalize=True, ignore_label=255))
     return n.to_proto()
 
 
