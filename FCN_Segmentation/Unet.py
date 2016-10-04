@@ -27,7 +27,7 @@ from caffe.coord_map import crop
 import sys
 
 
-def conv_relu(bottom, nout, ks=3, stride=1, pad=1):
+def conv_relu(bottom, nout, ks=3, stride=1, pad=0):
     conv = L.Convolution(bottom, kernel_size=ks, stride=stride,
                          num_output=nout, pad=pad,
                          param=[dict(lr_mult=1, decay_mult=1),
