@@ -224,7 +224,7 @@ class Flip(Transf):
             if hori == 1:
                 sub_res = flip_horizontal(img)
             else:
-                sub_res = flip_vertical(image)
+                sub_res = flip_vertical(img)
 
             res += (self.OutputType(sub_res),)
         return res
