@@ -285,7 +285,7 @@ class ElasticDeformation(Transf):
         for img in image:
 
             sub_res = img.copy()
-            rows, cols = img.shape[0], imgx.shape[1]
+            rows, cols = img.shape[0], img.shape[1]
 
             src = self.grid(rows, cols, num_points)
             # add gaussian displacement to row coordinates
