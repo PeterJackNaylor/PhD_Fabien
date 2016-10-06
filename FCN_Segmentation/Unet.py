@@ -91,7 +91,7 @@ def UNet(split, data_gene, batch_size, classifier_name="UNet", loss_layer="softm
     if loss_layer == "softmax":
         n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
                                    ntop=2, param_str=str(pydata_params))
-    elif loss_layer == "weight":
+    elif "weight" in loss_layer:
         n.data, n.label, n.weight = L.Python(module='DataLayerPeter', layer=pylayer,
                                              ntop=3, param_str=str(pydata_params))
     else:
