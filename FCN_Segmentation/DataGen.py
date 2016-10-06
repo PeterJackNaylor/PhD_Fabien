@@ -241,7 +241,8 @@ class DataGen(object):
         n = 92
 
         assert x == y, "Not same size x=%d, y=%d" % (x, y)
-        assert x % 16 == 0, "Not dividible by 16, the net will create strange shapes.."
+        assert CheckNumberForUnet(
+            x), "Dim not suited for UNet, it will create a wierd net"
 
         res = (kargs[0].copy(), )
         for i in range(1, len(kargs)):
@@ -343,6 +344,21 @@ class DataGen(object):
                 return key
         else:
             raise Exception('Key is of wrong dimensions: {}'.format(len(key)))
+
+
+def CheckNumberForUnet(n):
+    ans = False
+    if (n - 4) % 2 == 0:
+        n = (n - 4) / 2
+        if (n - 4) % 2 == 0:
+            n = (n - 4) / 2
+            if (n - 4) % 2 == 0:
+                n = (n - 4) / 2
+                if (n - 4) % 2 == 0:
+                    n = (n - 4) / 2
+                    ans = True
+
+    return ans
 
 
 def duplicate_channel(blob, n_c):
