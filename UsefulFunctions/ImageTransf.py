@@ -162,7 +162,7 @@ class Translation(Transf):
             else:
                 M = np.float32([[1, 0, (x * rev_x * -1)],
                                 [0, 1, (y * rev_y * -1)]])
-                res += (self.OutputType(cv2.warpAffine(image, M, (cols, rows)), ))
+                res += (self.OutputType(cv2.warpAffine(image, M, (cols, rows))), )
 
             return res
 
@@ -226,7 +226,7 @@ class Flip(Transf):
             else:
                 sub_res = flip_vertical(image)
 
-            res += (self.OutputType(sub_res))
+            res += (self.OutputType(sub_res),)
         return res
 
     def OutputType(self, img):
