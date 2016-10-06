@@ -24,7 +24,7 @@ def fcn(split, data_gene, classifier_name="FCN32",
     n = caffe.NetSpec()
 
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
-                         seed=1337, classifier_name=classifier_name)
+                         seed=None, classifier_name=classifier_name)
 #    pydata_params['dir'] = data_path
     pylayer = 'DataLayerPeter'
     pydata_params["datagen"] = data_gene
