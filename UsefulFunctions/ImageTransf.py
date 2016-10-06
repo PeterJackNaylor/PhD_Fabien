@@ -56,7 +56,7 @@ class Transf(object):
     def __init__(self, name):
         self.name = name
 
-    def _apply_(self, image):
+    def _apply_(self, *image):
         raise NotImplementedError
 
     def enlarge(self, image, x, y):
@@ -117,8 +117,10 @@ class Identity(Transf):
 
         Transf.__init__(self, "identity")
 
-    def _apply_(self, image):
-        image = self.OutputType(image)
+    def _apply_(self, *image):
+        res = ()
+        for img in image:
+            res += (self.OutputType(img), )
         return image
 
 
@@ -141,7 +143,7 @@ class Translation(Transf):
         self.params = {"x": x, "y": y, "rev_x": x_rev,
                        "rev_y": y_rev, "enlarge": enlarge}
 
-    def _apply_(self, image):
+    def _apply_(self, *image):
 
         rows, cols, channels = image.shape
 
@@ -150,18 +152,19 @@ class Translation(Transf):
         rev_x = self.params['rev_x']
         rev_y = self.params['rev_y']
         enlarge = self.params['enlarge']
+        res = ()
+        for img in image:
 
-        if enlarge:
-            big_image = self.enlarge(image, x, y)
-            res = big_image[(x + rev_x * x):(rows + x + rev_x * x),
-                            (y + rev_y * y):(cols + y + rev_y * y), :]
-        else:
-            M = np.float32([[1, 0, (x * rev_x * -1)],
-                            [0, 1, (y * rev_y * -1)]])
-            res = cv2.warpAffine(image, M, (cols, rows))
+            if enlarge:
+                big_image = self.enlarge(img, x, y)
+                res += (big_image[(x + rev_x * x):(rows + x + rev_x * x),
+                                  (y + rev_y * y):(cols + y + rev_y * y), :], )
+            else:
+                M = np.float32([[1, 0, (x * rev_x * -1)],
+                                [0, 1, (y * rev_y * -1)]])
+                res += (self.OutputType(cv2.warpAffine(image, M, (cols, rows)), ))
 
-        image = self.OutputType(image)
-        return res
+            return res
 
 
 class Rotation(Transf):
@@ -171,35 +174,36 @@ class Rotation(Transf):
         Transf.__init__(self, "Rot_" + str(deg))
         self.params = {"deg": deg, "enlarge": enlarge}
 
-    def _apply_(self, image):
-
-        rows, cols, channels = image.shape
+    def _apply_(self, *image):
 
         deg = self.params['deg']
         enlarge = self.params['enlarge']
+        res = ()
 
-        if enlarge:
-            # this part could be better adjusted
-            x = int(rows * (2 - 1.414213) / 1.414213)
-            y = int(cols * (2 - 1.414213) / 1.414213)
+        for img in image:
+            rows, cols, channels = img.shape
 
-            z = max(x, y)
-            big_image = self.enlarge(image, z, z)
+            if enlarge:
+                # this part could be better adjusted
+                x = int(rows * (2 - 1.414213) / 1.414213)
+                y = int(cols * (2 - 1.414213) / 1.414213)
 
-            b_rows, b_cols, b_channels = big_image.shape
-            M = cv2.getRotationMatrix2D((b_cols / 2, b_rows / 2), deg, 1)
-            dst = cv2.warpAffine(big_image, M, (b_cols, b_rows))
-            if b_channels == 1:
-                dst_ = np.zeros(shape=(b_rows, b_cols, b_channels))
-                dst_[:, :, 0] = dst
-                dst = dst_.copy()
-                del dst_
-            res = dst[z:(z + rows), z:(z + cols), :]
-        else:
-            M = cv2.getRotationMatrix2D((cols / 2, rows / 2), deg, 1)
-            res = cv2.warpAffine(image, M, (cols, rows))
+                z = max(x, y)
+                big_image = self.enlarge(img, z, z)
 
-        res = self.OutputType(res)
+                b_rows, b_cols, b_channels = big_image.shape
+                M = cv2.getRotationMatrix2D((b_cols / 2, b_rows / 2), deg, 1)
+                dst = cv2.warpAffine(big_image, M, (b_cols, b_rows))
+                if b_channels == 1:
+                    dst_ = np.zeros(shape=(b_rows, b_cols, b_channels))
+                    dst_[:, :, 0] = dst
+                    dst = dst_.copy()
+                    del dst_
+                res += (self.OutputType(dst[z:(z + rows), z:(z + cols), :]), )
+            else:
+                M = cv2.getRotationMatrix2D((cols / 2, rows / 2), deg, 1)
+                sub_res = cv2.warpAffine(img, M, (cols, rows))
+                res += (self.OutputType(sub_res),)
 
         return res
 
@@ -213,15 +217,16 @@ class Flip(Transf):
         Transf.__init__(self, "Flip_" + str(hori))
         self.params = {"hori": hori}
 
-    def _apply_(self, image):
+    def _apply_(self, *image):
+        res = ()
+        for img in image:
+            hori = self.params["hori"]
+            if hori == 1:
+                sub_res = flip_horizontal(img)
+            else:
+                sub_res = flip_vertical(image)
 
-        hori = self.params["hori"]
-        if hori == 1:
-            res = flip_horizontal(image)
-        else:
-            res = flip_vertical(image)
-
-        res = self.OutputType(res)
+            res += (self.OutputType(sub_res))
         return res
 
     def OutputType(self, img):
@@ -239,18 +244,19 @@ class OutOfFocus(Transf):
         Transf.__init__(self, "OutOfFocus_" + str(sigma))
         self.params = {"sigma": sigma}
 
-    def _apply_(self, image):
-        if len(image.shape) == 2:
-            image = self.OutputType(image)
-            return image
-        elif image.shape[2] == 1:
-            image = self.OutputType(image)
-            return image
-        sigma = self.params["sigma"]
+    def _apply_(self, *image):
+        res = ()
+        for img in image:
+            if len(img.shape) == 2:
+                sub_res = self.OutputType(img)
+            elif img.shape[2] == 1:
+                sub_res = self.OutputType(img)
+            sigma = self.params["sigma"]
 
-        res = cv2.blur(image, (sigma, sigma))
+            sub_res = cv2.blur(img, (sigma, sigma))
 
-        res = self.OutputType(res)
+            sub_res = self.OutputType(sub_res)
+            res += (sub_res,)
         return res
 
 
@@ -271,48 +277,54 @@ class ElasticDeformation(Transf):
         src = np.dstack([src_cols.flat, src_rows.flat])[0]
         return src
 
-    def _apply_(self, image):
+    def _apply_(self, *image):
+        res = ()
         mu = self.params["mu"]
         sigma = self.params["sigma"]
         num_points = self.params["num_points"]
+        for img in image:
 
-        res = image.copy()
-        rows, cols = image.shape[0], image.shape[1]
+            sub_res = img.copy()
+            rows, cols = img.shape[0], imgx.shape[1]
 
-        src = self.grid(rows, cols, num_points)
-        # add gaussian displacement to row coordinates
+            src = self.grid(rows, cols, num_points)
+            # add gaussian displacement to row coordinates
 
-        if not hasattr(self, "dst"):
-            np.random.seed(self.seed)
+            if not hasattr(self, "dst"):
+                np.random.seed(self.seed)
 
-            dst_rows = src[:, 1] - sigma * np.random.randn(src.shape[0]) + mu
-            dst_cols = src[:, 0] - sigma * np.random.randn(src.shape[0]) + mu
+                dst_rows = src[:, 1] - sigma * \
+                    np.random.randn(src.shape[0]) + mu
+                dst_cols = src[:, 0] - sigma * \
+                    np.random.randn(src.shape[0]) + mu
 
-            # Delimiting points to the grid space
-            for point_ind in range(src.shape[0]):
-                dst_rows[point_ind] = min(max(dst_rows[point_ind], 0), rows)
-                dst_cols[point_ind] = min(max(dst_cols[point_ind], 0), cols)
+                # Delimiting points to the grid space
+                for point_ind in range(src.shape[0]):
+                    dst_rows[point_ind] = min(
+                        max(dst_rows[point_ind], 0), rows)
+                    dst_cols[point_ind] = min(
+                        max(dst_cols[point_ind], 0), cols)
 
-            self.dst = np.vstack([dst_cols, dst_rows]).T
+                self.dst = np.vstack([dst_cols, dst_rows]).T
 
-            if self.seed is not None:
-                a = np.random.randint(0, 4294967295 - 1)
-                np.random.seed(a)
-        # pdb.set_trace()
-        tform = PiecewiseAffineTransform()
-        tform.estimate(src, self.dst)
+                if self.seed is not None:
+                    a = np.random.randint(0, 4294967295 - 1)
+                    np.random.seed(a)
+            # pdb.set_trace()
+            tform = PiecewiseAffineTransform()
+            tform.estimate(src, self.dst)
 
-        out_rows = rows
-        out_cols = cols
-        res = warp(image, tform, output_shape=(out_rows, out_cols),
-                   order=0)  # order 0 is nearest-neighbor
+            out_rows = rows
+            out_cols = cols
+            sub_res = warp(img, tform, output_shape=(out_rows, out_cols),
+                           order=0)  # order 0 is nearest-neighbor
 
-        res = self.OutputType(res)
+            sub_res = self.OutputType(sub_res)
+            res += (sub_res,)
 
         return res
 
     def OutputType(self, image):
-<<<<<<< HEAD
         if len(image.shape) == 2:
             image.dtype = 'uint8'
             return image
@@ -322,7 +334,3 @@ class ElasticDeformation(Transf):
         else:
             img = img_as_ubyte(image)
             return img
-=======
-        img = img_as_ubyte(image)
-        return img
->>>>>>> 37c5b99825259522eb104656173168906b330050
