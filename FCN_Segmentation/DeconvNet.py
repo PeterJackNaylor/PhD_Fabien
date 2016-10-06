@@ -104,7 +104,7 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet",
     n = caffe.NetSpec()
 
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
-                         seed=None, batch_size=batch_size, classifier_name=classifier_name)
+                         seed=1337, batch_size=batch_size, classifier_name=classifier_name)
     pylayer = 'DataLayerPeter'
     pydata_params["datagen"] = data_gene
     if loss_layer == "softmax":
