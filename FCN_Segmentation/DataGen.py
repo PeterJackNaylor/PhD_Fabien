@@ -218,6 +218,9 @@ class DataGen(object):
 
     def CropImgLbl(self, *kargs):
         size = self.size
+        if self.seed is not None:
+            print "I set the seed here, DataGen:l:222"
+            random.seed(self.seed)
         dim = kargs[0].shape
         x = dim[0]
         y = dim[1]
