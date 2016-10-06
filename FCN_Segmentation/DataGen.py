@@ -19,7 +19,7 @@ class DataGen(object):
 
     def __init__(self, path, crop=None, size=None, transforms=None,
                  split="train", leave_out=1, seed=None, name="optionnal",
-                 img_format="RGB", Weight=False, WeightOnes=False):
+                 img_format="RGB", Weight=False, WeightOnes=False, Unet=False):
 
         self.path = path
         self.name = name
@@ -38,6 +38,7 @@ class DataGen(object):
             self.size = size
         else:
             self.random_crop = False
+        self.UNet_crop = Unet
 
     def ReLoad(self, split):
         self.split = split
@@ -104,6 +105,10 @@ class DataGen(object):
         if self.Weight:
             if 0 in img_lbl_Mwgt[2]:
                 img_lbl_Mwgt[2][img_lbl_Mwgt[2] == 0] = 1
+
+        if self.UNet_crop:
+            img_lbl_Mwgt = self.Unet_cut(*img_lbl_Mwgt)
+
         return img_lbl_Mwgt
 
     def get_patients(self, path, seed):
@@ -211,8 +216,9 @@ class DataGen(object):
                 yield res
             i_old = i
 
-    def CropImgLbl(self, size, seed=None, *kargs):
-        if seed is not None:
+    def CropImgLbl(self, *kargs):
+        size = self.size
+        if self.seed is not None:
             print "I set the seed here"
             random.seed(seed)
         dim = kargs[0].shape
@@ -222,9 +228,25 @@ class DataGen(object):
         y_prime = size[1]
         x_rand = random.randint(0, x - x_prime)
         y_rand = random.randint(0, y - y_prime)
+        res = ()
         for i in range(len(kargs)):
-            kargs[i] = self.RandomCropGen(kargs[i], (x_prime, y_prime), (x_rand, y_rand)), self. RandomCropGen(
-                lbl, (x_prime, y_prime), (x_rand, y_rand))
+            res += (self.RandomCropGen(
+                kargs[i], (x_prime, y_prime), (x_rand, y_rand)),)
+        return res
+
+    def Unet_cut(self, *kargs):
+        dim = kargs[0].shape
+        x = dim[0]
+        y = dim[1]
+        n = 92
+
+        assert x == y, "Not same size x=%d, y=%d" % (x, y)
+        assert x % 16 == 0, "Not dividible by 16, the net will create strange shapes.."
+
+        res = (kargs[0].copy(), )
+        for i in range(1, len(kargs)):
+            res += (kargs[i][n:-n, n:-n],)
+        return res
 
     def RandomCropGen(self, img, size, shift):
         x_prime = size[0]
@@ -465,12 +487,12 @@ if __name__ == "__main__":
     #from FCN_Segmentation.DataLayerPeter import DataGen
     from UsefulFunctions import ImageTransf as IT
     datagen = DataGen("/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/",
-                      transforms=[IT.Identity()], Weight=True)
+                      transforms=[IT.Identity()], Weight=True, Unet=True)
     datagen.ReLoad("train")
     key = datagen.RandomKey(True)
     import matplotlib.pylab as plt
     import skimage.morphology as skm
-    nu = min(7, datagen.length)
+    nu = min(2, datagen.length)
     fig, axes = plt.subplots(nu, 3, figsize=(16, 180),
                              subplot_kw={'xticks': [], 'yticks': []})
     for i in range(nu):

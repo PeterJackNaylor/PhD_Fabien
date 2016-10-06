@@ -1,7 +1,7 @@
 import ImageTransf as Transf
 import os
 import cPickle as pkl
-from DataLayerPeter import DataGen
+from DataGen import DataGen
 
 
 def CheckOrCreate(path):
@@ -33,6 +33,7 @@ def WriteDataGen(kwargs):
     cn = kwargs['cn']
     rawdata = kwargs['rawdata']
     leaveout = int(kwargs['val_num'])
+    Unet = kwargs["UNet"]
 
     path_modelgen = os.path.join(wd, cn, "model")
 
@@ -107,7 +108,7 @@ def WriteDataGen(kwargs):
                                    transforms=transform_list, split="train",
                                    leave_out=leaveout, seed=seed,
                                    img_format=img_format, Weight=Weight,
-                                   WeightOnes=WeightOnes)
+                                   WeightOnes=WeightOnes, Unet=Unet)
 
     pkl.dump(data_generator_train, open(os.path.join(
         path_modelgen, "data_generator_train.pkl"), "wb"))
@@ -115,6 +116,6 @@ def WriteDataGen(kwargs):
                                   transforms=[Transf.Identity()], split="test",
                                   leave_out=leaveout, seed=seed,
                                   img_format=img_format, Weight=Weight,
-                                  WeightOnes=WeightOnes)
+                                  WeightOnes=WeightOnes, Unet=Unet)
     pkl.dump(data_generator_test, open(os.path.join(
         path_modelgen, "data_generator_test.pkl"), "wb"))

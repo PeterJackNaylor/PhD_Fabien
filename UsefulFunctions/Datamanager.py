@@ -6,6 +6,7 @@ from scipy import misc
 import nibabel as ni
 import pdb
 from itertools import chain
+from DataGen import DataGen
 
 
 class DataManager(object):

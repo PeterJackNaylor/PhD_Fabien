@@ -122,7 +122,10 @@ if __name__ == "__main__":
                 int(options.size_x), int(options.size_y))
         if options.img_format != "RGB":
             arg_datagen['img_format'] = options.img_format
-
+        if options.net == "UNet":
+            arg_datagen['UNet'] = True
+        else:
+            arg_datagen['UNet'] = False
         WriteDataGen(arg_datagen)
 
     if create_net:
