@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 
 from gi.repository import Vips
 import openslide
@@ -7,14 +7,13 @@ from ShortPrediction import Preprocessing, OutputNet
 
 
 def ApplyToSlideWrite(slide, table, f, outputfilename=None):
-                # Slide is a string of the location of the file
+	# Slide is a string of the location of the file
+	#  This function applies a function f to the whole slide, this slide is given as input with a table
+    # which contains all the patches on which to apply the function.
+    # Their is also a optionnal outputfilename
 
-        #  This function applies a function f to the whole slide, this slide is given as input with a table
-        # which contains all the patches on which to apply the function.
-        # Their is also a optionnal outputfilename
-
-        #  table is a iterable where each element has 5 attributes:
-        #   x, y, w, h, res
+    #  table is a iterable where each element has 5 attributes:
+    #   x, y, w, h, res
 
     input_slide = openslide.open_slide(slide)
     outputfilename = outputfilename if outputfilename is not None else "F_" + slide
