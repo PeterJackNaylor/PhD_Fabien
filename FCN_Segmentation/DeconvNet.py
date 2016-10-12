@@ -2,9 +2,9 @@
 
 import sys
 
-sys.path.append(
-    "/data/users/pnaylor/Documents/Python/PhD_Fabien/UsefulFunctions/")
-sys.path[4] = "/data/users/pnaylor/Documents/Python/caffe_peter/python"
+# sys.path.append(
+#    "/data/users/pnaylor/Documents/Python/PhD_Fabien/UsefulFunctions/")
+#sys.path[4] = "/data/users/pnaylor/Documents/Python/caffe_peter/python"
 
 
 def switch_caffe_path():
