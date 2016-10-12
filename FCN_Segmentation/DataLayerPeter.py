@@ -127,7 +127,7 @@ class DataLayerPeter(caffe.Layer):
         if self.datagen.Weight:
             top[2].data[...] = self.weight
         # pick next input
-        pdb.set_trace()
+        # pdb.set_trace()
         self.Nextkey()
 
     def backward(self, top, propagate_down, bottom):
