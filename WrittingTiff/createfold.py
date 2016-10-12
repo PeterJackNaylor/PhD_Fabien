@@ -60,6 +60,7 @@ if __name__ == '__main__':
     print "In this script, we will take one slide and create a new slide, this new slide will be annotated with cells"
 
     from TissueSegmentation import ROI_binary_mask
+    from CuttingPatches import ROI
     slide_name = "/data/users/pnaylor/Test_002.tif"
     out_slide = "/data/users/pnaylor/Test_002_pred.tif"
 
