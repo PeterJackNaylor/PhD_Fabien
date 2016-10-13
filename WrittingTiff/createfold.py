@@ -33,6 +33,10 @@ def ApplyToSlideWrite(slide, table, f, outputfilename=None):
         green_part = Vips.Image.new_from_array(image[:, :, 1].tolist())
         blue_part = Vips.Image.new_from_array(image[:, :, 2].tolist())
 
+        red_channel = red_channel.insert(red_part, table[i][0], table[i][1])
+        green_channel = green_channel.insert(
+            green_part, table[i][0], table[i][1])
+        blue_channel = blue_channel.insert(blue_part, table[i][0], table[i][1])
         #output_slide = output_slide.insert(image, table[i][0], table[i][1])
 
     rgb = red_part.bandjoin([green_part, blue_part])
