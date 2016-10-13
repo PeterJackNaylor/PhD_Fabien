@@ -3,7 +3,9 @@
 from gi.repository import Vips
 import openslide
 from UsefulOpenSlide import GetImage
-from ShortPrediction import Preprocessing, OutputNet
+from ShortPrediction import Preprocessing, OutputNet, ProbDeprocessing, dilation, erosion, disk
+import time
+import numpy as np
 
 
 def ApplyToSlideWrite(slide, table, f, outputfilename=None):
@@ -18,30 +20,38 @@ def ApplyToSlideWrite(slide, table, f, outputfilename=None):
     input_slide = openslide.open_slide(slide)
     outputfilename = outputfilename if outputfilename is not None else "F_" + slide
     dim1, dim2 = input_slide.dimensions
-    output_slide = Vips.Image.black(dim1, dim2)
+    #output_slide = Vips.Image.black(dim1, dim2)
+    red_channel = Vips.Image.black(dim1, dim2)
+    green_channel = Vips.Image.black(dim1, dim2)
+    blue_channel = Vips.Image.black(dim1, dim2)
 
-    for i in range(table):
-        image = GetImage(input_slide, table[i])
+    for i in range(len(table)):
+        image = np.array(GetImage(input_slide, table[i]))[:, :, :3]
         image = f(image)
-        output_slide = output_slide.insert(image, table[i][0], table[i][1])
 
-    #  writing stage
-    output_slide.write_to_file(outputfilename)
+        red_part = Vips.Image.new_from_array(image[:, :, 0].tolist())
+        green_part = Vips.Image.new_from_array(image[:, :, 1].tolist())
+        blue_part = Vips.Image.new_from_array(image[:, :, 2].tolist())
+
+        #output_slide = output_slide.insert(image, table[i][0], table[i][1])
+
+    rgb = red_part.bandjoin([green_part, blue_part])
+    rgb.write_to_file(outputfilename)
 
 
 def GetNet(cn, wd):
 
     root_directory = wd + "/" + cn + "/"
-    if 'FCN' not in el:
+    if 'FCN' not in cn:
         folder = root_directory + "temp_files/"
         weight = folder + "weights." + cn + ".caffemodel"
         deploy = root_directory + "test.prototxt"
     else:
         folder = root_directory + "FCN8/temp_files/"
-        weight = folder + "FCN8/weights." + cn + ".caffemodel"
+        weight = folder + "weights." + "FCN8" + ".caffemodel"
         deploy = root_directory + "FCN8/test.prototxt"
 
-        net = caffe.Net(deploy, weight, caffe.TRAIN)
+    net = caffe.Net(deploy, weight, caffe.TRAIN)
     return net
 
 
@@ -63,7 +73,7 @@ if __name__ == '__main__':
     from CuttingPatches import ROI
     slide_name = "/data/users/pnaylor/Test_002.tif"
     out_slide = "/data/users/pnaylor/Test_002_pred.tif"
-
+    param = 5
     size_images = 224
     list_of_para = ROI(slide_name, method="grid_fixed_size",
                        ref_level=0, seed=42, fixed_size_in=(size_images, size_images))
@@ -74,7 +84,7 @@ if __name__ == '__main__':
     cn_1 = "FCN_randomcrop"
     cn_2 = "batchLAYER4"
 
-    wd_1 = "/data/users/pnaylor/Documents/Python/SoftmaxWithWeight/"
+    wd_1 = "/data/users/pnaylor/Documents/Python/newdatagenAll"
     wd_2 = wd_1
 
     net_1 = GetNet(cn_1, wd_1)
@@ -88,9 +98,9 @@ if __name__ == '__main__':
         prob_ensemble = (prob_image1 + prob_image2) / 2
         bin_ensemble = (prob_ensemble > 0.5) + 0
         segmentation_mask = ProbDeprocessing(
-            prob_image, bin_image, param, method="ws_recons")
-        contours = dilation(segmentation_mask, square(2)) - \
-            erosion(segmentation_mask, square(2))
+            prob_ensemble, bin_ensemble, param, method="ws_recons")
+        contours = dilation(segmentation_mask, disk(2)) - \
+            erosion(segmentation_mask, disk(2))
 
         x, y = np.where(contours == 1)
         image[x, y, 0] = 255
