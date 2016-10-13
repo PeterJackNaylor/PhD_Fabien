@@ -105,7 +105,8 @@ class DataGen(object):
         if self.Weight:
             if 0 in img_lbl_Mwgt[2]:
                 img_lbl_Mwgt[2][img_lbl_Mwgt[2] == 0] = 1
-
+	if not hasattr(self, "UNet_crop"):
+            self.UNet_crop = False
         if self.UNet_crop:
             img_lbl_Mwgt = self.Unet_cut(*img_lbl_Mwgt)
 

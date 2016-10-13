@@ -3,8 +3,8 @@ import numpy as np
 from CheckingSolvingState.OutputNet import Transformer, GetScoreVectors
 import sys
 
-from skimage.morphology import watershed
-from skimage import measure
+from skimage.morphology import watershed, reconstruction, dilation, erosion, disk
+from skimage import measure, img_as_ubyte
 from scipy import ndimage as ndi
 
 
@@ -146,7 +146,7 @@ def find_maxima(img, convertuint8=False, inverse=False):
 
 
 def ProbDeprocessing(prob_image, bin_image, param, method="ws_recons"):
-    if methd == "ws_recons":
+    if method == "ws_recons":
         lamb = param
 
         Probs_inv = PrepareProb(prob_image)
@@ -160,7 +160,7 @@ def ProbDeprocessing(prob_image, bin_image, param, method="ws_recons"):
             temp = ws_labels.copy()
             temp[temp != val_m] = 0
             temp[temp == val_m] = 1
-            Contours = dilation(temp, square(2)) - erosion(temp, square(2))
+            Contours = dilation(temp, disk(2)) - erosion(temp, disk(2))
             new_ws_labels[Contours == 1] = 0
 
         new_ws_labels[new_ws_labels > 0] = 1
