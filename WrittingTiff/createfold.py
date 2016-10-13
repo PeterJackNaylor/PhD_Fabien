@@ -20,16 +20,23 @@ def ApplyToSlideWrite(slide, table, f, outputfilename=None):
     input_slide = openslide.open_slide(slide)
     outputfilename = outputfilename if outputfilename is not None else "F_" + slide
     dim1, dim2 = input_slide.dimensions
-    output_slide = Vips.Image.black(dim1, dim2)
+    #output_slide = Vips.Image.black(dim1, dim2)
+    red_channel = Vips.Image.black(dim1, dim2)
+    green_channel = Vips.Image.black(dim1, dim2)
+    blue_channel = Vips.Image.black(dim1, dim2)
 
     for i in range(len(table)):
         image = np.array(GetImage(input_slide, table[i]))[:,:,:3]
         image = f(image)
-	pdb.set_trace()
-        output_slide = output_slide.insert(image, table[i][0], table[i][1])
 
-    #  writing stage
-    output_slide.write_to_file(outputfilename)
+        red_part = Vips.Image.new_from_array(image[:, :, 0].tolist())
+        green_part = Vips.Image.new_from_array(image[:, :, 1].tolist())
+        blue_part = Vips.Image.new_from_array(image[:, :, 2].tolist())
+
+        #output_slide = output_slide.insert(image, table[i][0], table[i][1])
+
+    rgb = red_part.bandjoin([green_part, blue_part])
+    rgb.write_to_file(outputfilename)
 
 
 def GetNet(cn, wd):
