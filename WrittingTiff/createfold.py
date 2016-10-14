@@ -38,7 +38,9 @@ def ApplyToSlideWrite(slide, table, f, outputfilename=None):
             green_part, table[i][0], table[i][1])
         blue_channel = blue_channel.insert(blue_part, table[i][0], table[i][1])
         #output_slide = output_slide.insert(image, table[i][0], table[i][1])
-
+	if i % 10 == 0:
+	    print "Iteration {}".format(i)
+    print "lets join the slides"
     rgb = red_part.bandjoin([green_part, blue_part])
     rgb.write_to_file(outputfilename)
 

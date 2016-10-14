@@ -204,7 +204,7 @@ class DataGen(object):
         num_per_side = int(np.sqrt(self.crop))
         x_step = x / num_per_side
         y_step = y / num_per_side
-        print "step: ", x_step, y_step
+        #print "step: ", x_step, y_step
         i_old = 0
         for i in range(x_step, x + 1, x_step):
             j_old = 0
