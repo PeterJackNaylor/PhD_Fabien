@@ -8,7 +8,7 @@ import os
 from caffe.proto import caffe_pb2
 import pdb
 import numpy as np
-import pandas
+import pandas as pd
 import score
 
 
