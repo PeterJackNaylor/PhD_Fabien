@@ -72,6 +72,7 @@ def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', id="test"
     metrics.append(((recall + true_neg) / 2, 'Performance'))
     metrics.append((1 - acc, 'Pixel error'))
     if verbose:
+        print "\n "
         print ">>>", datetime.now(), "Iteration", iter, "for", id
         for val, name in metrics:
             print '>>>', name, val
