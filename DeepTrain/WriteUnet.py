@@ -1,4 +1,5 @@
 import Unet
+import os
 
 
 def CheckOrCreate(path):
@@ -18,7 +19,9 @@ def WriteUnet(kwargs):
 
     if 'loss' in kwargs.keys():
         loss = kwargs['loss']
-        if "weight" in loss:
+        if "weightcpp" in loss:
+            loss = 'weightcpp'
+        elif "weight" in loss:
             loss = 'weight'
         print "loss ----   {}   -----".format(str(loss))
 

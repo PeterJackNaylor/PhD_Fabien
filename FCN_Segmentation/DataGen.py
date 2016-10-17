@@ -105,7 +105,8 @@ class DataGen(object):
         if self.Weight:
             if 0 in img_lbl_Mwgt[2]:
                 img_lbl_Mwgt[2][img_lbl_Mwgt[2] == 0] = 1
-
+        if not hasattr(self, "UNet_crop"):
+            self.UNet_crop = False
         if self.UNet_crop:
             img_lbl_Mwgt = self.Unet_cut(*img_lbl_Mwgt)
 
@@ -219,8 +220,8 @@ class DataGen(object):
     def CropImgLbl(self, *kargs):
         size = self.size
         if self.seed is not None:
-            print "I set the seed here"
-            random.seed(seed)
+            print "I set the seed here, DataGen:l:222"
+            random.seed(self.seed)
         dim = kargs[0].shape
         x = dim[0]
         y = dim[1]
@@ -241,7 +242,8 @@ class DataGen(object):
         n = 92
 
         assert x == y, "Not same size x=%d, y=%d" % (x, y)
-        assert x % 16 == 0, "Not dividible by 16, the net will create strange shapes.."
+        assert CheckNumberForUnet(
+            x), "Dim not suited for UNet, it will create a wierd net"
 
         res = (kargs[0].copy(), )
         for i in range(1, len(kargs)):
@@ -343,6 +345,21 @@ class DataGen(object):
                 return key
         else:
             raise Exception('Key is of wrong dimensions: {}'.format(len(key)))
+
+
+def CheckNumberForUnet(n):
+    ans = False
+    if (n - 4) % 2 == 0:
+        n = (n - 4) / 2
+        if (n - 4) % 2 == 0:
+            n = (n - 4) / 2
+            if (n - 4) % 2 == 0:
+                n = (n - 4) / 2
+                if (n - 4) % 2 == 0:
+                    n = (n - 4) / 2
+                    ans = True
+
+    return ans
 
 
 def duplicate_channel(blob, n_c):

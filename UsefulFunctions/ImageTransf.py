@@ -162,7 +162,7 @@ class Translation(Transf):
             else:
                 M = np.float32([[1, 0, (x * rev_x * -1)],
                                 [0, 1, (y * rev_y * -1)]])
-                res += (self.OutputType(cv2.warpAffine(image, M, (cols, rows)), ))
+                res += (self.OutputType(cv2.warpAffine(image, M, (cols, rows))), )
 
             return res
 
@@ -224,9 +224,9 @@ class Flip(Transf):
             if hori == 1:
                 sub_res = flip_horizontal(img)
             else:
-                sub_res = flip_vertical(image)
+                sub_res = flip_vertical(img)
 
-            res += (self.OutputType(sub_res))
+            res += (self.OutputType(sub_res),)
         return res
 
     def OutputType(self, img):
@@ -285,7 +285,7 @@ class ElasticDeformation(Transf):
         for img in image:
 
             sub_res = img.copy()
-            rows, cols = img.shape[0], imgx.shape[1]
+            rows, cols = img.shape[0], img.shape[1]
 
             src = self.grid(rows, cols, num_points)
             # add gaussian displacement to row coordinates
