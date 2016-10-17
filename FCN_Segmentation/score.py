@@ -32,8 +32,10 @@ def compute_hist(net, number_of_test, layer='score', gt='label'):
 def seg_tests(solver, number_of_test, layer='score', gt='label'):
     print '>>>', datetime.now(), 'Begin seg tests'
     solver.test_nets[0].share_with(solver.net)
-    hist, loss, acc, acc1, iu, fwavacc, recall, precision = do_seg_tests(solver.test_nets[0], solver.iter,
-                                                                         number_of_test, layer, gt)
+    hist, metrics = do_seg_tests(solver.test_nets[0], solver.iter,
+                                 number_of_test, layer, gt, "Test Net:")
+    hist_train, metrics_train = do_seg_tests(solver.net, solver.iter,
+                                             number_of_test, layer, gt, "Train Net:")
 #    if validation_set is not None:
 #        DataManagerForVal = SetupDataManager(options.path)
 #        data_batch_size = 1
@@ -42,32 +44,29 @@ def seg_tests(solver, number_of_test, layer='score', gt='label'):
 #        hist = compute_hist_VAL(net, DataManagerForVal,
 #                                layer=options.scorelayer)
 #        acc_, acc1_, iu_, fwavacc_, recall_, precision_ = Metrics(hist)
-    return loss, acc, acc1, iu, fwavacc, recall, precision
+    return metrics, metrics_train
 
 
-def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', verbose=True):
+def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', id="test", verbose=True):
 
     n_cl = net.blobs[layer].channels
 
     hist, loss = compute_hist(net, number_of_test, layer, gt)
-    acc = np.diag(hist).sum() / hist.sum()
-    acc1 = np.diag(hist) / hist.sum(1)
-    iu = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
-    freq = hist.sum(1) / hist.sum()
-    fwavacc = (freq[freq > 0] * iu[freq > 0]).sum()
-    recall = (hist[1, 1] + 0.0) / (hist[1, 0] + hist[1, 1])
-    precision = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1])
+    metrics = []
+    metrics.append((np.diag(hist).sum() / hist.sum()), 'acc')
+    metrics.append(np.diag(hist) / hist.sum(1), "acc1")
+    metrics.append(np.diag(hist) / (hist.sum(1) +
+                                    hist.sum(0) - np.diag(hist)), "iu")
+    metrics.append(hist.sum(1) / hist.sum(), "freq")
+    metrics.append((freq[freq > 0] * iu[freq > 0]).sum(), "fwavacc")
+    metrics.append((hist[1, 1] + 0.0) / (hist[1, 0] + hist[1, 1]), "recall")
+    metrics.append((hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1]), "precision")
 
     if verbose:
-        print '>>>', datetime.now(), 'Iteration', iter, 'loss', loss
-        print '>>>', datetime.now(), 'Iteration', iter, 'overall accuracy', acc
-        print '>>>', datetime.now(), 'Iteration', iter, 'mean accuracy', np.nanmean(acc1)
-        print '>>>', datetime.now(), 'Iteration', iter, 'mean IU', np.nanmean(iu)
-        print '>>>', datetime.now(), 'Iteration', iter, 'fwavacc', fwavacc
-        print '>>>', 'recall', recall
-        print '>>>', 'precision', precision
-
-    return hist, loss, acc, np.nanmean(acc1), np.nanmean(iu), fwavacc, recall, precision
+        print ">>>", datetime.now(), "Iteration", iter, "for", id
+        for val, name in metrics:
+        print '>>>', name, val
+    return hist, metrics
 
 
 def score_print(label_data, pred_bin):
