@@ -180,7 +180,7 @@ if __name__ == "__main__":
         arg_solver["solverrate"] = float(options.solverrate)
         arg_solver["momentum"] = float(options.momentum)
         arg_solver["weight_decay"] = float(options.weight_decay)
-        arg_solver["stepsize"] = float(options.stepsize)
+        arg_solver["stepsize"] = int(options.stepsize)
         arg_solver["momentum"] = float(options.momentum)
         arg_solver["gamma"] = float(options.gamma)
         if options.net == "FCN":
