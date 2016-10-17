@@ -65,7 +65,7 @@ def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', id="test"
     if verbose:
         print ">>>", datetime.now(), "Iteration", iter, "for", id
         for val, name in metrics:
-        print '>>>', name, val
+            print '>>>', name, val
     return hist, metrics
 
 
