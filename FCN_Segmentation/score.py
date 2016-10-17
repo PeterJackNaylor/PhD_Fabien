@@ -56,9 +56,11 @@ def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', id="test"
     acc = np.diag(hist).sum() / hist.sum()
     metrics.append((acc, 'acc'))
     metrics.append((np.diag(hist) / hist.sum(1), "acc1"))
-    metrics.append((np.diag(hist) / (hist.sum(1) +
-                                     hist.sum(0) - np.diag(hist)), "iu"))
-    metrics.append((hist.sum(1) / hist.sum(), "freq"))
+    iu = np.diag(hist) / (hist.sum(1) +
+                          hist.sum(0) - np.diag(hist))
+    metrics.append((iu, "iu"))
+    freq = hist.sum(1) / hist.sum()
+    metrics.append((freq, "freq"))
     metrics.append(((freq[freq > 0] * iu[freq > 0]).sum(), "fwavacc"))
     recall = (hist[1, 1] + 0.0) / (hist[1, 0] + hist[1, 1])
     metrics.append((recall, "recall"))
