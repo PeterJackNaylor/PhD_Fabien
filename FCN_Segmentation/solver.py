@@ -8,7 +8,7 @@ import os
 from caffe.proto import caffe_pb2
 import pdb
 import numpy as np
-
+import pandas
 import score
 
 
@@ -72,19 +72,19 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test):
     blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc', 'recall', 'precision')
     number_of_loops = niter / disp_interval
 
-    loss, acc, acc1, iu, fwavacc, recall, precision = ({name: np.zeros(number_of_loops) for name, _ in solvers}
-                                                       for _ in blobs)
+    Results = pd.DataFrame()
+    Results_train = Results.copy()
+
     for it in range(number_of_loops):
         for name, s in solvers:
-            # pdb.set_trace()
-            s.step(disp_interval)  # run a single SGD step in Caffe
-            # DEFINE VAL is validation test set, it computes it independently
-            # ...
+            s.step(disp_interval)
             print name
-            loss[name][it], acc[name][it], acc1[name][it], iu[name][it], fwavacc[
-                name][it], recall[name][it], precision[
-                name][it] = score.seg_tests(s, number_of_test)
-    # Save the learned weights from all nets.
+            metrics, metrics_train = score.seg_tests(s, number_of_test)
+            for val, name in metrics:
+                Results.set_value(it, name, val)
+            for val, name in metrics_train:
+                Results_train.set_value(it, name, val)
+
     if not os.path.isdir(res_fold):
         os.mkdir(res_fold)
     weight_dir = res_fold
@@ -93,7 +93,7 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test):
         filename = 'weights.%s.caffemodel' % name
         weights[name] = os.path.join(weight_dir, filename)
         s.net.save(weights[name])
-    return loss, acc, acc1, iu, fwavacc, recall, precision, weights
+    return Results, Results_train, weights
 
 
 def run_solvers(niter, solvers, res_fold, disp_interval=10):

@@ -81,30 +81,13 @@ def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test):
 
     res_fold = os.path.join(wd, cn, "temp_files")
 
-    loss, acc, acc1, iu, fwavacc, recall, precision, weights = run_solvers_IU(
+    Results, Results_train, weights = run_solvers_IU(
         niter, solvers, res_fold, disp_interval, number_of_test)
 
-    np.save(os.path.join(res_fold, "loss"), loss[cn])
-
-    np.save(os.path.join(res_fold, "acc"), acc[cn])
-    np.save(os.path.join(res_fold, "acc1"), acc1[cn])
-    np.save(os.path.join(res_fold, "iu"), iu[cn])
-    np.save(os.path.join(res_fold, "fwavacc"), fwavacc[cn])
-    np.save(os.path.join(res_fold, "precision"), precision[cn])
-    np.save(os.path.join(res_fold, "recall"), recall[cn])
-
-    range_iter = range(disp_interval, niter + disp_interval, disp_interval)
-
-    plt.plot(range_iter, loss[cn])
-    plt.savefig(os.path.join(res_fold, "loss"))
-    plt.close()
-    plt.plot(range_iter, acc[cn], "-r")
-    plt.plot(range_iter, acc1[cn], "-y")
-    plt.plot(range_iter, iu[cn], "-g")
-    plt.plot(range_iter, fwavacc[cn], "-b")
-    plt.plot(range_iter, recall[cn], "-c")
-    plt.plot(range_iter, precision[cn], "-m")
-    plt.savefig(os.path.join(res_fold, "alltogethernow"))
+    Results.to_csv(os.path.join(
+        res_fold, 'Metrics_{}_{}.csv').format(disp_interval, niter))
+    Results_train.to_csv(os.path.join(
+        res_fold, 'MetricsTrain_{}_{}.csv').format(disp_interval, niter))
 
     print 'Done.'
 
