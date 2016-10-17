@@ -6,11 +6,12 @@ import sys
 from datetime import datetime
 from PIL import Image
 import pdb
+from sklearn.metrics import confusion_matrix
 
 
 def fast_hist(a, b, n):
-    k = (a >= 0) & (a < n)
-    return np.bincount(n * a[k].astype(int) + b[k], minlength=n**2).reshape(n, n)
+    hist = confusion_matrix(a, b, np.array([0, 1]))
+    return hist
 
 
 def compute_hist(net, number_of_test, layer='score', gt='label'):
@@ -53,6 +54,7 @@ def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', id="test"
 
     hist, loss = compute_hist(net, number_of_test, layer, gt)
     metrics = []
+    metrics.append((loss, 'Loss'))
     acc = np.diag(hist).sum() / hist.sum()
     metrics.append((acc, 'Overall accuracy:'))
     acc1 = (np.diag(hist) + 0.0) / hist.sum(1)

@@ -13,7 +13,7 @@ def LoadImgLbl(file, final_size=224):
 
     rgb = image2pixelarray(file)
     lbl = image2pixelarray(file.replace('Slide', 'GT').replace(
-        '_ccd', '').replace('.tif', '.TIF'))
+        '_ccd', '').replace('.tif', '.TIF'), "greyscale")
 
     x, y = np.where(lbl > 0)
     x_g = np.min(x)
@@ -24,7 +24,7 @@ def LoadImgLbl(file, final_size=224):
     x_g, x_d = ExtractBounderie(x_g, x_d, (0, lbl.shape[0]), final_size)
     y_h, y_b = ExtractBounderie(y_h, y_b, (0, lbl.shape[1]), final_size)
 
-    return rgb[x_g:x_d, y_h:y_b], lbl[x_g:x_d, y_h:y_b]
+    return rgb[x_g:x_d, y_h:y_b, :], lbl[x_g:x_d, y_h:y_b]
 
 
 def ExtractBounderie(x_1, x_2, image_bounderies, final_size, always_crop_to_size=True):
@@ -65,12 +65,17 @@ def ExtractBounderie(x_1, x_2, image_bounderies, final_size, always_crop_to_size
     return x_1, x_2
 
 
-def image2pixelarray(filepath):
-    im = Image.open(filepath).convert('L')
-    (width, height) = im.size
-    greyscale_map = list(im.getdata())
-    greyscale_map = np.array(greyscale_map).reshape((height, width))
-    return greyscale_map
+def image2pixelarray(filepath, type="RGB"):
+    if type == "RGB":
+        im = Image.open(filepath).convert('RGB')
+        return np.array(im.getdata(),
+                        np.uint8).reshape(im.size[1], im.size[0], 3)
+    elif type == "greyscale":
+        im = Image.open(filepath).convert('L')
+        (width, height) = im.size
+        greyscale_map = list(im.getdata())
+        greyscale_map = np.array(greyscale_map).reshape((height, width))
+        return greyscale_map
 
 
 if __name__ == "__main__":
@@ -78,8 +83,8 @@ if __name__ == "__main__":
     from scipy.misc import imsave
     import os
     files = GetNames("/home/naylor/Bureau/NewDataSet/Slide")
-    res_fold_slide = "/home/naylor/Bureau/NewSlides/Slide_111111"
-    res_fold_gt = "/home/naylor/Bureau/NewSlides/GT_111111"
+    res_fold_slide = "/home/naylor/Bureau/BaochuanPang/Slide_111111"
+    res_fold_gt = "/home/naylor/Bureau/BaochuanPang/GT_111111"
     size = 224
     for f in files:
         # fig, axes = plt.subplots(1, 2)
@@ -88,5 +93,6 @@ if __name__ == "__main__":
         print f + "   :"
         assert rgb.shape[:2] == lbl.shape[:2]
         print rgb.shape
+        # pdb.set_trace()
         imsave(os.path.join(res_fold_slide, name), rgb)
         imsave(os.path.join(res_fold_gt, name), lbl)

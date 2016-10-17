@@ -71,6 +71,14 @@ if __name__ == "__main__":
                       help=" you can specify, this parameter is only taken into account for \
                       FCN and valid : 32_16_8")
 
+    parser.add_option('--momentum', dest="momentum", default="0.9",
+                      help="momentum for the training")
+    parser.add_option('--weight_decay', dest="weight_decay", default="0.0005",
+                      help="weight decay for the training")
+    parser.add_option('--stepsize', dest="stepsize", default="10000",
+                      help="stepsize for the training")
+    parser.add_option('--gamma', dest="gamma", default="0.1",
+                      help="gamma for the training")
     (options, args) = parser.parse_args()
 
     if options.wd is None:
@@ -102,6 +110,10 @@ if __name__ == "__main__":
     print "Image format      ; | " + options.img_format
     print "loss layer        : | " + options.loss
     print "gpu or cpu        : | " + options.gpu
+    print "Momentul          : | " + options.momentum
+    print "weight decay      : | " + options.weight_decay
+    print "stepsize          : | " + options.stepsize
+    print "gamma             : | " + options.gamma
 
     if create_dataset:
 
@@ -166,6 +178,10 @@ if __name__ == "__main__":
 
         arg_solver = arg_net
         arg_solver["solverrate"] = float(options.solverrate)
+        arg_solver["momentum"] = float(options.momentum)
+        arg_solver["weight_decay"] = float(options.weight_decay)
+        arg_solver["stepsize"] = float(options.stepsize)
+        arg_solver["momentum"] = float(options.momentum)
         if options.net == "FCN":
             archi = [int(el) for el in options.archi.split('_')]
             if len(archi) != 1:

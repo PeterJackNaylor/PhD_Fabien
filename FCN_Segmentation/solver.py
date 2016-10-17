@@ -12,7 +12,12 @@ import pandas as pd
 import score
 
 
-def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_snap="./temp_snapshot"):
+def solver(solver_name, train_net_path, test_net_path=None,
+           base_lr=0.001, out_snap="./temp_snapshot",
+           momentum=0.9,
+           weight_decay=5e-4,
+           gamma=0.1,
+           stepsize=10000):
     # pdb.set_trace()
     s = caffe_pb2.SolverParameter()
     s.train_net = train_net_path
@@ -39,15 +44,15 @@ def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, out_s
     # Here, we 'step' the learning rate by multiplying it by a factor `gamma`
     # every `stepsize` iterations.
     s.lr_policy = 'step'
-    s.gamma = 0.1
-    s.stepsize = 10000
+    s.gamma = gamma
+    s.stepsize = stepsize
 
     # Set other SGD hyperparameters. Setting a non-zero `momentum` takes a
     # weighted average of the current gradient and previous gradients to make
     # learning more stable. L2 weight decay regularizes learning, to help prevent
     # the model from overfitting.
-    s.momentum = 0.9
-    s.weight_decay = 5e-4
+    s.momentum = momentum
+    s.weight_decay = weight_decay
 
     # Display the current training loss and accuracy every 1000 iterations.
     s.display = 1000
