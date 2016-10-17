@@ -53,15 +53,22 @@ def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', id="test"
 
     hist, loss = compute_hist(net, number_of_test, layer, gt)
     metrics = []
-    metrics.append((np.diag(hist).sum() / hist.sum()), 'acc')
-    metrics.append(np.diag(hist) / hist.sum(1), "acc1")
-    metrics.append(np.diag(hist) / (hist.sum(1) +
-                                    hist.sum(0) - np.diag(hist)), "iu")
-    metrics.append(hist.sum(1) / hist.sum(), "freq")
-    metrics.append((freq[freq > 0] * iu[freq > 0]).sum(), "fwavacc")
-    metrics.append((hist[1, 1] + 0.0) / (hist[1, 0] + hist[1, 1]), "recall")
-    metrics.append((hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1]), "precision")
-
+    acc = np.diag(hist).sum() / hist.sum()
+    metrics.append((acc, 'acc'))
+    metrics.append((np.diag(hist) / hist.sum(1), "acc1"))
+    metrics.append((np.diag(hist) / (hist.sum(1) +
+                                     hist.sum(0) - np.diag(hist)), "iu"))
+    metrics.append((hist.sum(1) / hist.sum(), "freq"))
+    metrics.append(((freq[freq > 0] * iu[freq > 0]).sum(), "fwavacc"))
+    recall = (hist[1, 1] + 0.0) / (hist[1, 0] + hist[1, 1])
+    metrics.append((recall, "recall"))
+    metrics.append(
+        ((hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1]), "precision"))
+    metrics.append((recall, 'true positive'))
+    true_neg = (hist[0, 0] + 0.0) / (hist[0, 1] + hist[0, 0])
+    metrics.append((true_neg, 'true negatives'))
+    metrics.append(((recall + true_neg) / 2, 'performance'))
+    metrics.append((1 - acc, 'pixel error'))
     if verbose:
         print ">>>", datetime.now(), "Iteration", iter, "for", id
         for val, name in metrics:
