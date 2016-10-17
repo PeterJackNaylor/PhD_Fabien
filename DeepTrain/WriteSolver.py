@@ -28,10 +28,18 @@ def WriteSolver(kwargs):
     wd = kwargs['wd']
     cn = kwargs['cn']
     solverrate = kwargs['solverrate']
+    momentum = kwargs['momentum']
+    weight_decay = kwargs["weight_decay"]
+    gamma = kwargs["gamma"]
+    stepsize = kwargs["stepsize"]
 
-    print 'wd        ----   {}   ------'.format(str(wd))
-    print 'cn        ----   {}   ------'.format(str(cn))
-    print 'solverrate----   {}   ------'.format(str(solverrate))
+    print 'wd          ----   {}   ------'.format(str(wd))
+    print 'cn          ----   {}   ------'.format(str(cn))
+    print 'solverrate  ----   {}   ------'.format(str(solverrate))
+    print 'momentum    ----   {}   ------'.format(str(momentum))
+    print 'weight_decay----   {}   ------'.format(str(weight_decay))
+    print 'gamma       ----   {}   ------'.format(str(gamma))
+    print 'stepsize    ----   {}   ------'.format(str(stepsize))
 
     if "archi" not in kwargs.keys():
         solver_path = os.path.join(wd, cn, "solver.prototxt")
@@ -43,9 +51,13 @@ def WriteSolver(kwargs):
         name_solver = solver(solver_path,
                              os.path.join(wd, cn, "train.prototxt"),
                              test_net_path=os.path.join(
-                                 wd, cn, "train.prototxt"),
+                                 wd, cn, "test.prototxt"),
                              base_lr=solverrate,
-                             out_snap=outsnap)
+                             out_snap=outsnap,
+                             momentum=momentum,
+                             weight_decay=weight_decay,
+                             gamma=gamma,
+                             stepsize=stepsize)
     elif len(kwargs['archi']) == 1:
         solver_path = os.path.join(wd, cn, "solver.prototxt")
         outsnap = os.path.join(wd, cn, "snapshot")
@@ -56,9 +68,13 @@ def WriteSolver(kwargs):
         name_solver = solver(solver_path,
                              os.path.join(wd, cn, "train.prototxt"),
                              test_net_path=os.path.join(
-                                 wd, cn, "train.prototxt"),
+                                 wd, cn, "test.prototxt"),
                              base_lr=solverrate,
-                             out_snap=outsnap)
+                             out_snap=outsnap,
+                             momentum=momentum,
+                             weight_decay=weight_decay,
+                             gamma=gamma,
+                             stepsize=stepsize)
 
     else:
         for num in kwargs["archi"]:
@@ -72,6 +88,10 @@ def WriteSolver(kwargs):
             name_solver = solver(solver_path,
                                  os.path.join(wd, cn, "train.prototxt"),
                                  test_net_path=os.path.join(
-                                     wd, cn, "train.prototxt"),
+                                     wd, cn, "test.prototxt"),
                                  base_lr=solverrate,
-                                 out_snap=outsnap)
+                                 out_snap=outsnap,
+                                 momentum=momentum,
+                                 weight_decay=weight_decay,
+                                 gamma=gamma,
+                                 stepsize=stepsize)

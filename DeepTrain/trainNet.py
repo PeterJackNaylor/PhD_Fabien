@@ -1,6 +1,5 @@
 import caffe
-import matplotlib as mpl
-mpl.use('Agg')
+
 import matplotlib.pylab as plt
 import time
 import os
