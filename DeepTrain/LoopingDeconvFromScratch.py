@@ -26,9 +26,11 @@ size_y = 224
 
 
 for solraterate in solverrate_list:
-	for momentum in momentum_list:
-		for weight_decay in weight_decay_list:
-			cn = (net + '_{}_{}_{}')
-		    arguments = (net, rawdata, wd, cn, weight, niter, disp_interval, val_num, crop, solverrate, batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y)
-		    cmd = "python DeepTrain/runNet.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --val_num {} --crop {} --solverrate {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {}".format(arguments)
-		    subprocess.check_output(cmd, shell=True)
+    for momentum in momentum_list:
+        for weight_decay in weight_decay_list:
+            cn = (net + '_{}_{}_{}')
+            arguments = (net, rawdata, wd, cn, weight, niter, disp_interval, val_num, crop, solverrate,
+                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y)
+            cmd = "python DeepTrain/runNet.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --val_num {} --crop {} --solverrate {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {}".format(
+                arguments)
+            subprocess.check_output(cmd, shell=True)
