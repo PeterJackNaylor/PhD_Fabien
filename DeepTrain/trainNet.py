@@ -7,7 +7,7 @@ import os
 import cPickle as pkl
 from solver import solver, run_solvers, run_solvers_IU
 import numpy as np
-
+import pdb
 
 def trainNet(kwargs):
     """
@@ -38,7 +38,7 @@ def trainNet(kwargs):
         caffe.set_mode_gpu()
     else:
         caffe.set_mode_cpu()
-
+    pdb.set_trace()
     if 'archi' not in kwargs.keys():
         train(solver_path, weight, wd, cn, n_iter,
               disp_interval, number_of_test)
@@ -64,7 +64,7 @@ def trainNet(kwargs):
 
             train(solver_path, weight, wd, cn + '/' + fcn_num, n_iter,
                   disp_interval, number_of_test)
-
+	    pdb.set_trace()
 
 def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test):
     my_solver = caffe.get_solver(solver_path)
