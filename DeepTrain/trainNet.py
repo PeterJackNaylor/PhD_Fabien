@@ -37,7 +37,6 @@ def trainNet(kwargs):
         caffe.set_mode_gpu()
     else:
         caffe.set_mode_cpu()
-    pdb.set_trace()
     if 'archi' not in kwargs.keys():
         train(solver_path, weight, wd, cn, n_iter,
               disp_interval, number_of_test)

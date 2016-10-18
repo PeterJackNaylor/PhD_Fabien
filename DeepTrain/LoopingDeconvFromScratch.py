@@ -4,14 +4,14 @@ net = 'DeconvNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
 wd = "/data/users/pnaylor/Documents/Python/LoopingDeconvFromScratch"
 weight = "None"
-niter = 300
+niter = 40000
 disp_interval = 100
 val_num = "1"
 crop = "4"
 
 solverrate_list = [1, 0.1, 0.01, 0.001, 0.0001]
 
-batch_size = "1"
+batch_size = "4"
 img_format = "RGB"
 loss = 'softmax'
 
@@ -33,4 +33,5 @@ for solverrate in solverrate_list:
                          batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y)
             cmd = "python DeepTrain/runNet.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --val_num {} --crop {} --solverrate {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {}".format(
                 *arguments)
-            subprocess.check_output(cmd, shell=True)
+            proces = subprocess.Popen(cmd, shell=True)
+	    proces.wait() 
