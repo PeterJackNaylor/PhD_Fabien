@@ -39,6 +39,9 @@ if __name__ == "__main__":
     parser.add_option("--niter", dest="niter",
                       help="Number of iterations")
 
+    parser.add_option("--epoch", dest="epoch", default="None",
+                      help="Number of epoch, if epoch is specified, niter and disp_interval is dismissed")
+
     parser.add_option("--disp_interval", dest="disp_interval",
                       help=" Diplay interval for training the network", default="10")
 
@@ -94,6 +97,11 @@ if __name__ == "__main__":
         solverrate = 0.000001 * float(options.solverrate)
         options.solverrate = str(solverrate)
 
+    if options.epoch != "None":
+        options.epoch = int(epoch)
+        options.niter = epoch + " epoch"
+        options.disp_interval = "1 epoch"
+
     print "Input paramters to run:"
     print " \n "
     print "Net used          : | " + options.net
@@ -114,6 +122,7 @@ if __name__ == "__main__":
     print "weight decay      : | " + options.weight_decay
     print "stepsize          : | " + options.stepsize
     print "gamma             : | " + options.gamma
+    print "epoch             : | " + options.epoch
 
     if create_dataset:
 
@@ -194,11 +203,16 @@ if __name__ == "__main__":
     if train:
         from trainNet import trainNet
         arg_train = arg_net
-        arg_train['niter'] = int(options.niter)
+        if options.epoch != "None":
+            arg_train["epoch"] = int(options.epoch)
+            arg_net['batch_size'] = int(options.batch_size)
+        else:
+            arg_train['niter'] = int(options.niter)
+            arg_train['disp_interval'] = int(options.disp_interval)
+
         arg_train['solver_path'] = os.path.join(
             options.wd, options.cn, "solver.prototxt")
         arg_train['weight'] = options.weight
-        arg_train['disp_interval'] = int(options.disp_interval)
         arg_train['gpu'] = options.gpu
         if options.net == "FCN":
             archi = [int(el) for el in options.archi.split('_')]
