@@ -246,9 +246,9 @@ class DataGen(object):
             new_dim += (ne, )
 
         result = np.zeros(shape=new_dim)
-        n = 184
+        n = 92
         assert CheckNumberForUnet(
-            dim[0] + n), "Dim not suited for UNet, it will create a wierd net"
+            dim[0] + 2 * n), "Dim not suited for UNet, it will create a wierd net"
         # middle
         result[n:-n, n:-n] = kargs[0].copy()
         # top middle
