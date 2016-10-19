@@ -24,15 +24,15 @@ stepsize = 10000
 gamma = 0.1
 size_x = 224
 size_y = 224
-
+enlarge = " True"
 
 for solverrate in solverrate_list:
     for momentum in momentum_list:
         for weight_decay in weight_decay_list:
             cn = (net + '_{}_{}_{}').format(solverrate, momentum, weight_decay)
             arguments = (net, raw_data, wd, cn, weight, niter, disp_interval, val_num, crop, solverrate,
-                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, epoch, gpu)
-            cmd = "python DeepTrain/runNet.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --val_num {} --crop {} --solverrate {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --epoch {} --gpu {}".format(
+                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, epoch, gpu, enlarge)
+            cmd = "python DeepTrain/runNet.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --val_num {} --crop {} --solverrate {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --epoch {} --gpu {} --enlarge {}".format(
                 *arguments)
             proces = subprocess.Popen(cmd, shell=True)
             proces.wait()
