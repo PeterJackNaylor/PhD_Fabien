@@ -1,6 +1,6 @@
 import caffe
 from caffe import layers as L, params as P
-
+import os
 Constant_fil = dict(type="constant", value=0)
 
 
