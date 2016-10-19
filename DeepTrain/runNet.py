@@ -184,6 +184,8 @@ if __name__ == "__main__":
 
             WriteFCN(arg_net)
         if options.net == "BaochuanNet":
+            import sys
+            sys.path.append('/data/users/pnaylor/Documents/Python/PhD_Fabien')
             from Baochuan.WriteBaochuanNet import WriteBaochuanNet
 
             WriteBaochuanNet(arg_net)
