@@ -80,6 +80,7 @@ def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test):
     # pdb.set_trace()
 
     if weight != "None":
+        pdb.set_trace()
         assert os.path.exists(weight)
         my_solver.net.copy_from(weight)
 

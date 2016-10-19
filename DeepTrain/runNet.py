@@ -102,7 +102,6 @@ if __name__ == "__main__":
     if options.epoch != "None":
         options.niter = options.epoch + " epoch"
         options.epoch = int(options.epoch)
-        options.disp_interval = "1 epoch"
 
     print "Input paramters to run:"
     print " \n "
@@ -110,7 +109,7 @@ if __name__ == "__main__":
     print "Raw data direct   : | " + options.rawdata
     print "Work directory    : | " + options.wd
     print "Classifier name   : | " + options.cn
-    print "Weight file (init): | " + str(options.weight)
+    print "Weight file (init): | " + options.weight
     print "Number of iteration | " + options.niter
     print "display interval  : | " + options.disp_interval
     print "Patients in test  : | " + options.val_num
