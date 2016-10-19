@@ -16,7 +16,7 @@ def WriteBaochuanNet(kwargs):
         batch_size: batch size for trai 
     """
 
-    batch_size = kwargs['batch size']
+    batch_size = kwargs['batch_size']
 
     path_ = os.path.join(kwargs['wd'], kwargs['cn'])
     path_modelgen = os.path.join(path_, "model")
