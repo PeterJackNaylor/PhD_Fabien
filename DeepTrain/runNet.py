@@ -159,7 +159,7 @@ if __name__ == "__main__":
         arg_net = {'wd': options.wd,
                    'cn': options.cn,
                    'seed': 42,
-                   'batch_size' = int(options.batch_size)}
+                   'batch_size': int(options.batch_size)}
 
         if options.loss != "softmax":
             arg_net['loss'] = options.loss
