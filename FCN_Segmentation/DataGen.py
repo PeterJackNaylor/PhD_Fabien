@@ -205,7 +205,7 @@ class DataGen(object):
         num_per_side = int(np.sqrt(self.crop))
         x_step = x / num_per_side
         y_step = y / num_per_side
-        #print "step: ", x_step, y_step
+        # print "step: ", x_step, y_step
         i_old = 0
         for i in range(x_step, x + 1, x_step):
             j_old = 0
@@ -246,7 +246,7 @@ class DataGen(object):
             new_dim += (ne, )
 
         result = np.zeros(shape=new_dim)
-        n = 92
+        n = 184
         assert CheckNumberForUnet(
             dim[0] + n), "Dim not suited for UNet, it will create a wierd net"
         # middle

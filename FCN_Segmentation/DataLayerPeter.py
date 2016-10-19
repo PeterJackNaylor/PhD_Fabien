@@ -126,7 +126,10 @@ class DataLayerPeter(caffe.Layer):
         top[0].data[...] = self.data
         top[1].data[...] = self.label
         if self.datagen.Weight:
-            top[2].data[...] = self.weight
+            weight = self.weight
+            if 0 in weight:
+                weight[weight > 0] = 1
+            top[2].data[...] = weight
         # pick next input
         # pdb.set_trace()
         self.Nextkey()
