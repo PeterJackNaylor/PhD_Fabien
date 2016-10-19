@@ -1,9 +1,8 @@
-LoopingDeconvNet
 import subprocess
 
 net = 'DeconvNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
-wd = "/data/users/pnaylor/Documents/Python/LoopingUNetFromPretrainedWeight"
+wd = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetFromPretrainedWeight"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/DeconvNet_trainval_inference.caffemodel"
 niter = 5000
 disp_interval = 100
@@ -23,8 +22,8 @@ weight_decay_list = [0.005, 0.0005, 0.00005]
 
 stepsize = 10000
 gamma = 0.1
-size_x = 212
-size_y = 212
+size_x = 224
+size_y = 224
 
 
 for solverrate in solverrate_list:
