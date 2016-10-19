@@ -29,10 +29,10 @@ def BaochuanNet(split, data_gene, batch_size=1, classifier_name="BaochuanNet"):
     n.conv2, n.relu2 = conv_relu(n.relu1, 8, pad=1)
     n.conv3, n.relu3 = conv_relu(n.relu2, 8, pad=1)
 
-    score_fr = L.Convolution(n.relu3, num_output=2, kernel_size=1, pad=0,
-                             param=[dict(lr_mult=1, decay_mult=1),
-                                    dict(lr_mult=2, decay_mult=0)],
-                             weight_filler=dict(type="xavier"))
+    n.score = L.Convolution(n.relu3, num_output=2, kernel_size=1, pad=0,
+                            param=[dict(lr_mult=1, decay_mult=1),
+                                   dict(lr_mult=2, decay_mult=0)],
+                            weight_filler=dict(type="xavier"))
 
     n.loss = L.SoftmaxWithLoss(n.score, n.label,
                                loss_param=dict(normalize=True, ignore_label=255))
