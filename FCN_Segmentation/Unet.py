@@ -81,7 +81,7 @@ def max_pool(bottom, ks=2, stride=2):
     return layer
 
 
-def UNet(split, data_gene, batch_size, classifier_name="UNet", loss_layer="softmax", batch_size=1):
+def UNet(split, data_gene, batch_size, classifier_name="UNet", loss_layer="softmax"):
     n = caffe.NetSpec()
 
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
@@ -151,7 +151,7 @@ def UNet(split, data_gene, batch_size, classifier_name="UNet", loss_layer="softm
 def make_net(wd, data_gene_train, data_gene_test, classifier_name="UNet",
              loss_layer="softmax", batch_size=1):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(UNet('train', data_gene_train, 1,
-                         classifier_name, loss_layer, batch_size)))
+        f.write(str(UNet('train', data_gene_train, batch_size,
+                         classifier_name, loss_layer)))
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(UNet('test', data_gene_test, 1, classifier_name, loss_layer, 1)))
+        f.write(str(UNet('test', data_gene_test, 1, classifier_name, loss_layer)))
