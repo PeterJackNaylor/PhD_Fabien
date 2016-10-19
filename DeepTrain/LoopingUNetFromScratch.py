@@ -12,7 +12,7 @@ crop = "4"
 
 solverrate_list = [1, 0.1, 0.01, 0.001, 0.0001]
 
-batch_size = "1"
+batch_size = "10"
 img_format = "RGB"
 loss = 'softmax'
 
