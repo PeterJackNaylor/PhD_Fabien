@@ -8,7 +8,7 @@ def CheckOrCreate(path):
         os.makedirs(path)
 
 
-def WriteUnet(kwargs):
+def WriteBaochuanNet(kwargs):
     """
     Compulsory arguments:
         wd : work directory
