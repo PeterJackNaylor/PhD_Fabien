@@ -15,7 +15,7 @@ solverrate_list = [100, 10, 1, 0.1, 0.01, 0.001, 0.0001]
 batch_size = "10"
 img_format = "RGB"
 loss = 'softmax'
-
+gpu = "cpu"
 momentum_list = [0.9, 0.99]
 
 weight_decay_list = [0.005, 0.0005, 0.00005]
@@ -31,8 +31,8 @@ for solverrate in solverrate_list:
         for weight_decay in weight_decay_list:
             cn = (net + '_{}_{}_{}').format(solverrate, momentum, weight_decay)
             arguments = (net, raw_data, wd, cn, weight, niter, disp_interval, val_num, crop, solverrate,
-                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, epoch)
-            cmd = "python DeepTrain/runNet.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --val_num {} --crop {} --solverrate {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --epoch {}".format(
+                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, epoch, gpu)
+            cmd = "python DeepTrain/runNet.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --val_num {} --crop {} --solverrate {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --epoch {} --gpu {}".format(
                 *arguments)
             proces = subprocess.Popen(cmd, shell=True)
             proces.wait()
