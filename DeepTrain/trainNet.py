@@ -8,6 +8,7 @@ from solver import solver, run_solvers, run_solvers_IU
 import numpy as np
 import pdb
 
+
 def trainNet(kwargs):
     """
     options: cn : classifier name
@@ -34,7 +35,7 @@ def trainNet(kwargs):
         datagen_path_train = os.path.join(
             path_modelgen, "data_generator_train.pkl")
         datagen_train = pkl.load(open(datagen_path_train, "rb"))
-        disp_interval = datagen_train.length
+        disp_interval = datagen_train.length / 10
         n_iter = kwargs['epoch'] * disp_interval / kwargs['batch_size']
 
     else:
@@ -71,7 +72,8 @@ def trainNet(kwargs):
 
             train(solver_path, weight, wd, cn + '/' + fcn_num, n_iter,
                   disp_interval, number_of_test)
-	    pdb.set_trace()
+            pdb.set_trace()
+
 
 def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test):
     my_solver = caffe.get_solver(solver_path)
