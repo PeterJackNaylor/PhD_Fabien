@@ -33,9 +33,9 @@ def trainNet(kwargs):
     if "epoch" in kwargs.keys():
         datagen_path_train = os.path.join(
             path_modelgen, "data_generator_train.pkl")
-        datagen_train = pkl.load(open(datagen_path, "rb"))
+        datagen_train = pkl.load(open(datagen_path_train, "rb"))
         disp_interval = datagen_train.length
-        n_iter = kwargs['niter'] * disp_interval / kwargs['batch_size']
+        n_iter = kwargs['epoch'] * disp_interval / kwargs['batch_size']
 
     else:
         n_iter = kwargs['niter']

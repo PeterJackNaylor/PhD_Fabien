@@ -20,11 +20,11 @@ def max_pool(bottom, ks=2, stride=2):
 
 
 def fcn(split, data_gene, classifier_name="FCN16",
-        classifier_name1="score_fr", loss_layer='softmax'):
+        classifier_name1="score_fr", loss_layer='softmax', batch_size=1):
     n = caffe.NetSpec()
 
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
-                         seed=1337, classifier_name=classifier_name)
+                         seed=1337, batch_size=batch_size, classifier_name=classifier_name)
 #    pydata_params['dir'] = data_path
     pylayer = 'DataLayerPeter'
     pydata_params["datagen"] = data_gene
@@ -108,10 +108,10 @@ def fcn(split, data_gene, classifier_name="FCN16",
 
 
 def make_net(wd, data_gene_train, data_gene_test, classifier_name="FCN16",
-             classifier_name1="score_fr", loss_layer="softmax"):
+             classifier_name1="score_fr", loss_layer="softmax", batch_size=1):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
         f.write(str(fcn('train', data_gene_train, classifier_name,
-                        classifier_name1, loss_layer)))
+                        classifier_name1, loss_layer, batch_size)))
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
         f.write(str(fcn('test', data_gene_test, classifier_name,
-                        classifier_name1, loss_layer)))
+                        classifier_name1, loss_layer, 1)))

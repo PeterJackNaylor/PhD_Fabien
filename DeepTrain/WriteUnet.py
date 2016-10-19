@@ -27,6 +27,7 @@ def WriteUnet(kwargs):
 
     else:
         loss = 'softmax'
+    batch_size = kwargs['batch_size']
 
     path_ = os.path.join(kwargs['wd'], kwargs['cn'])
     path_modelgen = os.path.join(path_, "model")
@@ -39,4 +40,5 @@ def WriteUnet(kwargs):
                   datagen_path,
                   os.path.join(path_modelgen, "data_generator_test.pkl"),
                   classifier_name=kwargs['cn'],
-                  loss_layer=loss)
+                  loss_layer=loss,
+                  batch_size=batch_size)

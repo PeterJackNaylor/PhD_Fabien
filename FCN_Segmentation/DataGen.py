@@ -13,6 +13,7 @@ import nibabel as ni
 import pdb
 from itertools import chain
 import sys
+from UsefulFunctions.ImageTransf import flip_vertical, flip_horizontal
 
 
 class DataGen(object):
@@ -219,9 +220,6 @@ class DataGen(object):
 
     def CropImgLbl(self, *kargs):
         size = self.size
-        if self.seed is not None:
-            print "I set the seed here, DataGen:l:222"
-            random.seed(self.seed)
         dim = kargs[0].shape
         x = dim[0]
         y = dim[1]
@@ -237,17 +235,34 @@ class DataGen(object):
 
     def Unet_cut(self, *kargs):
         dim = kargs[0].shape
-        x = dim[0]
-        y = dim[1]
+        i = 0
+        new_dim = ()
+        for c in dim:
+            if i < 2:
+                ne = c + 184
+            else:
+                ne = c
+            i += 1
+            new_dim += (ne, )
+
+        result = np.zeros(shape=new_dim)
         n = 92
-
-        assert x == y, "Not same size x=%d, y=%d" % (x, y)
         assert CheckNumberForUnet(
-            x), "Dim not suited for UNet, it will create a wierd net"
+            dim[0] + n), "Dim not suited for UNet, it will create a wierd net"
+        # middle
+        result[n:-n, n:-n] = kargs[0].copy()
+        # top middle
+        result[0:n, n:-n] = flip_horizontal(result[n:(2 * n), n:-n])
+        # bottom middle
+        result[-n::, n:-n] = flip_horizontal(result[-(2 * n):-n, n:-n])
+        # left whole
+        result[:, 0:n] = flip_vertical(result[:, n:(2 * n)])
+        # right whole
+        result[:, -n::] = flip_vertical(result[:, -(2 * n):-n])
 
-        res = (kargs[0].copy(), )
+        res = (result, )
         for i in range(1, len(kargs)):
-            res += (kargs[i][n:-n, n:-n],)
+            res += (kargs[i],)
         return res
 
     def RandomCropGen(self, img, size, shift):

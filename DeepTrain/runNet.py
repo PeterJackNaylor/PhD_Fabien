@@ -82,6 +82,8 @@ if __name__ == "__main__":
                       help="stepsize for the training")
     parser.add_option('--gamma', dest="gamma", default="0.1",
                       help="gamma for the training")
+    parser.add_option('--enlarge', dest="enlarge", default="None",
+                      help="enlarge with mirrored image")
     (options, args) = parser.parse_args()
 
     if options.wd is None:
@@ -98,8 +100,8 @@ if __name__ == "__main__":
         options.solverrate = str(solverrate)
 
     if options.epoch != "None":
-        options.epoch = int(epoch)
-        options.niter = epoch + " epoch"
+        options.niter = options.epoch + " epoch"
+        options.epoch = int(options.epoch)
         options.disp_interval = "1 epoch"
 
     print "Input paramters to run:"
@@ -122,7 +124,8 @@ if __name__ == "__main__":
     print "weight decay      : | " + options.weight_decay
     print "stepsize          : | " + options.stepsize
     print "gamma             : | " + options.gamma
-    print "epoch             : | " + options.epoch
+    print "epoch             : | " + str(options.epoch)
+    print "enlarge           : | " + options.enlarge
 
     if create_dataset:
 
@@ -147,13 +150,16 @@ if __name__ == "__main__":
             arg_datagen['UNet'] = True
         else:
             arg_datagen['UNet'] = False
+        if options.enlarge == "True":
+            arg_datagen["enlarge"] = True
         WriteDataGen(arg_datagen)
 
     if create_net:
 
         arg_net = {'wd': options.wd,
                    'cn': options.cn,
-                   'seed': 42}
+                   'seed': 42,
+                   'batch_size' = int(options.batch_size)}
 
         if options.loss != "softmax":
             arg_net['loss'] = options.loss
@@ -168,8 +174,6 @@ if __name__ == "__main__":
 
             from WriteDeconvNet import WriteDeconvNet
 
-            arg_net['batch_size'] = int(options.batch_size)
-
             WriteDeconvNet(arg_net)
 
         if options.net == "FCN":
@@ -177,7 +181,6 @@ if __name__ == "__main__":
             from WriteFCN import WriteFCN
 
             archi = [int(el) for el in options.archi.split('_')]
-            arg_net['batch_size'] = int(options.batch_size)
             arg_net['archi'] = archi
 
             WriteFCN(arg_net)
