@@ -6,6 +6,7 @@ wd = "/data/users/pnaylor/Documents/Python/LoopingUNetFromScratch"
 weight = "None"
 niter = 5000
 disp_interval = 100
+epoch = 10
 val_num = "1"
 crop = "4"
 
@@ -30,8 +31,8 @@ for solverrate in solverrate_list:
         for weight_decay in weight_decay_list:
             cn = (net + '_{}_{}_{}').format(solverrate, momentum, weight_decay)
             arguments = (net, raw_data, wd, cn, weight, niter, disp_interval, val_num, crop, solverrate,
-                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y)
-            cmd = "python DeepTrain/runNet.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --val_num {} --crop {} --solverrate {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {}".format(
+                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, epoch)
+            cmd = "python DeepTrain/runNet.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --val_num {} --crop {} --solverrate {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --epoch {}".format(
                 *arguments)
             proces = subprocess.Popen(cmd, shell=True)
             proces.wait()
