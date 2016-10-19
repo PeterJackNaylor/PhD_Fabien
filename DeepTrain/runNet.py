@@ -206,12 +206,12 @@ if __name__ == "__main__":
     if train:
         from trainNet import trainNet
         arg_train = arg_net
+        arg_train['disp_interval'] = int(options.disp_interval)
         if options.epoch != "None":
             arg_train["epoch"] = int(options.epoch)
             arg_net['batch_size'] = int(options.batch_size)
         else:
             arg_train['niter'] = int(options.niter)
-            arg_train['disp_interval'] = int(options.disp_interval)
 
         arg_train['solver_path'] = os.path.join(
             options.wd, options.cn, "solver.prototxt")
