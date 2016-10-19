@@ -1,6 +1,6 @@
 import subprocess
 
-net = 'DeconvNet'
+net = 'UNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
 wd = "/data/users/pnaylor/Documents/Python/LoopingUNetFromScratch"
 weight = "None"
@@ -11,7 +11,7 @@ crop = "4"
 
 solverrate_list = [1, 0.1, 0.01, 0.001, 0.0001]
 
-batch_size = "4"
+batch_size = "1"
 img_format = "RGB"
 loss = 'softmax'
 
