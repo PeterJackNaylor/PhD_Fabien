@@ -79,14 +79,21 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test):
 
     Results = pd.DataFrame()
     Results_train = Results.copy()
-
+    for name, s in solvers:
+        print name
+        metrics, metrics_train = score.seg_tests(s, number_of_test)
+        for val, name in metrics:
+            #   pdb.set_trace()
+            Results.set_value(it, name, val)
+        for val, name in metrics_train:
+            Results_train.set_value(it, name, val)
     for it in range(number_of_loops):
         for name, s in solvers:
             s.step(disp_interval)
             print name
             metrics, metrics_train = score.seg_tests(s, number_of_test)
             for val, name in metrics:
-	#	pdb.set_trace()
+                #	pdb.set_trace()
                 Results.set_value(it, name, val)
 
             for val, name in metrics_train:

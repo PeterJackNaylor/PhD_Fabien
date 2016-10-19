@@ -31,17 +31,16 @@ def trainNet(kwargs):
     datagen_test = pkl.load(open(datagen_path, "rb"))
     number_of_test = datagen_test.length
 
+    disp_interval = kwargs['disp_interval']
+
     if "epoch" in kwargs.keys():
         datagen_path_train = os.path.join(
             path_modelgen, "data_generator_train.pkl")
         datagen_train = pkl.load(open(datagen_path_train, "rb"))
-        disp_interval = datagen_train.length
-        n_iter = kwargs['epoch'] * disp_interval / kwargs['batch_size']
-        disp_interval = datagen_train.length / 10
+        n_iter = kwargs['epoch'] * datagen_train.length / kwargs['batch_size']
 
     else:
         n_iter = kwargs['niter']
-        disp_interval = kwargs['disp_interval']
 
     caffe.set_device(0)
     if gpu == "gpu":
