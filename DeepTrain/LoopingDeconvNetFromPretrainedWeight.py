@@ -1,4 +1,3 @@
-LoopingDeconvNet
 import subprocess
 
 net = 'DeconvNet'
@@ -23,8 +22,8 @@ weight_decay_list = [0.005, 0.0005, 0.00005]
 
 stepsize = 10000
 gamma = 0.1
-size_x = 212
-size_y = 212
+size_x = 224
+size_y = 224
 
 
 for solverrate in solverrate_list:
