@@ -29,6 +29,7 @@ def WriteFCN(kwargs):
 
     print 'architectures :' + str(kwargs["archi"])
 
+    batch_size = kwargs['batch_size']
     path_ = os.path.join(kwargs['wd'], kwargs['cn'])
     path_modelgen = os.path.join(path_, "model")
 
@@ -50,7 +51,8 @@ def WriteFCN(kwargs):
                           classifier_name1="score_fr_2",
                           classifier_name2="upscore2",
                           classifier_name3="score_pool4",
-                          loss_layer=loss)
+                          loss_layer=loss,
+                          batch_size=batch_size)
         if arc == 16:
             import FCN16
             if len(kwargs["archi"]) == 1:
@@ -62,7 +64,8 @@ def WriteFCN(kwargs):
                            datagen_test_path,
                            classifier_name=kwargs['cn'],
                            classifier_name1="score_fr_2",
-                           loss_layer=loss)
+                           loss_layer=loss,
+                           batch_size=batch_size)
         if arc == 32:
             import FCN32
             if len(kwargs["archi"]) == 1:
@@ -75,4 +78,5 @@ def WriteFCN(kwargs):
                            classifier_name=kwargs['cn'],
                            classifier_name1="score_fr_2",
                            classifier_name2="upscore_2",
-                           loss_layer=loss)
+                           loss_layer=loss,
+                           batch_size=batch_size)
