@@ -98,8 +98,8 @@ if __name__ == "__main__":
         options.solverrate = str(solverrate)
 
     if options.epoch != "None":
-        options.epoch = int(epoch)
-        options.niter = epoch + " epoch"
+        options.niter = options.epoch + " epoch"
+        options.epoch = int(options.epoch)
         options.disp_interval = "1 epoch"
 
     print "Input paramters to run:"
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     print "weight decay      : | " + options.weight_decay
     print "stepsize          : | " + options.stepsize
     print "gamma             : | " + options.gamma
-    print "epoch             : | " + options.epoch
+    print "epoch             : | " + str(options.epoch)
 
     if create_dataset:
 
