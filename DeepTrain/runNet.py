@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser = OptionParser()
 
     parser.add_option('--net', dest="net",
-                      help="net architecture possible: FCN, DeconvNet, UNet")
+                      help="net architecture possible: FCN, DeconvNet, UNet, BaochuanNet")
 
     parser.add_option("--rawdata", dest="rawdata",
                       default='/data/users/pnaylor/Bureau/ToAnnotate',
@@ -183,6 +183,10 @@ if __name__ == "__main__":
             arg_net['archi'] = archi
 
             WriteFCN(arg_net)
+        if options.net == "BaochuanNet":
+            from Baochuan.WriteBaochuanNet import WriteBaochuanNet
+
+            WriteBaochuanNet(arg_net)
 
     if create_solver:
         from WriteSolver import WriteSolver
