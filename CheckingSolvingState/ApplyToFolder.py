@@ -8,7 +8,7 @@ from Deprocessing.Morphology import GetContours, DynamicWatershedAlias
 
 from optparse import OptionParser
 import time
-from UsefulFunctions.usefulPloting import Contours, ImageSegmentationSave
+from usefulPloting import Contours, ImageSegmentationSave
 import caffe
 import numpy as np
 from ShortPrediction import Preprocessing, OutputNet
@@ -68,15 +68,15 @@ if __name__ == "__main__":
     CheckOrCreate(options.output)
     CheckExistants(options.input)
 
-    delpoy1 = "/data/users/pnaylor/Documents/Python/newdatagenAll/FCN_randomcrop/FCN8/test.prototxt"
+    deploy1 = "/data/users/pnaylor/Documents/Python/newdatagenAll/FCN_randomcrop/FCN8/test.prototxt"
     weight1 = "/data/users/pnaylor/Documents/Python/newdatagenAll/FCN_randomcrop/FCN8/temp_files/weights.FCN8.caffemodel"
     deploy2 = "/data/users/pnaylor/Documents/Python/newdatagenAll/batchLAYER4/test.prototxt"
     weight2 = "/data/users/pnaylor/Documents/Python/newdatagenAll/batchLAYER4/temp_files/weights.batchLAYER4.caffemodel"
-    net1 = caffe.net(deploy1,
+    net1 = caffe.Net(deploy1,
                      weight1,
                      caffe.TEST)
 
-    net2 = caffe.net(deploy2,
+    net2 = caffe.Net(deploy2,
                      weight2,
                      caffe.TEST)
     net_dic = {'FCN_randomcrop': net1, 'batchLAYER4': net2}
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     start_time = time.time()
     files = glob.glob(os.path.join(options.input, "*.png"))
     for f in files:
-        image = ir(f)[0:224, 0:224, :]
+        image = ir(f)[0:224,0:224,0:3]
         bin, prob = pred_img(
             image, net_dic, return_prob=False, return_both=True)
         dyn_ws = DynamicWatershedAlias(prob, int(options.lamb))
@@ -112,9 +112,9 @@ if __name__ == "__main__":
 
         def filename(name):
             return os.path.join(out_patient, name + ".png")
-
+	bin[bin>0] = 255
         imsave(filename('rgb'), image)
-        imsave(filename('binary'), image)
-        imsave(filename('prob'), image)
+        imsave(filename('binary'), bin)
+        imsave(filename('prob'), prob)
         imsave(filename('OverlayNormal'), Overlay_normal)
         imsave(filename('OverlayDynWs'), Overlay_dyn_ws)
