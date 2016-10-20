@@ -30,7 +30,6 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
 
     # checking the input data
-    caffe.set_mode_cpu()
 
     CheckOrCreate(options.output)
     CheckOrCreate(os.path.join(options.output), "NotEnlarge")
