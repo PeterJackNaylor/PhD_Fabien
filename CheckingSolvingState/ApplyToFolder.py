@@ -8,8 +8,7 @@ from Deprocessing.Morphology import GetContours, DynamicWatershedAlias
 
 from optparse import OptionParser
 import time
-from usefulPloting import Contours, ImageSegmentationSave
-import glob
+from UsefulFunctions.usefulPloting import Contours, ImageSegmentationSave
 import caffe
 import numpy as np
 from ShortPrediction import Preprocessing, OutputNet
@@ -93,7 +92,7 @@ if __name__ == "__main__":
     start_time = time.time()
     files = glob.glob(os.path.join(options.input, "*.png"))
     for f in files:
-        image = ir(f)
+        image = ir(f)[0:224, 0:224, :]
         bin, prob = pred_img(
             image, net_dic, return_prob=False, return_both=True)
         dyn_ws = DynamicWatershedAlias(prob, int(options.lamb))
@@ -117,5 +116,5 @@ if __name__ == "__main__":
         imsave(filename('rgb'), image)
         imsave(filename('binary'), image)
         imsave(filename('prob'), image)
-        imsave(filename('OverlayNormal'), OverlayNormal)
+        imsave(filename('OverlayNormal'), Overlay_normal)
         imsave(filename('OverlayDynWs'), Overlay_dyn_ws)

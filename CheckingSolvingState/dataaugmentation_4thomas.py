@@ -1,0 +1,69 @@
+# -*- coding: utf-8 -*-
+
+import cPickle as pkl
+import os
+from optparse import OptionParser
+
+#  predicting from ensemble/ dictionnary of nets
+
+
+def CheckOrCreate(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+
+def CheckExistants(path):
+    assert os.path.isdir(path)
+
+
+def CheckFile(path):
+    assert os.path.isfile(path)
+
+
+if __name__ == "__main__":
+
+    parser = OptionParser()
+
+    parser.add_option("-o", "--output", dest="output",
+                      help="Output folder")
+
+    (options, args) = parser.parse_args()
+
+    # checking the input data
+    caffe.set_mode_cpu()
+
+    CheckOrCreate(options.output)
+    CheckOrCreate(os.path.join(options.output), "NotEnlarge")
+    CheckOrCreate(os.path.join(options.output), "Enlarge")
+    CheckExistants(options.input)
+
+    datagen_not = "/data/users/pnaylor/Documents/Python/newdatagenAll/batchLAYER4/model/data_generator_train.pkl"
+    datagen_enlarge = "LoopingDeconvNetFromPretrainedWeight/DeconvNet_0.1_0.9_0.0005/model/data_generator_train.pkl"
+
+    datagen_not = pkl.load(open(datagen_not, "r"))
+    datagen_enlarge = pkl.load(open(datagen_enlarge, "r"))
+
+    pat = 0
+    sli = 1
+    crop = 0
+    print "Input paramters to OutputNet:"
+    print " \n "
+    print "Output folder     : | " + options.output
+    print ' \n '
+    print "Beginning analyse:"
+
+    for i in range(len(datagen_not.transforms)):
+        list_img = datagen_not[pat, sli, i, crop]
+        patient = os.path.join(options.output), "NotEnlarge/NotEnlarge{}.png"
+        patient_gt = os.path.join(
+            options.output), "NotEnlarge/NotEnlarge{}_gt.png"
+        imsave(patient.format(i), list_img[0])
+        imsave(patient_gt.format(i), list_img[1])
+
+    for i in range(len(datagen_enlarge.transforms)):
+        list_img = datagen_enlarge[pat, sli, i, crop]
+        patient = os.path.join(options.output), "Enlarge/Enlarge{}.png"
+        patient_gt = os.path.join(
+            options.output), "Enlarge/Enlarge{}_gt.png"
+        imsave(patient.format(i), list_img[0])
+        imsave(patient_gt.format(i), list_img[1])

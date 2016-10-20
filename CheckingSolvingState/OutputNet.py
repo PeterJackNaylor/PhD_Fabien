@@ -7,8 +7,7 @@ import glob
 from skimage.io import imread as ir
 from optparse import OptionParser
 import time
-from usefulPloting import Contours, ImageSegmentationSave
-import glob
+from UsefulFunctions.usefulPloting import Contours, ImageSegmentationSave
 import caffe
 import numpy as np
 
