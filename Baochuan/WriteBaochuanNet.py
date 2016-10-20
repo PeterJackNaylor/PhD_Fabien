@@ -1,6 +1,7 @@
 import Unet
 import os
 import BaochuanNet
+import pdb
 
 
 def CheckOrCreate(path):
@@ -15,7 +16,7 @@ def WriteBaochuanNet(kwargs):
         cn : classifier name
         batch_size: batch size for trai 
     """
-
+    pdb.set_trace()
     batch_size = kwargs['batch_size']
 
     path_ = os.path.join(kwargs['wd'], kwargs['cn'])
