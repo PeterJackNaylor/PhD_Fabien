@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from skimage.morphology import watershed
 import numpy as np
 from skimage.measure import label
 from skimage.morphology import reconstruction, dilation, erosion, disk
+from skimage import img_as_ubyte
 
 
 def PrepareProb(img, convertuint8=True, inverse=True):
