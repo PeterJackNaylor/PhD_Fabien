@@ -16,7 +16,6 @@ def conv_relu(bottom, nout, ks=3, stride=1, pad=1):
 
 
 def BaochuanNet(split, data_gene, batch_size=1, classifier_name="BaochuanNet"):
-    pdb.set_trace()
     n = caffe.NetSpec()
 
     pydata_params = dict(split=split, mean=(104.00699, 116.66877, 122.67892),
@@ -38,10 +37,10 @@ def BaochuanNet(split, data_gene, batch_size=1, classifier_name="BaochuanNet"):
 
     n.loss = L.SoftmaxWithLoss(n.score, n.label,
                                loss_param=dict(normalize=True, ignore_label=255))
+    return n.to_proto()
 
 
 def make_net(wd, data_gene_train, data_gene_test, batch_size=1, classifier_name="BaochuanNet"):
-    pdb.set_trace()
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
         f.write(str(BaochuanNet('train', data_gene_train, batch_size,
                                 classifier_name)))
