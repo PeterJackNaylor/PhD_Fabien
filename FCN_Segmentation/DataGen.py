@@ -159,7 +159,10 @@ class DataGen(object):
         image = ni.load(path)
         img = image.get_data()
         new_img = np.zeros(shape=(img.shape[1], img.shape[0], 1))
-        new_img[:, :, 0] = img[:, :, 0].transpose()
+        try:
+            new_img[:, :, 0] = img[:, :, 0].transpose()
+        except:
+            new_img[:, :, 0] = img[:, :].transpose()
         new_img = new_img.astype("uint8")
         return new_img
 
