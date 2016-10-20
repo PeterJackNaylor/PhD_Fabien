@@ -287,7 +287,6 @@ class DataGen(object):
         if not rand:
             return [0] * dims
         else:
-            pdb.set_trace()
             a = random.randint(0, len(self.patients_iter) - 1)
             numero = self.patients_iter[a]
             b = random.randint(0, len(self.patient_img[numero]) - 1)
