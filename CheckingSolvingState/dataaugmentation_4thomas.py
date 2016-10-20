@@ -3,7 +3,7 @@
 import cPickle as pkl
 import os
 from optparse import OptionParser
-
+from skimage.io import imsave
 #  predicting from ensemble/ dictionnary of nets
 
 
@@ -30,19 +30,17 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
 
     # checking the input data
-    caffe.set_mode_cpu()
 
     CheckOrCreate(options.output)
-    CheckOrCreate(os.path.join(options.output), "NotEnlarge")
-    CheckOrCreate(os.path.join(options.output), "Enlarge")
-    CheckExistants(options.input)
+    CheckOrCreate(os.path.join(options.output, "NotEnlarge"))
+    CheckOrCreate(os.path.join(options.output, "Enlarge"))
 
     datagen_not = "/data/users/pnaylor/Documents/Python/newdatagenAll/batchLAYER4/model/data_generator_train.pkl"
-    datagen_enlarge = "LoopingDeconvNetFromPretrainedWeight/DeconvNet_0.1_0.9_0.0005/model/data_generator_train.pkl"
+    datagen_enlarge = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetFromPretrainedWeight/DeconvNet_0.1_0.9_0.0005/model/data_generator_train.pkl"
 
     datagen_not = pkl.load(open(datagen_not, "r"))
     datagen_enlarge = pkl.load(open(datagen_enlarge, "r"))
-
+    datagen_not.Weight = False
     pat = 0
     sli = 1
     crop = 0
@@ -54,16 +52,24 @@ if __name__ == "__main__":
 
     for i in range(len(datagen_not.transforms)):
         list_img = datagen_not[pat, sli, i, crop]
-        patient = os.path.join(options.output), "NotEnlarge/NotEnlarge{}.png"
+        patient = os.path.join(options.output, "NotEnlarge/NotEnlarge{}.png")
         patient_gt = os.path.join(
-            options.output), "NotEnlarge/NotEnlarge{}_gt.png"
+            options.output, "NotEnlarge/NotEnlarge{}_gt.png")
         imsave(patient.format(i), list_img[0])
-        imsave(patient_gt.format(i), list_img[1])
+	try:
+	    gt = list_img[1][:,:,0]
+	except:
+	    gt = list_img[1]
+        imsave(patient_gt.format(i), gt)
 
     for i in range(len(datagen_enlarge.transforms)):
         list_img = datagen_enlarge[pat, sli, i, crop]
-        patient = os.path.join(options.output), "Enlarge/Enlarge{}.png"
+        patient = os.path.join(options.output, "Enlarge/Enlarge{}.png")
         patient_gt = os.path.join(
-            options.output), "Enlarge/Enlarge{}_gt.png"
+            options.output, "Enlarge/Enlarge{}_gt.png")
         imsave(patient.format(i), list_img[0])
-        imsave(patient_gt.format(i), list_img[1])
+	try:
+	    gt = list_img[1][:,:,0]
+	except:
+	    gt = list_img[1]
+        imsave(patient_gt.format(i), gt)
