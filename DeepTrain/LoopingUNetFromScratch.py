@@ -6,7 +6,7 @@ wd = "/data/users/pnaylor/Documents/Python/LoopingUNetFromScratch2"
 weight = "None"
 niter = 100000
 disp_interval = 100
-epoch = 1
+#epoch = 1
 val_num = "1"
 crop = "4"
 
