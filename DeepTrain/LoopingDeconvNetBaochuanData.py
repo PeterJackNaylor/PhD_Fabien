@@ -2,7 +2,7 @@ import subprocess
 
 net = 'DeconvNet'
 raw_data = "/data/users/pnaylor/Bureau/BaochuanPang/ToAnnotate"
-wd = "/data/users/pnaylor/Documents/Python/LoopingBaochuanPeterData"
+wd = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetBaochuanData"
 weight = "None"
 niter = 50000
 disp_interval = 100
