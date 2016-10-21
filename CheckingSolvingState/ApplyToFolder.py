@@ -92,7 +92,7 @@ if __name__ == "__main__":
     start_time = time.time()
     files = glob.glob(os.path.join(options.input, "*.png"))
     for f in files:
-        image = ir(f)[0:224,0:224,0:3]
+        image = ir(f)[0:224, 0:224, 0:3]
         bin, prob = pred_img(
             image, net_dic, return_prob=False, return_both=True)
         dyn_ws = DynamicWatershedAlias(prob, int(options.lamb))
@@ -112,9 +112,10 @@ if __name__ == "__main__":
 
         def filename(name):
             return os.path.join(out_patient, name + ".png")
-	bin[bin>0] = 255
+        bin[bin > 0] = 255
         imsave(filename('rgb'), image)
         imsave(filename('binary'), bin)
         imsave(filename('prob'), prob)
+        imsave(filename('BinWS'), dyn_ws)
         imsave(filename('OverlayNormal'), Overlay_normal)
         imsave(filename('OverlayDynWs'), Overlay_dyn_ws)
