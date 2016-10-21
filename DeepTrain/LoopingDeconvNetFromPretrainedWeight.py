@@ -6,7 +6,7 @@ wd = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetFromPretrainedWeight2
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/DeconvNet_trainval_inference.caffemodel"
 niter = 25000
 disp_interval = 100
-#epoch = 1
+epoch = "None"
 val_num = "1"
 crop = "4"
 
