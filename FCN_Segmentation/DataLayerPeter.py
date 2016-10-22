@@ -124,6 +124,7 @@ class DataLayerPeter(caffe.Layer):
     def forward(self, bottom, top):
         # assign output
         top[0].data[...] = self.data
+        self.label[self.label > 0] = 1
         top[1].data[...] = self.label
         if self.datagen.Weight:
             weight = self.weight
@@ -131,11 +132,11 @@ class DataLayerPeter(caffe.Layer):
                 weight[weight > 0] = 1
             top[2].data[...] = weight
         # pick next input
-	if len(np.unique(top[1].data[...]))!= 2:
-	    print np.unique(top[1].data[...])
-	    if 1 not in np.unique(top[1].data[...]):
-		print np.unique(top[1].data[...])
-        #pdb.set_trace()
+        if len(np.unique(top[1].data[...])) != 2:
+            print np.unique(top[1].data[...])
+            if 1 not in np.unique(top[1].data[...]):
+                print np.unique(top[1].data[...])
+        # pdb.set_trace()
         self.Nextkey()
 
     def backward(self, top, propagate_down, bottom):
@@ -145,7 +146,8 @@ class DataLayerPeter(caffe.Layer):
         if self.random:
             self.key = self.datagen.NextKeyRandList(self.key)
         else:
-            print 'this is not random!'
+            if self.split != "test":
+                print 'this is not random!'
             self.key = self.datagen.NextKey(self.key)
 
     def PrepareImg(self, img):
