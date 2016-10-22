@@ -146,7 +146,7 @@ class DataLayerPeter(caffe.Layer):
         if self.random:
             self.key = self.datagen.NextKeyRandList(self.key)
         else:
-            if self.split != "test":
+	    if self.split != "test":
                 print 'this is not random!'
             self.key = self.datagen.NextKey(self.key)
 
