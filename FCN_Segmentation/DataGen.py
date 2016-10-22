@@ -305,6 +305,24 @@ class DataGen(object):
             else:
                 return [a, b]
 
+    def NextKeyRandList(self, key):
+        if not hasattr(self, "RandomList"):
+            RandomList = []
+            oldkey = key
+            for i in range(self.length):
+                key = self.NextKey(key)
+                RandomList.append(key)
+                from random import shuffle
+                shuffle(RandomList)
+                self.RandomList = RandomList
+                self.key_iter = 0
+        if self.key_iter = self.length:
+            self.key_iter = 0
+
+        self.key_iter += 1
+
+        return self.RandomList[self.key_iter]
+
     def NextKey(self, key):
         if len(key) == 4:
             if key[3] == self.crop - 1:

@@ -139,8 +139,9 @@ class DataLayerPeter(caffe.Layer):
 
     def Nextkey(self):
         if self.random:
-            self.key = self.datagen.RandomKey(True)
+            self.key = self.datagen.NextKeyRandList(self.key)
         else:
+            print 'this is not random!'
             self.key = self.datagen.NextKey(self.key)
 
     def PrepareImg(self, img):
