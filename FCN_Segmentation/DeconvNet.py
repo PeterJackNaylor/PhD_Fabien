@@ -221,7 +221,7 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet",
                             bias_filler=Constant_fil)
     if loss_layer == "softmax":
         n.loss = L.SoftmaxWithLoss(n.score, n.label,
-                                   loss_param=dict(normalize=True, ignore_label=255))
+                                   loss_param=dict(normalize=False))
     elif loss_layer == "weight":
         n.loss = L.Python(n.score, n.label, n.weight,
                           module='DataLayerPeter', layer="WeigthedLossLayer")

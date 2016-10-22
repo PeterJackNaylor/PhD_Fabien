@@ -2,6 +2,7 @@ import ImageTransf as Transf
 import os
 import cPickle as pkl
 from DataGen import DataGen
+import numpy as np
 
 
 def CheckOrCreate(path):
@@ -95,14 +96,14 @@ def WriteDataGen(kwargs):
                       Transf.Flip(0),
                       Transf.Flip(1)]
 
-    for rot in range(1, 360):
+    for rot in np.arange(1, 360, 4):
         transform_list.append(Transf.Rotation(rot, enlarge=enlarge))
 
     for sig in [1, 2, 3, 4]:
         transform_list.append(Transf.OutOfFocus(sig))
 
-    for i in range(20):
-        transform_list.append(Transf.ElasticDeformation(0, 10, num_points=9))
+    for i in range(50):
+        transform_list.append(Transf.ElasticDeformation(0, 16, num_points=4))
 
     data_generator_train = DataGen(rawdata, crop=crop, size=crop_size,
                                    transforms=transform_list, split="train",

@@ -2,11 +2,11 @@ import subprocess
 
 net = 'DeconvNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
-wd = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetFromPretrainedWeight"
+wd = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetFromPretrainedWeight2"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/DeconvNet_trainval_inference.caffemodel"
-niter = 5000
+niter = 25000
 disp_interval = 100
-epoch = 1
+epoch = "None"
 val_num = "1"
 crop = "4"
 
@@ -18,7 +18,7 @@ loss = 'softmax'
 
 momentum_list = [0.9]
 
-weight_decay_list = [0.0005, 0.005, 0.00005]
+weight_decay_list = [0.0005]  # , 0.005, 0.00005]
 
 stepsize = 7000
 gamma = 0.1

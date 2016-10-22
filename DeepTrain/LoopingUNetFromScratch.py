@@ -2,23 +2,23 @@ import subprocess
 
 net = 'UNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
-wd = "/data/users/pnaylor/Documents/Python/LoopingUNetFromScratch"
+wd = "/data/users/pnaylor/Documents/Python/LoopingUNetFromScratch2"
 weight = "None"
-niter = 5000
+niter = 100000
 disp_interval = 100
-epoch = 1
+epoch = "None"
 val_num = "1"
 crop = "4"
 
 solverrate_list = [1, 0.1, 0.01, 0.001, 0.0001]
 
-batch_size = "10"
+batch_size = "1"
 img_format = "RGB"
 loss = 'softmax'
 
-momentum_list = [0.9, 0.99]
+momentum_list = [0.9]
 
-weight_decay_list = [0.005, 0.0005, 0.00005]
+weight_decay_list = [0.0005]
 
 stepsize = 10000
 gamma = 0.1
