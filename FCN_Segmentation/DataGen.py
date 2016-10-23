@@ -316,10 +316,9 @@ class DataGen(object):
                 shuffle(RandomList)
                 self.RandomList = RandomList
                 self.key_iter = 0
+        self.key_iter += 1
         if self.key_iter == self.length:
             self.key_iter = 0
-
-        self.key_iter += 1
 
         return self.RandomList[self.key_iter]
 
