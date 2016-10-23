@@ -35,7 +35,7 @@ if __name__ == "__main__":
     CheckOrCreate(os.path.join(options.output, "NotEnlarge"))
     CheckOrCreate(os.path.join(options.output, "Enlarge"))
 
-    datagen_not = "/data/users/pnaylor/Documents/Python/"
+    datagen_not = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetFromPretrainedWeight2/DeconvNet_1_0.9_0.0005/model/data_generator_train.pkl"
     datagen_enlarge = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetFromPretrainedWeight/DeconvNet_0.1_0.9_0.0005/model/data_generator_train.pkl"
 
     datagen_not = pkl.load(open(datagen_not, "r"))
