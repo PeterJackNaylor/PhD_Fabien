@@ -320,7 +320,6 @@ class DataGen(object):
         if self.key_iter == self.length:
             self.key_iter = 0
 
-
         return self.RandomList[self.key_iter]
 
     def NextKey(self, key):
