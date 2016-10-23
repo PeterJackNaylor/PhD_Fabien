@@ -138,7 +138,7 @@ def UNet(split, data_gene, batch_size, classifier_name="UNet", loss_layer="softm
 
     if loss_layer == "softmax":
         n.loss = L.SoftmaxWithLoss(n.score, n.label,
-                                   loss_param=dict(normalize=False))
+                                   loss_param=dict(normalize=True))
     elif loss_layer == "weight":
         n.loss = L.Python(n.score, n.label, n.weight,
                           module='DataLayerPeter', layer="WeigthedLossLayer")
