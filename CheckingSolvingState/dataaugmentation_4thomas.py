@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import numpy as np
+
 import cPickle as pkl
 import os
 from optparse import OptionParser
@@ -36,20 +36,19 @@ if __name__ == "__main__":
     CheckOrCreate(os.path.join(options.output, "Enlarge"))
 
     datagen_not = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetFromPretrainedWeight2/DeconvNet_1_0.9_0.0005/model/data_generator_train.pkl"
-    datagen_enlarge = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetFromPretrainedWeight/DeconvNet_0.1_0.9_0.0005/model/data_generator_train.pkl"
-
+    datagen_enlarge = datagen_not
     datagen_not = pkl.load(open(datagen_not, "r"))
-#    datagen_enlarge = pkl.load(open(datagen_enlarge, "r"))
+    datagen_enlarge = pkl.load(open(datagen_enlarge, "r"))
     datagen_not.Weight = False
-    pat = 0
-    sli = 1
-    crop = 0
+    pat = 3
+    sli = 3
+    crop = 3
     print "Input paramters to OutputNet:"
     print " \n "
     print "Output folder     : | " + options.output
     print ' \n '
     print "Beginning analyse:"
-
+"""
     key = datagen_not.RandomKey(True)
     for i in range(datagen_not.length):
         key = datagen_not.NextKeyRandList(key)
@@ -58,13 +57,11 @@ if __name__ == "__main__":
         patient_gt = os.path.join(
             options.output, "{}_gt.png")
         imsave(patient.format(i), list_img[0])
-	print list_img[1].shape, np.unique(list_img[1])
         try:
             gt = list_img[1][:, :, 0]
         except:
             gt = list_img[1]
         imsave(patient_gt.format(i), gt)
-	print "line {}".format(i)
 """
     for i in range(len(datagen_enlarge.transforms)):
         list_img = datagen_enlarge[pat, sli, i, crop]
@@ -72,9 +69,8 @@ if __name__ == "__main__":
         patient_gt = os.path.join(
             options.output, "Enlarge/Enlarge{}_gt.png")
         imsave(patient.format(i), list_img[0])
-	try:
-	    gt = list_img[1][:,:,0]
-	except:
-	    gt = list_img[1]
+        try:
+            gt = list_img[1][:, :, 0]
+        except:
+            gt = list_img[1]
         imsave(patient_gt.format(i), gt)
-"""

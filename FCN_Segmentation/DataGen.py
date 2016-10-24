@@ -16,6 +16,7 @@ import sys
 from UsefulFunctions.ImageTransf import flip_vertical, flip_horizontal
 import copy
 
+
 class DataGen(object):
 
     def __init__(self, path, crop=None, size=None, transforms=None,
@@ -309,17 +310,17 @@ class DataGen(object):
         if not hasattr(self, "RandomList"):
             RandomList = []
             oldkey = key
-	    #pdb.set_trace()
+            from random import shuffle
+
+            # pdb.set_trace()
             for i in range(self.length):
-		print key
                 key = self.NextKey(key)
-		test = copy.copy(key)
+                test = copy.copy(key)
                 RandomList.append(test)
-                from random import shuffle
-            shuffle(RandomList)
+                shuffle(RandomList)
             self.RandomList = RandomList
             self.key_iter = 0
-	#pdb.set_trace()
+        # pdb.set_trace()
         self.key_iter += 1
         if self.key_iter == self.length:
             self.key_iter = 0
