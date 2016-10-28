@@ -14,6 +14,7 @@ import pdb
 from itertools import chain
 import sys
 from UsefulFunctions.ImageTransf import flip_vertical, flip_horizontal
+import copy
 
 
 class DataGen(object):
@@ -304,6 +305,27 @@ class DataGen(object):
                 return [a, b, c]
             else:
                 return [a, b]
+
+    def NextKeyRandList(self, key):
+        if not hasattr(self, "RandomList"):
+            RandomList = []
+            oldkey = key
+            from random import shuffle
+
+            # pdb.set_trace()
+            for i in range(self.length):
+                key = self.NextKey(key)
+                test = copy.copy(key)
+                RandomList.append(test)
+                shuffle(RandomList)
+            self.RandomList = RandomList
+            self.key_iter = 0
+        # pdb.set_trace()
+        self.key_iter += 1
+        if self.key_iter == self.length:
+            self.key_iter = 0
+
+        return self.RandomList[self.key_iter]
 
     def NextKey(self, key):
         if len(key) == 4:

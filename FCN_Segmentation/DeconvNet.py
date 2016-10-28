@@ -29,7 +29,7 @@ Constant_fil = dict(type="constant", value=0)
 def Conv(bottom, nout, ks=3, stride=1, pad=1):
     conv = L.Convolution(bottom, kernel_size=ks, stride=stride,
                          num_output=nout, pad=pad,
-                         param=[dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)], weight_filler=dict(type="xavier"))
+                         param=[dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)])  # , weight_filler=dict(type="xavier"))
     return conv
 
 
@@ -47,11 +47,11 @@ def Deconv(bottom, nout, ks, pad, weight_filler, bias_filler):
 # had to improvise with respect to bn_mode=INFERENCE
 
 
-def BatchNormalizer(bottom):
-    noth = dict(lr_mult=0)
-    param = [noth, noth, noth]
-    bn = L.BatchNorm(bottom, param=param, in_place=True)
-    return bn
+# def BatchNormalizer(bottom):
+#     noth = dict(lr_mult=0)
+#     param = [noth, noth, noth]
+#     bn = L.BatchNorm(bottom, param=param, in_place=True)
+#     return bn
 
 
 def BatchNormalizer(bottom):
@@ -107,6 +107,7 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet",
                          seed=1337, batch_size=batch_size, classifier_name=classifier_name)
     pylayer = 'DataLayerPeter'
     pydata_params["datagen"] = data_gene
+
     if loss_layer == "softmax":
         n.data, n.label = L.Python(module='DataLayerPeter', layer=pylayer,
                                    ntop=2, param_str=str(pydata_params))
@@ -115,6 +116,7 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet",
                                              ntop=3, param_str=str(pydata_params))
     else:
         raise Exception("No loss layer attributed to {}".format(loss_layer))
+
     n.conv1_1, n.BatchNormalize1_1, n.scaler1_1, n.relu1_1 = ConvBnRelu(
         n.data, 64, 3, 1, 1)
     n.conv1_2, n.BatchNormalize1_2, n.scaler1_2, n.relu1_2 = ConvBnRelu(
@@ -221,13 +223,13 @@ def DeconvNet(split, data_gene, batch_size=1, classifier_name="DeconvNet",
                             bias_filler=Constant_fil)
     if loss_layer == "softmax":
         n.loss = L.SoftmaxWithLoss(n.score, n.label,
-                                   loss_param=dict(normalize=True, ignore_label=255))
+                                   loss_param=dict(normalize=False))
     elif loss_layer == "weight":
         n.loss = L.Python(n.score, n.label, n.weight,
                           module='DataLayerPeter', layer="WeigthedLossLayer")
     elif loss_layer == "weightcpp":
         n.loss = L.WeightedSoftmaxLoss(n.score, n.label, n.weight,
-                                       loss_param=dict(normalize=True, ignore_label=255))
+                                       loss_param=dict(normalize=False))
     return n.to_proto()
 
 
