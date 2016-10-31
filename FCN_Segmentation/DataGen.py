@@ -116,8 +116,6 @@ class DataGen(object):
 
     def get_patients(self, path, seed):
         # pdb.set_trace()
-        if seed is not None:
-            random.seed(seed)
         folders = glob.glob(path + "/Slide_*")
         patient_num = []
         for el in folders:
@@ -128,9 +126,13 @@ class DataGen(object):
         self.patient_img = {el: glob.glob(
             self.path + "/Slide_{}".format(el) + "/*.png") for el in patient_num}
 
-        random.seed(random.randint(0, maxint - 1))
+        #random.seed(random.randint(0, maxint - 1))
 
     def Sort_patients(self):
+
+        if seed is not None:
+            random.seed(seed)
+
         n = len(self.patient_num)
         test_patient = random.sample(self.patient_num, self.leave_out)
         train_patient = [

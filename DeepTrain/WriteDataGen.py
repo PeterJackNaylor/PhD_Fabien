@@ -103,7 +103,7 @@ def WriteDataGen(kwargs):
         transform_list.append(Transf.OutOfFocus(sig))
 
     for i in range(50):
-        transform_list.append(Transf.ElasticDeformation(0, 16, num_points=4))
+        transform_list.append(Transf.ElasticDeformation(0, 12, num_points=4))
 
     data_generator_train = DataGen(rawdata, crop=crop, size=crop_size,
                                    transforms=transform_list, split="train",

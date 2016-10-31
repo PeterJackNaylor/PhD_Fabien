@@ -134,7 +134,7 @@ if __name__ == "__main__":
                        'cn': options.cn,
                        'rawdata': options.rawdata,
                        'val_num': options.val_num,
-                       'seed': 42}
+                       'seed': 8}
 
         if options.loss != "softmax":
             arg_datagen['loss'] = options.loss
