@@ -72,6 +72,7 @@ def trainNet(kwargs):
 
             train(solver_path, weight, wd, cn + '/' + fcn_num, n_iter,
                   disp_interval, number_of_test)
+            ##pdb.set_trace()
 
 
 def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test):
