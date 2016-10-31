@@ -30,13 +30,13 @@ def trainNet(kwargs):
 
     datagen_test = pkl.load(open(datagen_path, "rb"))
     number_of_test = datagen_test.length
-
+    patients = datagen_test.patient_num
+    datagen_path_train = os.path.join(
+        path_modelgen, "data_generator_train.pkl")
+        datagen_train = pkl.load(open(datagen_path_train, "rb"))
     disp_interval = kwargs['disp_interval']
 
     if "epoch" in kwargs.keys():
-        datagen_path_train = os.path.join(
-            path_modelgen, "data_generator_train.pkl")
-        datagen_train = pkl.load(open(datagen_path_train, "rb"))
         n_iter = kwargs['epoch'] * datagen_train.length / kwargs['batch_size']
 
     else:
@@ -48,11 +48,22 @@ def trainNet(kwargs):
     else:
         caffe.set_mode_cpu()
     if 'archi' not in kwargs.keys():
-        train(solver_path, weight, wd, cn, n_iter,
-              disp_interval, number_of_test)
+        for num in patients:
+            datagen_train.SetPatients(num)
+            datagen_test.SetPatients(num)
+            pkl.dump(datagen_train, open(datagen_path_train, "w"))
+            pkl.dump(datagen_test, open(datagen_path, "w"))
+            train(solver_path, weight, wd, cn, n_iter,
+                  disp_interval, number_of_test, num)
+
     elif len(kwargs['archi']) == 1:
-        train(solver_path, weight, wd, cn, n_iter,
-              disp_interval, number_of_test)
+        for num in patients:
+            datagen_train.SetPatients(num)
+            datagen_test.SetPatients(num)
+            pkl.dump(datagen_train, open(datagen_path_train, "w"))
+            pkl.dump(datagen_test, open(datagen_path, "w"))
+            train(solver_path, weight, wd, cn, n_iter,
+                  disp_interval, number_of_test, num)
     else:
         kwargs['archi'].sort()
         kwargs['archi'] = kwargs['archi'][::-1]
@@ -69,13 +80,17 @@ def trainNet(kwargs):
                 weight = os.path.join(
                     wd, cn, before, "temp_files", "weights." + before + ".caffemodel")
                 before = fcn_num
+            for num in patients:
+                datagen_train.SetPatients(num)
+                datagen_test.SetPatients(num)
+                pkl.dump(datagen_train, open(datagen_path_train, "w"))
+                pkl.dump(datagen_test, open(datagen_path, "w"))
+                train(solver_path, weight, wd, cn + '/' + fcn_num, n_iter,
+                      disp_interval, number_of_test, num)
+            # pdb.set_trace()
 
-            train(solver_path, weight, wd, cn + '/' + fcn_num, n_iter,
-                  disp_interval, number_of_test)
-            ##pdb.set_trace()
 
-
-def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test):
+def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test, num):
     my_solver = caffe.get_solver(solver_path)
     # pdb.set_trace()
 
@@ -91,12 +106,12 @@ def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test):
     res_fold = os.path.join(wd, cn, "temp_files")
 
     Results, Results_train, weights = run_solvers_IU(
-        niter, solvers, res_fold, disp_interval, number_of_test)
+        niter, solvers, res_fold, disp_interval, number_of_test, num)
 
     Results.to_csv(os.path.join(
-        res_fold, 'Metrics_{}_{}.csv').format(disp_interval, niter))
+        res_fold, 'Metrics_{}_{}_{}.csv').format(disp_interval, niter, num))
     Results_train.to_csv(os.path.join(
-        res_fold, 'MetricsTrain_{}_{}.csv').format(disp_interval, niter))
+        res_fold, 'MetricsTrain_{}_{}_{}.csv').format(disp_interval, niter, num))
 
     print 'Done.'
 

@@ -114,6 +114,31 @@ class DataGen(object):
 
         return img_lbl_Mwgt
 
+    def SetPatient(self, num):
+        # function for leave one out..
+        test_patient = [num]
+        train_patient = [
+            el for el in self.patient_num if el not in test_patient]
+
+        if self.transforms is None:
+            number_of_transforms = 1
+        else:
+            number_of_transforms = len(self.transforms)
+
+        if self.split == "train":
+            if self.crop is None:
+                self.crop = 1
+            self.length = np.sum([len(glob.glob(self.path + "/Slide_{}".format(el) + "/*.png"))
+                                  for el in train_patient]) * self.crop * number_of_transforms
+
+            self.patients_iter = train_patient
+        else:
+            if self.crop is None:
+                self.crop = 1
+            self.length = np.sum([len(glob.glob(
+                self.path + "/Slide_{}".format(el) + "/*.png")) for el in test_patient]) * self.crop * number_of_transforms
+            self.patients_iter = test_patient
+
     def get_patients(self, path):
         # pdb.set_trace()
         folders = glob.glob(path + "/Slide_*")

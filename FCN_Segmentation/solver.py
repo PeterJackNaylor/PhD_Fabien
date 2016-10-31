@@ -73,7 +73,7 @@ def solver(solver_name, train_net_path, test_net_path=None,
         return f.name
 
 
-def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test):
+def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test, num):
     blobs = ('loss', 'acc', 'acc1', 'iu', 'fwavacc', 'recall', 'precision')
     number_of_loops = niter / disp_interval
 
@@ -104,9 +104,9 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test):
     weight_dir = res_fold
     weights = {}
     for name, s in solvers:
-	if "/" in name:
-	     name = name.split('/')[-1]
-        filename = 'weights.%s.caffemodel' % name
+        if "/" in name:
+            name = name.split('/')[-1]
+        filename = 'weights.{}_{}.caffemodel'.format(name, num)
         weights[name] = os.path.join(weight_dir, filename)
         s.net.save(weights[name])
     return Results, Results_train, weights
