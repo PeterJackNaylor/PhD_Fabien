@@ -44,7 +44,7 @@ class DataGen(object):
 
     def ReLoad(self, split):
         self.split = split
-        self.get_patients(self.path, self.seed)
+        self.get_patients(self.path)
         self.Sort_patients()
 
     def __getitem__(self, key):
