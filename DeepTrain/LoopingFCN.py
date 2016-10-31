@@ -4,18 +4,18 @@ net = 'FCN'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
 wd = "/data/users/pnaylor/Documents/Python/LoopingFCN"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel"
-niter = 1000
+niter = 30000
 disp_interval = 100
 epoch = "None"
 val_num = "1"
-crop = "1"
+crop = "4"
 
-solverrate_list = [0.1]  # , 0.01, 0.001, 0.0001]
+solverrate_list = [0.01, 0.001, 0.0001]
 
 batch_size = "1"
 img_format = "RGB"
 loss = 'softmax'
-gpu = "cpu"
+gpu = "gpu"
 momentum_list = [0.9]
 
 weight_decay_list = [0.005]
@@ -25,7 +25,7 @@ gamma = 0.1
 size_x = 224
 size_y = 224
 enlarge = " True"
-archi = "32"  # _16_8"
+archi = "32_16_8"  # _16_8"
 
 for solverrate in solverrate_list:
     for momentum in momentum_list:

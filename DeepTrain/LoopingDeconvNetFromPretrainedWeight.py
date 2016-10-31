@@ -2,23 +2,23 @@ import subprocess
 
 net = 'DeconvNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
-wd = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetFromPretrainedWeight2"
+wd = "/data/users/pnaylor/Documents/Python/LoopingDeconvNetFromPretrainedWeightImages"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/DeconvNet_trainval_inference.caffemodel"
-niter = 25000
-disp_interval = 100
+niter = 30000
+disp_interval = 1000
 epoch = "None"
 val_num = "1"
 crop = "4"
 
 
-solverrate_list = [0.1, 1, 0.01, 0.001, 0.0001]
+solverrate_list = [0.01]#, 1, 0.01, 0.001, 0.0001]
 batch_size = "4"
 img_format = "RGB"
-loss = 'softmax'
+loss = 'weightcpp'
 
-momentum_list = [0.9]
+momentum_list = [0.5,0.7,0.9]
 
-weight_decay_list = [0.0005]  # , 0.005, 0.00005]
+weight_decay_list = [0.0005 , 0.005]#, 0.00005]
 
 stepsize = 7000
 gamma = 0.1

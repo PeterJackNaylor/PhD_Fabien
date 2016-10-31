@@ -104,6 +104,8 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test):
     weight_dir = res_fold
     weights = {}
     for name, s in solvers:
+	if "/" in name:
+	     name = name.split('/')[-1]
         filename = 'weights.%s.caffemodel' % name
         weights[name] = os.path.join(weight_dir, filename)
         s.net.save(weights[name])

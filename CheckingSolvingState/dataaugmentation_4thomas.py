@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import numpy as np
 import cPickle as pkl
 import os
 from optparse import OptionParser
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     datagen_not = pkl.load(open(datagen_not, "r"))
     datagen_enlarge = pkl.load(open(datagen_enlarge, "r"))
     datagen_not.Weight = False
-    pat = 3
+    pat = 4
     sli = 3
     crop = 3
     print "Input paramters to OutputNet:"
@@ -48,27 +48,13 @@ if __name__ == "__main__":
     print "Output folder     : | " + options.output
     print ' \n '
     print "Beginning analyse:"
-"""
-    key = datagen_not.RandomKey(True)
-    for i in range(datagen_not.length):
-        key = datagen_not.NextKeyRandList(key)
-        list_img = datagen_not[key]
-        patient = os.path.join(options.output, "{}.png")
-        patient_gt = os.path.join(
-            options.output, "{}_gt.png")
-        imsave(patient.format(i), list_img[0])
-        try:
-            gt = list_img[1][:, :, 0]
-        except:
-            gt = list_img[1]
-        imsave(patient_gt.format(i), gt)
-"""
     for i in range(len(datagen_enlarge.transforms)):
         list_img = datagen_enlarge[pat, sli, i, crop]
         patient = os.path.join(options.output, "Enlarge/Enlarge{}.png")
         patient_gt = os.path.join(
             options.output, "Enlarge/Enlarge{}_gt.png")
         imsave(patient.format(i), list_img[0])
+	print np.unique(list_img[1]), list_img[1].shape
         try:
             gt = list_img[1][:, :, 0]
         except:
