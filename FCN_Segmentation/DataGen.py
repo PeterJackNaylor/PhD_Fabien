@@ -30,7 +30,7 @@ class DataGen(object):
         self.split = split
         self.leave_out = leave_out
         self.seed = seed
-        self.get_patients(path, seed)
+        self.get_patients(path)
         self.Sort_patients()
         self.img_format = img_format
         self.Weight = Weight
@@ -114,7 +114,7 @@ class DataGen(object):
 
         return img_lbl_Mwgt
 
-    def get_patients(self, path, seed):
+    def get_patients(self, path):
         # pdb.set_trace()
         folders = glob.glob(path + "/Slide_*")
         patient_num = []
@@ -130,8 +130,8 @@ class DataGen(object):
 
     def Sort_patients(self):
 
-        if seed is not None:
-            random.seed(seed)
+        if self.seed is not None:
+            random.seed(self.seed)
 
         n = len(self.patient_num)
         test_patient = random.sample(self.patient_num, self.leave_out)
