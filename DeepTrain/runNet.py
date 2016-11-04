@@ -170,7 +170,7 @@ if __name__ == "__main__":
             from WriteUnet import WriteUnet
             if options.skip != "None":
                 skip = []
-                for i in range(4):
+                for i in range(1, 5):
                     if str(i) in options.skip:
                         skip.append(i)
                 arg_net["skip"] = skip
