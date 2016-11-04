@@ -93,7 +93,7 @@ def WriteSolver(kwargs):
 
             name_solver = solver(solver_path,
                                  train_net_path,
-                                 test_net_path=test_net_path, ,
+                                 test_net_path=test_net_path,
                                  base_lr=solverrate,
                                  out_snap=outsnap,
                                  momentum=momentum,
