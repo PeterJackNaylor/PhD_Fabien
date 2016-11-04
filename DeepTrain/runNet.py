@@ -84,7 +84,7 @@ if __name__ == "__main__":
                       help="gamma for the training")
     parser.add_option('--enlarge', dest="enlarge", default="None",
                       help="enlarge with mirrored image")
-    parser.add_option('--skip', dest=skip, default="None",
+    parser.add_option('--skip', dest="skip", default="None",
                       help=" Which layers to skip, give 1234 or 123, 13, 12, 1 etc .")
     (options, args) = parser.parse_args()
 

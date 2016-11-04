@@ -162,7 +162,7 @@ def UNet(split, data_gene, batch_size, classifier_name="UNet", loss_layer="softm
 
 
 def make_net(wd, data_gene_train, data_gene_test, classifier_name="UNet",
-             loss_layer="softmax", batch_size=1, skip):
+             loss_layer="softmax", batch_size=1, skip=[]):
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
         f.write(str(UNet_Spe_skip('train', data_gene_train, batch_size,
                                   classifier_name, loss_layer, skip)))
