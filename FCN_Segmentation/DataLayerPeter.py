@@ -137,16 +137,8 @@ class DataLayerPeter(caffe.Layer):
             if 1 not in np.unique(top[1].data[...]):
                 print np.unique(top[1].data[...])
         # pdb.set_trace()
-	from scipy.misc import imsave
-	
-	from ShortPrediction import Deprocessing4Visualisation, DeprocessingLabel
-	imsave('/data/users/pnaylor/temp/'+str(self.key)+"rgb.png",Deprocessing4Visualisation(top[0].data[...]))
-	imsave('/data/users/pnaylor/temp/'+str(self.key)+"bin.png",DeprocessingLabel(top[1].data[...]))
-	try:
-	    imsave('/data/users/pnaylor/temp/'+str(self.key)+"wgt.png",DeprocessingLabel(top[2].data[...]))
-	except:
-	    pass
         self.Nextkey()
+
     def backward(self, top, propagate_down, bottom):
         pass
 
@@ -154,7 +146,7 @@ class DataLayerPeter(caffe.Layer):
         if self.random:
             self.key = self.datagen.NextKeyRandList(self.key)
         else:
-	    if self.split != "test":
+            if self.split != "test":
                 print 'this is not random!'
             self.key = self.datagen.NextKey(self.key)
 
