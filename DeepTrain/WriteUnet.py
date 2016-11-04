@@ -27,6 +27,11 @@ def WriteUnet(kwargs):
 
     else:
         loss = 'softmax'
+    if 'skip' in kwargs.keys():
+        skip = kwargs['skip']
+        print "skip:", skip
+    else:
+        skip = []
     batch_size = kwargs['batch_size']
 
     path_ = os.path.join(kwargs['wd'], kwargs['cn'])
@@ -41,4 +46,5 @@ def WriteUnet(kwargs):
                   os.path.join(path_modelgen, "data_generator_test.pkl"),
                   classifier_name=kwargs['cn'],
                   loss_layer=loss,
-                  batch_size=batch_size)
+                  batch_size=batch_size,
+                  skip=skip)
