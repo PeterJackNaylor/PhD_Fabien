@@ -40,6 +40,7 @@ def WriteFCN(kwargs):
     for arc in kwargs["archi"]:
         FCN_num = "FCN" + str(arc)
         temp_path_ = os.path.join(path_, FCN_num)
+        CheckOrCreate(temp_path_)
         if arc == 8:
             import FCN8
             FCN8.make_net(temp_path_,
