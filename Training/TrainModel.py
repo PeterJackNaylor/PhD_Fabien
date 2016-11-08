@@ -12,7 +12,7 @@ def CheckOrCreate(path):
 
 def TrainModel(options):
     wd = options.wd
-    cn = optons.cn
+    cn = options.cn
     dgtrain = options.dgtrain
     dgtest = options.dgtest
     patients = options.patients
