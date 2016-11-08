@@ -78,6 +78,7 @@ def fcn(split, data_gene, classifier_name="FCN8",
     upscore2 = L.Deconvolution(score_fr,
                                convolution_param=dict(num_output=2, kernel_size=4, stride=2,
                                                       bias_term=False),
+                               weight_filler=dict(type='bilinear'),
                                param=[dict(lr_mult=0)])
     n.__setattr__(classifier_name2, upscore2)
 
