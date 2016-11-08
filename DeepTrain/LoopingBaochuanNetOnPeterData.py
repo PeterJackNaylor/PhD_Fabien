@@ -2,9 +2,9 @@ import subprocess
 
 net = 'BaochuanNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
-wd = "/data/users/pnaylor/Documents/Python/LoopingBaochuanPeterData"
+wd = "/data/users/pnaylor/Documents/Python/Experiences/BaochuanSoftMax"
 weight = "None"
-niter = 50000
+niter = 10000
 disp_interval = 100
 epoch = "None"
 val_num = "1"
