@@ -17,7 +17,7 @@ def MakeDataGen(options):
     dgtest = options.dgtest
 
     rawdata = options.rawdata
-    leave_out = options.leaveout
+    leaveout = options.leaveout
     enlarge = options.enlarge
     Weight = options.Weight
     WeightOnes = options.WeightOnes
@@ -32,7 +32,7 @@ def MakeDataGen(options):
 
     data_generator_train = DataGen(rawdata, crop=crop, size=crop_size,
                                    transforms=transform_list, split="train",
-                                   leave_out=leave_out, seed=seed,
+                                   leave_out=leaveout, seed=seed,
                                    img_format=img_format, Weight=Weight,
                                    WeightOnes=WeightOnes, Unet=Unet)
     pkl.dump(data_generator_train, open(dgtrain, "wb"))
