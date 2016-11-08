@@ -11,6 +11,11 @@ import pandas as pd
 import score
 
 
+def CheckOrCreate(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+
 def WriteSolver(options):
     wd = options.wd
     cn = options.cn
