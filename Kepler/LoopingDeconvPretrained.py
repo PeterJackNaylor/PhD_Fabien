@@ -1,6 +1,6 @@
 import subprocess
 
-net = 'DeconvNet'
+net = 'PangNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
 wd = "/data/users/pnaylor/Documents/Python/Experiences2"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/DeconvNet_trainval_inference.caffemodel"
@@ -15,9 +15,9 @@ batch_size = 4
 img_format = "RGB"
 loss = 'softmax'
 
-momentum_list = [0.5, 0.7, 0.9]
+momentum_list = [0.5]
 
-weight_decay_list = [0.0005, 0.005]  # , 0.00005]
+weight_decay_list = [0.0005]  # , 0.00005]
 
 stepsize = 7000
 gamma = 0.1

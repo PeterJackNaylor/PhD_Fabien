@@ -89,7 +89,7 @@ class DataLayer(caffe.Layer):
             top[0].reshape(self.batch_size, *data.shape)
             top[1].reshape(self.batch_size, *label.shape)
 
-            if IsTheirWeights:
+            if self.Weight:
                 top[2].reshape(self.batch_size, *weight.shape)
 
     def forward(self, bottom, top):
