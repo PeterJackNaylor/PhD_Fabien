@@ -1,4 +1,4 @@
-import caffe
+/bin/bash: indent : commande introuvable
 
 import matplotlib.pylab as plt
 import time
@@ -33,7 +33,7 @@ def trainNet(kwargs):
     patients = datagen_test.patient_num
     datagen_path_train = os.path.join(
         path_modelgen, "data_generator_train.pkl")
-        datagen_train = pkl.load(open(datagen_path_train, "rb"))
+    datagen_train = pkl.load(open(datagen_path_train, "rb"))
     disp_interval = kwargs['disp_interval']
 
     if "epoch" in kwargs.keys():
@@ -49,17 +49,21 @@ def trainNet(kwargs):
         caffe.set_mode_cpu()
     if 'archi' not in kwargs.keys():
         for num in patients:
-            datagen_train.SetPatients(num)
-            datagen_test.SetPatients(num)
-            pkl.dump(datagen_train, open(datagen_path_train, "w"))
-            pkl.dump(datagen_test, open(datagen_path, "w"))
-            train(solver_path, weight, wd, cn, n_iter,
-                  disp_interval, number_of_test, num)
+	    if num in []:
+		print "NOT DOING", num
+	    else:
+		print "DOING", num
+                datagen_train.SetPatient(num)
+                datagen_test.SetPatient(num)
+                pkl.dump(datagen_train, open(datagen_path_train, "w"))
+                pkl.dump(datagen_test, open(datagen_path, "w"))
+                train(solver_path, weight, wd, cn, n_iter,
+                      disp_interval, number_of_test, num)
 
     elif len(kwargs['archi']) == 1:
         for num in patients:
-            datagen_train.SetPatients(num)
-            datagen_test.SetPatients(num)
+            datagen_train.SetPatient(num)
+            datagen_test.SetPatient(num)
             pkl.dump(datagen_train, open(datagen_path_train, "w"))
             pkl.dump(datagen_test, open(datagen_path, "w"))
             train(solver_path, weight, wd, cn, n_iter,
@@ -81,8 +85,8 @@ def trainNet(kwargs):
                     wd, cn, before, "temp_files", "weights." + before + ".caffemodel")
                 before = fcn_num
             for num in patients:
-                datagen_train.SetPatients(num)
-                datagen_test.SetPatients(num)
+                datagen_train.SetPatient(num)
+                datagen_test.SetPatient(num)
                 pkl.dump(datagen_train, open(datagen_path_train, "w"))
                 pkl.dump(datagen_test, open(datagen_path, "w"))
                 train(solver_path, weight, wd, cn + '/' + fcn_num, n_iter,

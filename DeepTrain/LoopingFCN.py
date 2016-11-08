@@ -16,7 +16,7 @@ batch_size = "1"
 img_format = "RGB"
 loss = 'softmax'
 gpu = "gpu"
-momentum_list = [0.9]
+momentum_list = [0.5, 0.9, 0.99]
 
 weight_decay_list = [0.005]
 
