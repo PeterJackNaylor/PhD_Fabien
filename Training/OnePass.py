@@ -1,8 +1,8 @@
 from options import GetOptions
 
-create_dataset = False
-create_net = False
-create_solver = False
+create_dataset = True
+create_net = True
+create_solver = True
 train = True
 
 

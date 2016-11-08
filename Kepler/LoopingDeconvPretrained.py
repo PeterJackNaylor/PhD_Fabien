@@ -1,6 +1,6 @@
 import subprocess
 
-net = 'UNet'
+net = 'DeconvNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
 wd = "/data/users/pnaylor/Documents/Python/Experiences2"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/DeconvNet_trainval_inference.caffemodel"
