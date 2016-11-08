@@ -27,8 +27,8 @@ def pangnet(split, data_gene, loss, batch_size, Weight, cn):
 
 
 def make_net(options):
-    dgtrain = options.datagen_path_train
-    dgtest = options.datagen_path_test
+    dgtrain = options.dgtrain
+    dgtest = options.dgtest
     cn = options.cn
     loss = options.loss
     bs = options.batch_size

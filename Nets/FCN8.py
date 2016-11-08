@@ -86,8 +86,8 @@ def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
 
 
 def make_net(options, c1="score_fr", c2="upscore", c3="score_pool4"):
-    dgtrain = options.datagen_path_train
-    dgtest = options.datagen_path_test
+    dgtrain = options.dgtrain
+    dgtest = options.dgtest
     cn = options.cn
     loss = options.loss
     bs = options.batch_size
