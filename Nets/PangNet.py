@@ -33,10 +33,10 @@ def make_net(options):
     loss = options.loss
     bs = options.batch_size
     wgt = options.Weight
-    wd = options.wd
+    path = os.path.join(options.wd, options.cn)
 
-    with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
+    with open(os.path.join(path, 'train.prototxt'), 'w') as f:
         f.write(str(pangnet('train', dgtrain, loss, bs, wgt, cn)))
 
-    with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
+    with open(os.path.join(path, 'test.prototxt'), 'w') as f:
         f.write(str(pangnet('test', dgtest, loss, 1, False, cn)))
