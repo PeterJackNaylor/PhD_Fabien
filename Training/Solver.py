@@ -49,7 +49,7 @@ def WriteSolver(options):
 
 def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, momentum=0.9,
            weight_decay=5e-4, gamma=0.1, stepsize=10000):
-    out_snap = "./temp_snapshot"
+    outsnap = "./temp_snapshot"
     CheckOrCreate(outsnap)
     # pdb.set_trace()
     s = caffe_pb2.SolverParameter()
