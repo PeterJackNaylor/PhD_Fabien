@@ -5,6 +5,11 @@ from Solver import solver, run_solvers_IU
 import numpy as np
 
 
+def CheckOrCreate(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+
 def TrainModel(options):
 
     dgtrain = options.dgtrain
@@ -41,6 +46,7 @@ def TrainModel(options):
                     weight = os.path.join(
                         options.wd, options.cn, fcn_num, "temp_files", 'weights.{}_{}.caffemodel'.format(fcn_num, num))
                 path_ = os.path.join(wd, cn, fcn_num)
+                CheckOrCreate(path_)
                 solver_name = os.path.join(path_, "solver.prototxt")
                 train(solver_path, weight, wd, cn, niter,
                       disp_interval, number_of_test, num)

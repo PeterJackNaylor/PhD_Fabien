@@ -4,6 +4,11 @@ import os
 import numpy as np
 
 
+def CheckOrCreate(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+
 def GetOptions(verbose=True):
 
     parser = OptionParser()
@@ -76,6 +81,8 @@ def GetOptions(verbose=True):
     print "Net used          : | {}".format(options.net)
     print "Raw data direct   : | {}".format(options.rawdata)
     print "Work directory    : | {}".format(options.wd)
+    CheckOrCreate(options.wd)
+    CheckOrCreate(os.path.join(options.wd, options.cn))
     print "Classifier name   : | {}".format(options.cn)
 
 # options with default values
@@ -128,6 +135,7 @@ def GetOptions(verbose=True):
 
 # new arguments
     path_modelgen = os.path.join(options.wd, options.cn, "model")
+    CheckOrCreate(path_modelgen)
     options.dgtrain = os.path.join(path_modelgen, "data_generator_train.pkl")
     options.dgtest = os.path.join(path_modelgen, "data_generator_test.pkl")
 
