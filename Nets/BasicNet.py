@@ -85,8 +85,8 @@ def ConvBnRelu(bottom, nout, ks=3, stride=1, pad=1):
     return conv, bn, sl, relu
 
 
-def DeconvBnRelu(bottom, nout, ks=3, pad=0, weight_filler=Gaussian_fil, bias_filler=Constant_fil):
-    deconv = Deconv(bottom, nout, ks, pad, weight_filler, bias_filler)
+def DeconvBnRelu(bottom, nout, ks=3, pad=0, stride, weight_filler=Gaussian_fil, bias_filler=Constant_fil):
+    deconv = Deconv(bottom, nout, pad, ks, stride, weight_filler, bias_filler)
     bn, sl = BatchNormalizer(deconv)
     relu = Relu(sl)
     return deconv, bn, sl, relu
@@ -96,7 +96,7 @@ def DeconvReConvReConvRe(bottom1, val, deconv_out=None):
     if deconv_out is None:
         deconv_out = val
 
-    deconv = Deconv(bottom1, deconv_out, 2, 2,
+    deconv = Deconv(bottom1, deconv_out, 2, 2, 1
                     xavier, Constant_fil)
     relu1 = Relu(deconv)
     conv2, relu2 = conv_relu(relu1, val)
@@ -109,7 +109,7 @@ def DeconvReCropConcatConvReConvRe(bottom1, bridge2, val, deconv_out=None):
     if deconv_out is None:
         deconv_out = val
 
-    deconv = Deconv(bottom1, deconv_out, 2, 2,
+    deconv = Deconv(bottom1, deconv_out, 2, 2, 1
                     xavier, Constant_fil)
     relu1 = Relu(deconv)
     croped = crop(bridge2, relu1)
