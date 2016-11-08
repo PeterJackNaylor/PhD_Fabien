@@ -3,6 +3,7 @@ import os
 import cPickle as pkl
 from Solver import solver, run_solvers_IU
 import numpy as np
+import caffe
 
 
 def CheckOrCreate(path):
