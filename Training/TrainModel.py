@@ -7,8 +7,8 @@ import numpy as np
 
 def TrainModel(options):
 
-    dgtrain = options.datagen_path_train
-    dgtest = options.datagen_path_test
+    dgtrain = options.dgtrain
+    dgtest = options.dgtest
     patients = options.patients
     path_ = os.path.join(options.wd, options.cn)
     niter = options.niter
