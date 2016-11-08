@@ -11,7 +11,8 @@ def CheckOrCreate(path):
 
 
 def TrainModel(options):
-
+    wd = options.wd
+    cn = optons.cn
     dgtrain = options.dgtrain
     dgtest = options.dgtest
     patients = options.patients
