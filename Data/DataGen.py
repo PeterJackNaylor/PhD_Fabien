@@ -8,7 +8,7 @@ from random import shuffle
 
 from scipy import misc
 import nibabel as ni
-from UsefulFunctions.ImageTransf import flip_vertical, flip_horizontal
+from UsefulFunctions.ImageTransf import Identity, flip_vertical, flip_horizontal
 import copy
 
 
@@ -38,7 +38,7 @@ def MakeDataGen(options):
     pkl.dump(data_generator_train, open(dgtrain, "wb"))
 
     data_generator_test = DataGen(rawdata, crop=crop, size=crop_size,
-                                  transforms=[Transf.Identity()], split="test",
+                                  transforms=[Identity()], split="test",
                                   leave_out=leaveout, seed=seed,
                                   img_format=img_format, Weight=Weight,
                                   WeightOnes=WeightOnes, Unet=Unet)
