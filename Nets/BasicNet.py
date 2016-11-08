@@ -123,7 +123,7 @@ def DeconvReCropConcatConvReConvRe(bottom1, bridge2, val, deconv_out=None):
 def DataLayer(split, data_gene, batch_size, cn, Weight):
 
     pydata_params = dict()
-    pydata_params["split"] = slit
+    pydata_params["split"] = split
     pydata_params["batch_size"] = batch_size
     pydata_params["classifier_name"] = cn
     pydata_params["datagen"] = data_gene
