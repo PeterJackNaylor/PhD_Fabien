@@ -47,11 +47,11 @@ def WriteSolver(kwargs):
 
         CheckOrCreate(os.path.join(wd, cn))
         CheckOrCreate(outsnap)
-
+        train_net_path = os.path.join(wd, cn, "train.prototxt")
+        test_net_path = os.path.join(wd, cn, "test.prototxt")
         name_solver = solver(solver_path,
-                             os.path.join(wd, cn, "train.prototxt"),
-                             test_net_path=os.path.join(
-                                 wd, cn, "test.prototxt"),
+                             train_net_path,
+                             test_net_path=test_net_path,
                              base_lr=solverrate,
                              out_snap=outsnap,
                              momentum=momentum,
@@ -61,14 +61,17 @@ def WriteSolver(kwargs):
     elif len(kwargs['archi']) == 1:
         solver_path = os.path.join(wd, cn, "solver.prototxt")
         outsnap = os.path.join(wd, cn, "snapshot")
+        num = kwargs['archi'][0]
+        fcn_num = "FCN{}".format(num)
 
         CheckOrCreate(os.path.join(wd, cn))
         CheckOrCreate(outsnap)
 
+        train_net_path = os.path.join(wd, cn, fcn_num, "train.prototxt")
+        test_net_path = os.path.join(wd, cn, fcn_num, "test.prototxt")
         name_solver = solver(solver_path,
-                             os.path.join(wd, cn, "train.prototxt"),
-                             test_net_path=os.path.join(
-                                 wd, cn, "test.prototxt"),
+                             train_net_path,
+                             test_net_path=test_net_path,
                              base_lr=solverrate,
                              out_snap=outsnap,
                              momentum=momentum,
@@ -83,12 +86,14 @@ def WriteSolver(kwargs):
             outsnap = os.path.join(wd, cn, fcn_num, "snapshot")
 
             CheckOrCreate(os.path.join(wd, cn, fcn_num))
+
+            train_net_path = os.path.join(wd, cn, fcn_num, "train.prototxt")
+            test_net_path = os.path.join(wd, cn, fcn_num, "test.prototxt")
             CheckOrCreate(outsnap)
 
             name_solver = solver(solver_path,
-                                 os.path.join(wd, cn, "train.prototxt"),
-                                 test_net_path=os.path.join(
-                                     wd, cn, "test.prototxt"),
+                                 train_net_path,
+                                 test_net_path=test_net_path,
                                  base_lr=solverrate,
                                  out_snap=outsnap,
                                  momentum=momentum,

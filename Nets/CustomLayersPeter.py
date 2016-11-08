@@ -1,40 +1,16 @@
 import cPickle as pkl
-from UsefulFunctions.usefulPloting import Contours
 import caffe
-import matplotlib.pylab as plt
-from sys import maxint
-import FIMM_histo.deconvolution as deconv
 import pdb
-from DataGen import DataGen
+
+import glob
+import numpy as np
+import random
 
 
-class DataLayerPeter(caffe.Layer):
-    """
-    Load (input image, label image) pairs from PASCAL VOC
-    one-at-a-time while reshaping the net to preserve dimensions.
-
-    Use this to feed data to a fully convolutional network.
-    """
+class DataLayer(caffe.Layer):
 
     def setup(self, bottom, top):
-        """
-        Setup data layer according to parameters:
 
-        - split: train / val / test
-        - mean: tuple of mean values to subtract
-        - randomize: load in random order (default: True)
-        - seed: seed for randomization (default: None / current time)
-
-        for FCN semantic segmentation.
-
-        example
-
-        params = dict(dir="/path/to/PASCAL/VOC2011",
-            mean=(104.00698793, 116.66876762, 122.67891434),
-            split="val", classifier_name="FCN32")
-        """
-
-        # config
         params = eval(self.param_str)
         self.split = params['split']
         self.classifier_name = params['classifier_name']
@@ -47,9 +23,6 @@ class DataLayerPeter(caffe.Layer):
         self.Weight = params.get('Weight', False)
 
         self.datagen = pkl.load(open(params['datagen'], 'rb'))
-        #self.datagen.ReLoad(self.split)
-        if not hasattr(self.datagen, "Weight"):
-            self.datagen.Weight = False
         if not self.datagen.Weight:
             n_tops = 2
             n_tops_str = "two"
@@ -77,10 +50,8 @@ class DataLayerPeter(caffe.Layer):
 
     def reshape(self, bottom, top):
         # load image + label image pair
-        IsTheirWeights = self.datagen.Weight
-
         if self.batch_size == 1:
-            if not IsTheirWeights:
+            if not self.Weight:
                 self.data, self.label = self.loadImageAndGT(self.key)
             else:
                 self.data, self.label, self.weight = self.loadWithWeight(
@@ -91,7 +62,7 @@ class DataLayerPeter(caffe.Layer):
             top[1].reshape(self.batch_size, *self.label.shape)
 
         else:
-            if not IsTheirWeights:
+            if not self.Weight:
                 data, label = self.loadImageAndGT(self.key)
             else:
                 data, label, weight = self.loadWithWeight(self.key)
@@ -101,7 +72,7 @@ class DataLayerPeter(caffe.Layer):
 
             self.data = np.zeros(shape=(self.batch_size, x, y, z))
             self.label = np.zeros(shape=(self.batch_size, x_l, y_l, z_l))
-            if IsTheirWeights:
+            if self.Weight:
                 self.weight = np.zeros(
                     shape=(self.batch_size, x_l, y_l, z_l), dtype=np.float32)
                 self.weight[0] = weight
@@ -109,7 +80,7 @@ class DataLayerPeter(caffe.Layer):
 
             for i in range(1, self.batch_size):
                 self.Nextkey()
-                if not IsTheirWeights:
+                if not self.Weight:
                     self.data[i], self.label[i] = self.loadImageAndGT(self.key)
                 else:
                     self.data[i], self.label[i], self.weight[
@@ -126,7 +97,7 @@ class DataLayerPeter(caffe.Layer):
         top[0].data[...] = self.data
         self.label[self.label > 0] = 1
         top[1].data[...] = self.label
-        if self.datagen.Weight:
+        if self.Weight:
             weight = self.weight
             if 0 in weight:
                 weight[weight > 0] = 1
@@ -137,18 +108,6 @@ class DataLayerPeter(caffe.Layer):
             if 1 not in np.unique(top[1].data[...]):
                 print np.unique(top[1].data[...])
         # pdb.set_trace()
-<<<<<<< HEAD
-#	from scipy.misc import imsave
-	
-#	from ShortPrediction import Deprocessing4Visualisation, DeprocessingLabel
-#	imsave('/data/users/pnaylor/temp/'+str(self.key)+"rgb.png",Deprocessing4Visualisation(top[0].data[...]))
-#	imsave('/data/users/pnaylor/temp/'+str(self.key)+"bin.png",DeprocessingLabel(top[1].data[...]))
-#	try:
-#	    imsave('/data/users/pnaylor/temp/'+str(self.key)+"wgt.png",DeprocessingLabel(top[2].data[...]))
-#	except:
-#	    pass
-=======
->>>>>>> 120da2c35becae54fb44d2725296e1e7ac8997b7
         self.Nextkey()
 
     def backward(self, top, propagate_down, bottom):
@@ -197,17 +156,6 @@ class DataLayerPeter(caffe.Layer):
             label[label > 0] = 1
         # pdb.set_trace()
         return in_, label, weight
-
-
-import glob
-import numpy as np
-import random
-from sklearn.cross_validation import KFold
-from scipy import misc
-import nibabel as ni
-import pdb
-from itertools import chain
-import sys
 
 
 def duplicate_channel(blob, n_c):
@@ -318,6 +266,7 @@ if __name__ == "__main__":
     import ImageTransf as Transf
     import matplotlib.pylab as plt
     import os
+    from Data.DataGen import DataGen
 
     path = '/Users/naylorpeter/Documents/Histopathologie/ToAnnotate'
     out = "~/test/"

@@ -38,12 +38,11 @@ def WriteFCN(kwargs):
 
     CheckOrCreate(os.path.join(path_))
     for arc in kwargs["archi"]:
+        FCN_num = "FCN" + str(arc)
+        temp_path_ = os.path.join(path_, FCN_num)
+        CheckOrCreate(temp_path_)
         if arc == 8:
             import FCN8
-            if len(kwargs["archi"]) == 1:
-                temp_path_ = path_
-            else:
-                temp_path_ = path_
             FCN8.make_net(temp_path_,
                           datagen_path,
                           datagen_test_path,
@@ -55,10 +54,6 @@ def WriteFCN(kwargs):
                           batch_size=batch_size)
         if arc == 16:
             import FCN16
-            if len(kwargs["archi"]) == 1:
-                temp_path_ = path_
-            else:
-                temp_path_ = path_
             FCN16.make_net(temp_path_,
                            datagen_path,
                            datagen_test_path,
@@ -68,10 +63,6 @@ def WriteFCN(kwargs):
                            batch_size=batch_size)
         if arc == 32:
             import FCN32
-            if len(kwargs["archi"]) == 1:
-                temp_path_ = path_
-            else:
-                temp_path_ = path_
             FCN32.make_net(temp_path_,
                            datagen_path,
                            datagen_test_path,
