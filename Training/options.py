@@ -147,7 +147,7 @@ def GetOptions(verbose=True):
     options.Weight = Weight
     options.WeightOnes = WeightOnes
 
-    options.Patients = ['141549', '572123', '581910',
+    options.patients = ['141549', '572123', '581910',
                         '162438', '588626', '160120', '498959']
 
     transform_list = [Transf.Identity(),
