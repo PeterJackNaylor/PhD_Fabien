@@ -85,7 +85,7 @@ def ConvBnRelu(bottom, nout, ks=3, stride=1, pad=1):
     return conv, bn, sl, relu
 
 
-def DeconvBnRelu(bottom, nout, ks=3, pad=0, stride, weight_filler=Gaussian_fil, bias_filler=Constant_fil):
+def DeconvBnRelu(bottom, nout, ks=3, pad=0, stride=0, weight_filler=Gaussian_fil, bias_filler=Constant_fil):
     deconv = Deconv(bottom, nout, pad, ks, stride, weight_filler, bias_filler)
     bn, sl = BatchNormalizer(deconv)
     relu = Relu(sl)
