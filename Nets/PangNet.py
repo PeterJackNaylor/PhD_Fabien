@@ -13,9 +13,9 @@ def pangnet(split, data_gene, loss, batch_size, Weight, cn):
         n.data, n.label, n.weight = DataLayer(
             split, data_gene, batch_size, cn, Weight)
 
-    n.conv1, n.relu1 = conv_relu(n.data, 8, pad=1)
-    n.conv2, n.relu2 = conv_relu(n.relu1, 8, pad=1)
-    n.conv3, n.relu3 = conv_relu(n.relu2, 8, pad=1)
+    n.conv1, n.relu1 = ConvRelu(n.data, 8, pad=1)
+    n.conv2, n.relu2 = ConvRelu(n.relu1, 8, pad=1)
+    n.conv3, n.relu3 = ConvRelu(n.relu2, 8, pad=1)
 
     n.score = Conv(n.relu3, nout=2, ks=1, pad=0)
 
