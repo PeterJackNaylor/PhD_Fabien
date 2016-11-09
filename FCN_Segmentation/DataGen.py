@@ -15,6 +15,7 @@ from itertools import chain
 import sys
 from UsefulFunctions.ImageTransf import flip_vertical, flip_horizontal
 import copy
+import itertools
 
 
 class DataGen(object):
