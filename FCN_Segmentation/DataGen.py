@@ -337,7 +337,6 @@ class DataGen(object):
         if not hasattr(self, "RandomList"):
             RandomList = []
             oldkey = key
-            from random import shuffle
 
             # pdb.set_trace()
             for i in range(self.length):

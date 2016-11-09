@@ -250,7 +250,6 @@ class WeigthedLossLayer(caffe.Layer):
         top[0].data[...] = np.sum(loss_matrix) / np.sum(weight_batch)
 
     def backward(self, top, propagate_down, bottom):
-        pdb.set_trace()
         for i in range(3):
             if not propagate_down[i]:
                 continue
