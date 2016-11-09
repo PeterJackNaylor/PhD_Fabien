@@ -348,7 +348,7 @@ class DataGen(object):
             nber_per_patient = len(self.patient_img[num])
             lists += (range(nber_per_patient),)
             if len_key > 2:
-                lists += (self.transforms,)
+                lists += (range(len(self.transforms)),)
             if len_key > 3:
                 lists += (range(self.crop),)
             AllPossibleKeys += lists(itertools.product(*lists))
