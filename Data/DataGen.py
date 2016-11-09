@@ -379,7 +379,7 @@ class DataGen(object):
                 lists += (range(len(self.transforms)),)
             if len_key > 3:
                 lists += (range(self.crop),)
-            AllPossibleKeys += lists(itertools.product(*lists))
+            AllPossibleKeys += list(itertools.product(*lists))
 
         return AllPossibleKeys
 

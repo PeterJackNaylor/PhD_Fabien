@@ -352,7 +352,7 @@ class DataGen(object):
             if len_key > 3:
                 lists += (range(self.crop),)
                 pdb.set_trace()
-            AllPossibleKeys += lists(itertools.product(*lists))
+            AllPossibleKeys += list(itertools.product(*lists))
 
         return AllPossibleKeys
 
