@@ -10,6 +10,7 @@ from scipy import misc
 import nibabel as ni
 from UsefulFunctions.ImageTransf import Identity, flip_vertical, flip_horizontal
 import copy
+import itertools
 
 
 def MakeDataGen(options):
@@ -166,6 +167,7 @@ class DataGen(object):
             self.length = np.sum([len(glob.glob(
                 self.path + "/Slide_{}".format(el) + "/*.png")) for el in test_patient]) * self.crop * number_of_transforms
             self.patients_iter = test_patient
+        self.SetRandomList()
 
     def get_patients(self, path):
         # pdb.set_trace()
@@ -359,21 +361,41 @@ class DataGen(object):
             else:
                 return [a, b]
 
+    def GeneratePossibleKeys(self):
+        if self.transforms is None:
+            len_key = 2
+        elif self.crop == 1 or self.crop is None:
+            len_key = 3
+        else:
+            len_key = 4
+        AllPossibleKeys = []
+        numero = self.patients_iter[key[0]]
+        i = 0
+        for num in self.patients_iter:
+            lists = ([i],)
+            i += 1
+            nber_per_patient = len(self.patient_img[num])
+            lists += (range(nber_per_patient),)
+            if len_key > 2:
+                lists += (range(self.transforms),)
+            if len_key > 3:
+                lists += (range(self.crop),)
+            AllPossibleKeys += lists(itertools.product(*lists))
+
+    return AllPossibleKeys
+
+    def SetRandomList(self):
+        RandomList = self.GeneratePossibleKeys()
+        shuffle(RandomList)
+        self.RandomList = RandomList
+        self.key_iter = 0
+
     def NextKeyRandList(self, key):
         if not hasattr(self, "RandomList"):
-            RandomList = []
-            oldkey = key
-
-            # pdb.set_trace()
-            for i in range(self.length):
-                key = self.NextKey(key)
-                test = copy.copy(key)
-                RandomList.append(test)
-                shuffle(RandomList)
-            self.RandomList = RandomList
+            self.SetRandomList()
             self.key_iter = 0
-        # pdb.set_trace()
-        self.key_iter += 1
+        else:  # pdb.set_trace()
+            self.key_iter += 1
         if self.key_iter == self.length:
             self.key_iter = 0
 
