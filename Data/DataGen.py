@@ -369,7 +369,6 @@ class DataGen(object):
         else:
             len_key = 4
         AllPossibleKeys = []
-        numero = self.patients_iter[key[0]]
         i = 0
         for num in self.patients_iter:
             lists = ([i],)
