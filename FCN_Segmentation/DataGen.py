@@ -353,7 +353,7 @@ class DataGen(object):
                 lists += (range(self.crop),)
             AllPossibleKeys += lists(itertools.product(*lists))
 
-    return AllPossibleKeys
+        return AllPossibleKeys
 
     def SetRandomList(self):
         RandomList = self.GeneratePossibleKeys()
