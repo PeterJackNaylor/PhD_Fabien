@@ -102,12 +102,6 @@ class DataLayer(caffe.Layer):
             if 0 in weight:
                 weight[weight > 0] = 1
             top[2].data[...] = weight
-        # pick next input
-        if len(np.unique(top[1].data[...])) != 2:
-            print np.unique(top[1].data[...])
-            if 1 not in np.unique(top[1].data[...]):
-                print np.unique(top[1].data[...])
-        # pdb.set_trace()
         self.Nextkey()
 
     def backward(self, top, propagate_down, bottom):
