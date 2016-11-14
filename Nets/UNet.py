@@ -13,26 +13,26 @@ def unet(split, data_gene, loss, batch_size, Weight, cn, skip):
         n.data, n.label, n.weight = DataLayer(
             split, data_gene, batch_size, cn, Weight)
 
-    n.conv_d0a, n.relu_d0b = ConvRelu(n.data, 64, pad=0)
-    n.conv_d0b, n.relu_d0c = ConvRelu(n.relu_d0b, 64, pad=0)
+    n.conv_d0a, n.relu_d0b = ConvRelu(n.data, 64)
+    n.conv_d0b, n.relu_d0c = ConvRelu(n.relu_d0b, 64)
     n.pool_d0c = Maxpool(n.relu_d0c)
 
-    n.conv_d1a, n.relu_d1b = ConvRelu(n.pool_d0c, 128, pad=0)
-    n.conv_d1b, n.relu_d1c = ConvRelu(n.relu_d1b, 128, pad=0)
+    n.conv_d1a, n.relu_d1b = ConvRelu(n.pool_d0c, 128)
+    n.conv_d1b, n.relu_d1c = ConvRelu(n.relu_d1b, 128)
     n.pool_d1c = Maxpool(n.relu_d1c)
 
-    n.conv_d2a, n.relu_d2b = ConvRelu(n.pool_d1c, 256, pad=0)
-    n.conv_d2b, n.relu_d2c = ConvRelu(n.relu_d2b, 256, pad=0)
+    n.conv_d2a, n.relu_d2b = ConvRelu(n.pool_d1c, 256)
+    n.conv_d2b, n.relu_d2c = ConvRelu(n.relu_d2b, 256)
     n.pool_d2c = Maxpool(n.relu_d2c)
 
-    n.conv_d3a, n.relu_d3b = ConvRelu(n.pool_d2c, 512, pad=0)
-    n.conv_d3b, n.relu_d3c = ConvRelu(n.relu_d3b, 512, pad=0)
+    n.conv_d3a, n.relu_d3b = ConvRelu(n.pool_d2c, 512)
+    n.conv_d3b, n.relu_d3c = ConvRelu(n.relu_d3b, 512)
     n.drop_d3c = L.Dropout(n.relu_d3c, dropout_ratio=0.5, in_place=True)
 
     n.pool_d3c = Maxpool(n.drop_d3c)
 
-    n.conv_d4a, n.relu_d4b = ConvRelu(n.pool_d3c, 512, pad=0)
-    n.conv_d4b, n.relu_d4c = ConvRelu(n.relu_d4b, 512, pad=0)
+    n.conv_d4a, n.relu_d4b = ConvRelu(n.pool_d3c, 512)
+    n.conv_d4b, n.relu_d4c = ConvRelu(n.relu_d4b, 512)
     n.drop_d4c = L.Dropout(n.relu_d4c, dropout_ratio=0.5, in_place=True)
 
     if 4 not in skip:

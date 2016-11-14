@@ -7,11 +7,9 @@ Created on Mon Jun 27 16:07:56 2016
 import os
 from caffe.proto import caffe_pb2
 import pdb
+import numpy as np
 import pandas as pd
 import score
-
-
-from UsefulFunctions.RandomUtils import CheckOrCreate
 
 
 def WriteSolver(options):
@@ -33,9 +31,9 @@ def WriteSolver(options):
                base_lr, momentum, weight_decay, gamma, stepsize)
     else:
         for num in options.archi:
+            CheckOrCreate(path_)
             fcn_num = "FCN{}".format(num)
             path_ = os.path.join(wd, cn, fcn_num)
-            CheckOrCreate(path_)
             solver_name = os.path.join(path_, "solver.prototxt")
             train_net_path = os.path.join(path_, "train.prototxt")
             test_net_path = os.path.join(path_, "test.prototxt")
@@ -47,8 +45,8 @@ def WriteSolver(options):
 
 def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, momentum=0.9,
            weight_decay=5e-4, gamma=0.1, stepsize=10000):
-    snapshot = solver_name.replace('solver.prototxt', 'snapshot')
-    CheckOrCreate(snapshot)
+    out_snap = "./temp_snapshot"
+    CheckOrCreate(outsnap)
     # pdb.set_trace()
     s = caffe_pb2.SolverParameter()
     s.train_net = train_net_path
@@ -91,7 +89,9 @@ def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, momen
     # Snapshots are files used to store networks we've trained.  Here, we'll
     # snapshot every 10K iterations -- ten times during training.
     s.snapshot = 100000
-    s.snapshot_prefix = snapshot
+    if not os.path.isdir(out_snap):
+        os.mkdir(out_snap)
+    s.snapshot_prefix = out_snap
 
     # Train on the GPU.  Using the CPU to train large networks is very slow.
     s.solver_mode = caffe_pb2.SolverParameter.GPU
@@ -139,3 +139,33 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test, num)
         weights[name] = os.path.join(weight_dir, filename)
         s.net.save(weights[name])
     return Results, Results_train, weights
+
+
+def run_solvers(niter, solvers, res_fold, disp_interval=10):
+    """Run solvers for niter iterations,
+       returning the loss and accuracy recorded each iteration.
+       `solvers` is a list of (name, solver) tuples."""
+    blobs = ('loss', 'acc')
+    loss, acc = ({name: np.zeros(niter) for name, _ in solvers}
+                 for _ in blobs)
+    for it in range(niter):
+        for name, s in solvers:
+            # pdb.set_trace()
+            s.step(1)  # run a single SGD step in Caffe
+            loss[name][it], acc[name][it] = [s.net.blobs[b].data.copy()
+                                             for b in blobs]
+        if it % disp_interval == 0 or it + 1 == niter:
+            loss_disp = '; '.join('%s: loss=%.3f, acc=%2d%%' %
+                                  (n, loss[n][it], np.round(100 * acc[n][it]))
+                                  for n, _ in solvers)
+            print '%3d) %s' % (it, loss_disp)
+    # Save the learned weights from both nets.
+    if not os.path.isdir(res_fold):
+        os.mkdir(res_fold)
+    weight_dir = res_fold
+    weights = {}
+    for name, s in solvers:
+        filename = 'weights.%s.caffemodel' % name
+        weights[name] = os.path.join(weight_dir, filename)
+        s.net.save(weights[name])
+    return loss, acc, weights
