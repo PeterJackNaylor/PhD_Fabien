@@ -6,9 +6,7 @@ import numpy as np
 import caffe
 
 
-def CheckOrCreate(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
+from UsefulFunctions.RandomUtils import CheckOrCreate
 
 
 def TrainModel(options):
@@ -20,6 +18,11 @@ def TrainModel(options):
     path_ = os.path.join(options.wd, options.cn)
     niter = options.niter
     disp_interval = options.disp_interval
+
+    if options.hardware == "cpu":
+        caffe.set_mode_cpu()
+    elif options.hardware == "gpu":
+        caffe.set_mode_gpu()
 
     for num in patients:
         datagen_test = pkl.load(open(dgtest, "rb"))
@@ -49,8 +52,9 @@ def TrainModel(options):
                         options.wd, options.cn, fcn_num, "temp_files", 'weights.{}_{}.caffemodel'.format(fcn_num, num))
                 path_ = os.path.join(wd, cn, fcn_num)
                 CheckOrCreate(path_)
-                solver_name = os.path.join(path_, "solver.prototxt")
-                train(solver_path, weight, wd, cn, niter,
+                solver_path = os.path.join(path_, "solver.prototxt")
+                cn_fcn = os.path.join(cn, fcn_num)
+                train(solver_path, weight, wd, cn_fcn, niter,
                       disp_interval, number_of_test, num)
                 before = fcn_num
 

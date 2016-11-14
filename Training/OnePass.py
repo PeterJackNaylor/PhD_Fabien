@@ -1,4 +1,5 @@
 from options import GetOptions
+import caffe
 
 create_dataset = True
 create_net = True
@@ -9,7 +10,6 @@ train = True
 if __name__ == "__main__":
 
     (options, args) = GetOptions()
-
     if create_dataset:
         from Data.DataGen import MakeDataGen
         MakeDataGen(options)
