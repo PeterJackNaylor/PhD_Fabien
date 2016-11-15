@@ -62,7 +62,7 @@ def TrainModel(options):
 def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test, num):
     my_solver = caffe.get_solver(solver_path)
 
-    if weight is None:
+    if weight is not None:
         assert os.path.exists(weight)
         my_solver.net.copy_from(weight)
 
