@@ -138,7 +138,7 @@ def DataLayer(split, data_gene, batch_size, cn, Weight):
                                ntop=2, param_str=str(pydata_params))
         return data, label
     else:
-        data, label, weight = L.Python(module='DataLayerPeter', layer=pylayer,
+        data, label, weight = L.Python(module='CustomLayersPeter', layer=pylayer,
                                        ntop=3, param_str=str(pydata_params))
         return data, label, weight
 
