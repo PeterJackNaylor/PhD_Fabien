@@ -11,9 +11,7 @@ import pandas as pd
 import score
 
 
-def CheckOrCreate(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
+from UsefulFunctions.RandomUtils import CheckOrCreate
 
 
 def WriteSolver(options):
@@ -35,9 +33,9 @@ def WriteSolver(options):
                base_lr, momentum, weight_decay, gamma, stepsize)
     else:
         for num in options.archi:
-            CheckOrCreate(path_)
             fcn_num = "FCN{}".format(num)
             path_ = os.path.join(wd, cn, fcn_num)
+            CheckOrCreate(path_)
             solver_name = os.path.join(path_, "solver.prototxt")
             train_net_path = os.path.join(path_, "train.prototxt")
             test_net_path = os.path.join(path_, "test.prototxt")
@@ -49,8 +47,8 @@ def WriteSolver(options):
 
 def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, momentum=0.9,
            weight_decay=5e-4, gamma=0.1, stepsize=10000):
-    outsnap = "./temp_snapshot"
-    CheckOrCreate(outsnap)
+    snapshot = solver_name.replace('solver.prototxt', 'snapshot')
+    CheckOrCreate(snapshot)
     # pdb.set_trace()
     s = caffe_pb2.SolverParameter()
     s.train_net = train_net_path
@@ -93,7 +91,7 @@ def solver(solver_name, train_net_path, test_net_path=None, base_lr=0.001, momen
     # Snapshots are files used to store networks we've trained.  Here, we'll
     # snapshot every 10K iterations -- ten times during training.
     s.snapshot = 100000
-    s.snapshot_prefix = outsnap
+    s.snapshot_prefix = snapshot
 
     # Train on the GPU.  Using the CPU to train large networks is very slow.
     s.solver_mode = caffe_pb2.SolverParameter.GPU

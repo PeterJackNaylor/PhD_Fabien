@@ -3,10 +3,7 @@ from UsefulFunctions import ImageTransf as Transf
 import os
 import numpy as np
 
-
-def CheckOrCreate(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
+from UsefulFunctions.RandomUtils import CheckOrCreate
 
 
 def GetOptions(verbose=True):
@@ -54,6 +51,8 @@ def GetOptions(verbose=True):
                       help="enlarge with mirrored image")
     parser.add_option('--seed', dest="seed", default=1337, type="int",
                       help="seed for datalayer")
+    parser.add_option('--hw', dest="hardware", default="cpu", type="string",
+                      help="hardware for computing: gpu or cpu")
 
 # non compulsory arguments with no default
     parser.add_option("--weight", dest="weight", type="string",
@@ -102,7 +101,7 @@ def GetOptions(verbose=True):
     print "gamma             : | {}".format(options.gamma)
     print "enlarge           : | {}".format(options.enlarge)
     print "seed              : | {}".format(options.seed)
-
+    print "hardware          : | {}".format(options.hardware)
 # non compulsory arguments with no default
 
     if options.weight is not None:
@@ -139,9 +138,16 @@ def GetOptions(verbose=True):
     options.dgtrain = os.path.join(path_modelgen, "data_generator_train.pkl")
     options.dgtest = os.path.join(path_modelgen, "data_generator_test.pkl")
 
-    options.wd_32 = os.path.join(options.wd, options.cn, "FCN32")
-    options.wd_16 = os.path.join(options.wd, options.cn, "FCN16")
-    options.wd_8 = os.path.join(options.wd, options.cn, "FCN8")
+    if options.net == "FCN":
+        if 32 in options.archi:
+            options.wd_32 = os.path.join(options.wd, options.cn, "FCN32")
+            CheckOrCreate(options.wd_32)
+        if 16 in options.archi:
+            options.wd_16 = os.path.join(options.wd, options.cn, "FCN16")
+            CheckOrCreate(options.wd_16)
+        if 8 in options.archi:
+            options.wd_8 = os.path.join(options.wd, options.cn, "FCN8")
+            CheckOrCreate(options.wd_8)
 
     if options.loss == "weight" or options.loss == "weightcpp":
         Weight = True

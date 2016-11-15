@@ -5,7 +5,7 @@ from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
 
-def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
+def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2, c3):
     n = caffe.NetSpec()
     if not Weight:
         n.data, n.label = DataLayer(split, data_gene, batch_size, cn, Weight)

@@ -1,28 +1,28 @@
 import subprocess
 
-net = 'DeconvNet'
+net = 'UNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
 wd = "/data/users/pnaylor/Documents/Python/Experiences2"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/DeconvNet_trainval_inference.caffemodel"
-niter = 15000
+niter = 30000
 disp_interval = 1000
 leaveout = 1
 crop = 4
 
 
-base_lr_list = [0.01]  # , 1, 0.01, 0.001, 0.0001]
+base_lr_list = [0.01, 0.001, 0.0001]
 batch_size = 4
 img_format = "RGB"
 loss = 'softmax'
 
-momentum_list = [0.5]
+momentum_list = [0.9, 0.99]
 
-weight_decay_list = [0.0005]  # , 0.00005]
+weight_decay_list = [0.0005, 0.00005]
 
 stepsize = 7000
 gamma = 0.1
-size_x = 224
-size_y = 224
+size_x = 212
+size_y = 212
 
 hw = "gpu"
 
