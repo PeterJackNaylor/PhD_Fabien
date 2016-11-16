@@ -53,11 +53,9 @@ def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2, c3):
                                param=[dict(lr_mult=1)])
     n.__setattr__(c2, upscore2)
 
-    score_pool4 = Conv(n.pool4, nout=2, ks=1, pad=0)
+    n.score_pool4 = Conv(n.pool4, nout=2, ks=1, pad=0)
 
-    n.__setattr__(c3, score_pool4)
-
-    n.score_pool4c = crop(score_pool4, upscore2)
+    n.score_pool4c = crop(n.score_pool4, upscore2)
     n.fuse_pool4 = L.Eltwise(upscore2, n.score_pool4c,
                              operation=P.Eltwise.SUM)
     n.upscore_pool4 = L.Deconvolution(n.fuse_pool4,
