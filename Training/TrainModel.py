@@ -49,7 +49,7 @@ def TrainModel(options):
                     weight = options.weight
                 else:
                     weight = os.path.join(
-                        options.wd, options.cn, fcn_num, "temp_files", 'weights.{}_{}.caffemodel'.format(fcn_num, num))
+                        options.wd, options.cn, before, "temp_files", 'weights.{}_{}.caffemodel'.format(before, num))
                 path_ = os.path.join(wd, cn, fcn_num)
                 CheckOrCreate(path_)
                 solver_path = os.path.join(path_, "solver.prototxt")
