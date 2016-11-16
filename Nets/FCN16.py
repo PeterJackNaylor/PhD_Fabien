@@ -51,6 +51,7 @@ def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1):
                                                         bias_term=False),
                                  weight_filler=dict(type='bilinear'),
                                  param=[dict(lr_mult=1)])
+    n.__setattr__(c2, upscore2)
 
     n.score_pool4 = Conv(n.pool4, nout=2, ks=1, pad=0)
 
@@ -72,7 +73,7 @@ def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1):
     return n.to_proto()
 
 
-def make_net(options, c1="score_fr"):
+def make_net(options, c1="score_fr_32", c2="upscore_16"):
     dgtrain = options.dgtrain
     dgtest = options.dgtest
     cn = options.cn
