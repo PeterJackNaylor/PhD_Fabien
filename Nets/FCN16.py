@@ -5,7 +5,7 @@ from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
 
-def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1):
+def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
     n = caffe.NetSpec()
     if not Weight:
         n.data, n.label = DataLayer(split, data_gene, batch_size, cn, Weight)
@@ -83,7 +83,7 @@ def make_net(options, c1="score_fr_32", c2="upscore_16"):
     wd = options.wd_16
 
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(fcn16('train', dgtrain, loss, bs, wgt, cn, c1)))
+        f.write(str(fcn16('train', dgtrain, loss, bs, wgt, cn, c1, c2)))
 
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(fcn16('test', dgtest, loss, 1, False, cn, c1)))
+        f.write(str(fcn16('test', dgtest, loss, 1, False, cn, c1, c2)))
