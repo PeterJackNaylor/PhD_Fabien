@@ -63,7 +63,7 @@ def fcn32(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
     return n.to_proto()
 
 
-def make_net(options, c1="score_fr", c2="upscore"):
+def make_net(options, c1="score_fr2", c2="upscore2"):
     dgtrain = options.dgtrain
     dgtest = options.dgtest
     cn = options.cn

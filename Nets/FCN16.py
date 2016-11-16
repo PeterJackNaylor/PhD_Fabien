@@ -72,7 +72,7 @@ def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1):
     return n.to_proto()
 
 
-def make_net(options, c1="score_fr"):
+def make_net(options, c1="score_fr2"):
     dgtrain = options.dgtrain
     dgtest = options.dgtest
     cn = options.cn
