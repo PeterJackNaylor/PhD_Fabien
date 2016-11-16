@@ -85,7 +85,7 @@ def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2, c3):
     return n.to_proto()
 
 
-def make_net(options, c1="score_fr2", c2="upscore2", c3="score_pool4_2"):
+def make_net(options, c1="score_fr_32", c2="upscore_16"):
     dgtrain = options.dgtrain
     dgtest = options.dgtest
     cn = options.cn
