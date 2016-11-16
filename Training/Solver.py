@@ -138,7 +138,4 @@ def run_solvers_IU(niter, solvers, res_fold, disp_interval, number_of_test, num)
         filename = 'weights.{}_{}.caffemodel'.format(name, num)
         weights[name] = os.path.join(weight_dir, filename)
         s.net.save(weights[name])
-	for i in range(10):
-	    print "###################################################"
-	    print weights[name]
     return Results, Results_train, weights
