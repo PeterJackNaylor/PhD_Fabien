@@ -46,7 +46,7 @@ def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
     score_fr = Conv(n.drop7, nout=2, ks=1, pad=0)
     n.__setattr__(c1, score_fr)
 
-    n.upscore2 = L.Deconvolution(score_fr,
+    upscore2 = L.Deconvolution(score_fr,
                                  convolution_param=dict(num_output=2, kernel_size=4, stride=2,
                                                         bias_term=False),
                                  weight_filler=dict(type='bilinear'),
@@ -55,8 +55,8 @@ def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
 
     n.score_pool4 = Conv(n.pool4, nout=2, ks=1, pad=0)
 
-    n.score_pool4c = crop(n.score_pool4, n.upscore2)
-    n.fuse_pool4 = L.Eltwise(n.upscore2, n.score_pool4c,
+    n.score_pool4c = crop(n.score_pool4, upscore2)
+    n.fuse_pool4 = L.Eltwise(upscore2, n.score_pool4c,
                              operation=P.Eltwise.SUM)
     n.upscore16 = L.Deconvolution(n.fuse_pool4,
                                   convolution_param=dict(num_output=2, kernel_size=32, stride=16,
