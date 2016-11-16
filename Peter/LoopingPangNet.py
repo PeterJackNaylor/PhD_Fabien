@@ -3,14 +3,14 @@ import subprocess
 net = 'PangNet'
 raw_data = "/home/pnaylor/Documents/Data/ToAnnotate"
 wd = "/home/pnaylor/Documents/Experiences/PangNet"
-niter = 30000
-disp_interval = 1000
+niter = 10000
+disp_interval = 100
 leaveout = 1
 crop = 4
 
 
-base_lr_list = [1000, 100, 10, 1, 0.01, 0.001, 0.0001]
-batch_size = 4
+base_lr_list = [100, 10, 1, 0.01, 0.001]
+batch_size = 20
 img_format = "RGB"
 loss = 'softmax'
 
