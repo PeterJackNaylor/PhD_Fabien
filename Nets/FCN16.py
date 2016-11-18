@@ -5,7 +5,7 @@ from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
 
-def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1):
+def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
     n = caffe.NetSpec()
     if not Weight:
         n.data, n.label = DataLayer(split, data_gene, batch_size, cn, Weight)
@@ -46,16 +46,17 @@ def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1):
     score_fr = Conv(n.drop7, nout=2, ks=1, pad=0)
     n.__setattr__(c1, score_fr)
 
-    n.upscore2 = L.Deconvolution(score_fr,
+    upscore2 = L.Deconvolution(score_fr,
                                  convolution_param=dict(num_output=2, kernel_size=4, stride=2,
                                                         bias_term=False),
                                  weight_filler=dict(type='bilinear'),
                                  param=[dict(lr_mult=1)])
+    n.__setattr__(c2, upscore2)
 
     n.score_pool4 = Conv(n.pool4, nout=2, ks=1, pad=0)
 
-    n.score_pool4c = crop(n.score_pool4, n.upscore2)
-    n.fuse_pool4 = L.Eltwise(n.upscore2, n.score_pool4c,
+    n.score_pool4c = crop(n.score_pool4, upscore2)
+    n.fuse_pool4 = L.Eltwise(upscore2, n.score_pool4c,
                              operation=P.Eltwise.SUM)
     n.upscore16 = L.Deconvolution(n.fuse_pool4,
                                   convolution_param=dict(num_output=2, kernel_size=32, stride=16,
@@ -72,7 +73,7 @@ def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1):
     return n.to_proto()
 
 
-def make_net(options, c1="score_fr"):
+def make_net(options, c1="score_fr_32", c2="upscore_16"):
     dgtrain = options.dgtrain
     dgtest = options.dgtest
     cn = options.cn
@@ -82,7 +83,7 @@ def make_net(options, c1="score_fr"):
     wd = options.wd_16
 
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(fcn16('train', dgtrain, loss, bs, wgt, cn, c1)))
+        f.write(str(fcn16('train', dgtrain, loss, bs, wgt, cn, c1, c2)))
 
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(fcn16('test', dgtest, loss, 1, False, cn, c1)))
+        f.write(str(fcn16('test', dgtest, loss, 1, False, cn, c1, c2)))

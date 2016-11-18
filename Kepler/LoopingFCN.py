@@ -4,20 +4,20 @@ net = 'FCN'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
 wd = "/data/users/pnaylor/Documents/Python/Experiences2"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel"
-niter = 300
-disp_interval = 100
+niter = 10000
+disp_interval = 1000
 leaveout = 1
 crop = 4
 
-base_lr_list = [0.01]  # , 0.001, 0.0001]
+base_lr_list = [0.001]  # , 0.001, 0.0001]
 
 batch_size = 1
 img_format = "RGB"
 loss = 'softmax'
 
-momentum_list = [0.9]  # , 0.99]
+momentum_list = [0.99]  # , 0.99]
 
-weight_decay_list = [0.005]  # , 0.0005]
+weight_decay_list = [0.0005]  # , 0.0005]
 
 stepsize = 7000
 gamma = 0.1

@@ -5,7 +5,7 @@ from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
 
-def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2, c3):
+def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
     n = caffe.NetSpec()
     if not Weight:
         n.data, n.label = DataLayer(split, data_gene, batch_size, cn, Weight)
@@ -53,11 +53,9 @@ def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2, c3):
                                param=[dict(lr_mult=1)])
     n.__setattr__(c2, upscore2)
 
-    score_pool4 = Conv(n.pool4, nout=2, ks=1, pad=0)
+    n.score_pool4 = Conv(n.pool4, nout=2, ks=1, pad=0)
 
-    n.__setattr__(c3, score_pool4)
-
-    n.score_pool4c = crop(score_pool4, upscore2)
+    n.score_pool4c = crop(n.score_pool4, upscore2)
     n.fuse_pool4 = L.Eltwise(upscore2, n.score_pool4c,
                              operation=P.Eltwise.SUM)
     n.upscore_pool4 = L.Deconvolution(n.fuse_pool4,
@@ -85,7 +83,7 @@ def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2, c3):
     return n.to_proto()
 
 
-def make_net(options, c1="score_fr", c2="upscore", c3="score_pool4"):
+def make_net(options, c1="score_fr_32", c2="upscore_16"):
     dgtrain = options.dgtrain
     dgtest = options.dgtest
     cn = options.cn
@@ -95,7 +93,7 @@ def make_net(options, c1="score_fr", c2="upscore", c3="score_pool4"):
     wd = options.wd_8
 
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(fcn8('train', dgtrain, loss, bs, wgt, cn, c1, c2, c3)))
+        f.write(str(fcn8('train', dgtrain, loss, bs, wgt, cn, c1, c2)))
 
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(fcn8('test', dgtest, loss, 1, False, cn, c1, c2, c3)))
+        f.write(str(fcn8('test', dgtest, loss, 1, False, cn, c1, c2)))

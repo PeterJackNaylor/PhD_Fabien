@@ -4,7 +4,7 @@ import cPickle as pkl
 from Solver import solver, run_solvers_IU
 import numpy as np
 import caffe
-
+import pdb
 
 from UsefulFunctions.RandomUtils import CheckOrCreate
 
@@ -49,7 +49,7 @@ def TrainModel(options):
                     weight = options.weight
                 else:
                     weight = os.path.join(
-                        options.wd, options.cn, fcn_num, "temp_files", 'weights.{}_{}.caffemodel'.format(fcn_num, num))
+                        options.wd, options.cn, before, "temp_files", 'weights.{}_{}.caffemodel'.format(before, num))
                 path_ = os.path.join(wd, cn, fcn_num)
                 CheckOrCreate(path_)
                 solver_path = os.path.join(path_, "solver.prototxt")
@@ -62,7 +62,7 @@ def TrainModel(options):
 def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test, num):
     my_solver = caffe.get_solver(solver_path)
 
-    if weight is None:
+    if weight is not None:
         assert os.path.exists(weight)
         my_solver.net.copy_from(weight)
 
