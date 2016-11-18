@@ -5,6 +5,7 @@ import time
 import pdb
 import sys
 import os
+import cPickle as pkl
 
 
 def Preprocessing(image_RGB):
@@ -18,7 +19,7 @@ def Preprocessing(image_RGB):
 def SetPatient(num, folder, split="test"):
     print "Patient num : {}".format(num)
     datagen_str = os.path.join(
-        files, "model", "data_generator_{}.pkl".format(split))
+        folder, "model", "data_generator_{}.pkl".format(split))
     datagen = pkl.load(open(datagen_str, "rb"))
     datagen.SetPatient(num)
     disp = datagen.length
@@ -64,15 +65,15 @@ def Transformer(net):
     return transformer
 
 
-def Forward(net, img=None, transformer=None, layer=["score"]):
+def Forward(net, img=None, preprocess=True, layer=["score"]):
 
     if img is not None:
-        if transformer is None:
-            transformer = Transformer(net)
+        if preprocess:
+            transformed_image = Preprocessing(img)
 
-        transformed_image = transformer.preprocess('data', img)
+        transformed_image = img
 
-        net.blobs['data'].data[...] = transformed_image
+        net.blobs['data'].data[0] = transformed_image
         conv1_name = [el for el in net.blobs.keys() if "conv" in el][0]
         output = net.forward(layer, start=conv1_name)
 
@@ -117,7 +118,7 @@ def ProcessLoss(image_blob, method="binary"):
         maxint = sys.maxint - 100
         res = np.zeros(l1.shape[0] * l2.shape[1] * 2)
         res[0:(l1.shape[0] * l2.shape[1])] = l1.flatten()
-        res[(l1.shape[0] * l2.shape[1])            :(l1.shape[0] * l2.shape[1] * 2)] = l2.flatten()
+        res[(l1.shape[0] * l2.shape[1]):(l1.shape[0] * l2.shape[1] * 2)] = l2.flatten()
         mu = np.mean(res)
         sig = np.std(res)
 

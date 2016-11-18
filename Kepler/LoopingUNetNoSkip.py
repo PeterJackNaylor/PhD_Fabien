@@ -11,7 +11,7 @@ crop = 4
 
 
 base_lr_list = [0.001]# [0.01, 0.001, 0.0001]
-batch_size = 4
+batch_size = 1
 img_format = "RGB"
 loss = 'softmax'
 
