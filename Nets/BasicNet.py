@@ -96,7 +96,7 @@ def DeconvReConvReConvRe(bottom1, val, deconv_out=None):
     if deconv_out is None:
         deconv_out = val
 
-    deconv = Deconv(bottom1, deconv_out, 1, 2, 2,
+    deconv = Deconv(bottom1, deconv_out, 0, 2, 2,
                     xavier, Constant_fil)
     relu1 = Relu(deconv)
     conv2, relu2 = ConvRelu(relu1, val, pad=0)
@@ -109,7 +109,7 @@ def DeconvReCropConcatConvReConvRe(bottom1, bridge2, val, deconv_out=None):
     if deconv_out is None:
         deconv_out = val
 
-    deconv = Deconv(bottom1, deconv_out, 1, 2, 2,
+    deconv = Deconv(bottom1, deconv_out, 0, 2, 2,
                     xavier, Constant_fil)
     relu1 = Relu(deconv)
     croped = crop(bridge2, relu1)
