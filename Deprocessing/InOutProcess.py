@@ -4,6 +4,7 @@ from optparse import OptionParser
 import time
 import pdb
 import sys
+import os
 
 
 def Preprocessing(image_RGB):
