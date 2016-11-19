@@ -118,6 +118,10 @@ class DataGen(object):
         else:
             img_lbl_Mwgt = (img, lbl)
 
+        if len_key > 2:
+            f = self.transforms[key[2]]
+            img_lbl_Mwgt = f._apply_(*img_lbl_Mwgt)  # change _apply_
+
         i = 0
         if len_key == 4:
             for sub_el in self.DivideImage(*img_lbl_Mwgt):
@@ -126,12 +130,8 @@ class DataGen(object):
                     break
                 else:
                     i += 1
-        if len_key > 2:
-            f = self.transforms[key[2]]
-            img_lbl_Mwgt = f._apply_(*img_lbl_Mwgt)  # change _apply_
 
         if self.random_crop:
-
             img_lbl_Mwgt = self.CropImgLbl(*img_lbl_Mwgt)
         if self.Weight:
             if 0 in img_lbl_Mwgt[2]:
@@ -215,7 +215,7 @@ class DataGen(object):
         image = ni.load(path)
         img = image.get_data()
         if len(img.shape) == 3:
-            img = img[:,:,0].transpose()
+            img = img[:, :, 0].transpose()
         else:
             img = img.transpose()
         return img

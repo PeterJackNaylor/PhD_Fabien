@@ -4,14 +4,27 @@ from optparse import OptionParser
 import time
 import pdb
 import sys
+import os
+import cPickle as pkl
 
 
-def Preprocessing(image_RGB):  
+def Preprocessing(image_RGB):
     in_ = np.array(image_RGB, dtype=np.float32)
     in_ = in_[:, :, ::-1]
     in_ -= np.array([104.00698793, 116.66876762, 122.67891434])
     in_ = in_.transpose((2, 0, 1))
     return in_
+
+
+def SetPatient(num, folder, split="test"):
+    print "Patient num : {}".format(num)
+    datagen_str = os.path.join(
+        folder, "model", "data_generator_{}.pkl".format(split))
+    datagen = pkl.load(open(datagen_str, "rb"))
+    datagen.SetPatient(num)
+    disp = datagen.length
+    pkl.dump(datagen, open(datagen_str, "wb"))
+    return disp
 
 
 def Deprocessing4Visualisation(image_blob):
@@ -38,6 +51,7 @@ def Net(model_def, weights, data_batch_size, n_c=3, height=224, width=224):
     net.blobs['data'].reshape(data_batch_size, n_c, height, width)
     return net
 
+
 def Transformer(net):
 
     mu = np.array([104.00698793, 116.66876762, 122.67891434])
@@ -51,26 +65,31 @@ def Transformer(net):
     return transformer
 
 
-def Forward(net, img, transformer = None, layer="score"):
+def Forward(net, img=None, preprocess=True, layer=["score"]):
 
-    if transformer is None:
-        transformer = Transformer(net)
+    if img is not None:
+        if preprocess:
+            transformed_image = Preprocessing(img)
 
-    transformed_image = transformer.preprocess('data', img)
+        transformed_image = img
 
-    net.blobs['data'].data[...] = transformed_image
-    output = net.forward()
+        net.blobs['data'].data[0] = transformed_image
+        conv1_name = [el for el in net.blobs.keys() if "conv" in el][0]
+        output = net.forward(layer, start=conv1_name)
 
-    score = output[layer]
+    else:
+        output = net.forward(layer)
 
-    return score
+    return output
+
 
 def ProcessLoss(image_blob, method="binary"):
 
     if method == "binary":
-        
+
         classed = np.argmax(image_blob[0, :, :, :], axis=0)
         scores = np.unique(classed)
+
         def rescore(c):
             """ rescore values from original score values (0-59) to values ranging from 0 to num_scores-1 """
             return np.where(scores == c)[0][0]
@@ -78,7 +97,7 @@ def ProcessLoss(image_blob, method="binary"):
 
         painted = rescore(classed)
         return painted
-    
+
     elif method == "softmax":
 
         l1 = image_blob[0, 0, :, :]
@@ -87,7 +106,7 @@ def ProcessLoss(image_blob, method="binary"):
         return 1 / (1 + mat)
 
     elif method == "log":
-        
+
         min_to_add = min(np.min(l1), np.min(l2))
         test1 = (l1 + min_to_add + 1).astype(np.dtype('float64'))
         test2 = (l2 + min_to_add + 1).astype(np.dtype('float64'))
@@ -95,21 +114,17 @@ def ProcessLoss(image_blob, method="binary"):
         return mat
 
     elif method == "normalize":
-        
+
         maxint = sys.maxint - 100
         res = np.zeros(l1.shape[0] * l2.shape[1] * 2)
         res[0:(l1.shape[0] * l2.shape[1])] = l1.flatten()
-        res[(l1.shape[0] * l2.shape[1])            :(l1.shape[0] * l2.shape[1] * 2)] = l2.flatten()
+        res[(l1.shape[0] * l2.shape[1]):(l1.shape[0] * l2.shape[1] * 2)] = l2.flatten()
         mu = np.mean(res)
         sig = np.std(res)
 
         mat = np.exp((l2 - mu) / sig - (l1 - mu) / sig)
         mat[mat > maxint] = maxint
         return 1 / (1 + mat)
-
-
-
-
 
 
 if __name__ == "__main__":
@@ -138,7 +153,6 @@ if __name__ == "__main__":
     print "Weight file (init): | " + options.weight
     print "Model definition  : | " + options.model_def
     start_time = time.time()
-
 
     print 'Done.'
 

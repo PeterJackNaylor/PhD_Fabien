@@ -100,22 +100,21 @@ class Transf(object):
     def SetFlag(self, i):
         if i == 0:
             return cv2.INTER_LINEAR
-        elif i ==1:
+        elif i == 1:
             return cv2.INTER_NEAREST
         elif i == 2:
             return cv2.INTER_LINEAR
 
     def OutputType(self, image):
         # pdb.set_trace()
-        if np.max(image) > 1:
-            try:
-                image.dtype = np.uint8
-            except:
-                image = image.astype('uint8')
+        if image.dtype == "uint8":
             return image
+        elif image.dtype == "uint16":
+            cvuint8 = cv2.convertScaleAbs(image)
+            return cvuint8
         else:
-            img = img_as_ubyte(image)
-        return img
+            image = img_as_ubyte(image)
+            return image
 
 
 class Identity(Transf):
@@ -160,7 +159,7 @@ class Translation(Transf):
         rev_y = self.params['rev_y']
         enlarge = self.params['enlarge']
         res = ()
-        n_img = 0 
+        n_img = 0
         for img in image:
             flags = self.SetFlag(n_img)
             if enlarge:
@@ -170,8 +169,9 @@ class Translation(Transf):
             else:
                 M = np.float32([[1, 0, (x * rev_x * -1)],
                                 [0, 1, (y * rev_y * -1)]])
-                res += (self.OutputType(cv2.warpAffine(image, M, (cols, rows)), flags=flags), )
-            n_img += 1 
+                res += (self.OutputType(cv2.warpAffine(image,
+                                                       M, (cols, rows)), flags=flags), )
+            n_img += 1
             return res
 
 
@@ -187,9 +187,9 @@ class Rotation(Transf):
         deg = self.params['deg']
         enlarge = self.params['enlarge']
         res = ()
-        n_img = 0 
+        n_img = 0
         for img in image:
-            rows, cols= img.shape[0], img.shape[1]
+            rows, cols = img.shape[0], img.shape[1]
             flags = self.SetFlag(n_img)
             if enlarge:
                 # this part could be better adjusted
@@ -199,16 +199,16 @@ class Rotation(Transf):
                 z = max(x, y)
                 big_image = self.enlarge(img, z, z)
 
-                b_rows, b_cols= big_image.shape[0], big_image.shape[1]
+                b_rows, b_cols = big_image.shape[0], big_image.shape[1]
                 M = cv2.getRotationMatrix2D((b_cols / 2, b_rows / 2), deg, 1)
-
                 dst = cv2.warpAffine(big_image, M, (b_cols, b_rows), flags=flags)
+
                 res += (self.OutputType(dst[z:(z + rows), z:(z + cols)]), )
             else:
                 M = cv2.getRotationMatrix2D((cols / 2, rows / 2), deg, 1)
                 sub_res = cv2.warpAffine(img, M, (cols, rows), flags=flags)
                 res += (self.OutputType(sub_res),)
-            n_img += 1 
+            n_img += 1
 
         return res
 
@@ -233,14 +233,6 @@ class Flip(Transf):
 
             res += (self.OutputType(sub_res),)
         return res
-
-    def OutputType(self, img):
-        if len(np.unique(img)) == 1:
-            img = img_as_ubyte(img)
-            img[img == 255] = 1
-        else:
-            img.dtype = np.uint8
-        return img
 
 
 class OutOfFocus(Transf):
@@ -268,10 +260,11 @@ class OutOfFocus(Transf):
 
 class ElasticDeformation(Transf):
 
-    def __init__(self, mu, sigma, num_points, seed=None):
-        Transf.__init__(self, "ElasticDeform_" + str(mu) +
-                        "_" + str(sigma) + "_" + str(num_points))
-        self.params = {"mu": mu, "sigma": sigma, "num_points": num_points, "alpha": mu, "alpha_affine":num_points}
+    def __init__(self, alpha, sigma, alpha_affine, seed=None):
+        Transf.__init__(self, "ElasticDeform_" + str(alpha) +
+                        "_" + str(sigma) + "_" + str(alpha_affine))
+        self.params = {"sigma": sigma,
+                       "alpha": alpha, "alpha_affine": alpha_affine}
 
         self.seed = seed
 
@@ -298,40 +291,43 @@ class ElasticDeformation(Transf):
                 square_size = min(shape_size) // 3
                 random_state = np.random.RandomState(None)
 
-                pts1 = np.float32([center_square + square_size, [center_square[0]+square_size, center_square[1]-square_size], center_square - square_size])
-                pts2 = pts1 + random_state.uniform(-alpha_affine, alpha_affine, size=pts1.shape).astype(np.float32)
+                pts1 = np.float32([center_square + square_size, [center_square[
+                                  0] + square_size, center_square[1] - square_size], center_square - square_size])
+                pts2 = pts1 + \
+                    random_state.uniform(-alpha_affine, alpha_affine,
+                                         size=pts1.shape).astype(np.float32)
                 self.M = cv2.getAffineTransform(pts1, pts2)
-                self.dx = gaussian_filter((random_state.rand(*shape) * 2 - 1), sigma) * alpha
-                self.dy = gaussian_filter((random_state.rand(*shape) * 2 - 1), sigma) * alpha
-                #self.dz = np.zeros_like(self.dx)
+                self.dx = gaussian_filter(
+                    (random_state.rand(*shape) * 2 - 1), sigma) * alpha
+                self.dy = gaussian_filter(
+                    (random_state.rand(*shape) * 2 - 1), sigma) * alpha
+                # self.dz = np.zeros_like(self.dx)
+
             if len(shape) == 3:
-                x, y, z = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]), np.arange(shape[2]))
-                indices = np.reshape(y+self.dy, (-1, 1)), np.reshape(x+self.dx, (-1, 1)), np.reshape(z, (-1, 1))
-            elif len(shape)==2:
-                x, y = np.meshgrid(np.arange(shape[0]), np.arange(shape[1]), indexing='ij')
-                indices = np.reshape(x+self.dx[:,:,0], (-1, 1)), np.reshape(y+self.dy[:,:,0], (-1, 1))
+                x, y, z = np.meshgrid(np.arange(shape[1]), np.arange(
+                    shape[0]), np.arange(shape[2]), indexing='ij')
+                indices = np.reshape(
+                    x + self.dx, (-1, 1)), np.reshape(y + self.dy, (-1, 1)), np.reshape(z, (-1, 1))
+            elif len(shape) == 2:
+                x, y = np.meshgrid(np.arange(shape[1]), np.arange(
+                    shape[0]), indexing='ij')
+                indices = np.reshape(
+                    x + np.mean(self.dx, axis=2), (-1, 1)), np.reshape(y + np.mean(self.dy, axis=2), (-1, 1))
             else:
                 print "Error"
-            pdb.set_trace()
-            img =  cv2.warpAffine(img, self.M, shape_size[::-1], borderMode=cv2.BORDER_REFLECT_101)
+
             if n_img == 1:
                 order = 0
+                flags = cv2.INTER_NEAREST
             else:
                 order = 1
-            sub_res =  map_coordinates(img, indices, order=order, mode='reflect').reshape(shape)
+                flags = cv2.INTER_LINEAR
+            img = cv2.warpAffine(img, self.M, shape_size[
+                                 ::-1], flags=flags, borderMode=cv2.BORDER_REFLECT_101)
+
+            sub_res = map_coordinates(
+                img, indices, order=order, mode='reflect').reshape(shape)
             sub_res = self.OutputType(sub_res)
             res += (sub_res,)
             n_img += 1
         return res
-
-
-    def OutputType(self, image):
-        if len(image.shape) == 2:
-            image.dtype = 'uint8'
-            return image
-        elif image.shape[2] == 1:
-            image.dtype = 'uint8'
-            return image
-        else:
-            img = img_as_ubyte(image)
-            return img

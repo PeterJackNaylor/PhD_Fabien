@@ -4,8 +4,8 @@ net = 'FCN'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
 wd = "/data/users/pnaylor/Documents/Python/Experiences2"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel"
-niter = 500
-disp_interval = 100
+niter = 10000
+disp_interval = 1000
 leaveout = 1
 crop = 4
 
