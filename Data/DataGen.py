@@ -214,13 +214,11 @@ class DataGen(object):
     def LoadGT(self, path, normalize=True):
         image = ni.load(path)
         img = image.get_data()
-        new_img = np.zeros(shape=(img.shape[1], img.shape[0], 1))
-        try:
-            new_img[:, :, 0] = img[:, :, 0].transpose()
-        except:
-            new_img[:, :, 0] = img[:, :].transpose()
-        new_img = new_img.astype("uint8")
-        return new_img
+        if len(img.shape) == 3:
+            img = img[:,:,0].transpose()
+        else:
+            img = img.transpose()
+        return img
 
     def LoadImage(self, path):
         if not hasattr(self, "img_format"):
