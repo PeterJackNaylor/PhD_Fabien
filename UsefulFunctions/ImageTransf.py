@@ -201,9 +201,8 @@ class Rotation(Transf):
 
                 b_rows, b_cols = big_image.shape[0], big_image.shape[1]
                 M = cv2.getRotationMatrix2D((b_cols / 2, b_rows / 2), deg, 1)
+                dst = cv2.warpAffine(big_image, M, (b_cols, b_rows), flags=flags)
 
-                dst = cv2.warpAffine(
-                    big_image, M, (b_cols, b_rows), flags=flags)
                 res += (self.OutputType(dst[z:(z + rows), z:(z + cols)]), )
             else:
                 M = cv2.getRotationMatrix2D((cols / 2, rows / 2), deg, 1)
