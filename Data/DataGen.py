@@ -118,6 +118,10 @@ class DataGen(object):
         else:
             img_lbl_Mwgt = (img, lbl)
 
+        if len_key > 2:
+            f = self.transforms[key[2]]
+            img_lbl_Mwgt = f._apply_(*img_lbl_Mwgt)  # change _apply_
+
         i = 0
         if len_key == 4:
             for sub_el in self.DivideImage(*img_lbl_Mwgt):
@@ -126,12 +130,8 @@ class DataGen(object):
                     break
                 else:
                     i += 1
-        if len_key > 2:
-            f = self.transforms[key[2]]
-            img_lbl_Mwgt = f._apply_(*img_lbl_Mwgt)  # change _apply_
 
         if self.random_crop:
-
             img_lbl_Mwgt = self.CropImgLbl(*img_lbl_Mwgt)
         if self.Weight:
             if 0 in img_lbl_Mwgt[2]:
@@ -214,13 +214,11 @@ class DataGen(object):
     def LoadGT(self, path, normalize=True):
         image = ni.load(path)
         img = image.get_data()
-        new_img = np.zeros(shape=(img.shape[1], img.shape[0], 1))
-        try:
-            new_img[:, :, 0] = img[:, :, 0].transpose()
-        except:
-            new_img[:, :, 0] = img[:, :].transpose()
-        new_img = new_img.astype("uint8")
-        return new_img
+        if len(img.shape) == 3:
+            img = img[:, :, 0].transpose()
+        else:
+            img = img.transpose()
+        return img
 
     def LoadImage(self, path):
         if not hasattr(self, "img_format"):
