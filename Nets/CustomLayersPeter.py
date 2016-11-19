@@ -129,8 +129,6 @@ class DataLayer(caffe.Layer):
             img = img.transpose((2, 0, 1))
         else:
             img = img[np.newaxis, ...]
-        if len(img.shape) == 4:
-            img = img[:, :, :, 0]
         return img
 
     def loadImageAndGT(self, key):

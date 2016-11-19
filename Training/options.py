@@ -177,7 +177,7 @@ def GetOptions(verbose=True):
         transform_list.append(Transf.OutOfFocus(sig))
 
     for i in range(50):
-        transform_list.append(Transf.ElasticDeformation(0, 12, num_points=4))
+        transform_list.append(Transf.ElasticDeformation(1.2, 24. / 512, 0.07))
 
     options.transform_list = transform_list
 
