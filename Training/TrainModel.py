@@ -7,7 +7,7 @@ import caffe
 import pdb
 
 from UsefulFunctions.RandomUtils import CheckOrCreate
-
+from UsefulFunctions.EmailSys import ElaborateEmail
 
 def TrainModel(options):
     wd = options.wd
@@ -25,38 +25,43 @@ def TrainModel(options):
         caffe.set_mode_gpu()
 
     for num in patients:
-        datagen_test = pkl.load(open(dgtest, "rb"))
-        datagen_train = pkl.load(open(dgtrain, "rb"))
-        datagen_train.SetPatient(num)
-        datagen_test.SetPatient(num)
-        number_of_test = datagen_test.length
-        pkl.dump(datagen_train, open(dgtrain, "w"))
-        pkl.dump(datagen_test, open(dgtest, "w"))
+        try:
+            datagen_test = pkl.load(open(dgtest, "rb"))
+            datagen_train = pkl.load(open(dgtrain, "rb"))
+            datagen_train.SetPatient(num)
+            datagen_test.SetPatient(num)
+            number_of_test = datagen_test.length
+            pkl.dump(datagen_train, open(dgtrain, "w"))
+            pkl.dump(datagen_test, open(dgtest, "w"))
 
-        if options.epoch is not None:
-            niter = options.epoch * number_of_test / options.batch_size
+            if options.epoch is not None:
+                niter = options.epoch * number_of_test / options.batch_size
 
-        if options.net != "FCN":
-            weight = options.weight
-            solver_path = os.path.join(path_, "solver.prototxt")
-            train(solver_path, weight, wd, cn, niter,
-                  disp_interval, number_of_test, num)
-        else:
-            before = None
-            for i in options.archi:
-                fcn_num = "FCN{}".format(i)
-                if before is None:
-                    weight = options.weight
-                else:
-                    weight = os.path.join(
-                        options.wd, options.cn, before, "temp_files", 'weights.{}_{}.caffemodel'.format(before, num))
-                path_ = os.path.join(wd, cn, fcn_num)
-                CheckOrCreate(path_)
+            if options.net != "FCN":
+                weight = options.weight
                 solver_path = os.path.join(path_, "solver.prototxt")
-                cn_fcn = os.path.join(cn, fcn_num)
-                train(solver_path, weight, wd, cn_fcn, niter,
+                train(solver_path, weight, wd, cn, niter,
                       disp_interval, number_of_test, num)
-                before = fcn_num
+            else:
+                before = None
+                for i in options.archi:
+                    fcn_num = "FCN{}".format(i)
+                    if before is None:
+                        weight = options.weight
+                    else:
+                        weight = os.path.join(
+                            options.wd, options.cn, before, "temp_files", 'weights.{}_{}.caffemodel'.format(before, num))
+                    path_ = os.path.join(wd, cn, fcn_num)
+                    CheckOrCreate(path_)
+                    solver_path = os.path.join(path_, "solver.prototxt")
+                    cn_fcn = os.path.join(cn, fcn_num)
+                    train(solver_path, weight, wd, cn_fcn, niter,
+                          disp_interval, number_of_test, num)
+                    before = fcn_num
+        except Exception, e:
+            config = "PATIENT: {} \n \n "+ str(options) + " \n \n" + str(e)
+
+            ElaborateEmail(config, "Error patient {}".format(num))
 
 
 def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test, num):

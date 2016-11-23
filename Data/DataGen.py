@@ -169,9 +169,13 @@ class DataGen(object):
             self.patients_iter = test_patient
         self.SetRandomList()
 
+    def SetPath(self, path):
+        self.path = path
+        self.get_patients(path)
+
     def get_patients(self, path):
         # pdb.set_trace()
-        folders = glob.glob(path + "/Slide_*")
+        folders = glob.glob(self.path + "/Slide_*")
         patient_num = []
         for el in folders:
             patient_num.append(el.split("_")[-1].split('.')[0])
