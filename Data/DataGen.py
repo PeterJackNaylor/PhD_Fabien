@@ -169,7 +169,7 @@ class DataGen(object):
             self.patients_iter = test_patient
         self.SetRandomList()
 
-    def SetPath(path):
+    def SetPath(self, path):
         self.path = path
         self.get_patients(path)
 
