@@ -31,6 +31,7 @@ def MakeDataGen(options):
     img_format = options.img_format
     seed = options.seed
     Unet = options.net == "UNet"
+    wgt_param = options.wgt_param
 
     transform_list = options.transform_list
 
@@ -38,14 +39,16 @@ def MakeDataGen(options):
                                    transforms=transform_list, split="train",
                                    leave_out=leaveout, seed=seed,
                                    img_format=img_format, Weight=Weight,
-                                   WeightOnes=WeightOnes, Unet=Unet)
+                                   WeightOnes=WeightOnes, wgt_param=wgt_param,
+                                   Unet=Unet)
     pkl.dump(data_generator_train, open(dgtrain, "wb"))
 
     data_generator_test = DataGen(rawdata, crop=crop, size=crop_size,
                                   transforms=[Identity()], split="test",
                                   leave_out=leaveout, seed=seed,
                                   img_format=img_format, Weight=Weight,
-                                  WeightOnes=WeightOnes, Unet=Unet)
+                                  WeightOnes=WeightOnes, wgt_param=wgt_param,
+                                  Unet=Unet)
     pkl.dump(data_generator_test, open(dgtest, "wb"))
 
 

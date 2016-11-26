@@ -70,6 +70,16 @@ def GetOptions(verbose=True):
     parser.add_option('--skip', dest="skip", default="", type="string",
                       help=" Which layers to skip, give 1234 or 123, 13, 12, 1 etc .")
 
+# arguments if options.loss == weight
+    parser.add_option('--w_0', dest="w_0", default=10, type="int",
+                      help="parameter for the weighted loss map")
+    parser.add_option('--val_b', dest="val_b", default=1, type="int",
+                      help="background class weight")
+    parser.add_option('--val_n', dest="val_n", default=5, type="int",
+                      help="nuclei class weight")
+    parser.add_option('--sig_WGT', dest="sig_WGT", default=5, type='int',
+                      help="sigma for the weighted pixel map")
+
     (options, args) = parser.parse_args()
 
     print "Input paramters to run:"
@@ -178,5 +188,8 @@ def GetOptions(verbose=True):
         transform_list.append(Transf.ElasticDeformation(1.2, 24. / 512, 0.07))
 
     options.transform_list = transform_list
+
+    options.wgt_param = (options.w_0, options.val_b,
+                         options.val_n, options.sig_WGT)
 
     return (options, args)
