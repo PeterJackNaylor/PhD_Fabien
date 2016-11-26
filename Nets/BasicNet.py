@@ -154,3 +154,9 @@ def LossLayer(score, label, loss, weight=None):
         losslayer = L.WeightedSoftmaxLoss(score, label, weight,
                                           loss_param=dict(normalize=False))
     return losslayer
+
+def CRF_modules(score, data, label, method = "softmax"):
+    unary, Q0 = L.Split(score)
+    pred = L.MultiStageMeanfield(unary, Q0, data)
+    loss = LossLayer(pred, label, method)
+    return unary, Q0, pred, loss

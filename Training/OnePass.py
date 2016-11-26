@@ -4,6 +4,7 @@ import caffe
 create_dataset = True
 create_net = True
 create_solver = True
+email = True
 train = True
 
 
@@ -43,3 +44,8 @@ if __name__ == "__main__":
     if train:
         from TrainModel import TrainModel
         TrainModel(options)
+
+    if email:
+        from UsefulFunctions.EmailSys import ElaborateEmail
+        body = "We have just finished the training here. \n \n" + str(options)
+        subject = "Training finished"

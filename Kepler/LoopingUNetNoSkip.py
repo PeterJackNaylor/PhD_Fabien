@@ -1,4 +1,6 @@
 import subprocess
+from UsefulFunctions.EmailSys import ElaborateEmail
+from os import environ
 
 net = 'UNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
@@ -26,7 +28,7 @@ size_y = 212
 
 hw = "gpu"
 
-for base_lr in base_lr_list:
+for base_lr in base_lr_lits:
     for momentum in momentum_list:
         for weight_decay in weight_decay_list:
             cn = (net + '_{}_{}_{}').format(base_lr, momentum, weight_decay)
@@ -36,3 +38,7 @@ for base_lr in base_lr_list:
                 *arguments)
             proces = subprocess.Popen(cmd, shell=True)
             proces.wait()
+
+body = "The job on {} using node {} is now free".format(environ["HOSTNAME"],environ["CUDA_VISIBLE_DEVICES"])
+subject = "Free node"
+ElaborateEmail(body, subject)

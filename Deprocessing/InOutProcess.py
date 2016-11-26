@@ -66,14 +66,15 @@ def Transformer(net):
 
 
 def Forward(net, img=None, preprocess=True, layer=["score"]):
-
     if img is not None:
+        transformed_image = img
+        
         if preprocess:
             transformed_image = Preprocessing(img)
 
-        transformed_image = img
-
+        #output = net.forward() # useless line
         net.blobs['data'].data[0] = transformed_image
+        pdb.set_trace()
         conv1_name = [el for el in net.blobs.keys() if "conv" in el][0]
         output = net.forward(layer, start=conv1_name)
 
