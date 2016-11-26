@@ -5,10 +5,13 @@ import glob
 import numpy as np
 import random
 from random import shuffle
-
+import os
 from scipy import misc
 import nibabel as ni
+from UsefulFunctions.RandomUtils import CheckExistants, CheckFile
+
 from UsefulFunctions.ImageTransf import Identity, flip_vertical, flip_horizontal
+from UsefulFunctions.WeightMaps import ComputeWeightMap
 import copy
 import itertools
 
@@ -50,7 +53,8 @@ class DataGen(object):
 
     def __init__(self, path, crop=None, size=None, transforms=None,
                  split="train", leave_out=1, seed=None, name="optionnal",
-                 img_format="RGB", Weight=False, WeightOnes=False, Unet=False):
+                 img_format="RGB", Weight=False, WeightOnes=False,
+                 wgt_param=(5, 1, 3, 5), Unet=False):
 
         self.path = path
         self.name = name
@@ -64,6 +68,7 @@ class DataGen(object):
         self.img_format = img_format
         self.Weight = Weight
         self.WeightOnes = WeightOnes
+        self.wgt_param = wgt_param
         if size is not None:
             self.random_crop = True
             self.size = size
@@ -112,8 +117,11 @@ class DataGen(object):
         lbl = self.LoadGT(lbl_path)
 
         if self.Weight:
-            wgt_path = img_path.replace("Slide", "WeightMap")
+            wgt_dir = self.Weight_path()
+            wgt_path = os.path.join(wgt_dir, *img_path.split('/')[-2::])
+            wgt_path = wgt_path.replace("Slide", "WGT")
             wgt = self.LoadWeight(wgt_path)
+
             img_lbl_Mwgt = (img, lbl, wgt)
         else:
             img_lbl_Mwgt = (img, lbl)
@@ -143,6 +151,19 @@ class DataGen(object):
 
         return img_lbl_Mwgt
 
+    def Weight_path(self):
+
+        w_0 = self.wgt_param[0]
+        val = self.wgt_param[1:3]
+        sigma = self.wgt_param[3]
+        try:
+            self.wgt_dir = os.path.join(
+                self.path, "WEIGHTS", "{}_{}_{}_{}".format(*self.wgt_param))
+            CheckExistants(self.wgt_dir)
+        except:
+            self.wgt_dir = ComputeWeightMap(self.path, w_0, val, sigma)
+        return self.wgt_dir
+
     def SetPatient(self, num):
         # function for leave one out..
         test_patient = [num]
@@ -169,7 +190,7 @@ class DataGen(object):
             self.patients_iter = test_patient
         self.SetRandomList()
 
-    def SetPath(path):
+    def SetPath(self, path):
         self.path = path
         self.get_patients(path)
 
@@ -253,8 +274,6 @@ class DataGen(object):
 
     def LoadWeight(self, path):
         image = misc.imread(path)
-        if len(image.shape) == 2:
-            image = image[..., np.newaxis]
         if self.WeightOnes:
             image = np.ones_like(image)
         return image
@@ -485,20 +504,20 @@ if __name__ == "__main__":
     #from FCN_Segmentation.DataLayerPeter import DataGen
     from UsefulFunctions import ImageTransf as IT
     datagen = DataGen("/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/",
-                      transforms=[IT.Identity()], Weight=True, Unet=True)
-    datagen.ReLoad("train")
+                      transforms=[IT.Identity()], Weight=True, wgt_param=(5, 1, 3, 5))
+#    datagen.ReLoad("train")
     key = datagen.RandomKey(True)
     import matplotlib.pylab as plt
     import skimage.morphology as skm
-    nu = min(2, datagen.length)
-    fig, axes = plt.subplots(nu, 3, figsize=(16, 180),
-                             subplot_kw={'xticks': [], 'yticks': []})
+    nu = min(3, datagen.length)
+    fig, axes = plt.subplots(nu, 3, figsize=(16, 180))
     for i in range(nu):
         img, lbl, wgt = datagen[key]
         key = datagen.NextKey(key)
         axes[i, 0].imshow(img)
-        axes[i, 1].imshow(wgt[:, :, 0])
-        axes[i, 2].imshow(skm.label(lbl[:, :, 0]))
+        axes[i, 1].imshow(wgt)
+        axes[i, 2].imshow(skm.label(lbl))
+        # pdb.set_trace()
     plt.show()
 
 """    import glob
