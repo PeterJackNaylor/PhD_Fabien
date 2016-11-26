@@ -47,5 +47,5 @@ if __name__ == "__main__":
 
     if email:
         from UsefulFunctions.EmailSys import ElaborateEmail
-        body = "We have just finished here. \n \n" + str(options)
+        body = "We have just finished the training here. \n \n" + str(options)
         subject = "Training finished"

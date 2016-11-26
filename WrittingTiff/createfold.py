@@ -9,6 +9,11 @@ from skimage.morphology import dilation, erosion, disk
 import time
 import numpy as np
 from Deprocessing.Morphology import DynamicWatershedAlias
+import matplotlib.pylab as plt
+
+def plot(image):
+    plt.imshow(image)
+    plt.show()
 
 def ApplyToSlideWrite(slide, table, f, outputfilename=None):
         # Slide is a string of the location of the file
@@ -68,7 +73,7 @@ def ApplyToSlideWrite(slide, table, f, outputfilename=None):
         imsave("/home/pnaylor/Documents/temp_image/small_jpg/"+"{}_{}.jpg".format(table[i][0], table[i][1]), image)
     print "lets join the slides"
 #    rgb = red_part.bandjoin([green_part, blue_part])
-    rgb.write_to_file(outputfilename)
+#    rgb.write_to_file(outputfilename)
 
 
 def GetNet(cn, wd):
@@ -130,9 +135,10 @@ if __name__ == '__main__':
             erosion(segmentation_mask, disk(2))
 
         x, y = np.where(contours == 1)
-        image[x, y, 0] = 255
-        image[x, y, 1] = 255
-        image[x, y, 2] = 255
+        image[x, y, 0] = 0 
+        image[x, y, 1] = 0 
+        image[x, y, 2] = 0 
+
         return image
     start_time = time.time()
     ApplyToSlideWrite(slide_name, list_of_para,
@@ -146,3 +152,8 @@ if __name__ == '__main__':
     print "Average time per image:"
     diff_time = diff_time / len(list_of_para)
     print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
+
+    from UsefulFunctions.EmailSys import ElaborateEmail
+    body = "I have finished writting all your bloody damn files so please test out what you wanted to do !!! \n Jerk"
+    subject = "Vips step"
+    ElaborateEmail(body, subject)
