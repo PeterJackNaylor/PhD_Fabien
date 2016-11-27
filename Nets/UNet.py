@@ -87,4 +87,4 @@ def make_net(options):
         f.write(str(unet('train', dgtrain, loss, bs, wgt, cn, skip)))
 
     with open(os.path.join(path, 'test.prototxt'), 'w') as f:
-        f.write(str(unet('test', dgtest, loss, 1, False, cn, skip)))
+        f.write(str(unet('test', dgtest, loss, 1, wgt, cn, skip)))

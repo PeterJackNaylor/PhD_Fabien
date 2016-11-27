@@ -507,7 +507,7 @@ if __name__ == "__main__":
     #from FCN_Segmentation.DataLayerPeter import DataGen
     from UsefulFunctions import ImageTransf as IT
     datagen = DataGen("/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/",
-                      transforms=[IT.Identity()], Weight=True, WeightOnes=False, split="train", wgt_param=(10, 1, 3, 10))
+                      transforms=[IT.Identity()], Weight=True, WeightOnes=False, split="train", wgt_param=(10, 2, 5, 10))
 #    datagen.ReLoad("train")
     datagen.SetPatient('0000000')
     key = datagen.RandomKey(True)
