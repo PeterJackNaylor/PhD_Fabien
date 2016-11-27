@@ -507,21 +507,32 @@ if __name__ == "__main__":
     #from FCN_Segmentation.DataLayerPeter import DataGen
     from UsefulFunctions import ImageTransf as IT
     datagen = DataGen("/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/",
-                      transforms=[IT.Identity()], Weight=True, wgt_param=(5, 1, 3, 5))
+                      transforms=[IT.Identity()], Weight=True, WeightOnes=False, split="train", wgt_param=(10, 1, 3, 10))
 #    datagen.ReLoad("train")
+    datagen.SetPatient('0000000')
     key = datagen.RandomKey(True)
     import matplotlib.pylab as plt
     import skimage.morphology as skm
-    nu = min(3, datagen.length)
-    fig, axes = plt.subplots(nu, 3, figsize=(16, 180))
+    nu = min(40, datagen.length)
+    #fig, axes = plt.subplots(nu, 3, figsize=(16, 180))
+    positiv = 0
+    negativ = 0
     for i in range(nu):
         img, lbl, wgt = datagen[key]
         key = datagen.NextKey(key)
-        axes[i, 0].imshow(img)
-        axes[i, 1].imshow(wgt)
-        axes[i, 2].imshow(skm.label(lbl))
+        # print np.unique(lbl)
+        lbl[lbl > 0] = 1
+        positiv += np.sum(wgt[lbl > 0])
+        negativ += np.sum(wgt[lbl == 0])
+    #    axes[i, 0].imshow(img)
+    #    axes[i, 1].imshow(wgt)
+    #    axes[i, 2].imshow(skm.label(lbl))
         # pdb.set_trace()
-    plt.show()
+    # plt.show()
+    print datagen.wgt_param
+    print "positive ratio: ", (positiv + 0.0) / (positiv + negativ)
+    print "negative ratio: ", (negativ + 0.0) / (positiv + negativ)
+
 
 """    import glob
     import os
