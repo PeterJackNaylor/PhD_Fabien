@@ -17,7 +17,7 @@ loss = 'softmax'
 
 momentum_list = [0.9]#, 0.99]
 
-weight_decay_list = [0.0005]#, 0.00005]
+weight_decay_list = [0.00005]#, 0.00005]
 
 stepsize = 7000
 gamma = 0.1
