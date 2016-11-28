@@ -39,7 +39,7 @@ def ChangePrototxt(protofile, folder):
         file.write(filedata)
 
 
-def ChangeLayer(path, folder):
+def ChangeEnv(path, folder):
     ChangeDataGenPath(path, folder)
     if 'FCN' in folder:
         for num in [32, 16, 8]:

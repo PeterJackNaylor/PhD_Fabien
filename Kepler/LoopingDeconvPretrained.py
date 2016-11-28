@@ -1,4 +1,7 @@
 import subprocess
+from UsefulFunctions.EmailSys import ElaborateEmail
+from os import environ
+
 
 net = 'DeconvNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
@@ -36,3 +39,7 @@ for base_lr in base_lr_list:
                 *arguments)
             proces = subprocess.Popen(cmd, shell=True)
             proces.wait()
+
+body = "The job on {} using node {} is now free".format(environ["HOSTNAME"],environ["CUDA_VISIBLE_DEVICES"])
+subject = "Free node"
+ElaborateEmail(body, subject)

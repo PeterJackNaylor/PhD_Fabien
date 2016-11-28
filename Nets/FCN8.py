@@ -5,7 +5,7 @@ from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
 
-def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
+def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2, crf=False):
     n = caffe.NetSpec()
     if not Weight:
         n.data, n.label = DataLayer(split, data_gene, batch_size, cn, Weight)
@@ -75,13 +75,15 @@ def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
                                  param=[dict(lr_mult=1)])
 
     n.score = crop(n.upscore8, n.data)
-
-    if not Weight:
-        n.loss = LossLayer(n.score, n.label, loss)
+    if not crf:
+        if not Weight:
+            n.loss = LossLayer(n.score, n.label, loss)
+        else:
+            n.loss = LossLayer(n.score, n.label, loss, weight=n.weight)
     else:
-        n.loss = LossLayer(n.score, n.label, loss, weight=n.weight)
-    return n.to_proto()
+        n.unary, n.Q0, n.pred, n.loss
 
+    return n.to_proto()
 
 def make_net(options, c1="score_fr_32", c2="upscore_16"):
     dgtrain = options.dgtrain

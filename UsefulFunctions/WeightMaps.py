@@ -2,6 +2,12 @@ import numpy as np
 from skimage.morphology import binary_dilation
 from skimage.morphology import disk
 import operator
+import glob
+import os
+from scipy import misc
+from UsefulFunctions.RandomUtils import CheckOrCreate, CheckExistants, CheckFile
+from UsefulFunctions.ImageTransf import Identity
+from scipy import ndimage
 
 
 def FrequencyBalanceValues(datagen):
@@ -89,31 +95,33 @@ def WeightMap(lbl, w_0, val, sigma=5, thresh=1000):
     return new_lbl + w_0 * new_res
 
 # val = FrequencyBalanceValues(datagen)
-
-
-import glob
-import os
-from scipy import misc
+import skimage.measure as skm
 
 
 def ComputeWeightMap(input_path, w_0, val, sigma=5):
-    from FCN_Segmentation.DataGen import DataGen
 
-    datagen = DataGen(input_path)
-    datagen.ReLoad("train")
+    from Data.DataGen import DataGen
+    WGT_DIR = os.path.join(input_path, "WEIGHTS")
+    CheckOrCreate(WGT_DIR)
+    wgt_dir = os.path.join(
+        WGT_DIR, "{}_{}_{}_{}".format(w_0, val[0], val[1], sigma))
+    CheckOrCreate(wgt_dir)
+    datagen = DataGen(input_path, transforms=[Identity()])
+    datagen.SetPatient("0000000")
     folder = glob.glob(os.path.join(input_path, 'GT_*'))
 
     for fold in folder:
-        new_fold = fold.replace('GT', 'WeightMap')
-        if not os.path.isdir(new_fold):
-            os.mkdir(new_fold)
+        num = fold.split('_')[-1].split(".")[0]
+        new_fold = os.path.join(wgt_dir, "WGT_" + num)
+        CheckOrCreate(new_fold)
         list_nii = glob.glob(os.path.join(fold, '*.nii.gz'))
         for name in list_nii:
             # print name
             lbl = datagen.LoadGT(name)
-            lbl_diff = skm.label(lbl[:, :, 0])
+            lbl_diff = skm.label(lbl)
             res = WeightMap(lbl_diff, w_0, val, sigma)
-            new_name = name.replace('GT', 'WeightMap')
-            new_name = new_name.replace('nii.gz', 'png')
+            name = os.path.join(new_fold, name.split('/')[-1])
+            new_name = name.replace('nii.gz', 'png')
             # print new_name
             misc.imsave(new_name, res)
+    return wgt_dir
