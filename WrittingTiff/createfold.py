@@ -11,9 +11,11 @@ import numpy as np
 from Deprocessing.Morphology import DynamicWatershedAlias
 import matplotlib.pylab as plt
 
+
 def plot(image):
     plt.imshow(image)
     plt.show()
+
 
 def ApplyToSlideWrite(slide, table, f, outputfilename=None):
         # Slide is a string of the location of the file
@@ -35,7 +37,7 @@ def ApplyToSlideWrite(slide, table, f, outputfilename=None):
     for i in range(len(table)):
         if i % 10 == 0:
             print "process: {} / {} ".format(i, len(table))
-        image = np.array(GetImage(input_slide, table[i]))[:,:,:3]
+        image = np.array(GetImage(input_slide, table[i]))[:, :, :3]
         image = f(image)
 
         red_part = Vips.Image.new_from_array(image[:, :, 0].tolist())
@@ -62,18 +64,35 @@ def ApplyToSlideWrite(slide, table, f, outputfilename=None):
     #   x, y, w, h, res
     from scipy.misc import imsave
     input_slide = openslide.open_slide(slide)
-    outputfilename = outputfilename if outputfilename is not None else "F_" + slide
+    outputfilename = outputfilename if outputfilename is not None else "./temp_build/"
+    CheckOrCreate(outputfilename)
     dim1, dim2 = input_slide.dimensions
     #output_slide = Vips.Image.black(dim1, dim2)
     for i in range(len(table)):
         if i % 10 == 0:
-            print "process: {} / {} ".format(i, len(table))
-        image = np.array(GetImage(input_slide, table[i]))[:,:,:3]
+            print "process: {} / {}     \r".format(i, len(table))
+        image = np.array(GetImage(input_slide, table[i]))[:, :, :3]
         image = f(image)
-        imsave("/home/pnaylor/Documents/temp_image/small_jpg/"+"{}_{}.jpg".format(table[i][0], table[i][1]), image)
+        outfile = os.path.join(
+            outputfilename, "{}_{}.tiff".format(table[i][0], table[i][1]))
+        tifffile.imsave(outfile, image)
+        imsave(
+            , image)
     print "lets join the slides"
 #    rgb = red_part.bandjoin([green_part, blue_part])
 #    rgb.write_to_file(outputfilename)
+from tifffile import imsave
+from scipy.misc import imread
+import sys
+import os
+
+for i in range(2, len(sys.argv)):
+    name_tiff = sys.argv[i].replace('.jpg', '.tiff')
+    to_replace = os.path.join(*sys.argv[i].split('/')[0:-1])
+    name_tiff = name_tiff.replace(to_replace, sys.argv[1])
+
+    xx = imread(sys.argv[i])
+    imsave(name_tiff, xx)
 
 
 def GetNet(cn, wd):
@@ -93,8 +112,8 @@ def GetNet(cn, wd):
 
 
 def PredImageFromNet(net, image, with_depross=True):
-    new_score = Forward(net, image, preprocess=with_depross,layer=["score"])
-    bin_map  = ProcessLoss(new_score["score"], method="binary")
+    new_score = Forward(net, image, preprocess=with_depross, layer=["score"])
+    bin_map = ProcessLoss(new_score["score"], method="binary")
     prob_map = ProcessLoss(new_score["score"], method="softmax")
     return prob_map, bin_map
 
@@ -125,7 +144,7 @@ if __name__ == '__main__':
     def predict_ensemble(image):
         prob_image1, bin_image1 = PredImageFromNet(
             net_1, image, with_depross=True)
-        #prob_image2, bin_image2 = PredImageFromNet(
+        # prob_image2, bin_image2 = PredImageFromNet(
         #    net_2, image, with_depross=True)
         #prob_ensemble = (prob_image1 + prob_image2) / 2
         #bin_ensemble = (prob_ensemble > 0.5) + 0
@@ -135,9 +154,9 @@ if __name__ == '__main__':
             erosion(segmentation_mask, disk(2))
 
         x, y = np.where(contours == 1)
-        image[x, y, 0] = 0 
-        image[x, y, 1] = 0 
-        image[x, y, 2] = 0 
+        image[x, y, 0] = 0
+        image[x, y, 1] = 0
+        image[x, y, 2] = 0
 
         return image
     start_time = time.time()
