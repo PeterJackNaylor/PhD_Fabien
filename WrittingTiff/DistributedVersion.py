@@ -150,7 +150,7 @@ def PredOneImage(slide, para, outfile, f):
     image = f(image)
     imsave(outfile, image)
 
-if __name__ = "__main__":
+if __name__ == "__main__":
 
     options = options_all()
     Distribute(options.slide, options.size, options.output, options)
