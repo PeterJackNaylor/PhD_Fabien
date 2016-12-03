@@ -34,7 +34,6 @@ def options():
     return options
 
 
-
 def plot(image):
     plt.imshow(image)
     plt.show()
@@ -97,22 +96,22 @@ def ApplyToSlideWrite(slide, table, f, outputfilename=None):
     for param in pbar(table):
         image = np.array(GetImage(input_slide, param))[:, :, :3]
         image = f(image)
-        outfile = os.path.join(outputfilename, "{}_{}.tiff".format(param[0], param[1]))
+        outfile = os.path.join(
+            outputfilename, "{}_{}.tiff".format(param[0], param[1]))
         imsave(outfile, image)
     return outputfilename
+
 
 def WritteTiffFromFiles(input_directory, outputtiff, size_x, size_y):
     files_tiff = glob.glob(os.path.join(input_directory, "*.tiff"))
     img = Vips.Image.black(size_x, size_y)
     pbar = ProgressBar()
     for files in pbar(files_tiff):
-        tile = Vips.Image.new_from_file(files, 
-                                access = Vips.Access.SEQUENTIAL_UNBUFFERED)
+        tile = Vips.Image.new_from_file(files,
+                                        access=Vips.Access.SEQUENTIAL_UNBUFFERED)
         _x, _y = files.split('.')[0].split('/')[-1].split('_')
         img = img.insert(tile, int(_x), int(_y))
-    img.tiffsave(outputtiff, tile=True, pyramid=True, bigtiff = True)
-
-
+    img.tiffsave(outputtiff, tile=True, pyramid=True, bigtiff=True)
 
 
 def ProcessOneImage(slide, f, output, options):
@@ -129,6 +128,7 @@ def ProcessOneImage(slide, f, output, options):
     WritteTiffFromFiles(temp_out, output, size_x, size_y)
 
     CleanTemp(temp_out)
+
 
 def GetNet(cn, wd):
 
@@ -153,12 +153,9 @@ def PredImageFromNet(net, image, with_depross=True):
     return prob_map, bin_map
 
 
-
-
 if __name__ == '__main__':
     print "In this script, we will take one slide and create a new slide, this new slide will be annotated with cells"
 
-    
     opt = options()
 
     slide_name = opt.input
@@ -175,18 +172,18 @@ if __name__ == '__main__':
 
     param = 8
 
-    def pred_f(image):
-        #pdb.set_trace()
-        prob_image1, bin_image1 = PredImageFromNet(net_1, image, with_depross=True)
+    def pred_f(image, param=param):
+        # pdb.set_trace()
+        prob_image1, bin_image1 = PredImageFromNet(
+            net_1, image, with_depross=True)
         segmentation_mask = DynamicWatershedAlias(prob_image1, param)
         segmentation_mask[segmentation_mask > 0] = 1
         contours = dilation(segmentation_mask, disk(2)) - \
-                erosion(segmentation_mask, disk(2))
+            erosion(segmentation_mask, disk(2))
 
         x, y = np.where(contours == 1)
         image[x, y] = np.array([0, 0, 0])
         return image
-
 
     start_time = time.time()
     diff_time = time.time() - start_time
@@ -197,12 +194,14 @@ if __name__ == '__main__':
     print 'Time for slide:'
     print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
 
-    #print ' \n '
-    #print "Average time per image:"
+    # print ' \n '
+    # print "Average time per image:"
     #diff_time = diff_time / len(list_of_para)
-    #print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
+    # print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60,
+    # diff_time % 60)
 
     from UsefulFunctions.EmailSys import ElaborateEmail
-    body = "Writting slide {} took ".format(opt.input) + '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
+    body = "Writting slide {} took ".format(
+        opt.input) + '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
     subject = "Writting file"
     ElaborateEmail(body, subject)
