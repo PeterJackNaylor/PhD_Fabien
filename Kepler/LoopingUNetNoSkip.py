@@ -13,7 +13,7 @@ crop = 4
 
 
 base_lr_list = [0.001]# [0.01, 0.001, 0.0001]
-batch_size = 4
+batch_size = 1
 img_format = "RGB"
 loss = 'softmax'
 
@@ -28,13 +28,18 @@ size_y = 212
 
 hw = "gpu"
 
-for base_lr in base_lr_lits:
+w_0 = 10
+val_b = 1
+val_n = 3
+sig_WGT = 10
+
+for base_lr in base_lr_list:
     for momentum in momentum_list:
         for weight_decay in weight_decay_list:
             cn = (net + '_{}_{}_{}').format(base_lr, momentum, weight_decay)
             arguments = (net, raw_data, wd, cn, weight, niter, disp_interval, leaveout, crop, base_lr,
-                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, hw)
-            cmd = "python Training/OnePass.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --leaveout {} --crop {} --base_lr {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --hw {}".format(
+                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, hw, w_0, val_b, val_n, sig_WGT)
+            cmd = "python Training/OnePass.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --leaveout {} --crop {} --base_lr {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --hw {} --w_0 {} --val_b {} --val_n {} --sig_WGT {}".format(
                 *arguments)
             proces = subprocess.Popen(cmd, shell=True)
             proces.wait()

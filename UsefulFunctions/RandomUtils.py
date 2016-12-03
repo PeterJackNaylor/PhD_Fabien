@@ -1,6 +1,7 @@
 import os
 from sklearn.metrics import confusion_matrix
 import numpy as np
+import shutil
 
 def CheckOrCreate(path):
     if not os.path.isdir(path):
@@ -37,3 +38,6 @@ def ComputeHist(blob_gt, blob_pred, perblob = False):
 
 
 
+def CleanTemp(folder):
+    if CheckExistants(folder):
+        shutil.rmtree(folder)
