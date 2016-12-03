@@ -34,8 +34,8 @@ def CreatePython(python_file, options):
     f.write(" \n \nfrom WrittingTiff.DistributedVersion\n \nif __name__ ==  \"__main__\": \n \n")
     f.write(indent("options = WrittingTiff.DistributedVersion.options_min()\n "))
     f.write(indent("WrittingTiff.DistributedVersion.PredImage(options)"))
-        f.write("\n\n" + "#" * 100 + "\n \n")
-        f.close()
+    f.write("\n\n" + "#" * 100 + "\n \n")
+    f.close()
 
 
 def CreateBash(bash_file, python_file, file_param, options):
