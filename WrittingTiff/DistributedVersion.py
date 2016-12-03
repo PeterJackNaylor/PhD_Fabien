@@ -7,34 +7,35 @@ import numpy as np
 
 
 def CreateFileParam(name, list):
-	f = open(os.path.join(INP_folder, "parameters.txt"), "wb")
-	line = 1
-	for para in list:
-		small_para = [para[0], para[1], para[3]]
-		pre = "__{}__ ".format(line)
-		pre += "{} {} {}".format(*small_para)
+    f = open(os.path.join(INP_folder, "parameters.txt"), "wb")
+    line = 1
+    for para in list:
+        small_para = [para[0], para[1], para[3]]
+        pre = "__{}__ ".format(line)
+        pre += "{} {} {}".format(*small_para)
         line += 1
-	f.close()
+    f.close()
 
 
 def Distribute(slide, size, output, options):
-	list_of_para = ROI(slide, method=options.method,
+    list_of_para = ROI(slide, method=options.method,
                        ref_level=0, seed=42, fixed_size_in=(size, size))
-	distribute_file = os.path.join(output, "ParameterDistribution.txt")
+    distribute_file = os.path.join(output, "ParameterDistribution.txt")
     bash_file = os.path.join(output, "PredOneSlide.sh")
-	CreateFile(distribute_file, list_of_para)
-	CreateBash(bash_files, distribute_file, options)
+    CreateFile(distribute_file, list_of_para)
+    CreateBash(bash_files, distribute_file, options)
     CreatePython(python_file,)
 
 
 def CreatePython(python_file, options):
-    f = open(python_file , "wb" )
-    f.write("# -*- coding: cp1252 -*- \n\"\"\" \nDescription: \n \nAuthors: " + getpass.getuser() + "\n \nDate: " + time.strftime("%x") + "\n \n\"\"\" ")
+    f = open(python_file, "wb")
+    f.write("# -*- coding: cp1252 -*- \n\"\"\" \nDescription: \n \nAuthors: " +
+            getpass.getuser() + "\n \nDate: " + time.strftime("%x") + "\n \n\"\"\" ")
     f.write(" \n \nfrom WrittingTiff.DistributedVersion\n \nif __name__ ==  \"__main__\": \n \n")
-    f.write( indent("options = WrittingTiff.DistributedVersion.options_min()\n ") )
-    f.write( indent("WrittingTiff.DistributedVersion.PredImage(options)"))
-                f.write( "\n\n"+"#" * 100 + "\n \n")
-                f.close()
+    f.write(indent("options = WrittingTiff.DistributedVersion.options_min()\n "))
+    f.write(indent("WrittingTiff.DistributedVersion.PredImage(options)"))
+        f.write("\n\n" + "#" * 100 + "\n \n")
+        f.close()
 
 
 def CreateBash(bash_file, python_file, file_param, options):
@@ -76,6 +77,8 @@ def CreateBash(bash_file, python_file, file_param, options):
 from createfold import caffe, GetNet, PredImageFromNet, DynamicWatershedAlias, dilation, disk, erosion
 
 param = 8
+
+
 def pred_f(image, param=param):
     # pdb.set_trace()
     caffe.set_mode_cpu()
@@ -87,7 +90,7 @@ def pred_f(image, param=param):
     segmentation_mask = DynamicWatershedAlias(prob_image1, param)
     segmentation_mask[segmentation_mask > 0] = 1
     contours = dilation(segmentation_mask, disk(2)) - \
-            erosion(segmentation_mask, disk(2))
+        erosion(segmentation_mask, disk(2))
 
     x, y = np.where(contours == 1)
     image[x, y] = np.array([0, 0, 0])
@@ -95,9 +98,10 @@ def pred_f(image, param=param):
 
 ##########################
 
+
 def options_min():
 
-	parser = OptionParser()
+    parser = OptionParser()
 
     parser.add_option('--slide', dest="slide", type="string",
                       help="Input slide")
@@ -106,10 +110,10 @@ def options_min():
     parser.add_option('-y', dest="y", type="int",
                       help="position on y axis")
     parser.add_option('-s', '--size', dest="size", type="int",
-    				 help='Size of images')
-    (options, args)=parser.parse_args()
+                      help='Size of images')
+    (options, args) = parser.parse_args()
 
-    options.param=[options.x, options.y, 0, options.size, options.size]
+    options.param = [options.x, options.y, 0, options.size, options.size]
 
     options.f = pred_f
 
@@ -118,7 +122,7 @@ def options_min():
 
 def options_all():
 
-    parser=OptionParser()
+    parser = OptionParser()
 
     parser.add_option('--slide', dest="slide", type="string",
                       help="Input slide")
@@ -129,24 +133,24 @@ def options_all():
     parser.add_option('--method', dest="method", type="str", default='grid_fixed_size',
                       help="Method of the tilling procedure")
 
-    (options, args)=parser.parse_args()
-    options.name=["-x", "-y", "-s"]
+    (options, args) = parser.parse_args()
+    options.name = ["-x", "-y", "-s"]
     return options
+
 
 def PredImage(options):
     slide = options.slide
     para = [options.x, options.y, 0, options.s, options.s]
-    outfile = os.path.join(options.outfile, 'tiled', "{}_{}.tiff".format(options.x, options.y))
-
+    outfile = os.path.join(options.outfile, 'tiled',
+                           "{}_{}.tiff".format(options.x, options.y))
 
 
 def PredOneImage(slide, para, outfile, f):
-	image=GetImage(slide, para)
-	image=f(image)
-	imsave(outfile, image)
+    image = GetImage(slide, para)
+    image = f(image)
+    imsave(outfile, image)
 
-if __name__="__main__":
+if __name__ = "__main__":
 
-	options=options_all()
+    options = options_all()
     Distribute(options.slide, options.size, options.output, options)
-
