@@ -43,7 +43,8 @@ def CreateBash(bash_file, python_file, file_param, options):
     f.write("#$ -cwd\n")  # executes job in current directory
     f.write("#$ -S /bin/bash\n")  # set bash environment
     # name of the job as it will appear in qstat -f
-    f.write("#$ -N ProcessSlide \n")
+    num = options.slide.split('/')[-1].split('.')[0]
+    f.write("#$ -N ProcessSlide{} \n".num)
     OUT_PBS = os.path.join(options.output, "PBS", "OUT")
     ERR_PBS = os.path.join(options.output, "PBS", "ERR")
     f.write("#$ -o " + OUT_PBS + "\n")  # where to put the output "print"
