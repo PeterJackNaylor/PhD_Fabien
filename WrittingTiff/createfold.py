@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gi.repository import Vips
+#from gi.repository import Vips
 import openslide
 from UsefulOpenSlide import GetImage
 import pdb
@@ -18,6 +18,7 @@ from CuttingPatches import ROI
 from progressbar import ProgressBar
 import glob
 import warnings
+import caffe
 warnings.filterwarnings('ignore')
 
 

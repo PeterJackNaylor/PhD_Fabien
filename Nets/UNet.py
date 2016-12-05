@@ -3,7 +3,6 @@ import os
 import caffe
 from caffe import layers as L, params as P
 from caffe.coord_map import crop
-import pdb
 
 def unet(split, data_gene, loss, batch_size, Weight, cn, skip):
     n = caffe.NetSpec()
@@ -69,7 +68,6 @@ def unet(split, data_gene, loss, batch_size, Weight, cn, skip):
         n.loss = LossLayer(n.score, n.label, loss)
     else:
         n.loss = LossLayer(n.score, n.label, loss, weight=n.weight)
-    pdb.set_trace()
     return n.to_proto()
 
 
