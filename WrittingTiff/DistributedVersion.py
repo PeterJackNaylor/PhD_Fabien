@@ -73,7 +73,6 @@ def CreateBash(bash_file, python_file, file_param, options):
     f.write('SLIDE={}\n'.format(options.slide))
     f.write('SIZE={}\n'.format(options.size))
     f.write('spe_tag=__\n')
-    line = 0
     last_line = ""
     n_field = len(open(file_param, "rb").readlines()[0].split(' ')) - 2
     for i in range(n_field):
@@ -168,11 +167,10 @@ def PredImage(options):
     print "outfile: {}".format(outfile)
     print "f: ", options.f
     PredOneImage(slide, para, outfile, options.f)
-import pdb
+
 def PredOneImage(slide, para, outfile, f):
     # pdb.set_trace()
     slide = openslide.open_slide(slide)
-    c = GetImage(slide, para)
     image = np.array(GetImage(slide, para))[:,:,:3]
     image = f(image)
     imsave(outfile, image)
