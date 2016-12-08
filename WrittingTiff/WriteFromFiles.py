@@ -20,8 +20,8 @@ outfile = sys.argv[2]
 
 
 img = Vips.Image.black(size_x, size_y)
-val = min(len(sys.argv), 1000000)
-for i in range(2, val):
+val = min(len(sys.argv), 10000)
+for i in range(3, val):
 	if i % 1000 == 0:
 		print "{} / {}".format(i, len(sys.argv))
 	tile = Vips.Image.new_from_file(sys.argv[i], 

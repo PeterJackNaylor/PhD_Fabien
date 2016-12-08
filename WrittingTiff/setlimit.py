@@ -4,7 +4,7 @@ import os
 import pwd
 
 print "getrlimit before:", resource.getrlimit(resource.RLIMIT_NOFILE)
-resource.setrlimit(resource.RLIMIT_NOFILE, (131072, 131072))
+resource.setrlimit(resource.RLIMIT_NOFILE, (262144, 262144))
 print "getrlimit:", resource.getrlimit(resource.RLIMIT_NOFILE)
 print "subprocess:", subprocess.check_output("whoami; ulimit -n", shell=True)
 
