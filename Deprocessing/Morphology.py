@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import pdb
 from skimage.morphology import watershed
 import numpy as np
 from skimage.measure import label
@@ -45,6 +45,10 @@ def GetContours(img):
     return dilation(img, disk(2)) - erosion(img, disk(2))
 
 def generate_wsl(ws):
+    #pdb.set_trace()
+    #if len(np.unique(ws))==1:
+    #    ws.dtype = 'uint8'
+    #	return ws
     se = diamond(1)
     ero = ws.copy()
     ero[ero==0] = ero.max() + 1
@@ -54,9 +58,11 @@ def generate_wsl(ws):
     grad = dilation(ws, se) - ero
     grad[ws==0] = 0
     grad[grad>0] = 255
-    return img_as_ubyte(grad)
+    grad = grad.astype(np.uint8)
+    return grad
 
 def DynamicWatershedAlias(p_img, lamb):
+    #pdb.set_trace()
     b_img = (p_img > 0.5) + 0
     Probs_inv = PrepareProb(p_img)
 
@@ -66,6 +72,7 @@ def DynamicWatershedAlias(p_img, lamb):
     ws_labels = watershed(Hrecons, markers_Probs_inv, mask=b_img)
 
     wsl = generate_wsl(ws_labels)
+    #pdb.set_trace()
     b_img[wsl>0] = 0
     
     return label(b_img)

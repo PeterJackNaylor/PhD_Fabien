@@ -57,7 +57,7 @@ class DataGen(object):
     def __init__(self, path, crop=None, size=None, transforms=None,
                  split="train", leave_out=1, seed=None, name="optionnal",
                  img_format="RGB", Weight=False, WeightOnes=False,
-                 wgt_param=(5, 1, 3, 5), Unet=False):
+                 wgt_param=(5, 1, 3, 5), Unet=False, return_path=False):
 
         self.path = path
         self.name = name
@@ -72,6 +72,7 @@ class DataGen(object):
         self.Weight = Weight
         self.WeightOnes = WeightOnes
         self.wgt_param = wgt_param
+        self.return_path = return_path
         if size is not None:
             self.random_crop = True
             self.size = size
@@ -151,6 +152,10 @@ class DataGen(object):
             self.UNet_crop = False
         if self.UNet_crop:
             img_lbl_Mwgt = self.Unet_cut(*img_lbl_Mwgt)
+        if not hasattr(self, "return_path"):
+            self.return_path = False
+        if self.return_path:
+            img_lbl_Mwgt += (img_path,)
 
         return img_lbl_Mwgt
 

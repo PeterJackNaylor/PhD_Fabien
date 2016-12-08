@@ -4,7 +4,6 @@ import caffe
 from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
-
 def unet(split, data_gene, loss, batch_size, Weight, cn, skip):
     n = caffe.NetSpec()
     if not Weight:
