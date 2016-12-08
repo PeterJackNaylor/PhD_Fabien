@@ -20,7 +20,7 @@ outfile = sys.argv[2]
 
 
 img = Vips.Image.black(size_x, size_y)
-val = min(len(sys.argv), 10000)
+val = min(len(sys.argv), 1000000)
 for i in range(3, val):
 	if i % 1000 == 0:
 		print "{} / {}".format(i, len(sys.argv))
@@ -28,4 +28,5 @@ for i in range(3, val):
 			                    access = Vips.Access.SEQUENTIAL_UNBUFFERED)
 	_x, _y = sys.argv[i].split('.')[0].split('/')[-1].split('_')
 	img = img.insert(tile, int(_x), int(_y))
+
 img.tiffsave(outfile, tile=True, pyramid=True, bigtiff = True)
