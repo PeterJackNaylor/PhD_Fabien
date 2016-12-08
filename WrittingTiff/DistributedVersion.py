@@ -103,6 +103,7 @@ def pred_f(image, param=param):
     net_1 = GetNet(cn_1, wd_1)
     prob_image1, bin_image1 = PredImageFromNet(
         net_1, image, with_depross=True)
+    #pdb.set_trace()
     segmentation_mask = DynamicWatershedAlias(prob_image1, param)
     segmentation_mask[segmentation_mask > 0] = 1
     contours = dilation(segmentation_mask, disk(2)) - \
@@ -159,7 +160,7 @@ def options_all():
 
 def PredImage(options):
     slide = options.slide
-    para = [options.x, options.y, 0, options.size, options.size]
+    para = [options.x, options.y, options.size, options.size, 0]
     outfile = os.path.join(options.output, 'tiled',
                            "{}_{}.tiff".format(options.x, options.y))
     print "slide :{}".format(slide)
@@ -169,7 +170,7 @@ def PredImage(options):
     PredOneImage(slide, para, outfile, options.f)
 import pdb
 def PredOneImage(slide, para, outfile, f):
-    pdb.set_trace()
+    # pdb.set_trace()
     slide = openslide.open_slide(slide)
     c = GetImage(slide, para)
     image = np.array(GetImage(slide, para))[:,:,:3]
