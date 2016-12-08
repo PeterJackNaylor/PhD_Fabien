@@ -12,12 +12,12 @@ leaveout = 1
 crop = 4
 
 
-base_lr_list = [0.001]# [0.01, 0.001, 0.0001]
+base_lr_list = [0.00001]
 batch_size = 1
 img_format = "RGB"
-loss = 'softmax'
+loss = 'weightcpp'
 
-momentum_list = [0.9]#, 0.99]
+momentum_list = [0.99]#, 0.99]
 
 weight_decay_list = [0.00005]#, 0.00005]
 

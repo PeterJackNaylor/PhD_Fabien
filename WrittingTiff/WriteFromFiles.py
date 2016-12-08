@@ -4,20 +4,20 @@ import sys
 import openslide
 from gi.repository import Vips
 
-if len(sys.argv) < 3:
+if len(sys.argv) < 4:
     print "usage: %s n image-out image1 image2 ..." % sys.argv[0]
     print "   make an n x n grid of images"
     sys.exit(1)
 
-slide_name = "/home/pnaylor/Documents/temp_image/576041.tiff"
+slide_name = sys.argv[1]
 size_x, size_y = openslide.open_slide(slide_name).dimensions
 
-outfile = sys.argv[1]
+outfile = sys.argv[2]
 
 img = Vips.Image.black(size_x, size_y)
 
-i = 2
-for i in range(2, len(sys.argv)):
+i = 3
+for i in range(3, len(sys.argv)):
 	if i % 1000 == 0:
 		print "{} / {}".format(i, len(sys.argv))
 	tile = Vips.Image.new_from_file(sys.argv[i], 
