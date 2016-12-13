@@ -173,6 +173,8 @@ def GetOptions(verbose=True):
 
     options.patients = ['141549', '572123', '581910',
                         '162438', '588626', '160120', '498959']
+#    options.patients = ['581910',
+#                        '162438', '588626', '160120', '498959']
 
     transform_list = [Transf.Identity(),
                       Transf.Flip(0),
