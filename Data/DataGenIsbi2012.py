@@ -109,6 +109,9 @@ class DataGenIsbi2012(DataGen):
         ran = (range(self.number), range(self.n_f))
         return list(itertools.product(*ran))
 
+    def SetPatient(self, num):
+        pass
+
 if __name__ == "__main__":
 
     transform_list = [Transf.Identity(),
