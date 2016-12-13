@@ -1,4 +1,3 @@
-/bin/bash: indent : commande introuvable
 
 import matplotlib.pylab as plt
 import time
@@ -49,10 +48,10 @@ def trainNet(kwargs):
         caffe.set_mode_cpu()
     if 'archi' not in kwargs.keys():
         for num in patients:
-	    if num in []:
-		print "NOT DOING", num
-	    else:
-		print "DOING", num
+            if num in []:
+                print "NOT DOING", num
+            else:
+                print "DOING", num
                 datagen_train.SetPatient(num)
                 datagen_test.SetPatient(num)
                 pkl.dump(datagen_train, open(datagen_path_train, "w"))

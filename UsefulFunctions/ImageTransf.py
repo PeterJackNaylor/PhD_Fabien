@@ -309,13 +309,13 @@ class ElasticDeformation(Transf):
                 indices = np.reshape(
                     x + self.dx, (-1, 1)), np.reshape(y + self.dy, (-1, 1)), np.reshape(z, (-1, 1))
             elif len(shape) == 2:
-                x, y = np.meshgrid(np.arange(shape[1]), np.arange(
-                    shape[0]), indexing='ij')
-                indices = np.reshape(
-                    x + np.mean(self.dx, axis=2), (-1, 1)), np.reshape(y + np.mean(self.dy, axis=2), (-1, 1))
+                x, y = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]), indexing='ij')
+                if len(self.dx.shape) == 3:
+                    indices = np.reshape(x + np.mean(self.dx, axis=2), (-1, 1)), np.reshape(y + np.mean(self.dy, axis=2), (-1, 1))
+                else:
+                    indices = np.reshape(x + self.dx, (-1, 1)), np.reshape(y + self.dy, (-1, 1))
             else:
                 print "Error"
-
             if n_img == 1:
                 order = 0
                 flags = cv2.INTER_NEAREST

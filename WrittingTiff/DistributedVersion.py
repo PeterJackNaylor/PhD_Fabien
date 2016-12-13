@@ -74,7 +74,8 @@ def CreateBash(bash_file, python_file, file_param, options):
 
 
 ###################
-from createfold import caffe, GetNet, PredImageFromNet, DynamicWatershedAlias, dilation, disk, erosion
+import caffe
+from createfold import GetNet, PredImageFromNet, DynamicWatershedAlias, dilation, disk, erosion
 
 param = 8
 
@@ -132,7 +133,8 @@ def options_all():
                       help="Size of the tiles")
     parser.add_option('--method', dest="method", type="str", default='grid_fixed_size',
                       help="Method of the tilling procedure")
-
+    parser.add_option('--tc', dest="tc", type="int", default=50,
+                      help="Numbr of jobs in paralelle")
     (options, args) = parser.parse_args()
     options.name = ["-x", "-y", "-s"]
     return options
@@ -141,7 +143,8 @@ def options_all():
 def PredImage(options):
     slide = options.slide
     para = [options.x, options.y, 0, options.s, options.s]
-    outfile = os.path.join(options.outfile, 'tiled',
+    num = options.slide.split('/')[-1].split('.')[0]
+    outfile = os.path.join(options.outfile, 'tiled_{}'.format(num),
                            "{}_{}.tiff".format(options.x, options.y))
 
 

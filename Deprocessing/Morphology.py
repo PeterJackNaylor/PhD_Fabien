@@ -3,7 +3,7 @@
 from skimage.morphology import watershed
 import numpy as np
 from skimage.measure import label
-from skimage.morphology import reconstruction, dilation, erosion, disk, diamond
+from skimage.morphology import reconstruction, dilation, erosion, disk, diamond, square
 from skimage import img_as_ubyte
 
 
@@ -27,7 +27,8 @@ def HreconstructionErosion(prob_img, h):
 
     seed = shift_prob_img
     mask = prob_img
-    recons = reconstruction(seed, mask, method='erosion').astype(np.dtype('ubyte'))
+    recons = reconstruction(
+        seed, mask, method='erosion').astype(np.dtype('ubyte'))
     return recons
 
 
@@ -44,17 +45,19 @@ def GetContours(img):
     img[img > 0] = 1
     return dilation(img, disk(2)) - erosion(img, disk(2))
 
+
 def generate_wsl(ws):
-    se = diamond(1)
+    se = square(3)
     ero = ws.copy()
-    ero[ero==0] = ero.max() + 1
+    ero[ero == 0] = ero.max() + 1
     ero = erosion(ero, se)
-    ero[ws==0] = 0
+    ero[ws == 0] = 0
 
     grad = dilation(ws, se) - ero
-    grad[ws==0] = 0
-    grad[grad>0] = 255
+    grad[ws == 0] = 0
+    grad[grad > 0] = 255
     return img_as_ubyte(grad)
+
 
 def DynamicWatershedAlias(p_img, lamb):
     b_img = (p_img > 0.5) + 0
@@ -66,6 +69,6 @@ def DynamicWatershedAlias(p_img, lamb):
     ws_labels = watershed(Hrecons, markers_Probs_inv, mask=b_img)
 
     wsl = generate_wsl(ws_labels)
-    b_img[wsl>0] = 0
-    
+    b_img[wsl > 0] = 0
+
     return label(b_img)
