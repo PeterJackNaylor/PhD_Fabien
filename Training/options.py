@@ -173,7 +173,7 @@ def GetOptions(verbose=True):
     options.Weight = Weight
     options.WeightOnes = WeightOnes
 
-    if not options.mode == "Fabien":
+    if options.mode == "Fabien":
         options.patients = ['141549', '572123', '581910',
                         '162438', '588626', '160120', '498959']
     elif options.mode == "Isbi2012":
