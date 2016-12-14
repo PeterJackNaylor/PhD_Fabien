@@ -4,10 +4,10 @@ from os import environ
 
 net = 'UNet'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
-wd = "/data/users/pnaylor/Documents/Python/Experiences2"
+wd = "/data/users/pnaylor/Documents/Python/Experiences2/SmallIter"
 # weight = "/data/users/pnaylor/Documents/Python/FCN/model/DeconvNet_trainval_inference.caffemodel"
 niter = 3000
-disp_interval = 1000
+disp_interval = 100
 leaveout = 1
 crop = 4
 
