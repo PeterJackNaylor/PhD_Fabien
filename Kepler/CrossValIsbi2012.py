@@ -4,19 +4,19 @@ from os import environ
 
 net = 'UNet'
 raw_data = "/data/users/pnaylor/Bureau/Isbi2012/train-volume.tif"
-wd = "/data/users/pnaylor/Documents/Python/Experiences2"
+wd = "/data/users/pnaylor/Documents/Python/Experiences2/Isbi2012"
 # weight = "/data/users/pnaylor/Documents/Python/FCN/model/DeconvNet_trainval_inference.caffemodel"
 niter = 3000
 disp_interval = 1000
 leaveout = 5
 
 
-base_lr_list = [10**(-el) for el in range(1, 6)]
+base_lr_list = [10**(-el) for el in range(2, 6)]
 batch_size = 1
 
-momentum_list = [0.9, 0.99]
+momentum_list = [0.9 , 0.99]
 
-weight_decay_list = [5 * 10 **(-el)  for el in range(3,7)]
+weight_decay_list = [5 * 10 **(-el)  for el in range(4,6)]
 
 stepsize = 7000
 gamma = 0.1
