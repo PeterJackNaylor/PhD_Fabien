@@ -116,12 +116,15 @@ class DataLayer(caffe.Layer):
             self.key = self.datagen.NextKey(self.key)
 
     def PrepareImg(self, img):
-        in_ = np.array(img, dtype=np.float32)
-        in_ = in_[:, :, ::-1]
-        in_ -= self.mean
-        in_ = in_.transpose((2, 0, 1))
-        if len(in_.shape) == 4:
-            in_ = in_[:, :, :, 0]
+        if len(img.shape) == 2:
+            in_ = self.Prepare2DImage(img)
+        else:
+            in_ = np.array(img, dtype=np.float32)
+            in_ = in_[:, :, ::-1]
+            in_ -= self.mean
+            in_ = in_.transpose((2, 0, 1))
+            if len(in_.shape) == 4:
+                in_ = in_[:, :, :, 0]
         return in_
 
     def Prepare2DImage(self, img):
