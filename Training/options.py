@@ -69,6 +69,8 @@ def GetOptions(verbose=True):
                       FCN and valid : 32_16_8")
     parser.add_option('--skip', dest="skip", default="", type="string",
                       help=" Which layers to skip, give 1234 or 123, 13, 12, 1 etc .")
+    parser.add_option('--mode', dest="mode", default="False",
+                      help="Mode can be Fabien's Dataset, Isbi2012 Dataset")
 
 # arguments if options.loss == weight
     parser.add_option('--w_0', dest="w_0", default=10, type="int",
@@ -171,8 +173,11 @@ def GetOptions(verbose=True):
     options.Weight = Weight
     options.WeightOnes = WeightOnes
 
-    options.patients = ['141549', '572123', '581910',
+    if not options.mode == "Fabien":
+        options.patients = ['141549', '572123', '581910',
                         '162438', '588626', '160120', '498959']
+    elif options.mode == "Isbi2012":
+        options.patients = ["OnlyOne"]
 #    options.patients = ['581910',
 #                        '162438', '588626', '160120', '498959']
 

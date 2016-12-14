@@ -9,6 +9,32 @@ import matplotlib.pylab as plt
 import numpy as np
 
 
+def MakeDataGen(options):
+    dgtrain = options.dgtrain
+    dgtest = options.dgtest
+
+    rawdata = options.rawdata
+    rawdata_lbl = rawdata.replace('volume', 'labels')
+    leaveout = options.leaveout
+    seed = options.seed
+    Unet = options.net == "UNet"
+
+    transform_list = options.transform_list
+
+
+    data_generator_train = DataGenIsbi2012(rawdata, rawdata_lbl,
+                                  transform_list, split="train",
+                                   leave_out=leaveout, seed=seed,
+                                   Unet=Unet)
+    pkl.dump(data_generator_train, open(dgtrain, "wb"))
+
+    data_generator_test = DataGenIsbi2012(rawdata, rawdata_lbl,
+                                  [Identity()], split="test",
+                                  leave_out=leaveout, seed=seed,
+                                  Unet=Unet)
+    pkl.dump(data_generator_test, open(dgtest, "wb"))
+
+
 def LoadSetImage(path):
     """This function is able to loads a multi page tif."""
     SetImage = imread(path)

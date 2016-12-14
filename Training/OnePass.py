@@ -12,9 +12,12 @@ if __name__ == "__main__":
 
     (options, args) = GetOptions()
     if create_dataset:
-        from Data.DataGen import MakeDataGen
-        MakeDataGen(options)
-
+        if options.mode == "Fabien":
+            from Data.DataGen import MakeDataGen
+            MakeDataGen(options)
+        elif options.mode == "Isbi2012":
+            from Data.DataGenIsbi2012 import MakeDataGen
+            MakeDataGen(options)
     if create_net:
         if options.net == "UNet":
             from Nets.UNet import make_net
