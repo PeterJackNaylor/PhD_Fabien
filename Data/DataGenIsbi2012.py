@@ -5,8 +5,35 @@ from DataGen import DataGen
 from WrittingTiff.tifffile import imread
 
 from UsefulFunctions import ImageTransf as Transf
+from UsefulFunctions.ImageTransf import Identity, flip_vertical, flip_horizontal
 import matplotlib.pylab as plt
 import numpy as np
+import cPickle as pkl
+
+def MakeDataGen(options):
+    dgtrain = options.dgtrain
+    dgtest = options.dgtest
+
+    rawdata = options.rawdata
+    rawdata_lbl = rawdata.replace('volume', 'labels')
+    leaveout = options.leaveout
+    seed = options.seed
+    Unet = options.net == "UNet"
+
+    transform_list = options.transform_list
+
+
+    data_generator_train = DataGenIsbi2012(rawdata, rawdata_lbl,
+                                  transform_list, split="train",
+                                   leave_out=leaveout, seed=seed,
+                                   Unet=Unet)
+    pkl.dump(data_generator_train, open(dgtrain, "wb"))
+
+    data_generator_test = DataGenIsbi2012(rawdata, rawdata_lbl,
+                                  [Identity()], split="test",
+                                  leave_out=leaveout, seed=seed,
+                                  Unet=Unet)
+    pkl.dump(data_generator_test, open(dgtest, "wb"))
 
 
 def LoadSetImage(path):
@@ -29,6 +56,9 @@ class DataGenIsbi2012(DataGen):
         self.n_f = len(transforms)
         self.SetDataSet()
 
+        self.Weight = False
+        self.WeightOnes = False
+        self.return_path = False
 
 
     def LoadImage(self, val):
@@ -80,6 +110,37 @@ class DataGenIsbi2012(DataGen):
             img_lbl = self.Unet_cut(*img_lbl)
 
         return img_lbl
+
+    def Unet_cut(self, *kargs):
+        dim = kargs[0].shape
+        x = dim[0]
+        y = dim[1]
+        result = np.zeros(shape=(x+184, y+184))
+        n = 92
+        result[n:-n, n:-n] = kargs[0].copy()
+        # top middle
+        result[0:n, n:-n] = flip_horizontal(result[n:(2 * n), n:-n])
+        # bottom middle
+        result[-n::, n:-n] = flip_horizontal(result[-(2 * n):-n, n:-n])
+        # left whole
+        result[:, 0:n] = flip_vertical(result[:, n:(2 * n)])
+        # right whole
+        result[:, -n::] = flip_vertical(result[:, -(2 * n):-n])
+
+
+        x_prime = 388
+        y_prime = 388
+        x_rand = random.randint(0, x - x_prime)
+        y_rand = random.randint(0, y - y_prime)
+
+        res = ()
+        res += (self.RandomCropGen(result, (572, 572), (x_rand, y_rand)),)
+        
+        for i in range(1, len(kargs)):
+            res += (self.RandomCropGen(kargs[i], (x_prime, y_prime), (x_rand, y_rand)),)
+        return res
+
+
 
     def RandomKey(self, rand):
         if rand:
