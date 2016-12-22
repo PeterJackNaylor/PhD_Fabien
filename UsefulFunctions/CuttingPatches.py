@@ -23,7 +23,7 @@ from sys import platform as _platform
 from skimage import measure
 import itertools
 from ImageTransf import flip_horizontal
-
+import progressbar
 
 def Sample_imagette(im_bin, N, slide, level_resolution, nber_pixels, current_level, mask):
     # I should modify this function, so that the squares don't fall on each
@@ -388,19 +388,20 @@ if __name__ == "__main__":
 # Core of the code
 ########################################
 
-    list_of_para = ROI(options.file, method="grid_fixed_size", ref_level=options.resolution,
+    list_of_para = ROI(options.file, method="SP_ROI", ref_level=options.resolution,
                        N_squares=(n_1, n_2), seed=42, number_of_pixels_max=(options.w, options.h), fixed_size_in=(int(options.h), int(options.w)))
     # pdb.set_trace()
-    visualise_cut(openslide.open_slide(options.file), list_of_para,
-                  res_to_view=4, title="This is the ouput of ROI")
-#    i = 0
-#    for para in list_of_para:
-#        sample = UOS.GetImage(options.file, para)
-#        if _platform == "linux2":
-#            sample.save(options.output_folder + "/" + str(i) + ".png")
-#        else:
-#            sample.save(options.output_folder + "\\" + str(i) + ".png")
-#        i += 1
+    #visualise_cut(openslide.open_slide(options.file), list_of_para,
+    #              res_to_view=4, title="This is the ouput of ROI")
+    bar = progressbar.ProgressBar()
+    i = 0
+    for para in bar(list_of_para):
+        sample = UOS.GetImage(options.file, para)
+        if _platform == "linux2":
+            sample.save(options.output_folder + "/" + str(i) + ".png")
+        else:
+            sample.save(options.output_folder + "\\" + str(i) + ".png")
+        i += 1
 ########################################
 
     diff_time = time.time() - start_time

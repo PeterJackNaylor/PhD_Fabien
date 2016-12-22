@@ -4,6 +4,8 @@ import os
 from gi.repository import Vips
 from UsefulFunctions.RandomUtils import CheckOrCreate
 import numpy as np
+import pdb
+import progressbar
 
 def gather_files(folder):
     """ Find all tif files in folder"""
@@ -27,8 +29,8 @@ def find_n_closest(list_image, x0, y0, n):
         el = element.split('/')[-1].split('.')[0]
         x, y = el.split('_')
         return (int(x) - x0)**2 + (int(y) - y0)**2
-    distanceX = map(f, list_image)
-    rank_index = np.array(sorted(range(len(distanceX)), key=lambda k: distanceX[k]))[0:n]
+    xx = np.array(map(f, list_image))
+    rank_index = xx.argsort()[:n]
     return list(np.array(list_image)[rank_index])
 
 
@@ -56,8 +58,9 @@ def gather_whole_square(to_do, not_done):
         el = element.split('/')[-1].split('.')[0]
         x, y = el.split('_')
         if in_square(x, y, [x_min, x_max], [y_min, y_max]):
-            return el
+            return element
     result = map(g, not_done)
+    result = [el for el in result if el is not None]
     return result
 
 
@@ -72,7 +75,7 @@ def construct_inter(list_image, save_fold):
     def f(element):
         el = element.split('/')[-1].split('.')[0]
         x, y = el.split('_')
-        return (x, y)
+        return (int(x), int(y))
     coord = map(f, list_image)
     sort_by_first = sorted(coord, key=lambda tup: tup[0])
     sort_by_second = sorted(coord, key=lambda tup: tup[1])
@@ -81,18 +84,29 @@ def construct_inter(list_image, save_fold):
     y_min = sort_by_second[0][1]
     y_max = sort_by_second[-1][1]
 
-    size_x = x_max - x_min
-    size_y = y_max - y_min 
+    size_x = 224 + x_max - x_min
+    size_y = 224 + y_max - y_min 
     img = Vips.Image.black(size_x, size_y)
-    for el in list_image:
-        el = element.split('/')[-1].split('.')[0]
+    bar = progressbar.ProgressBar()
+    print len(list_image)
+    for item in bar(list_image):
+        el = item.split('/')[-1].split('.')[0]
         x, y = el.split('_')
-        tile = Vips.Image.new_from_file(el, 
+        tile = Vips.Image.new_from_file(item, 
                         access = Vips.Access.SEQUENTIAL_UNBUFFERED)
-        img = img.insert(tile, int(x) - x_min, int(y) - y_min)
+        x_ins = int(x) - x_min
+        y_ins = int(y) - y_min
+        if x_ins >= size_x - 224 or x_ins <= 0:
+            print x_ins, y_ins
+        if y_ins >= size_y - 224 or y_ins <= 0:
+            print x_ins, y_ins
+        img = img.insert(tile, x_ins, y_ins)
+        
+        #pdb.set_trace()
     outfile = "{}_{}_{}_{}.tif".format(x_min, y_min, size_x, size_y)
     outfile = os.path.join(save_fold, outfile)
-    img.tiffsave(outfile, tile=True, pyramid=True, bigtiff = True) # change this line
+    pdb.set_trace()
+    img.tiffsave(outfile, tile=True, pyramid=True)#, bigtiff = True) # change this line
 
 
 def construct_exter(list_image, name):
@@ -117,10 +131,10 @@ def construct_exter(list_image, name):
     size_y = y_max - y_min 
 
     img = Vips.Image.black(size_x, size_y)
-    for el in list_image:
-        el = element.split('/')[-1].split('.')[0]
+    for item in list_image:
+        el = item.split('/')[-1].split('.')[0]
         x, y, size_x, size_y = el.split('_')
-        tile = Vips.Image.new_from_file(el, 
+        tile = Vips.Image.new_from_file(item, 
                         access = Vips.Access.SEQUENTIAL_UNBUFFERED)
         img = img.insert(tile, int(x) - x_min, int(y) - y_min)
     img.tiffsave(name, tile=True, pyramid=True, bigtiff = True) 
@@ -131,15 +145,14 @@ def __main__():
     folder_img = sys.argv[2]
     temp_folder = './temp_folder'
     CheckOrCreate(temp_folder)
-    n = sys.argv[3]
+    n = int(sys.argv[3])
     image_list = gather_files(folder_img)
-
-    first = True
     while len(image_list) != 0:
         name_tile = find_closest(image_list, 0, 0)
         x, y = name_tile.split('/')[-1].split('.')[0].split('_')
         to_analyse = find_n_closest(image_list, int(x), int(y), n)
         to_process = gather_whole_square(to_analyse, image_list)
+        pdb.set_trace()
         construct_inter(to_process, temp_folder)
         to_process, image_list = update(to_process, image_list)
         print len(image_list)
