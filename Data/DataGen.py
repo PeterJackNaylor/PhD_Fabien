@@ -34,23 +34,38 @@ def MakeDataGen(options):
     wgt_param = options.wgt_param
 
     transform_list = options.transform_list
+    if options.num_output == 2:
+        data_generator_train = DataGen(rawdata, crop=crop, size=crop_size,
+                                       transforms=transform_list, split="train",
+                                       leave_out=leaveout, seed=seed,
+                                       img_format=img_format, Weight=Weight,
+                                       WeightOnes=WeightOnes, wgt_param=wgt_param,
+                                       Unet=Unet)
+        pkl.dump(data_generator_train, open(dgtrain, "wb"))
 
-    data_generator_train = DataGen(rawdata, crop=crop, size=crop_size,
-                                   transforms=transform_list, split="train",
-                                   leave_out=leaveout, seed=seed,
-                                   img_format=img_format, Weight=Weight,
-                                   WeightOnes=WeightOnes, wgt_param=wgt_param,
-                                   Unet=Unet)
-    pkl.dump(data_generator_train, open(dgtrain, "wb"))
+        data_generator_test = DataGen(rawdata, crop=crop, size=crop_size,
+                                      transforms=[Identity()], split="test",
+                                      leave_out=leaveout, seed=seed,
+                                      img_format=img_format, Weight=Weight,
+                                      WeightOnes=WeightOnes, wgt_param=wgt_param,
+                                      Unet=Unet)
+        pkl.dump(data_generator_test, open(dgtest, "wb"))
+    else:
+        data_generator_train = DataGen2(rawdata, crop=crop, size=crop_size,
+                                       transforms=transform_list, split="train",
+                                       leave_out=leaveout, seed=seed,
+                                       img_format=img_format, Weight=Weight,
+                                       WeightOnes=WeightOnes, wgt_param=wgt_param,
+                                       Unet=Unet)
+        pkl.dump(data_generator_train, open(dgtrain, "wb"))
 
-    data_generator_test = DataGen(rawdata, crop=crop, size=crop_size,
-                                  transforms=[Identity()], split="test",
-                                  leave_out=leaveout, seed=seed,
-                                  img_format=img_format, Weight=Weight,
-                                  WeightOnes=WeightOnes, wgt_param=wgt_param,
-                                  Unet=Unet)
-    pkl.dump(data_generator_test, open(dgtest, "wb"))
-
+        data_generator_test = DataGen2(rawdata, crop=crop, size=crop_size,
+                                      transforms=[Identity()], split="test",
+                                      leave_out=leaveout, seed=seed,
+                                      img_format=img_format, Weight=Weight,
+                                      WeightOnes=WeightOnes, wgt_param=wgt_param,
+                                      Unet=Unet)
+        pkl.dump(data_generator_test, open(dgtest, "wb"))
 
 class DataGen(object):
 
@@ -488,7 +503,83 @@ class DataGen(object):
         else:
             raise Exception('Key is of wrong dimensions: {}'.format(len(key)))
 
+class DataGen2(DataGen):
+    def LoadGT(self, path, normalize=True):
+        img = misc.imread(path)
+        return img
+    def __getitem__(self, key):
+        if self.transforms is None:
+            len_key = 2
+        elif self.crop == 1 or self.crop is None:
+            len_key = 3
+        else:
+            len_key = 4
 
+        if len(key) != len_key:
+            print "key given: ", key
+            print "key length %d" % len_key
+            raise Exception('Wrong number of keys')
+
+        if key[0] > len(self.patients_iter):
+            raise Exception(
+                "Value exceed number of patients available for {}ing.".format(self.split))
+        numero = self.patients_iter[key[0]]
+        n_patient = len(self.patient_img[numero])
+        if key[1] > n_patient:
+            raise Exception(
+                "Patient {} doesn't have {} possible images.".format(self.patients_iter[key[0]], key[1]))
+        if len_key > 2:
+            if key[2] > len(self.transforms):
+                raise Exception(
+                    "Value exceed number of possible transformation for {}ing".format(self.split))
+        if len_key == 4:
+            if key[3] > self.crop - 1:
+                raise Exception("Value exceed number of crops")
+
+        img_path = self.patient_img[numero][key[1]]
+        lbl_path = img_path.replace("Slide", "GT")
+
+        img = self.LoadImage(img_path)
+        lbl = self.LoadGT(lbl_path)
+
+        if self.Weight:
+            wgt_dir = self.Weight_path()
+            wgt_path = os.path.join(wgt_dir, *img_path.split('/')[-2::])
+            wgt_path = wgt_path.replace("Slide", "WGT")
+            wgt = self.LoadWeight(wgt_path)
+
+            img_lbl_Mwgt = (img, lbl, wgt)
+        else:
+            img_lbl_Mwgt = (img, lbl)
+
+        if len_key > 2:
+            f = self.transforms[key[2]]
+            img_lbl_Mwgt = f._apply_(*img_lbl_Mwgt)  # change _apply_
+
+        i = 0
+        if len_key == 4:
+            for sub_el in self.DivideImage(*img_lbl_Mwgt):
+                if i == key[3]:
+                    img_lbl_Mwgt = sub_el
+                    break
+                else:
+                    i += 1
+
+        if self.random_crop:
+            img_lbl_Mwgt = self.CropImgLbl(*img_lbl_Mwgt)
+        if self.Weight:
+            if 0 in img_lbl_Mwgt[2]:
+                img_lbl_Mwgt[2][img_lbl_Mwgt[2] == 0] = 1
+        if not hasattr(self, "UNet_crop"):
+            self.UNet_crop = False
+        if self.UNet_crop:
+            img_lbl_Mwgt = self.Unet_cut(*img_lbl_Mwgt)
+        if not hasattr(self, "return_path"):
+            self.return_path = False
+        if self.return_path:
+            img_lbl_Mwgt += (img_path,)
+
+        return img_lbl_Mwgt
 def CheckNumberForUnet(n):
     ans = False
     if (n - 4) % 2 == 0:

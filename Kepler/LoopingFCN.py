@@ -4,8 +4,8 @@ from os import environ
 
 
 net = 'FCN'
-raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
-wd = "/data/users/pnaylor/Documents/Python/Experiences2/CRF"
+raw_data = "/data/users/pnaylor/Bureau/ToAnnotateColor"
+wd = "/data/users/pnaylor/Documents/Python/Experiences2/MultiClass"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel"
 niter = 20000
 disp_interval = 100
@@ -29,7 +29,7 @@ size_y = 224
 archi = "32_16_8"  # _16_8"
 
 hw = "gpu"
-num_output = 2
+num_output = 9
 crf = 1
 
 
