@@ -16,7 +16,7 @@ class DataLayer(caffe.Layer):
         self.classifier_name = params['classifier_name']
         self.mean = np.array(params['mean'])
 
-        self.normalize = params.get('normalize', True)
+        self.normalize = params.get('normalize', False)
         self.random = params.get('randomize', True)
         self.seed = params.get('seed', None)
         self.batch_size = params.get('batch_size', 1)
