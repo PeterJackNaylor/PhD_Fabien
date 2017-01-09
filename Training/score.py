@@ -20,7 +20,6 @@ def compute_hist(net, number_of_test, layer='score', gt='label'):
 
 def seg_tests(solver, number_of_test, layer='score', gt='label'):
     print '>>>', datetime.now(), 'Begin seg tests'
-    pdb.set_trace()
     solver.test_nets[0].share_with(solver.net)
     hist, metrics = do_seg_tests(solver.test_nets[0], solver.iter,
                                  number_of_test, layer, gt, "Test Net:")
@@ -31,7 +30,6 @@ def seg_tests(solver, number_of_test, layer='score', gt='label'):
 
 
 def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', id="test", verbose=True):
-
     hist, loss = compute_hist(net, number_of_test, layer, gt)
     metrics = []
     metrics.append((loss, 'Loss'))
