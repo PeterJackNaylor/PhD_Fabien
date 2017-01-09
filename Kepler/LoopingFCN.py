@@ -5,10 +5,10 @@ from os import environ
 
 net = 'FCN'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
-wd = "/data/users/pnaylor/Documents/Python/Experiences2"
+wd = "/data/users/pnaylor/Documents/Python/Experiences2/CRF"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel"
-niter = 10000
-disp_interval = 1000
+niter = 20000
+disp_interval = 100
 leaveout = 1
 crop = 4
 
@@ -29,14 +29,17 @@ size_y = 224
 archi = "32_16_8"  # _16_8"
 
 hw = "gpu"
+num_output = 2
+crf = 1
+
 
 for base_lr in base_lr_list:
     for momentum in momentum_list:
         for weight_decay in weight_decay_list:
             cn = (net + '_{}_{}_{}').format(base_lr, momentum, weight_decay)
             arguments = (net, raw_data, wd, cn, weight, niter, disp_interval, leaveout, crop, base_lr,
-                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, archi, hw)
-            cmd = "python Training/OnePass.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --leaveout {} --crop {} --base_lr {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --archi {} --hw {}".format(
+                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, archi, hw, num_output, crf)
+            cmd = "python Training/OnePass.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --leaveout {} --crop {} --base_lr {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --archi {} --hw {} --num_output {} --crf {}".format(
                 *arguments)
             proces = subprocess.Popen(cmd, shell=True)
             proces.wait()
