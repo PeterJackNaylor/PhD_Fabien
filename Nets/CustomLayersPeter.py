@@ -95,7 +95,7 @@ class DataLayer(caffe.Layer):
     def forward(self, bottom, top):
         # assign output
         top[0].data[...] = self.data
-        self.label[self.label > 0] = 1
+        # self.label[self.label > 0] = 1
         top[1].data[...] = self.label
         if self.Weight:
             weight = self.weight
@@ -103,7 +103,9 @@ class DataLayer(caffe.Layer):
                 weight[weight > 0] = 1
             top[2].data[...] = weight
         self.Nextkey()
-
+        from scipy.misc import imsave
+        imsave("/data/users/pnaylor/Documents/new/{}_{}_{}_{}_GT.png".format(*self.key), self.label)
+        imsave("/data/users/pnaylor/Documents/new/{}_{}_{}_{}.png".format(*self.key), self.data)
     def backward(self, top, propagate_down, bottom):
         pass
 
