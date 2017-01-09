@@ -18,7 +18,7 @@ def CheckFile(path):
 
 
 def fast_hist(a, b, n):
-    hist = confusion_matrix(a, b, np.array([0, 1]))
+    hist = confusion_matrix(a, b, np.array(list(np.range(n))))
     return hist
 
 def ComputeHist(blob_gt, blob_pred, perblob = False):
