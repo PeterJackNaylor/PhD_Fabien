@@ -104,8 +104,8 @@ class DataLayer(caffe.Layer):
             top[2].data[...] = weight
         self.Nextkey()
         from scipy.misc import imsave
-        imsave("/data/users/pnaylor/Documents/new/{}_{}_{}_{}_GT.png".format(*self.key), self.label)
-        imsave("/data/users/pnaylor/Documents/new/{}_{}_{}_{}.png".format(*self.key), self.data)
+        imsave("/data/users/pnaylor/Documents/new/{}_{}_{}_{}_GT.png".format(*self.key), self.label[0,:,:])
+        imsave("/data/users/pnaylor/Documents/new/{}_{}_{}_{}.png".format(*self.key), self.data.transpose(1,2,0))
     def backward(self, top, propagate_down, bottom):
         pass
 
