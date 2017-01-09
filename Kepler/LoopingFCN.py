@@ -42,6 +42,7 @@ for base_lr in base_lr_list:
                          batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, archi, hw, num_output, crf, mode)
             cmd = "python Training/OnePass.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --leaveout {} --crop {} --base_lr {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --archi {} --hw {} --num_output {} --crf {} --mode {}".format(
                 *arguments)
+	    print cmd
             proces = subprocess.Popen(cmd, shell=True)
             proces.wait()
 
