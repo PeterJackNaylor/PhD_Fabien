@@ -28,6 +28,7 @@ size_x = 224
 size_y = 224
 archi = "32_16_8"  # _16_8"
 
+mode = "Fabien1"
 hw = "gpu"
 num_output = 9
 crf = 0
@@ -38,8 +39,8 @@ for base_lr in base_lr_list:
         for weight_decay in weight_decay_list:
             cn = (net + '_{}_{}_{}').format(base_lr, momentum, weight_decay)
             arguments = (net, raw_data, wd, cn, weight, niter, disp_interval, leaveout, crop, base_lr,
-                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, archi, hw, num_output, crf)
-            cmd = "python Training/OnePass.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --leaveout {} --crop {} --base_lr {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --archi {} --hw {} --num_output {} --crf {}".format(
+                         batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, archi, hw, num_output, crf, mode)
+            cmd = "python Training/OnePass.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --leaveout {} --crop {} --base_lr {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --archi {} --hw {} --num_output {} --crf {} --mode {}".format(
                 *arguments)
             proces = subprocess.Popen(cmd, shell=True)
             proces.wait()
