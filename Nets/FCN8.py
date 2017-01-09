@@ -81,7 +81,7 @@ def fcn8(split, data_gene, loss, batch_size, Weight, cn, c1, c2, num_output, crf
         else:
             n.loss = LossLayer(n.score, n.label, loss, weight=n.weight)
     else:
-        n.unary, n.Q0, n.pred, n.loss
+        n.unary, n.Q0, n.pred, n.loss = CRF_modules(n.score, n.data, n.label, method = "softmax")
 
     return n.to_proto()
 
