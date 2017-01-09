@@ -5,7 +5,7 @@ from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
 
-def fcn32(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
+def fcn32(split, data_gene, loss, batch_size, Weight, cn, c1, c2, num_output):
     n = caffe.NetSpec()
     if not Weight:
         n.data, n.label = DataLayer(split, data_gene, batch_size, cn, Weight)
@@ -43,12 +43,12 @@ def fcn32(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
     n.fc7, n.relu7 = ConvRelu(n.drop6, 4096, ks=1, pad=0)
     n.drop7 = L.Dropout(n.relu7, dropout_ratio=0.5, in_place=True)
 
-    score_fr = Conv(n.drop7, 2, ks=1, pad=0)
+    score_fr = Conv(n.drop7, nout=num_output, ks=1, pad=0)
 
     n.__setattr__(c1, score_fr)
 
     upscore = L.Deconvolution(score_fr,
-                              convolution_param=dict(num_output=2, kernel_size=64, stride=32,
+                              convolution_param=dict(num_output=num_output, kernel_size=64, stride=32,
                                                      bias_term=False),
                               weight_filler=dict(type='xavier'),
                               param=[dict(lr_mult=1)])
@@ -71,9 +71,9 @@ def make_net(options, c1="score_fr_32", c2="upscore_32"):
     bs = options.batch_size
     wgt = options.Weight
     wd = options.wd_32
-
+    num_output = options.num_output
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(fcn32('train', dgtrain, loss, bs, wgt, cn, c1, c2)))
+        f.write(str(fcn32('train', dgtrain, loss, bs, wgt, cn, c1, c2, num_output)))
 
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(fcn32('test', dgtest, loss, 1, False, cn, c1, c2)))
+        f.write(str(fcn32('test', dgtest, loss, 1, False, cn, c1, c2, num_output)))

@@ -67,7 +67,7 @@ def gather_whole_square(to_do, not_done):
 def update(list_A, list_B):
     ''' removes all element A from B'''
     for el in list_A:
-    	list_B.remove(el)
+        list_B.remove(el)
     return list_A, list_B
 
 

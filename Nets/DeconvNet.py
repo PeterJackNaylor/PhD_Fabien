@@ -5,7 +5,7 @@ from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
 
-def deconvnet(split, data_gene, loss, batch_size, Weight, cn):
+def deconvnet(split, data_gene, loss, batch_size, Weight, cn, num_output):
     n = caffe.NetSpec()
     if not Weight:
         n.data, n.label = DataLayer(split, data_gene, batch_size, cn, Weight)
@@ -117,7 +117,7 @@ def deconvnet(split, data_gene, loss, batch_size, Weight, cn):
         n.derelu1_1, 64, ks=3, pad=1)
 
     n.score = L.Convolution(n.derelu1_2, kernel_size=3, stride=1,
-                            num_output=2, pad=1,
+                            num_output=num_output, pad=1,
                             param=[dict(lr_mult=1, decay_mult=1), dict(
                                 lr_mult=2, decay_mult=0)],
                             weight_filler=Gaussian_fil,
@@ -138,9 +138,9 @@ def make_net(options):
     bs = options.batch_size
     wgt = options.Weight
     path = os.path.join(options.wd, options.cn)
-
+    num_output = options.num_output
     with open(os.path.join(path, 'train.prototxt'), 'w') as f:
-        f.write(str(deconvnet('train', dgtrain, loss, bs, wgt, cn)))
+        f.write(str(deconvnet('train', dgtrain, loss, bs, wgt, cn, num_output)))
 
     with open(os.path.join(path, 'test.prototxt'), 'w') as f:
-        f.write(str(deconvnet('test', dgtest, loss, 1, False, cn)))
+        f.write(str(deconvnet('test', dgtest, loss, 1, False, cn, num_output)))
