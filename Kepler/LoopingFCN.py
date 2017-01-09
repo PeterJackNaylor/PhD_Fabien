@@ -7,7 +7,7 @@ net = 'FCN'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotateColor"
 wd = "/data/users/pnaylor/Documents/Python/Experiences2/MultiClass"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel"
-niter = 20000
+niter = 200
 disp_interval = 100
 leaveout = 1
 crop = 4
@@ -18,9 +18,9 @@ batch_size = 1
 img_format = "RGB"
 loss = 'softmax'
 
-momentum_list = [0.9, 0.99]
+momentum_list = [0.9] #, 0.99]
 
-weight_decay_list = [0.0005, 0.0005]
+weight_decay_list = [0.0005] #, 0.0005]
 
 stepsize = 7000
 gamma = 0.1
@@ -30,7 +30,7 @@ archi = "32_16_8"  # _16_8"
 
 hw = "gpu"
 num_output = 9
-crf = 1
+crf = 0
 
 
 for base_lr in base_lr_list:
