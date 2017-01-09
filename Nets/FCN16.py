@@ -5,7 +5,7 @@ from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
 
-def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
+def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1, c2, num_output):
     n = caffe.NetSpec()
     if not Weight:
         n.data, n.label = DataLayer(split, data_gene, batch_size, cn, Weight)
@@ -43,23 +43,23 @@ def fcn16(split, data_gene, loss, batch_size, Weight, cn, c1, c2):
     n.fc7, n.relu7 = ConvRelu(n.drop6, 4096, ks=1, pad=0)
     n.drop7 = L.Dropout(n.relu7, dropout_ratio=0.5, in_place=True)
 
-    score_fr = Conv(n.drop7, nout=2, ks=1, pad=0)
+    score_fr = Conv(n.drop7, nout=num_output, ks=1, pad=0)
     n.__setattr__(c1, score_fr)
 
     upscore2 = L.Deconvolution(score_fr,
-                                 convolution_param=dict(num_output=2, kernel_size=4, stride=2,
+                                 convolution_param=dict(num_output=num_output, kernel_size=4, stride=2,
                                                         bias_term=False),
                                  weight_filler=dict(type='bilinear'),
                                  param=[dict(lr_mult=1)])
     n.__setattr__(c2, upscore2)
 
-    n.score_pool4 = Conv(n.pool4, nout=2, ks=1, pad=0)
+    n.score_pool4 = Conv(n.pool4, nout=num_output, ks=1, pad=0)
 
     n.score_pool4c = crop(n.score_pool4, upscore2)
     n.fuse_pool4 = L.Eltwise(upscore2, n.score_pool4c,
                              operation=P.Eltwise.SUM)
     n.upscore16 = L.Deconvolution(n.fuse_pool4,
-                                  convolution_param=dict(num_output=2, kernel_size=32, stride=16,
+                                  convolution_param=dict(num_output=num_output, kernel_size=32, stride=16,
                                                          bias_term=False),
                                   weight_filler=dict(type='bilinear'),
                                   param=[dict(lr_mult=1)])
@@ -81,9 +81,10 @@ def make_net(options, c1="score_fr_32", c2="upscore_16"):
     bs = options.batch_size
     wgt = options.Weight
     wd = options.wd_16
+    num_output = options.num_output
 
     with open(os.path.join(wd, 'train.prototxt'), 'w') as f:
-        f.write(str(fcn16('train', dgtrain, loss, bs, wgt, cn, c1, c2)))
+        f.write(str(fcn16('train', dgtrain, loss, bs, wgt, cn, c1, c2, num_output)))
 
     with open(os.path.join(wd, 'test.prototxt'), 'w') as f:
-        f.write(str(fcn16('test', dgtest, loss, 1, False, cn, c1, c2)))
+        f.write(str(fcn16('test', dgtest, loss, 1, False, cn, c1, c2, num_output)))

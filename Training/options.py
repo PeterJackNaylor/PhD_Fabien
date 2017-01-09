@@ -53,6 +53,10 @@ def GetOptions(verbose=True):
                       help="seed for datalayer")
     parser.add_option('--hw', dest="hardware", default="cpu", type="string",
                       help="hardware for computing: gpu or cpu")
+    parser.add_option('--num_output', dest="num_output", default=2, type="int",
+                      help="number of output for the neural net")
+    parser.add_option('--crf', dest="crf", default=0, type="int",
+                      help="0: No crf, 1: crf")  
 
 # non compulsory arguments with no default
     parser.add_option("--weight", dest="weight", type="string",
@@ -69,7 +73,7 @@ def GetOptions(verbose=True):
                       FCN and valid : 32_16_8")
     parser.add_option('--skip', dest="skip", default="", type="string",
                       help=" Which layers to skip, give 1234 or 123, 13, 12, 1 etc .")
-    parser.add_option('--mode', dest="mode", default="False",
+    parser.add_option('--mode', dest="mode", default="Fabien",
                       help="Mode can be Fabien's Dataset, Isbi2012 Dataset")
 
 # arguments if options.loss == weight
@@ -114,6 +118,8 @@ def GetOptions(verbose=True):
     print "enlarge           : | {}".format(options.enlarge)
     print "seed              : | {}".format(options.seed)
     print "hardware          : | {}".format(options.hardware)
+    print "crf               : | {}".format(options.crf)
+    print "num_output        : | {}".format(options.num_output)
 # non compulsory arguments with no default
 
     if options.weight is not None:
@@ -132,6 +138,10 @@ def GetOptions(verbose=True):
         print "NO RANDOM CROP"
 
  # arguments that need to be reprocessed
+    if options.crf != 0:
+        options.crf = True
+    else:
+        options.crf = False
 
     if options.enlarge == 1:
         options.enlarge = True
@@ -178,6 +188,8 @@ def GetOptions(verbose=True):
                         '162438', '588626', '160120', '498959']
     elif options.mode == "Isbi2012":
         options.patients = ["OnlyOne"]
+    else:
+        options.patients = ['']
 #    options.patients = ['581910',
 #                        '162438', '588626', '160120', '498959']
 

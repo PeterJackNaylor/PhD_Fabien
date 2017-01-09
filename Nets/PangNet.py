@@ -5,7 +5,7 @@ from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
 
-def pangnet(split, data_gene, loss, batch_size, Weight, cn):
+def pangnet(split, data_gene, loss, batch_size, Weight, cn, num_output, crf):
     n = caffe.NetSpec()
     if not Weight:
         n.data, n.label = DataLayer(split, data_gene, batch_size, cn, Weight)
@@ -17,14 +17,16 @@ def pangnet(split, data_gene, loss, batch_size, Weight, cn):
     n.conv2, n.relu2 = ConvRelu(n.relu1, 8, pad=1)
     n.conv3, n.relu3 = ConvRelu(n.relu2, 8, pad=1)
 
-    n.score = Conv(n.relu3, nout=2, ks=1, pad=0)
+    n.score = Conv(n.relu3, nout=num_output, ks=1, pad=0)
 
-    if not Weight:
-        n.loss = LossLayer(n.score, n.label, loss)
+    if not crf:
+        if not Weight:
+            n.loss = LossLayer(n.score, n.label, loss)
+        else:
+            n.loss = LossLayer(n.score, n.label, loss, weight=n.weight)
     else:
-        n.loss = LossLayer(n.score, n.label, loss, weight=n.weight)
+        n.unary, n.Q0, n.pred, n.loss = CRF_modules(n.score, n.data, n.label, method = "softmax")
     return n.to_proto()
-
 
 def make_net(options):
     dgtrain = options.dgtrain
@@ -34,9 +36,11 @@ def make_net(options):
     bs = options.batch_size
     wgt = options.Weight
     path = os.path.join(options.wd, options.cn)
+    num_output = options.num_output
+    crf = options.crf
 
     with open(os.path.join(path, 'train.prototxt'), 'w') as f:
-        f.write(str(pangnet('train', dgtrain, loss, bs, wgt, cn)))
+        f.write(str(pangnet('train', dgtrain, loss, bs, wgt, cn, num_output, crf)))
 
     with open(os.path.join(path, 'test.prototxt'), 'w') as f:
-        f.write(str(pangnet('test', dgtest, loss, 1, False, cn)))
+        f.write(str(pangnet('test', dgtest, loss, 1, False, cn, num_output, crf)))

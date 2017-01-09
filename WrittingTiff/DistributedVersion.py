@@ -173,7 +173,7 @@ def PredOneImage(slide, para, outfile, f):
     slide = openslide.open_slide(slide)
     image = np.array(GetImage(slide, para))[:,:,:3]
     image = f(image)
-    imsave(outfile, image)
+    imsave(outfile, image, resolution=[1.0,1.0])
 
 if __name__ == "__main__":
 

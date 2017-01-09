@@ -4,9 +4,9 @@ from os import environ
 
 
 net = 'FCN'
-raw_data = "/data/users/pnaylor/Bureau/ToAnnotateColor"
-wd = "/data/users/pnaylor/Documents/Python/Experiences2/MultiClass"
-weight = "/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel"
+raw_data = "/share/data40T_v2/Peter/Data/ToAnnotate"
+wd = "/share/data40T_v2/Peter/Experiences/CRF"
+weight = "/share/data40T_v2/Peter/pretrained_models/fcn32s-heavy-pascal.caffemodel"
 niter = 20000
 disp_interval = 100
 leaveout = 1
@@ -18,9 +18,9 @@ batch_size = 1
 img_format = "RGB"
 loss = 'softmax'
 
-momentum_list = [0.9, 0.99]
+momentum_list = [0.9] #, 0.99]
 
-weight_decay_list = [0.0005, 0.0005]
+weight_decay_list = [0.0005] #, 0.0005]
 
 stepsize = 7000
 gamma = 0.1
@@ -29,7 +29,7 @@ size_y = 224
 archi = "32_16_8"  # _16_8"
 
 hw = "gpu"
-num_output = 9
+num_output = 2
 crf = 1
 
 

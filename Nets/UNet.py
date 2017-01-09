@@ -4,7 +4,7 @@ import caffe
 from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
-def unet(split, data_gene, loss, batch_size, Weight, cn, skip):
+def unet(split, data_gene, loss, batch_size, Weight, cn, skip, num_output):
     n = caffe.NetSpec()
     if not Weight:
         n.data, n.label = DataLayer(split, data_gene, batch_size, cn, Weight)
@@ -60,7 +60,7 @@ def unet(split, data_gene, loss, batch_size, Weight, cn, skip):
             n.relu_u1d, 64, deconv_out=128)
 
     n.score = L.Convolution(n.relu_u0d, kernel_size=1,
-                            num_output=2, pad=0,
+                            num_output=num_output, pad=0,
                             param=[dict(lr_mult=1, decay_mult=1), dict(
                                 lr_mult=2, decay_mult=0)],
                             weight_filler=dict(type="xavier"))
@@ -80,9 +80,10 @@ def make_net(options):
     wgt = options.Weight
     path = os.path.join(options.wd, options.cn)
     skip = options.skip
+    num_output = options.num_output
 
     with open(os.path.join(path, 'train.prototxt'), 'w') as f:
-        f.write(str(unet('train', dgtrain, loss, bs, wgt, cn, skip)))
+        f.write(str(unet('train', dgtrain, loss, bs, wgt, cn, skip, num_output)))
 
     with open(os.path.join(path, 'test.prototxt'), 'w') as f:
-        f.write(str(unet('test', dgtest, loss, 1, wgt, cn, skip)))
+        f.write(str(unet('test', dgtest, loss, 1, wgt, cn, skip, num_output)))

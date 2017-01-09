@@ -156,7 +156,13 @@ def LossLayer(score, label, loss, weight=None):
     return losslayer
 
 def CRF_modules(score, data, label, method = "softmax"):
-    unary, Q0 = L.Split(score)
-    pred = L.MultiStageMeanfield(unary, Q0, data)
+    unary, Q0 = L.Split(score, ntop=2)
+    p1 = dict(lr_mult=10000)
+    p2 = dict(lr_mult=10000)
+    p3 = dict(lr_mult=1000)
+    multi_stage_meanfield_param = dict(num_iterations=10, compatibility_mode=0, threshold=2, 
+                                       theta_alpha=160, theta_beta=3, theta_gamma=3, 
+                                       spatial_filter_weight=3, bilateral_filter_weight=5)
+    pred = L.MultiStageMeanfield(unary, Q0, data, param=[p1, p2, p3], multi_stage_meanfield_param=multi_stage_meanfield_param)
     loss = LossLayer(pred, label, method)
     return unary, Q0, pred, loss

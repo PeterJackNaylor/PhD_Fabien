@@ -152,7 +152,6 @@ class DataGenIsbi2012(DataGen):
             return (0, 0)
 
     def NextKey(self, key):
-
         val = key[0]
         transf = key[1]
 
