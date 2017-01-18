@@ -70,12 +70,5 @@ def DynamicWatershedAlias(p_img, lamb):
     ws_labels = watershed(Hrecons, markers_Probs_inv, mask=b_img)
 
     wsl = generate_wsl(ws_labels)
-<<<<<<< HEAD
     b_img[wsl > 0] = 0
-
-=======
-    #pdb.set_trace()
-    b_img[wsl>0] = 0
-    
->>>>>>> b6c93534bc58c36133b0bc41235dfb8fa8b4c1de
     return label(b_img)

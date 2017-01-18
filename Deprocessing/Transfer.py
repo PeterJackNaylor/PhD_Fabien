@@ -12,6 +12,13 @@ def find_between_r(s, first, last):
 
 
 def ChangeDataGenPath(path, folder):
+    """
+    Sets the datagenerator in folder so that they can find
+    the raw images in path.
+    Input:
+        path: raw image folder
+        folder: path to working folder
+    """
     datagen_test = os.path.join(folder, 'model', 'data_generator_test.pkl')
     datagen_train = os.path.join(folder, 'model', 'data_generator_train.pkl')
 
@@ -26,6 +33,13 @@ def ChangeDataGenPath(path, folder):
 
 
 def ChangePrototxt(protofile, folder):
+    """
+    Modifyies the protofile so that he know where to find the datagen
+    in the right folder.
+    Input:
+        protofile: protofile name
+        folder: path to working folder
+    """
     with open(protofile, 'r') as file:
         filedata = file.read()
 
@@ -40,6 +54,15 @@ def ChangePrototxt(protofile, folder):
 
 
 def ChangeEnv(path, folder):
+    """
+    Changes the setting for a whole caffe model, which means 
+    relacing the data generators so that they find path correctly
+    but also know where all the other related files are by specifying
+    folder.
+    Input: 
+        path: raw image folder
+        folder: path to working folder
+    """
     ChangeDataGenPath(path, folder)
     if 'FCN' in folder:
         for num in [32, 16, 8]:

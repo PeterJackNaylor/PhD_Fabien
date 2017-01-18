@@ -262,6 +262,7 @@ class DataGen(object):
     def LoadGT(self, path, normalize=True):
         image = ni.load(path)
         img = image.get_data()
+        img[img > 0] = 1
         if len(img.shape) == 3:
             img = img[:, :, 0].transpose()
         else:

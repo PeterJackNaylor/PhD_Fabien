@@ -1,3 +1,8 @@
+"""
+%run ../Python/PhD_Fabien/WrittingTiff/DistributedReconstruction.py seg_test.tif ./tiled_588626/ 1000
+"""
+
+
 import sys
 import glob
 import os
