@@ -6,7 +6,7 @@ import numpy as np
 import caffe
 import pdb
 
-from UsefulFunctions.RandomUtils import CheckOrCreate
+from UsefulFunctions.RandomUtils import CheckOrCreate, CheckFile
 from UsefulFunctions.EmailSys import ElaborateEmail
 
 def TrainModel(options):
@@ -65,36 +65,49 @@ def TrainModel(options):
 
 
 def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test, num):
-    my_solver = caffe.get_solver(solver_path)
-
-    if weight is not None:
-        assert os.path.exists(weight)
-        my_solver.net.copy_from(weight)
-
-    start_time = time.time()
-    print 'Running solvers for %d iterations...' % niter
-
-    solvers = [(cn, my_solver)]
 
     res_fold = os.path.join(wd, cn, "temp_files")
 
-    Results, Results_train, weights = run_solvers_IU(
-        niter, solvers, res_fold, disp_interval, number_of_test, num)
+    ## Checking if file exists before running.
+    name = cn
+    if "/" in name:
+        name = name.split('/')[-1]
+    filename = 'weights.{}_{}.caffemodel'.format(name, num)
+    if os.path.isfile(os.path.join(res_fold, filename)):
+        print "file already exists"
 
-    Results.to_csv(os.path.join(
-        res_fold, 'Metrics_{}_{}_{}.csv').format(disp_interval, niter, num))
-    Results_train.to_csv(os.path.join(
-        res_fold, 'MetricsTrain_{}_{}_{}.csv').format(disp_interval, niter, num))
+    else:
+            
+        my_solver = caffe.get_solver(solver_path)
 
-    print 'Done.'
+        if weight is not None:
+            assert os.path.exists(weight)
+            my_solver.net.copy_from(weight)
 
-    diff_time = time.time() - start_time
+        start_time = time.time()
+        print 'Running solvers for %d iterations...' % niter
 
-    print ' \n '
-    print 'Time for slide:'
-    print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
+        solvers = [(cn, my_solver)]
 
-    print ' \n '
-    print "Average time per image: (have to put number of images.. "
-    diff_time = diff_time / 10
-    print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
+
+            
+        Results, Results_train, weights = run_solvers_IU(
+            niter, solvers, res_fold, disp_interval, number_of_test, num)
+
+        Results.to_csv(os.path.join(
+            res_fold, 'Metrics_{}_{}_{}.csv').format(disp_interval, niter, num))
+        Results_train.to_csv(os.path.join(
+            res_fold, 'MetricsTrain_{}_{}_{}.csv').format(disp_interval, niter, num))
+
+        print 'Done.'
+
+        diff_time = time.time() - start_time
+
+        print ' \n '
+        print 'Time for slide:'
+        print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
+
+        print ' \n '
+        print "Average time per image: (have to put number of images.. "
+        diff_time = diff_time / 10
+        print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)

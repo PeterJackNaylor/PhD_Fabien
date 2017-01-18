@@ -88,7 +88,8 @@ def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', id="test"
             print ">>> Confusion matrix:"
             labels = ["Background", "Fat cells", "Cancerous", "Lymphocyte", "Fibroblast",
                       "Mitosis", "Epithelial", "Normal", "Ignore", "Necrose"]
-            print_cm(hist/hist.astype(np.float).sum(axis=1), labels)
+            print_cm(hist, labels)
+            #metrics.append((hist))
     return hist, metrics
 
 

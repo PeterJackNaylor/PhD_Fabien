@@ -3,6 +3,12 @@ import cPickle as pkl
 
 
 def find_between_r(s, first, last):
+    """
+    Finds string T in string s. Return the values between first and start in T.
+    Input:
+        s: String to look in.
+        first: first 
+    """
     try:
         start = s.index(first) + len(first)
         end = s.index(last, start)
