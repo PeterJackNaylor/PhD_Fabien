@@ -112,6 +112,7 @@ class DataGenIsbi2012(DataGen):
         return img_lbl
 
     def Unet_cut(self, *kargs):
+	# pdb.set_trace()
         dim = kargs[0].shape
         x = dim[0]
         y = dim[1]

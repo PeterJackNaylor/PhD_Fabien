@@ -18,9 +18,9 @@ batch_size = 1
 img_format = "RGB"
 loss = 'softmax'
 
-momentum_list = [0.99] #, 0.99]
+momentum_list = [0.9, 0.99]
 
-weight_decay_list = [0.0005] #, 0.0005]
+weight_decay_list = [0.005] #, 0.0005]
 
 stepsize = 7000
 gamma = 0.1
@@ -28,7 +28,7 @@ size_x = 224
 size_y = 224
 archi = "8"  # _16_8"
 
-mode = "Fabien1"
+mode = "Fabien"
 hw = "gpu"
 num_output = 10
 crf = 0
@@ -42,6 +42,7 @@ for base_lr in base_lr_list:
                          batch_size, img_format, loss, momentum, weight_decay, stepsize, gamma, size_x, size_y, archi, hw, num_output, crf, mode)
             cmd = "python Training/OnePass.py --net {} --rawdata {} --wd {} --cn {} --weight {} --niter {} --disp_interval {} --leaveout {} --crop {} --base_lr {} --batch_size {} --img_format {} --loss {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --size_x {} --size_y {} --archi {} --hw {} --num_output {} --crf {} --mode {}".format(
                 *arguments)
+	    print cmd
             proces = subprocess.Popen(cmd, shell=True)
             proces.wait()
 
