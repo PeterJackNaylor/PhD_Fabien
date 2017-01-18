@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     (options, args) = GetOptions()
     if create_dataset:
-        if options.mode == "Fabien":
+        if "Fabien" in options.mode:
             from Data.DataGen import MakeDataGen
             MakeDataGen(options)
         elif options.mode == "Isbi2012":

@@ -120,6 +120,7 @@ def GetOptions(verbose=True):
     print "hardware          : | {}".format(options.hardware)
     print "crf               : | {}".format(options.crf)
     print "num_output        : | {}".format(options.num_output)
+    print "mode              : | {}".format(options.mode)
 # non compulsory arguments with no default
 
     if options.weight is not None:
