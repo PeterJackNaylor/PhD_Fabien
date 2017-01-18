@@ -65,16 +65,6 @@ def TrainModel(options):
 
 
 def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test, num):
-    my_solver = caffe.get_solver(solver_path)
-
-    if weight is not None:
-        assert os.path.exists(weight)
-        my_solver.net.copy_from(weight)
-
-    start_time = time.time()
-    print 'Running solvers for %d iterations...' % niter
-
-    solvers = [(cn, my_solver)]
 
     res_fold = os.path.join(wd, cn, "temp_files")
 
@@ -85,7 +75,21 @@ def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test, num
     filename = 'weights.{}_{}.caffemodel'.format(name, num)
     if os.path.isfile(os.path.join(res_fold, filename)):
         print "file already exists"
+
     else:
+            
+        my_solver = caffe.get_solver(solver_path)
+
+        if weight is not None:
+            assert os.path.exists(weight)
+            my_solver.net.copy_from(weight)
+
+        start_time = time.time()
+        print 'Running solvers for %d iterations...' % niter
+
+        solvers = [(cn, my_solver)]
+
+
             
         Results, Results_train, weights = run_solvers_IU(
             niter, solvers, res_fold, disp_interval, number_of_test, num)
