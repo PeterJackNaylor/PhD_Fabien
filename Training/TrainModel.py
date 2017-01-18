@@ -6,7 +6,7 @@ import numpy as np
 import caffe
 import pdb
 
-from UsefulFunctions.RandomUtils import CheckOrCreate
+from UsefulFunctions.RandomUtils import CheckOrCreate, CheckFile
 from UsefulFunctions.EmailSys import ElaborateEmail
 
 def TrainModel(options):
@@ -78,23 +78,32 @@ def train(solver_path, weight, wd, cn, niter, disp_interval, number_of_test, num
 
     res_fold = os.path.join(wd, cn, "temp_files")
 
-    Results, Results_train, weights = run_solvers_IU(
-        niter, solvers, res_fold, disp_interval, number_of_test, num)
+    ## Checking if file exists before running.
+    name = cn
+    if "/" in name:
+        name = name.split('/')[-1]
+    filename = 'weights.{}_{}.caffemodel'.format(name, num)
+    if os.path.isfile(os.path.join(res_fold, filename)):
+        print "file already exists"
+    else:
+            
+        Results, Results_train, weights = run_solvers_IU(
+            niter, solvers, res_fold, disp_interval, number_of_test, num)
 
-    Results.to_csv(os.path.join(
-        res_fold, 'Metrics_{}_{}_{}.csv').format(disp_interval, niter, num))
-    Results_train.to_csv(os.path.join(
-        res_fold, 'MetricsTrain_{}_{}_{}.csv').format(disp_interval, niter, num))
+        Results.to_csv(os.path.join(
+            res_fold, 'Metrics_{}_{}_{}.csv').format(disp_interval, niter, num))
+        Results_train.to_csv(os.path.join(
+            res_fold, 'MetricsTrain_{}_{}_{}.csv').format(disp_interval, niter, num))
 
-    print 'Done.'
+        print 'Done.'
 
-    diff_time = time.time() - start_time
+        diff_time = time.time() - start_time
 
-    print ' \n '
-    print 'Time for slide:'
-    print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
+        print ' \n '
+        print 'Time for slide:'
+        print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
 
-    print ' \n '
-    print "Average time per image: (have to put number of images.. "
-    diff_time = diff_time / 10
-    print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
+        print ' \n '
+        print "Average time per image: (have to put number of images.. "
+        diff_time = diff_time / 10
+        print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
