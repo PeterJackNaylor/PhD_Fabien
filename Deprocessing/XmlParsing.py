@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 from UsefulFunctions.RandomUtils import CheckOrCreate
+import os
 import glob
 from scipy.misc import imread, imsave
 from skimage.measure import label
@@ -43,7 +44,10 @@ def load_files():
 
 def load_png(image_path):
     """returns label image with different intergers for each"""
-    return label(imread(image_path))
+    #pdb.set_trace()
+    lbl = label(imread(image_path))
+    lbl = lbl.astype(np.uint8)
+    return lbl
 
 def get_markers(xml_file):
     """ parsers the xml file into a pandas dataframe"""
@@ -63,6 +67,27 @@ def get_markers(xml_file):
             i += 1
     return xml_points
 
+
+
+def encadre(x):
+    return max(min(x,511),0)
+def find_closest_lbl(img, x, y, thresh=10):
+    """ find closest lbl of pixel in a thresh-old array"""
+    for i in range(thresh):
+        x_min = encadre(x - thresh)
+        x_max = encadre(x + thresh)
+        y_min = encadre(y - thresh)
+        y_max = encadre(y + thresh)
+        ana = img[x_min:x_max, y_min:y_max].copy()
+        lbl_prox = np.unique(ana)
+        if len(lbl_prox) != 1:
+            for el in lbl_prox:
+                if el != 0:
+                    break
+            return el
+    return 0
+
+
 def fuse(xml_pandas, lbl_label):
     """fuses the data from the lbl_label and the xml pandas"""
     res = lbl_label.copy()
@@ -72,14 +97,17 @@ def fuse(xml_pandas, lbl_label):
         x = int(xml_pandas.ix[i, "x"])
         y = int(xml_pandas.ix[i, "y"])
         ty = int(xml_pandas.ix[i, "Type"])
-        x = max(min(x, 511), 0)
-        y = max(min(y, 511), 0)
+        x = encadre(x)
+        y = encadre(y)
         val_nuc = lbl_label[y, x] # we have to inverse, maybe due to the xml enconding..
+        if val_nuc == 0:
+            val_nuc = find_closest_lbl(lbl_label, y, x)
         if val_nuc != 0:
             res[lbl_label == val_nuc] = ty
         #print x, y, ty
             if val_nuc in to_remove:
             	to_remove.remove(val_nuc)
+
     n_pri = len(to_remove)
     for too_small in to_remove:
         res[res == too_small] = 0
@@ -94,8 +122,8 @@ def CreateFolder(data_file):
     for string in data_file["Path_PNG"]:
         string = string.replace("masks", "colored_mask")
         string = string.replace(string.split('/')[-1], "")
-
-        print "Creating folder: {}".format(string)
+        if not os.path.isdir(string):
+            print "Creating folder: {}".format(string)
         CheckOrCreate(string)
 
 def SaveName():
@@ -111,21 +139,22 @@ def __main__():
         xml_path = all_files.ix[el, "Path_XML"]
         png_path = all_files.ix[el, "Path_PNG"]
         img = load_png(png_path)
+        #pdb.set_trace()
         xml_data = get_markers(xml_path)
         classed_label = fuse(xml_data, img)
         save_name = SaveName().format(*el)
         diffsave_name = SaveDiffName().format(*el)
         try:
-        	diff_png = img.copy()
-        	diff_png[diff_png > 0] = 1
-        	diff_classed = classed_label.copy()
-        	diff_classed[diff_classed > 0] = 1
-        	diff = diff_classed - diff_png
-        	diff[diff != 0] = 255
-        	imsave(diffsave_name, diff)
-
-        	imsave(save_name, classed_label)
-        	print "print saved file: {}".format(save_name)
+            diff_png = img.copy()
+            diff_png[diff_png > 0] = 1
+            diff_classed = classed_label.copy()
+            diff_classed[diff_classed > 0] = 1
+            diff = diff_classed - diff_png
+            diff[diff != 0] = 255
+            print classed_label.shape
+            imsave(diffsave_name, diff)
+            imsave(save_name, classed_label)
+            print "print saved file: {}".format(save_name)
         except:
-        	print "Couldn't save file : {}".format(save_name)
+            print "Couldn't save file : {}".format(save_name)
         #pdb.set_trace()

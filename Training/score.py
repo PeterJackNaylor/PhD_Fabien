@@ -69,7 +69,7 @@ def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', id="test"
     metrics.append(((freq[freq > 0] * iu[freq > 0]).sum(), "fwavacc"))
 
     if n_cl == 2 :
-        recall = (hist[1, 1] + 0.0) / (hist[1, 0] + hist[1, 1])
+        recall = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[1, 0])
         metrics.append((recall, "Recall"))
         prec = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1])
         metrics.append((prec, "Precision"))
@@ -79,6 +79,11 @@ def do_seg_tests(net, iter, number_of_test, layer='score', gt='label', id="test"
         metrics.append(((recall + true_neg) / 2, 'Performance'))
         F1 = 2 * prec * recall / (prec + recall)
         metrics.append((F1, 'F1'))
+    else:
+        for k in range(n_cl):
+            name = "Classe percentage {}".format(k)
+            val = (hist[k, k] + 0.0) / (np.sum(hist[k,:]))
+            metrics.append((val, name))
     if verbose:
         print "\n "
         print ">>>", datetime.now(), "Iteration", iter, "for", id
