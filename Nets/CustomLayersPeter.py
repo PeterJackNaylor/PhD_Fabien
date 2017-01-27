@@ -149,6 +149,7 @@ class DataLayer(caffe.Layer):
         return in_, label
 
     def loadWithWeight(self, key):
+        pdb.set_trace()
         im, label, weight = self.datagen[key]
         in_ = self.PrepareImg(im)
         label = self.Prepare2DImage(label)

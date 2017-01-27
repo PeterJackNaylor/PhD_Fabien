@@ -125,3 +125,32 @@ def ComputeWeightMap(input_path, w_0, val, sigma=5):
             # print new_name
             misc.imsave(new_name, res)
     return wgt_dir
+
+def ComputeWeightMapIsbi(path, w_0, val, sigma=5):
+
+    from Data.DataGen import DataGen
+    input_path = '/' + os.path.join(*path.split('/')[:-1])
+    WGT_DIR = os.path.join(input_path, "WEIGHTS")
+    CheckOrCreate(WGT_DIR)
+    wgt_dir = os.path.join(
+        WGT_DIR, "{}_{}_{}_{}".format(w_0, val[0], val[1], sigma))
+    CheckOrCreate(wgt_dir)
+    datagen = DataGen(input_path, transforms=[Identity()])
+    datagen.SetPatient("0000000")
+    folder = glob.glob(os.path.join(input_path, 'GT_*'))
+
+    for fold in folder:
+        num = fold.split('_')[-1].split(".")[0]
+        new_fold = os.path.join(wgt_dir, "WGT_" + num)
+        CheckOrCreate(new_fold)
+        list_nii = glob.glob(os.path.join(fold, '*.nii.gz'))
+        for name in list_nii:
+            # print name
+            lbl = datagen.LoadGT(name)
+            lbl_diff = skm.label(lbl)
+            res = WeightMap(lbl_diff, w_0, val, sigma)
+            name = os.path.join(new_fold, name.split('/')[-1])
+            new_name = name.replace('nii.gz', 'png')
+            # print new_name
+            misc.imsave(new_name, res)
+    return wgt_dir

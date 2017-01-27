@@ -9,6 +9,8 @@ from UsefulFunctions.ImageTransf import Identity, flip_vertical, flip_horizontal
 import matplotlib.pylab as plt
 import numpy as np
 import cPickle as pkl
+from RandomUtils import CheckExistants
+from UsefulFunctions.WeightMaps import ComputeWeightMap
 
 def MakeDataGen(options):
     dgtrain = options.dgtrain
@@ -19,19 +21,23 @@ def MakeDataGen(options):
     leaveout = options.leaveout
     seed = options.seed
     Unet = options.net == "UNet"
-
+    wgt_param = options.wgt_param
     transform_list = options.transform_list
+    Weight = options.Weight
+    WeightOnes = options.WeightOnes
 
 
     data_generator_train = DataGenIsbi2012(rawdata, rawdata_lbl,
                                   transform_list, split="train",
-                                   leave_out=leaveout, seed=seed,
+                                   leave_out=leaveout, seed=seed, Weight=Weight,
+                                   WeightOnes=WeightOnes, wgt_param=wgt_param,
                                    Unet=Unet)
     pkl.dump(data_generator_train, open(dgtrain, "wb"))
 
     data_generator_test = DataGenIsbi2012(rawdata, rawdata_lbl,
                                   [Identity()], split="test",
-                                  leave_out=leaveout, seed=seed,
+                                  leave_out=leaveout, seed=seed, Weight=Weight,
+                                  WeightOnes=WeightOnes, wgt_param=wgt_param,
                                   Unet=Unet)
     pkl.dump(data_generator_test, open(dgtest, "wb"))
 
@@ -43,7 +49,9 @@ def LoadSetImage(path):
 
 
 class DataGenIsbi2012(DataGen):
-    def __init__(self, path, lbl_path, transforms, split ='train', leave_out=1, seed=None, Unet=True):
+    def __init__(self, path, lbl_path, transforms, split ='train', 
+                 leave_out=1, seed=None, Weight=False, WeightOnes=False,
+                 wgt_param=(10, 1, 3, 5), Unet=True):
 
 
         self.path = path
@@ -56,10 +64,10 @@ class DataGenIsbi2012(DataGen):
         self.n_f = len(transforms)
         self.SetDataSet()
 
-        self.Weight = False
-        self.WeightOnes = False
+        self.Weight = Weight
+        self.WeightOnes = WeightOnes
         self.return_path = False
-
+        self.wgt_param = wgt_param
 
     def LoadImage(self, val):
         return self.data_vol[val]
@@ -106,7 +114,15 @@ class DataGenIsbi2012(DataGen):
         img = self.LoadImage(val)
         lbl = self.LoadLabel(val)
 
-        img_lbl = (img, lbl)
+        if self.Weight:
+            #pdb.set_trace()
+            wgt_dir = self.Weight_path()
+            wgt_path = os.path.join(wgt_dir, *img_path.split('/')[-2::])
+            wgt_path = wgt_path.replace("Slide", "WGT")
+            wgt = self.LoadWeight(wgt_path)
+            img_lbl = (img, lbl, wgt)
+        else:
+            img_lbl = (img, lbl)
 #        pdb.set_trace()
         func = self.transforms[transf]
         img_lbl = func._apply_(*img_lbl)
@@ -115,6 +131,19 @@ class DataGenIsbi2012(DataGen):
             img_lbl = self.Unet_cut(*img_lbl)
 
         return img_lbl
+
+    def Weight_path(self):
+        pdb.set_trace()
+        w_0 = self.wgt_param[0]
+        val = self.wgt_param[1:3]
+        sigma = self.wgt_param[3]
+        try:
+            self.wgt_dir = os.path.join(
+                '/' + os.path.join(*self.path.split('/')[:-1]), "WEIGHTS", "{}_{}_{}_{}".format(*self.wgt_param))
+            CheckExistants(self.wgt_dir)
+        except:
+            self.wgt_dir = ComputeWeightMap(self.path, w_0, val, sigma)
+        return self.wgt_dir
 
     def Unet_cut(self, *kargs):
 	# pdb.set_trace()
