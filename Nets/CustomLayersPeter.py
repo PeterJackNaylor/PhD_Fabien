@@ -50,6 +50,8 @@ class DataLayer(caffe.Layer):
 
     def reshape(self, bottom, top):
         # load image + label image pair
+
+        #pdb.set_trace()
         if self.batch_size == 1:
             if not self.Weight:
                 self.data, self.label = self.loadImageAndGT(self.key)
@@ -57,7 +59,8 @@ class DataLayer(caffe.Layer):
                 self.data, self.label, self.weight = self.loadWithWeight(
                     self.key)
                 top[2].reshape(self.batch_size, *self.weight.shape)
-
+            # self.data = self.data[np.newaxis, ...]
+            # self.label = self.label[np.newaxis, ...]    
             top[0].reshape(self.batch_size, *self.data.shape)
             top[1].reshape(self.batch_size, *self.label.shape)
 
@@ -94,6 +97,7 @@ class DataLayer(caffe.Layer):
 
     def forward(self, bottom, top):
         # assign output
+        #pdb.set_trace()
         top[0].data[...] = self.data
         # self.label[self.label > 0] = 1
         top[1].data[...] = self.label

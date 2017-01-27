@@ -3,7 +3,7 @@ import itertools
 import pdb
 from DataGen import DataGen
 from WrittingTiff.tifffile import imread
-
+import os
 from UsefulFunctions import ImageTransf as Transf
 from UsefulFunctions.ImageTransf import Identity, flip_vertical, flip_horizontal
 import matplotlib.pylab as plt
@@ -65,8 +65,8 @@ class DataGenIsbi2012(DataGen):
         return self.data_vol[val]
 
     def LoadLabel(self, val):
-	lbl = self.lbl_vol[val]
-	lbl[lbl > 0] = 1
+        lbl = self.lbl_vol[val]
+        lbl[lbl > 0] = 1
         return lbl
 
     def SetDataSet(self):
@@ -87,6 +87,9 @@ class DataGenIsbi2012(DataGen):
         self.number = self.data_vol.shape[0]
         self.length = self.number * self.n_f
 
+    def SetPath(self, path):
+        self.path = os.path.join(path, "train-volume.tif" )
+        self.lbl_path = os.path.join(path , "train-labels.tif")
 
     def __getitem__(self, key):
 
