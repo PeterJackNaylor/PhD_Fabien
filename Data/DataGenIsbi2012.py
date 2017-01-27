@@ -9,8 +9,8 @@ from UsefulFunctions.ImageTransf import Identity, flip_vertical, flip_horizontal
 import matplotlib.pylab as plt
 import numpy as np
 import cPickle as pkl
-from RandomUtils import CheckExistants
-from UsefulFunctions.WeightMaps import ComputeWeightMap
+from RandomUtils import CheckExistants, CheckFile
+from UsefulFunctions.WeightMaps import ComputeWeightMapIsbi
 
 def MakeDataGen(options):
     dgtrain = options.dgtrain
@@ -115,7 +115,6 @@ class DataGenIsbi2012(DataGen):
         lbl = self.LoadLabel(val)
 
         if self.Weight:
-            #pdb.set_trace()
             wgt_dir = self.Weight_path()
             wgt_path = os.path.join(wgt_dir, *img_path.split('/')[-2::])
             wgt_path = wgt_path.replace("Slide", "WGT")
@@ -123,7 +122,6 @@ class DataGenIsbi2012(DataGen):
             img_lbl = (img, lbl, wgt)
         else:
             img_lbl = (img, lbl)
-#        pdb.set_trace()
         func = self.transforms[transf]
         img_lbl = func._apply_(*img_lbl)
 
@@ -139,10 +137,10 @@ class DataGenIsbi2012(DataGen):
         sigma = self.wgt_param[3]
         try:
             self.wgt_dir = os.path.join(
-                '/' + os.path.join(*self.path.split('/')[:-1]), "WEIGHTS", "{}_{}_{}_{}".format(*self.wgt_param))
-            CheckExistants(self.wgt_dir)
+                '/' + os.path.join(*self.path.split('/')[:-1]), "WEIGHTS", "{}_{}_{}_{}.tif".format(*self.wgt_param))
+            CheckFile(self.wgt_dir)
         except:
-            self.wgt_dir = ComputeWeightMap(self.path, w_0, val, sigma)
+            self.wgt_dir = ComputeWeightMapIsbi(self.path, w_0, val, sigma)
         return self.wgt_dir
 
     def Unet_cut(self, *kargs):

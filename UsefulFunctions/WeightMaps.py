@@ -8,7 +8,7 @@ from scipy import misc
 from UsefulFunctions.RandomUtils import CheckOrCreate, CheckExistants, CheckFile
 from UsefulFunctions.ImageTransf import Identity
 from scipy import ndimage
-
+import WrittingTiff.tifffile as tif
 
 def FrequencyBalanceValues(datagen):
 
@@ -126,31 +126,18 @@ def ComputeWeightMap(input_path, w_0, val, sigma=5):
             misc.imsave(new_name, res)
     return wgt_dir
 
-def ComputeWeightMapIsbi(path, w_0, val, sigma=5):
+def ComputeWeightMapIsbi(lbl_path, w_0, val, sigma=5):
 
-    from Data.DataGen import DataGen
-    input_path = '/' + os.path.join(*path.split('/')[:-1])
+    input_path = '/' + os.path.join(*lbl_path.split('/')[:-1])
     WGT_DIR = os.path.join(input_path, "WEIGHTS")
     CheckOrCreate(WGT_DIR)
-    wgt_dir = os.path.join(
-        WGT_DIR, "{}_{}_{}_{}".format(w_0, val[0], val[1], sigma))
-    CheckOrCreate(wgt_dir)
-    datagen = DataGen(input_path, transforms=[Identity()])
-    datagen.SetPatient("0000000")
-    folder = glob.glob(os.path.join(input_path, 'GT_*'))
-
-    for fold in folder:
-        num = fold.split('_')[-1].split(".")[0]
-        new_fold = os.path.join(wgt_dir, "WGT_" + num)
-        CheckOrCreate(new_fold)
-        list_nii = glob.glob(os.path.join(fold, '*.nii.gz'))
-        for name in list_nii:
-            # print name
-            lbl = datagen.LoadGT(name)
-            lbl_diff = skm.label(lbl)
-            res = WeightMap(lbl_diff, w_0, val, sigma)
-            name = os.path.join(new_fold, name.split('/')[-1])
-            new_name = name.replace('nii.gz', 'png')
-            # print new_name
-            misc.imsave(new_name, res)
-    return wgt_dir
+    wgt_file = os.path.join(
+    WGT_DIR, "{}_{}_{}_{}.tif".format(w_0, val[0], val[1], sigma))
+    lbl = tif.imread(lbl_path)
+    wgt = np.zeros_like(lbl)
+    for i in range(wgt.shape[0]):
+        print "{} / {}".format(i, wgt.shape[0])
+        lbl_diff = skm.label(lbl[i,:,:])
+        wgt[i,:,:] = WeightMap(lbl_diff, w_0, val, sigma)
+    tif.imsave(wgt_file, wgt)
+    return wgt_file

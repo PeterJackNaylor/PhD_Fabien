@@ -81,7 +81,7 @@ def GetOptions(verbose=True):
                       help="parameter for the weighted loss map")
     parser.add_option('--val_b', dest="val_b", default=1, type="int",
                       help="background class weight")
-    parser.add_option('--val_n', dest="val_n", default=5, type="int",
+    parser.add_option('--val_n', dest="val_n", default=3, type="int",
                       help="nuclei class weight")
     parser.add_option('--sig_WGT', dest="sig_WGT", default=5, type='int',
                       help="sigma for the weighted pixel map")

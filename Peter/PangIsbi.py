@@ -23,13 +23,19 @@ gamma = 0.1
 loss = "weightcpp"
 hw = "cpu"
 mode = "Isbi2012"
+
+w_0 = 10
+val_b = 3
+val_n = 1
+sig_WGT = 5
+
 for base_lr in base_lr_list:
     for momentum in momentum_list:
         for weight_decay in weight_decay_list:
             cn = (net + '_{}_{}_{}').format(base_lr, momentum, weight_decay)
             arguments = (net, raw_data, wd, cn, niter, disp_interval, leaveout, base_lr,
-                         batch_size, momentum, weight_decay, stepsize, gamma, hw, mode, loss)
-            cmd = "python Training/OnePass.py --net {} --rawdata {} --wd {} --cn {} --niter {} --disp_interval {} --leaveout {} --base_lr {} --batch_size {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --hw {} --mode {} --loss {}".format(
+                         batch_size, momentum, weight_decay, stepsize, gamma, hw, mode, loss, w_0, val_b, val_n, sig_WGT)
+            cmd = "python Training/OnePass.py --net {} --rawdata {} --wd {} --cn {} --niter {} --disp_interval {} --leaveout {} --base_lr {} --batch_size {} --momentum {} --weight_decay {} --stepsize {} --gamma {} --hw {} --mode {} --loss {} --w_0 {} --val_b {} --val_n {} --sig_WGT {}".format(
                 *arguments)
             proces = subprocess.Popen(cmd, shell=True)
             proces.wait()
