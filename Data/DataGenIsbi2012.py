@@ -65,7 +65,9 @@ class DataGenIsbi2012(DataGen):
         return self.data_vol[val]
 
     def LoadLabel(self, val):
-        return self.lbl_vol[val]
+	lbl = self.lbl_vol[val]
+	lbl[lbl > 0] = 1
+        return lbl
 
     def SetDataSet(self):
         random.seed(self.seed)

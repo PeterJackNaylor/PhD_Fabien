@@ -28,7 +28,7 @@ size_x = 224
 size_y = 224
 archi = "8"  # _16_8"
 
-mode = "Fabien"
+mode = "Fabien1"
 hw = "gpu"
 num_output = 10
 crf = 0

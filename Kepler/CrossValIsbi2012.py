@@ -11,12 +11,12 @@ disp_interval = 100
 leaveout = 5
 
 
-base_lr_list = [0.01]
+base_lr_list = [0.001]
 batch_size = 1
 
 momentum_list = [0.9]
 
-weight_decay_list = [0.00005] #5 * 10 **(-el)  for el in range(4,6)]
+weight_decay_list = [0.0005] #5 * 10 **(-el)  for el in range(4,6)]
 
 stepsize = 7000
 gamma = 0.1
