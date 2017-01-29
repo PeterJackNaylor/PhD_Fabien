@@ -24,8 +24,8 @@ gamma = 0.1
 hw = "gpu"
 mode = "Isbi2012"
 w_0 = 10
-val_b = 1
-val_n = 3
+val_b = 3
+val_n = 1
 sig_WGT = 5
 
 for base_lr in base_lr_list:

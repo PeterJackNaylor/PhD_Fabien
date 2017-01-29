@@ -138,7 +138,6 @@ class DataGenIsbi2012(DataGen):
         return img_lbl
 
     def Weight_path(self):
-        pdb.set_trace()
         w_0 = self.wgt_param[0]
         val = self.wgt_param[1:3]
         sigma = self.wgt_param[3]

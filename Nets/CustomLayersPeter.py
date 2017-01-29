@@ -21,7 +21,7 @@ class DataLayer(caffe.Layer):
         self.seed = params.get('seed', None)
         self.batch_size = params.get('batch_size', 1)
         self.Weight = params.get('Weight', False)
-
+	# pdb.set_trace()
         self.datagen = pkl.load(open(params['datagen'], 'rb'))
         if not self.datagen.Weight:
             n_tops = 2
@@ -36,7 +36,7 @@ class DataLayer(caffe.Layer):
         # data layers have no bottoms
         if len(bottom) != 0:
             raise Exception("Do not define a bottom.")
-
+	
         self.key = self.datagen.RandomKey(False)
 
         # make eval deterministic
@@ -51,7 +51,7 @@ class DataLayer(caffe.Layer):
     def reshape(self, bottom, top):
         # load image + label image pair
 
-        #pdb.set_trace()
+        # pdb.set_trace()
         if self.batch_size == 1:
             if not self.Weight:
                 self.data, self.label = self.loadImageAndGT(self.key)
