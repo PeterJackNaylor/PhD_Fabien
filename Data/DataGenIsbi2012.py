@@ -115,8 +115,8 @@ class DataGenIsbi2012(DataGen):
         lbl = self.LoadLabel(val)
 
         if self.Weight:
-            wgt_dir = self.Weight_path()
-            wgt_path = os.path.join(wgt_dir, *img_path.split('/')[-2::])
+	    # pdb.set_trace()
+            wgt_path = self.Weight_path()
             wgt_path = wgt_path.replace("Slide", "WGT")
             wgt = self.LoadWeight(wgt_path)
             img_lbl = (img, lbl, wgt)
@@ -131,7 +131,6 @@ class DataGenIsbi2012(DataGen):
         return img_lbl
 
     def Weight_path(self):
-        pdb.set_trace()
         w_0 = self.wgt_param[0]
         val = self.wgt_param[1:3]
         sigma = self.wgt_param[3]
