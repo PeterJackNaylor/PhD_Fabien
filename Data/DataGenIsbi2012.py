@@ -77,6 +77,10 @@ class DataGenIsbi2012(DataGen):
         lbl[lbl > 0] = 1
         return lbl
 
+    def LoadWeight(val):
+        wgt = self.wgt_vol[val]
+        return wgt
+
     def SetDataSet(self):
         random.seed(self.seed)
         data = LoadSetImage(self.path)
@@ -87,6 +91,11 @@ class DataGenIsbi2012(DataGen):
         if self.split == "train":
             self.data_vol = data[im_id[self.leave_out::]]
             self.lbl_vol = label[im_id[self.leave_out::]]
+            if self.Weight:
+                wgt_path = self.Weight_path()
+                wgt = LoadSetImage(wgt_path)
+                self.wgt_vol = wgt[im_id[self.leave_out::]]
+
         elif self.split == "test":
             self.data_vol = data[im_id[0:self.leave_out]]
             self.lbl_vol = label[im_id[0:self.leave_out]]
@@ -115,13 +124,11 @@ class DataGenIsbi2012(DataGen):
         lbl = self.LoadLabel(val)
 
         if self.Weight:
-            wgt_dir = self.Weight_path()
-            wgt_path = os.path.join(wgt_dir, *img_path.split('/')[-2::])
-            wgt_path = wgt_path.replace("Slide", "WGT")
-            wgt = self.LoadWeight(wgt_path)
+            wgt = self.LoadWeight(val)
             img_lbl = (img, lbl, wgt)
         else:
             img_lbl = (img, lbl)
+            
         func = self.transforms[transf]
         img_lbl = func._apply_(*img_lbl)
 
@@ -140,7 +147,7 @@ class DataGenIsbi2012(DataGen):
                 '/' + os.path.join(*self.path.split('/')[:-1]), "WEIGHTS", "{}_{}_{}_{}.tif".format(*self.wgt_param))
             CheckFile(self.wgt_dir)
         except:
-            self.wgt_dir = ComputeWeightMapIsbi(self.path, w_0, val, sigma)
+            self.wgt_dir = ComputeWeightMapIsbi(self.lbl_path, w_0, val, sigma)
         return self.wgt_dir
 
     def Unet_cut(self, *kargs):
