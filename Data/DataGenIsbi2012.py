@@ -140,7 +140,7 @@ class DataGenIsbi2012(DataGen):
                 '/' + os.path.join(*self.path.split('/')[:-1]), "WEIGHTS", "{}_{}_{}_{}.tif".format(*self.wgt_param))
             CheckFile(self.wgt_dir)
         except:
-            self.wgt_dir = ComputeWeightMapIsbi(self.path, w_0, val, sigma)
+            self.wgt_dir = ComputeWeightMapIsbi(self.lbl_path, w_0, val, sigma)
         return self.wgt_dir
 
     def Unet_cut(self, *kargs):
