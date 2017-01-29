@@ -62,13 +62,13 @@ class DataGenIsbi2012(DataGen):
         self.seed = seed
         self.UNet_crop = Unet
         self.n_f = len(transforms)
-        self.SetDataSet()
 
         self.Weight = Weight
         self.WeightOnes = WeightOnes
         self.return_path = False
         self.wgt_param = wgt_param
 
+        self.SetDataSet()
     def LoadImage(self, val):
         return self.data_vol[val]
 
@@ -77,7 +77,7 @@ class DataGenIsbi2012(DataGen):
         lbl[lbl > 0] = 1
         return lbl
 
-    def LoadWeight(val):
+    def LoadWeight(self, val):
         wgt = self.wgt_vol[val]
         return wgt
 
@@ -92,6 +92,7 @@ class DataGenIsbi2012(DataGen):
             self.data_vol = data[im_id[self.leave_out::]]
             self.lbl_vol = label[im_id[self.leave_out::]]
             if self.Weight:
+		pdb.set_trace()
                 wgt_path = self.Weight_path()
                 wgt = LoadSetImage(wgt_path)
                 self.wgt_vol = wgt[im_id[self.leave_out::]]
@@ -124,6 +125,7 @@ class DataGenIsbi2012(DataGen):
         lbl = self.LoadLabel(val)
 
         if self.Weight:
+	    pdb.set_trace()
             wgt = self.LoadWeight(val)
             img_lbl = (img, lbl, wgt)
         else:
