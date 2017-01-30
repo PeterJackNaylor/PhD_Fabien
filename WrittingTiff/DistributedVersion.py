@@ -61,6 +61,7 @@ def Distribute(slide, size, output, options):
     bash_file = os.path.join(output, "PredOneSlide.sh")
     python_file = os.path.join(output, "PredictionSlide.py")
     CheckOrCreate(output)
+    CheckOrCreate(os.path.join(output, "tiled"))
     CreateFileParam(distribute_file, list_of_para)
     CreateBash(bash_file, python_file, distribute_file, options)
     CreatePython(python_file, options)
