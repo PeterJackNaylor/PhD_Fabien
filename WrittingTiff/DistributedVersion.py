@@ -11,11 +11,20 @@ import getpass
 import openslide
 
 def indent(text, amount=4, ch=' '):
+    """ Creates an indented string with amount characters of type ch.
+    Default:
+    - amount = 4
+    - ch = ' ' 
+    """
     padding = amount * ch
     return ('\n'+padding+text)
 
 
 def CreateFileParam(name, list):
+    """
+    Creates physically a text file named name where each line as an id 
+    and each line as parameters
+    """
     f = open(name, "wb")
     line = 1
     for para in list:
@@ -28,8 +37,26 @@ def CreateFileParam(name, list):
 
 
 def Distribute(slide, size, output, options):
+    """
+    Input:
+    Slide : name of the slide to analyse
+    size: size of outputed image crops from size.
+    output: folder to store all the different files for the processing
+    options: dictionnary with many options.
+
+    Ouput: No output but a folder in output where you will find
+        - a parameter file called ParameterDistribution
+        - a bash file called PredOneSlide.sh
+        - a python file called PredictionSlide.py
+    """
+    # the size option doesn't matter here...
     list_of_para = ROI(slide, method=options.method,
                        ref_level=0, seed=42, fixed_size_in=(size, size))
+    test = ROI(name, ref_level=0, disk_size=4, thresh=230, 
+               black_spots=None, number_of_pixels_max=9000000, 
+               verbose=False, marge=0, method='grid_etienne', 
+               mask_address=None, contour_size=3, N_squares=100, 
+               seed=None, fixed_size_in=(512, 512), fixed_size_out=(512,512))
     distribute_file = os.path.join(output, "ParameterDistribution.txt")
     bash_file = os.path.join(output, "PredOneSlide.sh")
     python_file = os.path.join(output, "PredictionSlide.py")
@@ -39,6 +66,12 @@ def Distribute(slide, size, output, options):
 
 
 def CreatePython(python_file, options):
+    """
+    Creates a small python file which is submitted to a cluster of jobs.
+    input:
+        python file: name of file
+        options: dictionnary of options such as: None are needed here.
+    """
     f = open(python_file, "wb")
     f.write("# -*- coding: cp1252 -*- \n\"\"\" \nDescription: \n \nAuthors: " +
             getpass.getuser() + "\n \nDate: " + time.strftime("%x") + "\n \n\"\"\" ")
@@ -50,6 +83,14 @@ def CreatePython(python_file, options):
 
 
 def CreateBash(bash_file, python_file, file_param, options):
+    """
+    Creates a bash function to submit in order to analyse each image patches.
+    input: bash_file: name of the bash file
+           python_file: name of the python file to submit.
+           file_param: name of the parameter file.
+           options: dictionnary of option such as output, slide name, size, and options names for the options to the python script
+           
+    """
     f = open(bash_file, "wb")
     f.write("#!/bin/bash\n\n")  # sets bash environnement
     f.write("#$ -cwd\n")  # executes job in current directory
@@ -93,15 +134,33 @@ from createfold import GetNet, PredImageFromNet, DynamicWatershedAlias, dilation
 
 param = 8
 
+def sliding_window(image, stepSize, windowSize):
+    # slide a window across the image
+    for y in xrange(0, image.shape[0], stepSize):
+        for x in xrange(0, image.shape[1], stepSize):
+            # yield the current window
+            yield (x, y, x + windowSize[0], y + windowSize[1], image[y:y + windowSize[1], x:x + windowSize[0]])
 
-def pred_f(image, param=param):
+
+def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
+    
+    x_s, y_s, z_s = image.shape
+    result = np.zeros(shape=(x_s, y_s, 2))
+    for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
+        prob_image1, bin_image1 = PredImageFromNet(net_1, image, with_depross=True)
+        result[y_b:y_e, x_b:x_e,  0] += prob_image1
+        result[y_b:y_e, x_b:x_e,  1] += 1
+    prob_map = result[:,:,0] / result[:,:,1]
+    bin_map = prob_map > 0.5 + 0.0
+    return prob_map, bin_map
+
+def pred_f(image, stepSize, windowSize, param=param,):
     # pdb.set_trace()
     caffe.set_mode_cpu()
     cn_1 = "FCN_0.01_0.99_0.0005"
     wd_1 = "/share/data40T_v2/Peter/pretrained_models"
     net_1 = GetNet(cn_1, wd_1)
-    prob_image1, bin_image1 = PredImageFromNet(
-        net_1, image, with_depross=True)
+    prob_image1, bin_image1 = PredLargeImageFromNet(net_1, image, stepSize, windowSize)
     #pdb.set_trace()
     segmentation_mask = DynamicWatershedAlias(prob_image1, param)
     segmentation_mask[segmentation_mask > 0] = 1
@@ -163,9 +222,9 @@ def PredImage(options):
     outfile = os.path.join(options.output, 'tiled',
                            "{}_{}.tiff".format(options.x, options.y))
     print "slide :{}".format(slide)
-    print "para: ", para
-    print "outfile: {}".format(outfile)
-    print "f: ", options.f
+    print "para : ", para
+    print "outfile : {}".format(outfile)
+    print "f : ", options.f
     PredOneImage(slide, para, outfile, options.f)
 
 def PredOneImage(slide, para, outfile, f):
