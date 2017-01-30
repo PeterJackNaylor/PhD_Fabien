@@ -239,7 +239,7 @@ def PredImage(options):
 def PredOneImage(slide, para, outfile, f):
     # pdb.set_trace()
     slide = openslide.open_slide(slide)
-    image = np.array(GetImage(slide, para))
+    image = np.array(GetImage(slide, para))[:,:,:3]
     pdb.set_trace()
     image = f(image)
     imsave(outfile, image, resolution=[1.0,1.0])
