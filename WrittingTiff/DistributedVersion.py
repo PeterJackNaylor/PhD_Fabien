@@ -138,10 +138,14 @@ windowSize = (224 , 224)
 param = 8
 
 def sliding_window(image, stepSize, windowSize):
-    # slide a window across the image
+    # slide a window across the imag
+    i = 0
     for y in xrange(0, image.shape[0], stepSize):
         for x in xrange(0, image.shape[1], stepSize):
             # yield the current window
+            print i + 1
+            i += 1
+            pdb.set_trace()
             res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
             change = False
             if res_img.shape[0] != windowSize[0]:
