@@ -134,7 +134,7 @@ import caffe
 from createfold import GetNet, PredImageFromNet, DynamicWatershedAlias, dilation, disk, erosion
 
 stepSize = 200
-windowSize = 224
+windowSize = (224 , 224)
 param = 8
 
 def sliding_window(image, stepSize, windowSize):
