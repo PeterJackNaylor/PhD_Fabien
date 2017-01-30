@@ -52,7 +52,7 @@ def Distribute(slide, size, output, options):
     # the size option doesn't matter here...
     list_of_para = ROI(slide, method=options.method,
                        ref_level=0, seed=42, fixed_size_in=(size, size))
-    test = ROI(name, ref_level=0, disk_size=4, thresh=230, 
+    list_of_para = ROI(name, ref_level=0, disk_size=4, thresh=230, 
                black_spots=None, number_of_pixels_max=9000000, 
                verbose=False, marge=0, method='grid_etienne', 
                mask_address=None, contour_size=3, N_squares=100, 
@@ -60,6 +60,7 @@ def Distribute(slide, size, output, options):
     distribute_file = os.path.join(output, "ParameterDistribution.txt")
     bash_file = os.path.join(output, "PredOneSlide.sh")
     python_file = os.path.join(output, "PredictionSlide.py")
+    CheckOrCreate(output)
     CreateFileParam(distribute_file, list_of_para)
     CreateBash(bash_file, python_file, distribute_file, options)
     CreatePython(python_file, options)
