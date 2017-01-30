@@ -3,7 +3,7 @@ from UsefulFunctions.EmailSys import ElaborateEmail
 from os import environ
 
 net = 'PangNet'
-raw_data = "/share/data40T_v2/Peter/Data/Isbi2012/train-volume.tif"
+raw_data = "/share/data40T_v2/Peter/Data/isbi2012/train-volume.tif"
 wd = "/share/data40T_v2/Peter/Experiences/PangIsbi"
 # weight = "/data/users/pnaylor/Documents/Python/FCN/model/DeconvNet_trainval_inference.caffemodel"
 niter = 100000
@@ -11,10 +11,10 @@ disp_interval = 100
 leaveout = 5
 
 
-base_lr_list = [10**(-el) for el in range(2, 6)]
+base_lr_list = [10**(-el) for el in range(0, 4)]
 batch_size = 1
 
-momentum_list = [0.9]
+momentum_list = [0.99]
 
 weight_decay_list = [5 * 10 **(-el)  for el in range(4,6)]
 

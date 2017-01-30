@@ -1,4 +1,5 @@
 from optparse import OptionParser
+import pdb
 from UsefulFunctions.UsefulOpenSlide import GetImage
 from UsefulFunctions.RandomUtils import CheckOrCreate
 from CuttingPatches import ROI
@@ -28,9 +29,8 @@ def CreateFileParam(name, list):
     f = open(name, "wb")
     line = 1
     for para in list:
-        small_para = [para[0], para[1], para[3]]
         pre = "__{}__ ".format(line)
-        pre += "{} {} {}\n".format(*small_para)
+        pre += "{} {} {} {} {}\n".format(*para)
         f.write(pre)
 	line += 1
     f.close()
@@ -52,7 +52,7 @@ def Distribute(slide, size, output, options):
     # the size option doesn't matter here...
     list_of_para = ROI(slide, method=options.method,
                        ref_level=0, seed=42, fixed_size_in=(size, size))
-    list_of_para = ROI(name, ref_level=0, disk_size=4, thresh=230, 
+    list_of_para = ROI(slide, ref_level=0, disk_size=4, thresh=230, 
                black_spots=None, number_of_pixels_max=9000000, 
                verbose=False, marge=0, method='grid_etienne', 
                mask_address=None, contour_size=3, N_squares=100, 
@@ -133,6 +133,8 @@ def CreateBash(bash_file, python_file, file_param, options):
 import caffe
 from createfold import GetNet, PredImageFromNet, DynamicWatershedAlias, dilation, disk, erosion
 
+stepSize = 200
+windowSize = 224
 param = 8
 
 def sliding_window(image, stepSize, windowSize):
@@ -144,7 +146,7 @@ def sliding_window(image, stepSize, windowSize):
 
 
 def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
-    
+    pdb.set_trace() 
     x_s, y_s, z_s = image.shape
     result = np.zeros(shape=(x_s, y_s, 2))
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
@@ -155,8 +157,8 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
     bin_map = prob_map > 0.5 + 0.0
     return prob_map, bin_map
 
-def pred_f(image, stepSize, windowSize, param=param,):
-    # pdb.set_trace()
+def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param):
+    pdb.set_trace()
     caffe.set_mode_cpu()
     cn_1 = "FCN_0.01_0.99_0.0005"
     wd_1 = "/share/data40T_v2/Peter/pretrained_models"
@@ -185,8 +187,12 @@ def options_min():
                       help="position on x axis")
     parser.add_option('-y', dest="y", type="int",
                       help="position on y axis")
-    parser.add_option('-s', '--size', dest="size", type="int",
-                      help='Size of images')
+    parser.add_option('--size_x', dest="size_x", type="int",
+                      help='Size of images x axis')
+    parser.add_option('--size_y', dest="size_y", type="int",
+                      help='Size of images y axis')  
+    parser.add_option('--ref_level', dest="ref_level", type ="int",
+                       help="Level of resolution")  
     parser.add_option('--output', dest='output', type="str",
 		     help='Output folder')
     (options, args) = parser.parse_args()
@@ -213,13 +219,13 @@ def options_all():
     parser.add_option('--tc', dest="tc", type="int", default=50,
                       help="Numbr of jobs in paralelle")
     (options, args) = parser.parse_args()
-    options.name = ["-x", "-y", "--size"]
+    options.name = ["-x", "-y", "--ref_level", "--size_x", "--size_y"]
     return options
 
 
 def PredImage(options):
     slide = options.slide
-    para = [options.x, options.y, 0, options.size, options.size]
+    para = [options.x, options.y, options.ref_level, options.size_x, options.size_y]
     outfile = os.path.join(options.output, 'tiled',
                            "{}_{}.tiff".format(options.x, options.y))
     print "slide :{}".format(slide)
@@ -231,7 +237,8 @@ def PredImage(options):
 def PredOneImage(slide, para, outfile, f):
     # pdb.set_trace()
     slide = openslide.open_slide(slide)
-    image = np.array(GetImage(slide, para))[:,:,:3]
+    image = np.array(GetImage(slide, para))
+    pdb.set_trace()
     image = f(image)
     imsave(outfile, image, resolution=[1.0,1.0])
 

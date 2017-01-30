@@ -12,15 +12,15 @@ disp_interval = 100
 leaveout = 1
 crop = 4
 
-base_lr_list = [0.0001]  # , 0.001, 0.0001]
+base_lr_list = [0.1]  # , 0.001, 0.0001]
 
 batch_size = 1
 img_format = "RGB"
 loss = 'softmax'
 
-momentum_list = [0.9] #, 0.99]
+momentum_list = [0.99, 0.9]
 
-weight_decay_list = [0.0005] #, 0.0005]
+weight_decay_list = [0.0005, 0.00005]
 
 stepsize = 7000
 gamma = 0.1
