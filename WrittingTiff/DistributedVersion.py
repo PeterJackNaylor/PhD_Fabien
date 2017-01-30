@@ -50,8 +50,8 @@ def Distribute(slide, size, output, options):
         - a python file called PredictionSlide.py
     """
     # the size option doesn't matter here...
-    list_of_para = ROI(slide, method=options.method,
-                       ref_level=0, seed=42, fixed_size_in=(size, size))
+    #list_of_para = ROI(slide, method=options.method,
+    #                   ref_level=0, seed=42, fixed_size_in=(size, size))
     list_of_para = ROI(slide, ref_level=0, disk_size=4, thresh=230, 
                black_spots=None, number_of_pixels_max=9000000, 
                verbose=False, marge=0, method='grid_etienne', 
@@ -227,7 +227,7 @@ def options_all():
 
 def PredImage(options):
     slide = options.slide
-    para = [options.x, options.y, options.ref_level, options.size_x, options.size_y]
+    para = [options.x, options.y, options.size_x, options.size_y, options.ref_level]
     outfile = os.path.join(options.output, 'tiled',
                            "{}_{}.tiff".format(options.x, options.y))
     print "slide :{}".format(slide)
