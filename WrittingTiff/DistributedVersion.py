@@ -145,10 +145,10 @@ def sliding_window(image, stepSize, windowSize):
             # yield the current window
             res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
             change = False
-            if res_img.shape[0] != windowSize[0]:
+            if res_img.shape[1] != windowSize[1]:
                 y = image.shape[1] - windowSize[1]
                 change = True
-            if res_img.shape[1] != windowSize[1]:
+            if res_img.shape[0] != windowSize[0]:
                 x = image.shape[0] - windowSize[0]
                 change = True
             if change:
