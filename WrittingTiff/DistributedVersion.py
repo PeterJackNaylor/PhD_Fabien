@@ -197,7 +197,7 @@ def options_min():
 		     help='Output folder')
     (options, args) = parser.parse_args()
 
-    options.param = [options.x, options.y, 0, options.size, options.size]
+    options.param = [options.x, options.y, options.ref_level, options.size_x, options.size_y]
 
     options.f = pred_f
 
@@ -212,7 +212,7 @@ def options_all():
                       help="Input slide")
     parser.add_option('--output', dest="output", type="string",
                       help="Output folder")
-    parser.add_option('--size', dest="size", type="int",
+    parser.add_option('--size_tiles', dest="size", type="int",
                       help="Size of the tiles")
     parser.add_option('--method', dest="method", type="str", default='grid_fixed_size',
                       help="Method of the tilling procedure")
