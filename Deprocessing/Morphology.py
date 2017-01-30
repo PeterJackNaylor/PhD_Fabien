@@ -56,6 +56,7 @@ def generate_wsl(ws):
     grad = dilation(ws, se) - ero
     grad[ws == 0] = 0
     grad[grad > 0] = 255
+    pdb.set_trace()
     return img_as_ubyte(grad)
 
 

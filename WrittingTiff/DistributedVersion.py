@@ -175,7 +175,7 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param):
     wd_1 = "/share/data40T_v2/Peter/pretrained_models"
     net_1 = GetNet(cn_1, wd_1)
     prob_image1, bin_image1 = PredLargeImageFromNet(net_1, image, stepSize, windowSize)
-    #pdb.set_trace()
+    pdb.set_trace()
     segmentation_mask = DynamicWatershedAlias(prob_image1, param)
     segmentation_mask[segmentation_mask > 0] = 1
     contours = dilation(segmentation_mask, disk(2)) - \
