@@ -146,7 +146,7 @@ def sliding_window(image, stepSize, windowSize):
 
 
 def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
-    pdb.set_trace() 
+    #pdb.set_trace() 
     x_s, y_s, z_s = image.shape
     result = np.zeros(shape=(x_s, y_s, 2))
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
@@ -158,7 +158,6 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
     return prob_map, bin_map
 
 def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param):
-    pdb.set_trace()
     caffe.set_mode_cpu()
     cn_1 = "FCN_0.01_0.99_0.0005"
     wd_1 = "/share/data40T_v2/Peter/pretrained_models"
@@ -240,7 +239,6 @@ def PredOneImage(slide, para, outfile, f):
     # pdb.set_trace()
     slide = openslide.open_slide(slide)
     image = np.array(GetImage(slide, para))[:,:,:3]
-    pdb.set_trace()
     image = f(image)
     imsave(outfile, image, resolution=[1.0,1.0])
 
