@@ -160,8 +160,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
     x_s, y_s, z_s = image.shape
     result = np.zeros(shape=(x_s, y_s, 2))
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
-        if window.shape[0] != 224 and window.shape[1] != 224:
-            pdb.set_trace()
+        print window.shape
         prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
         result[y_b:y_e, x_b:x_e,  0] += prob_image1
         result[y_b:y_e, x_b:x_e,  1] += 1
