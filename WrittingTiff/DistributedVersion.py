@@ -116,7 +116,7 @@ def CreateBash(bash_file, python_file, file_param, options):
     f.write('SIZE={}\n'.format(options.size))
     f.write('spe_tag=__\n')
     last_line = ""
-    n_field = len(open(file_param, "rb").readlines()[0].split(' ')) - 2
+    n_field = len(open(file_param, "rb").readlines()[0].split(' ')) - 1
     for i in range(n_field):
         f.write(
             'FIELD{}=$(grep \"$spe_tag$SGE_TASK_ID$spe_tag \" $FILE | cut -d\' \' -f{})\n'.format(i, i + 2))
@@ -195,6 +195,8 @@ def options_min():
                        help="Level of resolution")  
     parser.add_option('--output', dest='output', type="str",
 		     help='Output folder')
+    parser.add_option('--size', dest="size", type="int",
+                      help="Size of prediction images")
     (options, args) = parser.parse_args()
 
     options.param = [options.x, options.y, options.ref_level, options.size_x, options.size_y]
@@ -219,7 +221,7 @@ def options_all():
     parser.add_option('--tc', dest="tc", type="int", default=50,
                       help="Numbr of jobs in paralelle")
     (options, args) = parser.parse_args()
-    options.name = ["-x", "-y", "--ref_level", "--size_x", "--size_y"]
+    options.name = ["-x", "-y", "--size_x", "--size_y", "--ref_level"]
     return options
 
 
