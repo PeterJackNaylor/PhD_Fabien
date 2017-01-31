@@ -61,7 +61,6 @@ def Distribute(slide, size, output, options):
     bash_file = os.path.join(output, "PredOneSlide.sh")
     python_file = os.path.join(output, "PredictionSlide.py")
     CheckOrCreate(output)
-    CheckOrCreate(os.path.join(output, "tiled"))
     CreateFileParam(distribute_file, list_of_para)
     CreateBash(bash_file, python_file, distribute_file, options)
     CreatePython(python_file, options)
@@ -240,7 +239,10 @@ def PredImage(options):
     slide = options.slide
     para = [options.x, options.y, options.size_x, options.size_y, options.ref_level]
     outfile = os.path.join(options.output, 'tiled',
-                           "{}_{}.tiff".format(options.x, options.y))
+                           "{}_{}_{}_{}_{}.tiff".format(options.x, options.y,
+                           options.size_x, options.size_y, options.ref_level))
+
+    CheckOrCreate(os.path.join(options.output, "tiled"))
     print "slide :{}".format(slide)
     print "para : ", para
     print "outfile : {}".format(outfile)
