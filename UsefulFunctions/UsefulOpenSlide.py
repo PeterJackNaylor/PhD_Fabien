@@ -10,7 +10,7 @@ import openslide
 import numpy as np
 import pdb
 
-def GetImage(c,para):
+def GetImage(c, para):
     ## Returns cropped image given a set of parameters
     if len(para)!=5:
             print "Not enough parameters..."

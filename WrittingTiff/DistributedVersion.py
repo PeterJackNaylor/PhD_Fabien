@@ -257,14 +257,29 @@ def PredImage(options):
 
 def PredOneImage(slide, para, outfile, f):
     # pdb.set_trace()
-    if os.path.isfile(outfile):
+    if not os.path.isfile(outfile):
         slide = openslide.open_slide(slide)
         image = np.array(GetImage(slide, para))[:,:,:3]
         image = f(image)
         imsave(outfile, image, resolution=[1.0,1.0])
     else:
         print "Files exists"
-        
+
+def CheckJob(parameter_file, output_folder):
+    f = open(parameter_file, "r")
+    lines = [ss.split(' ') for ss in file.readlines()]
+    for para in lines:
+        line_number = para[0]
+        x = para[1]
+        y = para[2]
+        size_x = para[3]
+        size_y = para[4]
+        ref_level = para[5][0]
+        filename = os.path.join(output_folder, "{}_{}_{}_{}_{}.tiff")
+        filename = filename.format(x, y, size_x, size_y, ref_level)
+        if not os.path.isfile(filename):
+            print "file {} doesn't exists whish is job array number {}".format(filename, line_number)
+
 if __name__ == "__main__":
 
     options = options_all()
