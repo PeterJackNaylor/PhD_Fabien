@@ -267,7 +267,7 @@ def PredOneImage(slide, para, outfile, f):
 
 def CheckJob(parameter_file, output_folder):
     f = open(parameter_file, "r")
-    lines = [ss.split(' ') for ss in file.readlines()]
+    lines = [ss.split(' ') for ss in f.readlines()]
     for para in lines:
         line_number = para[0]
         x = para[1]
