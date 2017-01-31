@@ -64,8 +64,7 @@ def White_score(slide, para, options):
     return(float(nber_ones) / nber_total)
 
 def CalculateMarge(marge, size_x, size_y):
-    extra_pixels = int(np.ceil(marge * min(size_x, size_y)))
-    return extra_pixels / 2
+    return marge, marge
 
 def Best_Finder_rec(slide, level, x_0, y_0, size_x, size_y, ref_level, list_roi, number_of_pixels_max, marge, options):
     #pdb.set_trace()
@@ -73,21 +72,22 @@ def Best_Finder_rec(slide, level, x_0, y_0, size_x, size_y, ref_level, list_roi,
         print 'Warning: width or height is null..'
         return []
 
-    if marge > 1 or marge < 0:
-        print "Margin Error, marge should be between 0 and 1. Value of marge: {}".format(marge)
-        return []
-
     if level == ref_level:
         if size_x * size_y < number_of_pixels_max:
-            Extra_pixels = CalculateMarge(marge, size_x, size_y)
-            size_x += Extra_pixels 
-            size_y += Extra_pixels
-            width_xp, height_xp = UOS.get_size(slide, Extra_pixels, Extra_pixels, level, 0)
+
+            ## if ref_level != 0 then thir will need some changes..
+            width_xp, height_xp = CalculateMarge(marge, size_x, size_y)
+            max_width, max_height = slide.dimensions
+
+
             x_0 = max(x_0 - width_xp, 0)
             y_0 = max(y_0 - height_xp, 0)
+            size_x = min(x_0 + size_x + width_xp, max_width) - x_0
+            size_y = min(y_0 + size_y + height_xp, max_height) - y_0
+
             para = [x_0, y_0, size_x, size_y, level]
             val = White_score(slide, para, options)
-            if val < 0.95:
+            if val < options["value"]:
                 list_roi.append(para)
             else:
                 print val
@@ -173,7 +173,7 @@ def GimmeGrid(slide, res, level=4, fixed_size=(512, 512)):
 
 def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
         number_of_pixels_max=1000000, verbose=False, marge=0, method='grid',
-        mask_address=None, contour_size=3, N_squares=100, seed=None, fixed_size_in=(512,  512), fixed_size_out=(512, 512)):
+        mask_address=None, contour_size=3, N_squares=100, seed=None, fixed_size_in=(512,  512), fixed_size_out=(512, 512), cut_whitescore=0.8):
     # creates a grid of the all interesting places on the image
 
     if seed is not None:
@@ -225,6 +225,7 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
             new_x, new_y = UOS.get_X_Y(slide, x_0, y_0, lowest_res)
             options = {}
             options['Threshold'] = thresh
+            options['value'] = cut_whitescore
             # pdb.set_trace()
             list_roi = Best_Finder_rec(slide, lowest_res, new_x, new_y, w, h,
                                        ref_level, list_roi, number_of_pixels_max, marge, options)

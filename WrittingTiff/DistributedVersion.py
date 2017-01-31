@@ -60,7 +60,13 @@ def Distribute(slide, size, output, options):
     distribute_file = os.path.join(output, "ParameterDistribution.txt")
     bash_file = os.path.join(output, "PredOneSlide.sh")
     python_file = os.path.join(output, "PredictionSlide.py")
+    PBS = os.path.join(output, "PBS")
+    OUT = os.path.join(PBS, "OUT")
+    ERR = os.path.join(PBS, "ERR")
     CheckOrCreate(output)
+    CheckOrCreate(PBS)
+    CheckOrCreate(OUT)
+    CheckOrCreate(ERR)
     CreateFileParam(distribute_file, list_of_para)
     CreateBash(bash_file, python_file, distribute_file, options)
     CreatePython(python_file, options)
@@ -163,9 +169,9 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
         print window.shape
         prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
-        result[y_b:y_e, x_b:x_e,  0] += prob_image1
-        result[y_b:y_e, x_b:x_e,  1] += 1
-    prob_map = result[:,:,0] / result[:,:,1]
+        result[y_b:y_e, x_b:x_e, 0] += prob_image1
+        result[y_b:y_e, x_b:x_e, 1] += 1.
+    prob_map = result[:, :, 0] / result[:, :, 1]
     bin_map = prob_map > 0.5 + 0.0
     return prob_map, bin_map
 
@@ -251,11 +257,14 @@ def PredImage(options):
 
 def PredOneImage(slide, para, outfile, f):
     # pdb.set_trace()
-    slide = openslide.open_slide(slide)
-    image = np.array(GetImage(slide, para))[:,:,:3]
-    image = f(image)
-    imsave(outfile, image, resolution=[1.0,1.0])
-
+    if os.path.isfile(outfile):
+        slide = openslide.open_slide(slide)
+        image = np.array(GetImage(slide, para))[:,:,:3]
+        image = f(image)
+        imsave(outfile, image, resolution=[1.0,1.0])
+    else:
+        print "Files exists"
+        
 if __name__ == "__main__":
 
     options = options_all()
