@@ -257,7 +257,7 @@ def PredImage(options):
 
 def PredOneImage(slide, para, outfile, f):
     # pdb.set_trace()
-    if os.path.isfile(outfile):
+    if not os.path.isfile(outfile):
         slide = openslide.open_slide(slide)
         image = np.array(GetImage(slide, para))[:,:,:3]
         image = f(image)
