@@ -32,7 +32,7 @@ def CreateFileParam(name, list):
         pre = "__{}__ ".format(line)
         pre += "{} {} {} {} {}\n".format(*para)
         f.write(pre)
-	line += 1
+    line += 1
     f.close()
 
 
