@@ -148,9 +148,31 @@ def MoveAndRename(r, path):
         print ">>>>>>>>>>>>>>>>>> LOOK HERE <<<<<<<<<<<<<<<<<<<<"
     return pd.Series({"Biopsy_here": min(1, i), "Piece_here": min(1, j)})
 
+def GetOptions(verbose=True):
+
+    parser = OptionParser()
+    parser.add_option('--pi', dest="patient_info", type="string",
+                      help="patient info xlsx file")
+    parser.add_option("--f", dest="folder", type='string', 
+                     default="/media/naylor/F00E67D40E679300/Projet_FR-TNBC-2015-09-30/All",
+                     help="folder where the histopathology files are")
+    (options, args) = parser.parse_args()
+
+    if verbose:
+        print " \n "
+        print "Input paramters to run:"
+        print " \n "
+        print "Patient info file     : | {}".format(options.patient_info)
+        print "Biopsy and WSI folder : | {}".format(options.folder)
+
+
+    return (options, args)
+
+
 if __name__ == "__main__":
 
-    name = "PatientInfo.xlsx"
+    options, args = GetOptions()
+    name = options.patient_info
     data_patient_piece = ImportData(name)
     data_patient_piece = IdBioWho(data_patient_piece)
 
@@ -158,7 +180,7 @@ if __name__ == "__main__":
     convert_data(data_patient_piece, "Piece_operatoire")
 
     path_file = "id-patient-Sheet1.csv"
-    path_input_data = "/media/naylor/F00E67D40E679300/Projet_FR-TNBC-2015-09-30/All"
+    path_input_data = options.folder
 
     data_piece_file = pd.read_csv(path_file)
     convert2_data(data_piece_file, "patient_id")
