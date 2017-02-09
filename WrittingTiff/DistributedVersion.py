@@ -168,14 +168,15 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
     result = np.zeros(shape=(x_s, y_s, 2))
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
         prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
-        savename = "/share/data40T_v2/Peter/Reconstruction/temp/{}_{}_{}_{}.tiff".format(x_b, y_b, x_e, y_e)
-        savenamebin = "/share/data40T_v2/Peter/Reconstruction/temp/{}_{}_{}_{}_bin.tiff".format(x_b, y_b, x_e, y_e)
-        imsave(savename, prob_image1)
-        imsave(savenamebin, bin_image1)
         result[y_b:y_e, x_b:x_e, 0] += prob_image1
         result[y_b:y_e, x_b:x_e, 1] += 1.
     prob_map = result[:, :, 0] / result[:, :, 1]
     bin_map = prob_map > 0.5 + 0.0
+    savename = "/share/data40T_v2/Peter/Reconstruction/temp/{}_{}_{}_{}.tiff".format(x_b, y_b, x_e, y_e)
+    savenamebin = "/share/data40T_v2/Peter/Reconstruction/temp/{}_{}_{}_{}_bin.tiff".format(x_b, y_b, x_e, y_e)
+    imsave(savename, prob_image1)
+    imsave(savenamebin, bin_image1)
+
     return prob_map, bin_map
 
 def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param):
