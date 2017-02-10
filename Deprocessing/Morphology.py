@@ -89,4 +89,24 @@ def DynamicWatershedAlias(p_img, lamb):
 
     wsl = generate_wsl(ws_labels)
     b_img[wsl > 0] = 0
-    return label(b_img, background=0)
+    labeled_image = ArrangeLabel(image)
+
+    return labeled_image
+
+def ArrangeLabel(mat):
+    mat = label(mat)
+    val, counts = np.unique(mat, return_counts=True)
+    if np.max(counts) == counts[0]:
+        return mat
+    else:
+        maxi = counts[0]
+        i_ind = 0
+        for i in val:
+            if counts[i] > maxi:
+                maxi = counts[i]
+                i_ind = i
+        mat[mat == 0] = np.max(mat) + 1
+        mat[mat == i_ind] = 0
+        mat[mat == np.max(mat)] = i_ind
+        return mat
+
