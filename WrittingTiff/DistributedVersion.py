@@ -141,7 +141,7 @@ from createfold import GetNet, PredImageFromNet, DynamicWatershedAlias, dilation
 
 stepSize = 224
 windowSize = (224 , 224)
-param = 14
+param = 10
 
 
 def sliding_window(image, stepSize, windowSize):
