@@ -67,6 +67,21 @@ def DynamicWatershedAlias(p_img, lamb):
     b_img = (p_img > 0.5) + 0
     Probs_inv = PrepareProb(p_img)
 
+    #print "Probs_inv :", Probs_inv.dtype, np.max(Probs_inv), np.min(Probs_inv)
+    #Hrecons = HreconstructionErosion(Probs_inv, lamb)
+    #print "Hrecons :", Hrecons.dtype, np.max(Hrecons), np.min(Hrecons)
+    #markers_Probs_inv = find_maxima(Hrecons)
+    #print "markers_Probs_inv :", markers_Probs_inv.dtype, np.max(markers_Probs_inv), np.min(markers_Probs_inv)
+    #markers_Probs_inv = label(markers_Probs_inv)
+    #print "markers_Probs_inv :", markers_Probs_inv.dtype, np.max(markers_Probs_inv), np.min(markers_Probs_inv)
+    #ws_labels = watershed(Hrecons, markers_Probs_inv, mask=b_img)
+    #print "ws_labels :", ws_labels.dtype, np.max(ws_labels), np.min(ws_labels)
+    #wsl = generate_wsl(ws_labels)
+    #print "wsl : ", ws_labels.dtype, np.max(ws_labels), np.min(ws_labels)
+    #b_img[wsl > 0] = 0
+    #print "b_img : ", b_img.dtype, np.max(b_img), np.min(b_img)
+    #pdb.set_trace()
+
     Hrecons = HreconstructionErosion(Probs_inv, lamb)
     markers_Probs_inv = find_maxima(Hrecons)
     markers_Probs_inv = label(markers_Probs_inv)
@@ -74,4 +89,4 @@ def DynamicWatershedAlias(p_img, lamb):
 
     wsl = generate_wsl(ws_labels)
     b_img[wsl > 0] = 0
-    return label(b_img)
+    return label(b_img, background=0)
