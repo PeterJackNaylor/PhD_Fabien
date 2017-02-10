@@ -174,13 +174,6 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
     prob_map = result[:, :, 0] / result[:, :, 1]
     bin_map = prob_map > 0.5 + 0.0
     bin_map = bin_map.astype(np.uint8)
-   # pdb.set_trace()
-    #rand_int = np.random.randint(0,10000)
-    #savename = "/share/data40T_v2/Peter/Reconstruction/temp/{}.tiff".format(rand_int)
-    #savenamebin = "/share/data40T_v2/Peter/Reconstruction/temp/{}_bin.tiff".format(rand_int)
-    #misc.imsave(savename, prob_map)
-    #misc.imsave(savenamebin, bin_map)
-
     return prob_map, bin_map
 
 def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param):
@@ -197,17 +190,6 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param):
     x, y = np.where(contours == 1)
     image[x, y] = np.array([0, 0, 0])
 
-    rand_int = np.random.randint(0,10000)
-    savename = "/share/data40T_v2/Peter/Reconstruction/temp/{}.tiff".format(rand_int)
-    savenamebin = "/share/data40T_v2/Peter/Reconstruction/temp/{}_bin.tiff".format(rand_int)
-    savenamesegmask = "/share/data40T_v2/Peter/Reconstruction/temp/{}_segmask.tiff".format(rand_int)
-    savenamecontour = "/share/data40T_v2/Peter/Reconstruction/temp/{}_contour.tiff".format(rand_int)
-    savenamergb = "/share/data40T_v2/Peter/Reconstruction/temp/{}_rgb.tiff".format(rand_int)
-    misc.imsave(savename, prob_image1)
-    misc.imsave(savenamebin, bin_image1)
-    misc.imsave(savenamesegmask, segmentation_mask)
-    misc.imsave(savenamecontour, contours)
-    misc.imsave(savenamergb, image)
     return image
 
 
