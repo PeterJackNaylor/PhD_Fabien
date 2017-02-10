@@ -86,12 +86,12 @@ def DynamicWatershedAlias(p_img, lamb):
     markers_Probs_inv = find_maxima(Hrecons)
     markers_Probs_inv = label(markers_Probs_inv)
     ws_labels = watershed(Hrecons, markers_Probs_inv, mask=b_img)
+    arrange_label = ArrangeLabel(ws_labels)
+    wsl = generate_wsl(arrange_label)
+    arrange_label[wsl > 0] = 0
+    
 
-    wsl = generate_wsl(ws_labels)
-    b_img[wsl > 0] = 0
-    labeled_image = ArrangeLabel(image)
-
-    return labeled_image
+    return arrange_label
 
 def ArrangeLabel(mat):
     mat = label(mat)
