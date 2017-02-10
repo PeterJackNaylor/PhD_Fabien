@@ -208,6 +208,7 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param):
     misc.imsave(savenamesegmask, segmentation_mask)
     misc.imsave(savenamecontour, contours)
     misc.imsave(savenamergb, image)
+    #pdb.set_trace()
     return image
 
 
