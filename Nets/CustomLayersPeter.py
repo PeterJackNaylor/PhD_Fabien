@@ -97,7 +97,7 @@ class DataLayer(caffe.Layer):
 
     def forward(self, bottom, top):
         # assign output
-        #pdb.set_trace()
+        # pdb.set_trace()
         top[0].data[...] = self.data
         # self.label[self.label > 0] = 1
         top[1].data[...] = self.label

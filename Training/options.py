@@ -186,7 +186,9 @@ def GetOptions(verbose=True):
 
     if options.mode == "Fabien":
         options.patients = ['141549', '572123', '581910',
-                        '162438', '588626', '160120', '498959']
+                        '162438', '588626', '160120', '498959',
+			'508389', '536266', '544161', '574527'
+			]
     elif options.mode == "Isbi2012":
         options.patients = ["OnlyOne"]
     else:

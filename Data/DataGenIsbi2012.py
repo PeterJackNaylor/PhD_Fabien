@@ -69,6 +69,7 @@ class DataGenIsbi2012(DataGen):
         self.wgt_param = wgt_param
         self.SetDataSet()
 
+        self.SetDataSet()
     def LoadImage(self, val):
         return self.data_vol[val]
 
@@ -92,6 +93,7 @@ class DataGenIsbi2012(DataGen):
             self.data_vol = data[im_id[self.leave_out::]]
             self.lbl_vol = label[im_id[self.leave_out::]]
             if self.Weight:
+		# pdb.set_trace()
                 wgt_path = self.Weight_path()
                 wgt = LoadSetImage(wgt_path)
                 self.wgt_vol = wgt[im_id[self.leave_out::]]

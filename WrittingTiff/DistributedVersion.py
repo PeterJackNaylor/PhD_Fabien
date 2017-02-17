@@ -139,9 +139,10 @@ def CreateBash(bash_file, python_file, file_param, options):
 import caffe
 from createfold import GetNet, PredImageFromNet, DynamicWatershedAlias, dilation, disk, erosion
 
-stepSize = 200
+stepSize = 224
 windowSize = (224 , 224)
 param = 8
+
 
 def sliding_window(image, stepSize, windowSize):
     # slide a window across the imag
@@ -161,18 +162,18 @@ def sliding_window(image, stepSize, windowSize):
                 res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
             yield (x, y, x + windowSize[0], y + windowSize[1], res_img)
 
-
+from scipy import misc
 def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
     #pdb.set_trace() 
     x_s, y_s, z_s = image.shape
     result = np.zeros(shape=(x_s, y_s, 2))
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
-        print window.shape
         prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
         result[y_b:y_e, x_b:x_e, 0] += prob_image1
         result[y_b:y_e, x_b:x_e, 1] += 1.
     prob_map = result[:, :, 0] / result[:, :, 1]
     bin_map = prob_map > 0.5 + 0.0
+    bin_map = bin_map.astype(np.uint8)
     return prob_map, bin_map
 
 def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param):
@@ -181,6 +182,7 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param):
     wd_1 = "/share/data40T_v2/Peter/pretrained_models"
     net_1 = GetNet(cn_1, wd_1)
     prob_image1, bin_image1 = PredLargeImageFromNet(net_1, image, stepSize, windowSize)
+    pdb.set_trace()
     segmentation_mask = DynamicWatershedAlias(prob_image1, param)
     segmentation_mask[segmentation_mask > 0] = 1
     contours = dilation(segmentation_mask, disk(2)) - \
@@ -188,7 +190,17 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param):
 
     x, y = np.where(contours == 1)
     image[x, y] = np.array([0, 0, 0])
+    from scipy import misc
+    rand_int = np.random.randint(0,10000)
+    savename = "/share/data40T_v2/Peter/Reconstruction/temp/{}_prob.tiff".format(rand_int)
+    savenamebin = "/share/data40T_v2/Peter/Reconstruction/temp/{}_bin.tiff".format(rand_int)
+    savenamesegmask = "/share/data40T_v2/Peter/Reconstruction/temp/{}_segmask.tiff".format(rand_int)
+    misc.imsave(savename, prob_image1)
+    misc.imsave(savenamebin, bin_image1)
+    misc.imsave(savenamesegmask, segmentation_mask)
+
     return image
+
 
 ##########################
 

@@ -18,10 +18,7 @@ def PrepareProb(img, convertuint8=True, inverse=True):
 def HreconstructionErosion(prob_img, h):
 
     def making_top_mask(x, lamb=h):
-        if 255 >= x + lamb:
-            return x + lamb
-        else:
-            return 255
+	return max(254, x + lamb)
     f = np.vectorize(making_top_mask)
     shift_prob_img = f(prob_img)
 
@@ -67,11 +64,32 @@ def DynamicWatershedAlias(p_img, lamb):
     b_img = (p_img > 0.5) + 0
     Probs_inv = PrepareProb(p_img)
 
+
     Hrecons = HreconstructionErosion(Probs_inv, lamb)
     markers_Probs_inv = find_maxima(Hrecons)
     markers_Probs_inv = label(markers_Probs_inv)
     ws_labels = watershed(Hrecons, markers_Probs_inv, mask=b_img)
+    arrange_label = ArrangeLabel(ws_labels)
+    wsl = generate_wsl(arrange_label)
+    arrange_label[wsl > 0] = 0
+    
 
-    wsl = generate_wsl(ws_labels)
-    b_img[wsl > 0] = 0
-    return label(b_img)
+    return arrange_label
+
+def ArrangeLabel(mat):
+    mat = label(mat)
+    val, counts = np.unique(mat, return_counts=True)
+    if np.max(counts) == counts[0]:
+        return mat
+    else:
+        maxi = counts[0]
+        i_ind = 0
+        for i in val:
+            if counts[i] > maxi:
+                maxi = counts[i]
+                i_ind = i
+        mat[mat == 0] = np.max(mat) + 1
+        mat[mat == i_ind] = 0
+        mat[mat == np.max(mat)] = i_ind
+        return mat
+
