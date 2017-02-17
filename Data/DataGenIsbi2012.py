@@ -67,6 +67,7 @@ class DataGenIsbi2012(DataGen):
         self.WeightOnes = WeightOnes
         self.return_path = False
         self.wgt_param = wgt_param
+        self.SetDataSet()
 
         self.SetDataSet()
     def LoadImage(self, val):
@@ -92,7 +93,7 @@ class DataGenIsbi2012(DataGen):
             self.data_vol = data[im_id[self.leave_out::]]
             self.lbl_vol = label[im_id[self.leave_out::]]
             if self.Weight:
-		pdb.set_trace()
+		# pdb.set_trace()
                 wgt_path = self.Weight_path()
                 wgt = LoadSetImage(wgt_path)
                 self.wgt_vol = wgt[im_id[self.leave_out::]]
@@ -100,6 +101,10 @@ class DataGenIsbi2012(DataGen):
         elif self.split == "test":
             self.data_vol = data[im_id[0:self.leave_out]]
             self.lbl_vol = label[im_id[0:self.leave_out]]
+            if self.Weight:
+                wgt_path = self.Weight_path()
+                wgt = LoadSetImage(wgt_path)
+                self.wgt_vol = wgt[im_id[self.leave_out::]]
         else:
             raise Exception('Not valid split name')
         self.number = self.data_vol.shape[0]
@@ -125,7 +130,7 @@ class DataGenIsbi2012(DataGen):
         lbl = self.LoadLabel(val)
 
         if self.Weight:
-	    pdb.set_trace()
+            # pdb.set_trace()
             wgt = self.LoadWeight(val)
             img_lbl = (img, lbl, wgt)
         else:

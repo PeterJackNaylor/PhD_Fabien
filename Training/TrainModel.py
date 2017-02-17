@@ -59,6 +59,7 @@ def TrainModel(options):
                           disp_interval, number_of_test, num)
                     before = fcn_num
         except Exception, e:
+	    print e
             config = "PATIENT: {} \n \n "+ str(options) + " \n \n" + str(e)
 
             ElaborateEmail(config, "Error patient {}".format(num))
