@@ -18,10 +18,7 @@ def PrepareProb(img, convertuint8=True, inverse=True):
 def HreconstructionErosion(prob_img, h):
 
     def making_top_mask(x, lamb=h):
-        if 255 >= x + lamb:
-            return x + lamb
-        else:
-            return 255
+	return max(254, x + lamb)
     f = np.vectorize(making_top_mask)
     shift_prob_img = f(prob_img)
 
