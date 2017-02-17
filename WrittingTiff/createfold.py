@@ -122,7 +122,7 @@ def ProcessOneImage(slide, f, output, options):
                        ref_level=0, seed=42, fixed_size_in=(size_images, size_images))
     size_x, size_y = openslide.open_slide(slide_name).dimensions
 
-    list_of_para = list_of_para[10:100]
+    #list_of_para = list_of_para[10:100]
 
     temp_out = ApplyToSlideWrite(slide, list_of_para, f)
 

@@ -1,3 +1,7 @@
+"""
+python XmlParsing.py --a /Users/naylorpeter/Documents/Histopathologie/CellCognition/classifiers/classifier_January2017/ --c /Users/naylorpeter/Documents/Histopathologie/CellCognition/Fabien/ --o /Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotateColor/ --d /Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotateDiff
+"""
+
 import xml.etree.ElementTree as ET
 from UsefulFunctions.RandomUtils import CheckOrCreate
 import os
@@ -8,6 +12,8 @@ import pandas as pd
 import pdb
 import matplotlib.pylab as plt
 import numpy as np
+from optparse import OptionParser
+
 
 def plot(img):
 	plt.imshow(img)
@@ -23,17 +29,19 @@ def parse_name_png(string):
     """parsers cellcognitions masks name file"""
     new_string = string.replace("/Slide", "AZER").replace("/Mask_", "AZER").replace('.png', 'AZER')
     new_string = new_string.split('AZER')
-    return string, new_string[1], new_string[2]
+    return string, new_string[1], new_string[2].split('__')[0]
 
-def load_files():
+def load_files(options):
     """loading the main files"""
-    folder = glob.glob('/Users/naylorpeter/Documents/Histopathologie/CellCognition/export/annotations/*.xml')
+    files_location = os.path.join(options.annotation, 'annotations/*.xml')
+    folder = glob.glob(files_location)
     data_folder = pd.DataFrame(columns=('Path_XML', 'SlideID', 'CropID'))
     for i, item in enumerate(folder):
         data_folder.loc[i] = parse_name_xml(item)
     data_folder = data_folder.set_index(['SlideID', 'CropID'])
 
-    image = glob.glob("/Users/naylorpeter/Documents/Histopathologie/CellCognition/export/masks/Slide*/*")
+    slides_location = os.path.join(options.cellcognition, "masks/Slide*/*.png")
+    image = glob.glob(slides_location)
     image_folder = pd.DataFrame(columns=('Path_PNG', 'SlideID', 'CropID'))
     for j, item in enumerate(image):
         image_folder.loc[j] = parse_name_png(item)
@@ -118,32 +126,86 @@ def fuse(xml_pandas, lbl_label):
 
 
 
-def CreateFolder(data_file):
+def CreateFolder(data_file, options):
     for string in data_file["Path_PNG"]:
-        string = string.replace("masks", "colored_mask")
         string = string.replace(string.split('/')[-1], "")
+        ending = string[:-1].split('/')[-1]
+        ending = ending.replace('Slide', 'Slide_')
+        #pdb.set_trace()
+        string = os.path.join(options.output, ending)
+
         if not os.path.isdir(string):
             print "Creating folder: {}".format(string)
         CheckOrCreate(string)
+        GT = string.replace('Slide', "GT")
+        CheckOrCreate(GT)
+        if not os.path.isdir(GT):
+            print "Creating folder: {}".format(GT) 
 
-def SaveName():
-    return "/Users/naylorpeter/Documents/Histopathologie/CellCognition/export/colored_mask/Slide{}/CMask_{}.png"
-def SaveDiffName():
-    return "/Users/naylorpeter/Documents/Histopathologie/CellCognition/export/colored_mask/Slide{}/DiffCMask_{}.png"
+        if options.output_diff != "None":
+            string = os.path.join(options.output_diff, ending)
+            if not os.path.isdir(string):
+                print "Creating folder: {}".format(string)
+            CheckOrCreate(string)
+            
 
-def __main__():
+def SaveName(options):
+    return os.path.join(options.output, "GT_{}/{}_{}.png")
+def SaveDiffName(options):
+    return os.path.join(options.output_diff, "Slide_{}/{}_{}.png")
+
+def GetOptions(verbose=True):
+
+    parser = OptionParser()
+
+# complsory aguments:
+    parser.add_option('--a', dest="annotation", type="string",
+                      help="annotation folder")
+    parser.add_option("--c", dest="cellcognition", type="string",
+                      help="cellcognition output")
+    parser.add_option("--o", dest="output", type='string',
+                     help="output")
+    parser.add_option("--d", dest='output_diff', type="string", default="None",
+                     help="images of who hasn't been assigned (if specified)")
+    parser.add_option("--b", dest='binary', type="string", 
+                     help="binary folder")
+
+    (options, args) = parser.parse_args()
+    if verbose:
+        print "Input paramters to run:"
+        print " \n "
+
+    # complsory aguments:
+
+        print "Annotation folder    : | {}".format(options.annotation)
+        print "CellCognition folder : | {}".format(options.cellcognition)
+        print "Binary folder        : | {}".format(options.binary)
+        print "Output               : | {}".format(options.output)
+        print "Output difference    : | {}".format(options.output_diff)
+    CheckOrCreate(options.output)
+    if options.output_diff != "None":
+        CheckOrCreate(options.output_diff)
+
+    return (options, args)
+
+
+def __main__(options):
     """main function"""
-    all_files = load_files()
-    CreateFolder(all_files)
+    all_files = load_files(options)
+    CreateFolder(all_files, options)
     for el in all_files.index:
         xml_path = all_files.ix[el, "Path_XML"]
         png_path = all_files.ix[el, "Path_PNG"]
+        print 'Dealing with {}'.format(png_path)
+        print 'And with {}'.format(xml_path)
         img = load_png(png_path)
         #pdb.set_trace()
         xml_data = get_markers(xml_path)
         classed_label = fuse(xml_data, img)
-        save_name = SaveName().format(*el)
-        diffsave_name = SaveDiffName().format(*el)
+        s_id = el[0]
+        i_id = el[1]
+        save_name = SaveName(options).format(s_id, s_id, i_id)
+        diffsave_name = SaveDiffName(options).format(s_id, s_id, i_id)
         try:
             diff_png = img.copy()
             diff_png[diff_png > 0] = 1
@@ -152,9 +214,13 @@ def __main__():
             diff = diff_classed - diff_png
             diff[diff != 0] = 255
             print classed_label.shape
+            #pdb.set_trace()
             imsave(diffsave_name, diff)
             imsave(save_name, classed_label)
             print "print saved file: {}".format(save_name)
         except:
             print "Couldn't save file : {}".format(save_name)
         #pdb.set_trace()
+if __name__ == "__main__":
+    options, args = GetOptions()
+    __main__(options)

@@ -1,4 +1,5 @@
 from optparse import OptionParser
+import pdb
 from UsefulFunctions.UsefulOpenSlide import GetImage
 from UsefulFunctions.RandomUtils import CheckOrCreate
 from CuttingPatches import ROI
@@ -11,34 +12,73 @@ import getpass
 import openslide
 
 def indent(text, amount=4, ch=' '):
+    """ Creates an indented string with amount characters of type ch.
+    Default:
+    - amount = 4
+    - ch = ' ' 
+    """
     padding = amount * ch
     return ('\n'+padding+text)
 
 
 def CreateFileParam(name, list):
+    """
+    Creates physically a text file named name where each line as an id 
+    and each line as parameters
+    """
     f = open(name, "wb")
     line = 1
     for para in list:
-        small_para = [para[0], para[1], para[3]]
         pre = "__{}__ ".format(line)
-        pre += "{} {} {}\n".format(*small_para)
+        pre += "{} {} {} {} {}\n".format(*para)
         f.write(pre)
-	line += 1
+    line += 1
     f.close()
 
 
 def Distribute(slide, size, output, options):
-    list_of_para = ROI(slide, method=options.method,
-                       ref_level=0, seed=42, fixed_size_in=(size, size))
+    """
+    Input:
+    Slide : name of the slide to analyse
+    size: size of outputed image crops from size.
+    output: folder to store all the different files for the processing
+    options: dictionnary with many options.
+
+    Ouput: No output but a folder in output where you will find
+        - a parameter file called ParameterDistribution
+        - a bash file called PredOneSlide.sh
+        - a python file called PredictionSlide.py
+    """
+    # the size option doesn't matter here...
+    #list_of_para = ROI(slide, method=options.method,
+    #                   ref_level=0, seed=42, fixed_size_in=(size, size))
+    list_of_para = ROI(slide, ref_level=0, disk_size=4, thresh=230, 
+               black_spots=None, number_of_pixels_max=9000000, 
+               verbose=False, marge=0, method='grid_etienne', 
+               mask_address=None, contour_size=3, N_squares=100, 
+               seed=None, fixed_size_in=(512, 512), fixed_size_out=(512,512))
     distribute_file = os.path.join(output, "ParameterDistribution.txt")
     bash_file = os.path.join(output, "PredOneSlide.sh")
     python_file = os.path.join(output, "PredictionSlide.py")
+    PBS = os.path.join(output, "PBS")
+    OUT = os.path.join(PBS, "OUT")
+    ERR = os.path.join(PBS, "ERR")
+    CheckOrCreate(output)
+    CheckOrCreate(PBS)
+    CheckOrCreate(OUT)
+    CheckOrCreate(ERR)
     CreateFileParam(distribute_file, list_of_para)
     CreateBash(bash_file, python_file, distribute_file, options)
     CreatePython(python_file, options)
 
 
 def CreatePython(python_file, options):
+    """
+    Creates a small python file which is submitted to a cluster of jobs.
+    input:
+        python file: name of file
+        options: dictionnary of options such as: None are needed here.
+    """
     f = open(python_file, "wb")
     f.write("# -*- coding: cp1252 -*- \n\"\"\" \nDescription: \n \nAuthors: " +
             getpass.getuser() + "\n \nDate: " + time.strftime("%x") + "\n \n\"\"\" ")
@@ -50,6 +90,14 @@ def CreatePython(python_file, options):
 
 
 def CreateBash(bash_file, python_file, file_param, options):
+    """
+    Creates a bash function to submit in order to analyse each image patches.
+    input: bash_file: name of the bash file
+           python_file: name of the python file to submit.
+           file_param: name of the parameter file.
+           options: dictionnary of option such as output, slide name, size, and options names for the options to the python script
+           
+    """
     f = open(bash_file, "wb")
     f.write("#!/bin/bash\n\n")  # sets bash environnement
     f.write("#$ -cwd\n")  # executes job in current directory
@@ -74,7 +122,7 @@ def CreateBash(bash_file, python_file, file_param, options):
     f.write('SIZE={}\n'.format(options.size))
     f.write('spe_tag=__\n')
     last_line = ""
-    n_field = len(open(file_param, "rb").readlines()[0].split(' ')) - 2
+    n_field = len(open(file_param, "rb").readlines()[0].split(' ')) - 1
     for i in range(n_field):
         f.write(
             'FIELD{}=$(grep \"$spe_tag$SGE_TASK_ID$spe_tag \" $FILE | cut -d\' \' -f{})\n'.format(i, i + 2))
@@ -91,18 +139,50 @@ def CreateBash(bash_file, python_file, file_param, options):
 import caffe
 from createfold import GetNet, PredImageFromNet, DynamicWatershedAlias, dilation, disk, erosion
 
+stepSize = 224
+windowSize = (224 , 224)
 param = 8
 
 
-def pred_f(image, param=param):
-    # pdb.set_trace()
+def sliding_window(image, stepSize, windowSize):
+    # slide a window across the imag
+    i = 0
+    for y in xrange(0, image.shape[0], stepSize):
+        for x in xrange(0, image.shape[1], stepSize):
+            # yield the current window
+            res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
+            change = False
+            if res_img.shape[0] != windowSize[1]:
+                y = image.shape[0] - windowSize[1]
+                change = True
+            if res_img.shape[1] != windowSize[0]:
+                x = image.shape[1] - windowSize[0]
+                change = True
+            if change:
+                res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
+            yield (x, y, x + windowSize[0], y + windowSize[1], res_img)
+
+from scipy import misc
+def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
+    #pdb.set_trace() 
+    x_s, y_s, z_s = image.shape
+    result = np.zeros(shape=(x_s, y_s, 2))
+    for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
+        prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
+        result[y_b:y_e, x_b:x_e, 0] += prob_image1
+        result[y_b:y_e, x_b:x_e, 1] += 1.
+    prob_map = result[:, :, 0] / result[:, :, 1]
+    bin_map = prob_map > 0.5 + 0.0
+    bin_map = bin_map.astype(np.uint8)
+    return prob_map, bin_map
+
+def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param):
     caffe.set_mode_cpu()
     cn_1 = "FCN_0.01_0.99_0.0005"
     wd_1 = "/share/data40T_v2/Peter/pretrained_models"
     net_1 = GetNet(cn_1, wd_1)
-    prob_image1, bin_image1 = PredImageFromNet(
-        net_1, image, with_depross=True)
-    #pdb.set_trace()
+    prob_image1, bin_image1 = PredLargeImageFromNet(net_1, image, stepSize, windowSize)
+    pdb.set_trace()
     segmentation_mask = DynamicWatershedAlias(prob_image1, param)
     segmentation_mask[segmentation_mask > 0] = 1
     contours = dilation(segmentation_mask, disk(2)) - \
@@ -110,7 +190,17 @@ def pred_f(image, param=param):
 
     x, y = np.where(contours == 1)
     image[x, y] = np.array([0, 0, 0])
+    from scipy import misc
+    rand_int = np.random.randint(0,10000)
+    savename = "/share/data40T_v2/Peter/Reconstruction/temp/{}_prob.tiff".format(rand_int)
+    savenamebin = "/share/data40T_v2/Peter/Reconstruction/temp/{}_bin.tiff".format(rand_int)
+    savenamesegmask = "/share/data40T_v2/Peter/Reconstruction/temp/{}_segmask.tiff".format(rand_int)
+    misc.imsave(savename, prob_image1)
+    misc.imsave(savenamebin, bin_image1)
+    misc.imsave(savenamesegmask, segmentation_mask)
+
     return image
+
 
 ##########################
 
@@ -125,13 +215,19 @@ def options_min():
                       help="position on x axis")
     parser.add_option('-y', dest="y", type="int",
                       help="position on y axis")
-    parser.add_option('-s', '--size', dest="size", type="int",
-                      help='Size of images')
+    parser.add_option('--size_x', dest="size_x", type="int",
+                      help='Size of images x axis')
+    parser.add_option('--size_y', dest="size_y", type="int",
+                      help='Size of images y axis')  
+    parser.add_option('--ref_level', dest="ref_level", type ="int",
+                       help="Level of resolution")  
     parser.add_option('--output', dest='output', type="str",
 		     help='Output folder')
+    parser.add_option('--size', dest="size", type="int",
+                      help="Size of prediction images")
     (options, args) = parser.parse_args()
 
-    options.param = [options.x, options.y, 0, options.size, options.size]
+    options.param = [options.x, options.y, options.ref_level, options.size_x, options.size_y]
 
     options.f = pred_f
 
@@ -146,34 +242,55 @@ def options_all():
                       help="Input slide")
     parser.add_option('--output', dest="output", type="string",
                       help="Output folder")
-    parser.add_option('--size', dest="size", type="int",
+    parser.add_option('--size_tiles', dest="size", type="int",
                       help="Size of the tiles")
     parser.add_option('--method', dest="method", type="str", default='grid_fixed_size',
                       help="Method of the tilling procedure")
     parser.add_option('--tc', dest="tc", type="int", default=50,
                       help="Numbr of jobs in paralelle")
     (options, args) = parser.parse_args()
-    options.name = ["-x", "-y", "--size"]
+    options.name = ["-x", "-y", "--size_x", "--size_y", "--ref_level"]
     return options
 
 
 def PredImage(options):
     slide = options.slide
-    para = [options.x, options.y, 0, options.size, options.size]
+    para = [options.x, options.y, options.size_x, options.size_y, options.ref_level]
     outfile = os.path.join(options.output, 'tiled',
-                           "{}_{}.tiff".format(options.x, options.y))
+                           "{}_{}_{}_{}_{}.tiff".format(options.x, options.y,
+                           options.size_x, options.size_y, options.ref_level))
+
+    CheckOrCreate(os.path.join(options.output, "tiled"))
     print "slide :{}".format(slide)
-    print "para: ", para
-    print "outfile: {}".format(outfile)
-    print "f: ", options.f
+    print "para : ", para
+    print "outfile : {}".format(outfile)
+    print "f : ", options.f
     PredOneImage(slide, para, outfile, options.f)
 
 def PredOneImage(slide, para, outfile, f):
     # pdb.set_trace()
-    slide = openslide.open_slide(slide)
-    image = np.array(GetImage(slide, para))[:,:,:3]
-    image = f(image)
-    imsave(outfile, image, resolution=[1.0,1.0])
+    if not os.path.isfile(outfile):
+        slide = openslide.open_slide(slide)
+        image = np.array(GetImage(slide, para))[:,:,:3]
+        image = f(image)
+        imsave(outfile, image, resolution=[1.0,1.0])
+    else:
+        print "Files exists"
+
+def CheckJob(parameter_file, output_folder):
+    f = open(parameter_file, "r")
+    lines = [ss.split(' ') for ss in f.readlines()]
+    for para in lines:
+        line_number = para[0]
+        x = para[1]
+        y = para[2]
+        size_x = para[3]
+        size_y = para[4]
+        ref_level = para[5][0]
+        filename = os.path.join(output_folder, "{}_{}_{}_{}_{}.tiff")
+        filename = filename.format(x, y, size_x, size_y, ref_level)
+        if not os.path.isfile(filename):
+            print "file {} doesn't exists whish is job array number {}".format(filename, line_number)
 
 if __name__ == "__main__":
 

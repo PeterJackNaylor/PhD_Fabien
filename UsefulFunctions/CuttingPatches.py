@@ -53,108 +53,91 @@ def Sample_imagette(im_bin, N, slide, level_resolution, nber_pixels, current_lev
     return(result, mask)
 
 
-def White_score(slide, para, thresh):
+def White_score(slide, para, options):
     crop = UOS.GetImage(slide, para)
     # pdb.set_trace()
+    thresh = options["Threshold"]
     crop = np.array(crop)[:, :, 0]
     binary = crop > thresh
     nber_ones = sum(sum(binary))
     nber_total = binary.shape[0] * binary.shape[1]
     return(float(nber_ones) / nber_total)
 
+def CalculateMarge(marge, size_x, size_y):
+    return marge, marge
 
-def Best_Finder_rec(slide, level, x_0, y_0, size_x, size_y, image_name, ref_level, list_roi, number_of_pixels_max, thresh, verbose, marge=0):
-    # This function enables you to cut up a portion of a slide to a given resolution.
-    # It will try and minimize the number of create images for a given portion
-    # of the image
+def Best_Finder_rec(slide, level, x_0, y_0, size_x, size_y, ref_level, list_roi, number_of_pixels_max, marge, options):
+    #pdb.set_trace()
     if size_x * size_y == 0:
         print 'Warning: width or height is null..'
-        return([])
-    else:
-        if level == ref_level:
-            if size_x * size_y < number_of_pixels_max:  # size of level 3
-                if marge > 0:
-                    # if it is int, then it ill add that amount of pixels
-                    if isinstance(marge, int):
-                        extra_pixels = marge
-                    # if it is float it will multiply it with respect to its
-                    # size.
-                    elif isinstance(marge, float):
-                        extra_pixels = int(
-                            np.ceil(marge * min(size_x, size_y)))
-                    size_x += extra_pixels / 2
-                    size_y += extra_pixels / 2
-                    width_xp, height_xp = UOS.get_size(
-                        slide, extra_pixels / 2, extra_pixels / 2, level, 0)
-                    x_0 = max(x_0 - width_xp, 0)
-                    y_0 = max(y_0 - height_xp, 0)
-                para = [x_0, y_0, size_x, size_y, level]
-                if White_score(slide, para, thresh) < 0.5:
-                    list_roi.append(para)
-                return(list_roi)
+        return []
+
+    if level == ref_level:
+        if size_x * size_y < number_of_pixels_max:
+
+            ## if ref_level != 0 then thir will need some changes..
+            width_xp, height_xp = CalculateMarge(marge, size_x, size_y)
+            max_width, max_height = slide.dimensions
+
+
+            x_0 = max(x_0 - width_xp, 0)
+            y_0 = max(y_0 - height_xp, 0)
+            size_x = min(x_0 + size_x + width_xp, max_width) - x_0
+            size_y = min(y_0 + size_y + height_xp, max_height) - y_0
+
+            para = [x_0, y_0, size_x, size_y, level]
+            val = White_score(slide, para, options)
+            if val < options["value"]:
+                list_roi.append(para)
             else:
-
-                size_x_new = int(size_x * 0.5)
-                size_y_new = int(size_y * 0.5)
-
-                diese_str = "#" * level * 10
-                if verbose:
-                    print diese_str + "split level " + str(level)
-
-                width_x_0, height_y_0 = UOS.get_size(
-                    slide, size_x, size_y, level, 0)
-                x_1 = x_0 + int(width_x_0 * 0.5)
-                y_1 = y_0 + int(height_y_0 * 0.5)
-
-                image_name = image_name + "_Split_id_" + \
-                    str(random.randint(0, 1000))
-                list_roi = Best_Finder_rec(slide, level, x_0, y_0, size_x_new, size_y_new,
-                                           image_name, ref_level, list_roi, number_of_pixels_max, thresh, verbose, marge)
-                list_roi = Best_Finder_rec(slide, level, x_1, y_0, size_x_new, size_y_new,
-                                           image_name, ref_level, list_roi, number_of_pixels_max, thresh, verbose, marge)
-                list_roi = Best_Finder_rec(slide, level, x_0, y_1, size_x_new, size_y_new,
-                                           image_name, ref_level, list_roi, number_of_pixels_max, thresh, verbose, marge)
-                list_roi = Best_Finder_rec(slide, level, x_1, y_1, size_x_new, size_y_new,
-                                           image_name, ref_level, list_roi, number_of_pixels_max, thresh, verbose, marge)
-                return(list_roi)
+                print val
+                print "rejected"
+            ## else, you don't append it and it has been discarded
+            return list_roi
         else:
-            if level > 1:
-                if size_x * size_y > number_of_pixels_max:  # size of level 3
+            ## image is still too big at the level we intend it to be, so we split it still.
+            size_x_new = int(size_x * 0.5)
+            size_y_new = int(size_y * 0.5)
+            width_x_0, height_y_0 = UOS.get_size(slide, size_x, size_y, level, 0)
+            x_1 = x_0 + int(width_x_0 * 0.5)
+            y_1 = y_0 + int(height_y_0 * 0.5)
+            list_roi = Best_Finder_rec(slide, level, x_0, y_0, size_x_new, size_y_new,
+                                       ref_level, list_roi, number_of_pixels_max, marge, options)
+            list_roi = Best_Finder_rec(slide, level, x_1, y_0, size_x_new, size_y_new,
+                                       ref_level, list_roi, number_of_pixels_max, marge, options)
+            list_roi = Best_Finder_rec(slide, level, x_0, y_1, size_x_new, size_y_new,
+                                       ref_level, list_roi, number_of_pixels_max, marge, options)
+            list_roi = Best_Finder_rec(slide, level, x_1, y_1, size_x_new, size_y_new,
+                                       ref_level, list_roi, number_of_pixels_max, marge, options)
+            return list_roi
+    elif level > ref_level:
+        if size_x * size_y > number_of_pixels_max:
+            ### if the image is too big at this level then we can already divide it
+            size_x_new, size_y_new = UOS.get_size(slide, size_x, size_y, level, level - 1)
+            size_x_new = int(size_x_new * 0.5)
+            size_y_new = int(size_y_new * 0.5)
+            width_x_0, height_y_0 = UOS.get_size(slide, size_x, size_y, level, 0)
+            x_1 = x_0 + int(width_x_0 * 0.5)
+            y_1 = y_0 + int(height_y_0 * 0.5)
+            list_roi = Best_Finder_rec(slide, level - 1, x_0, y_0, size_x_new, size_y_new,
+                                       ref_level, list_roi, number_of_pixels_max, marge, options)
+            list_roi = Best_Finder_rec(slide, level - 1 , x_1, y_0, size_x_new, size_y_new,
+                                       ref_level, list_roi, number_of_pixels_max, marge, options)
+            list_roi = Best_Finder_rec(slide, level - 1, x_0, y_1, size_x_new, size_y_new,
+                                       ref_level, list_roi, number_of_pixels_max, marge, options)
+            list_roi = Best_Finder_rec(slide, level - 1, x_1, y_1, size_x_new, size_y_new,
+                                       ref_level, list_roi, number_of_pixels_max, marge, options)
+            return list_roi
 
-                    size_x_new, size_y_new = UOS.get_size(
-                        slide, size_x, size_y, level, level - 1)
-                    size_x_new = int(size_x_new * 0.5)
-                    size_y_new = int(size_y_new * 0.5)
+        else:
+            #### image is still very small, so we can increase the resolution without any problem
+            size_x_new, size_y_new = UOS.get_size(slide, size_x, size_y, level, level - 1)
+            list_roi = Best_Finder_rec(slide, level - 1, x_0, y_0, size_x_new, size_y_new,
+                                       ref_level, list_roi, number_of_pixels_max, marge, options)
+            return list_roi
+    else:
+        print "Something fucked up"
 
-                    if verbose:
-                        diese_str = "#" * level * 10
-                        print diese_str + "split level " + str(level)
-
-                    width_x_0, height_y_0 = UOS.get_size(
-                        slide, size_x, size_y, level, 0)
-
-                    x_1 = x_0 + int(width_x_0 * 0.5)
-                    y_1 = y_0 + int(height_y_0 * 0.5)
-
-                    list_roi = Best_Finder_rec(slide, level - 1, x_0, y_0, size_x_new, size_y_new,
-                                               image_name, ref_level, list_roi, number_of_pixels_max, thresh, verbose, marge)
-                    list_roi = Best_Finder_rec(slide, level - 1, x_1, y_0, size_x_new, size_y_new,
-                                               image_name, ref_level, list_roi, number_of_pixels_max, thresh, verbose, marge)
-                    list_roi = Best_Finder_rec(slide, level - 1, x_0, y_1, size_x_new, size_y_new,
-                                               image_name, ref_level, list_roi, number_of_pixels_max, thresh, verbose, marge)
-                    list_roi = Best_Finder_rec(slide, level - 1, x_1, y_1, size_x_new, size_y_new,
-                                               image_name, ref_level, list_roi, number_of_pixels_max, thresh, verbose, marge)
-                    return(list_roi)
-                else:
-
-                    size_x_new, size_y_new = UOS.get_size(
-                        slide, size_x, size_y, level, level - 1)
-
-                    list_roi = Best_Finder_rec(slide, level - 1, x_0, y_0, size_x_new, size_y_new,
-                                               image_name, ref_level, list_roi, number_of_pixels_max, thresh, verbose, marge)
-                    return(list_roi)
-            else:
-                print "Not enough variability on second split"
 
 
 def ReturnGrid(x_g, x_d, y_h, y_b, fixed_size):
@@ -190,7 +173,7 @@ def GimmeGrid(slide, res, level=4, fixed_size=(512, 512)):
 
 def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
         number_of_pixels_max=1000000, verbose=False, marge=0, method='grid',
-        mask_address=None, contour_size=3, N_squares=100, seed=None, fixed_size_in=(512,  512), fixed_size_out=(512, 512)):
+        mask_address=None, contour_size=3, N_squares=100, seed=None, fixed_size_in=(512,  512), fixed_size_out=(512, 512), cut_whitescore=0.8):
     # creates a grid of the all interesting places on the image
 
     if seed is not None:
@@ -240,8 +223,12 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
             w = max(x) - x_0
             h = max(y) - y_0
             new_x, new_y = UOS.get_X_Y(slide, x_0, y_0, lowest_res)
-            list_roi = Best_Finder_rec(slide, lowest_res, new_x, new_y, w, h, "./" + folder +
-                                       "/" + folder, ref_level, list_roi, number_of_pixels_max, thresh, verbose, marge)
+            options = {}
+            options['Threshold'] = thresh
+            options['value'] = cut_whitescore
+            # pdb.set_trace()
+            list_roi = Best_Finder_rec(slide, lowest_res, new_x, new_y, w, h,
+                                       ref_level, list_roi, number_of_pixels_max, marge, options)
 
     elif method == 'SP_ROI':
 
@@ -319,6 +306,7 @@ def visualise_cut(slide, list_pos, res_to_view=None, color='red', size=12, title
 
 
 # if False:
+"""
 if __name__ == "__main__":
     parser = OptionParser()
 
@@ -414,3 +402,4 @@ if __name__ == "__main__":
     print "Average time per image:"
     diff_time = diff_time / len(list_of_para)
     print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
+"""
