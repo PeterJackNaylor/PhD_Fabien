@@ -128,7 +128,7 @@ class DataGenIsbi2012(DataGen):
         lbl = self.LoadLabel(val)
 
         if self.Weight:
-            pdb.set_trace()
+            # pdb.set_trace()
             wgt = self.LoadWeight(val)
             img_lbl = (img, lbl, wgt)
         else:
