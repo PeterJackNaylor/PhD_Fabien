@@ -1,6 +1,7 @@
 import pandas as pd
 import os
-
+from optparse import OptionParser
+from id_patient import Matching, getting_files_name
 
 def check_folder(path):
     if not os.path.isdir(path):
@@ -118,27 +119,27 @@ def MoveAndRename(r, path):
 
     if bio_file != "":
         i += 1
-        check_folder(root_folder)
+        #check_folder(root_folder)
         new_filename = os.path.join(root_folder, str(biopsie) + "_biopsy.tiff")
         print ">>>>>>> {} --------> {}".format(bio_file, new_filename)
 
     if bio_file2 != "":
         i += 1
-        check_folder(root_folder)
+        #check_folder(root_folder)
         new_filename = os.path.join(
             root_folder, str(biopsie) + "_secondbiopsy.tiff")
         print ">>>>>>> {} --------> {}".format(bio_file2, new_filename)
     j = 0
     if pie_file != "":
         j += 1
-        check_folder(root_folder)
+        #check_folder(root_folder)
         new_filename = os.path.join(
             root_folder, str(Piece_operatoire) + "_piece.tiff")
         print ">>>>>>> {} --------> {}".format(pie_file, new_filename)
 
     if pie_file2 != "":
         j += 1
-        check_folder(root_folder)
+        #check_folder(root_folder)
         new_filename = os.path.join(
             root_folder, str(biopsie) + "_secondpiece.tiff")
         print ">>>>>>> {} --------> {}".format(bio_file, new_filename)
@@ -191,6 +192,5 @@ if __name__ == "__main__":
     files = findAllFiles(path_input_data, ".tiff")
 
     where_is_file(data_patient_piece, data_piece_file, files)
-
     data_patient_piece[["Biopsy_here", "Piece_here"]] = data_patient_piece.apply(
         lambda r: MoveAndRename(r, path_input_data), axis=1)
