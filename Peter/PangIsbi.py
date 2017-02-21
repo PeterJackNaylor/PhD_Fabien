@@ -43,3 +43,5 @@ for base_lr in base_lr_list:
 body = "The job on {} using node {} is now free".format(environ["HOSTNAME"],environ["CUDA_VISIBLE_DEVICES"])
 subject = "Free node"
 ElaborateEmail(body, subject)
+
+##### HELLO people
