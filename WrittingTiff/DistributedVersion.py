@@ -32,7 +32,7 @@ def CreateFileParam(name, list):
         pre = "__{}__ ".format(line)
         pre += "{} {} {} {} {}\n".format(*para)
         f.write(pre)
-    line += 1
+        line += 1
     f.close()
 
 
@@ -54,7 +54,7 @@ def Distribute(slide, size, output, options):
     #                   ref_level=0, seed=42, fixed_size_in=(size, size))
     list_of_para = ROI(slide, ref_level=0, disk_size=4, thresh=230, 
                black_spots=None, number_of_pixels_max=9000000, 
-               verbose=False, marge=0, method='grid_etienne', 
+               verbose=False, marge=0, method=options.method, 
                mask_address=None, contour_size=3, N_squares=100, 
                seed=None, fixed_size_in=(512, 512), fixed_size_out=(512,512))
     distribute_file = os.path.join(output, "ParameterDistribution.txt")
@@ -139,7 +139,7 @@ def CreateBash(bash_file, python_file, file_param, options):
 import caffe
 from createfold import GetNet, PredImageFromNet, DynamicWatershedAlias, dilation, disk, erosion
 
-stepSize = 224
+stepSize = 180
 windowSize = (224 , 224)
 param = 7
 
@@ -222,7 +222,7 @@ def options_min():
     parser.add_option('--ref_level', dest="ref_level", type ="int",
                        help="Level of resolution")  
     parser.add_option('--output', dest='output', type="str",
-		     help='Output folder')
+		              help='Output folder')
     parser.add_option('--size', dest="size", type="int",
                       help="Size of prediction images")
     (options, args) = parser.parse_args()
@@ -245,9 +245,9 @@ def options_all():
     parser.add_option('--size_tiles', dest="size", type="int",
                       help="Size of the tiles")
     parser.add_option('--method', dest="method", type="str", default='grid_fixed_size',
-                      help="Method of the tilling procedure")
+                      help="Method of the tilling procedure, it can grid_etienne/grid_fixed_size")
     parser.add_option('--tc', dest="tc", type="int", default=50,
-                      help="Numbr of jobs in paralelle")
+                      help="Number of jobs in paralelle")
     (options, args) = parser.parse_args()
     options.name = ["-x", "-y", "--size_x", "--size_y", "--ref_level"]
     return options
