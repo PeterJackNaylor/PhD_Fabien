@@ -17,10 +17,15 @@ DATA_FOLDER = "Data"
 
 DISTRIBUTED_VERSION = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/DistributedVersion.py')
 
-remote_DATA_FOLDER = WD_REMOTE/DATA_FOLDER
 
-process PriorJob {
+
+
+
+process SendToCluster {
     profile = 'cluster'
+    validExitStatus 0,134
+    clusterOptions = "-S /bin/bash"
+    publishDir WD_REMOTE, overwrite: false
 
     input:
     file PYTHONFILE from DISTRIBUTED_VERSION
@@ -28,16 +33,16 @@ process PriorJob {
     val wd_REMOTE from WD_REMOTE
 
     output:
-    file "$wd/PatientFolder/$x/PredOneSlide.sh" into JOB_SUBMIT
-    file $x into TIFF_REMOTE
+    file "PatientFolder/Job_$x" into JOB_SUBMIT
 
     """
-    OUTPUT=$wd/PatientFolder/$x.name/
+
+    FOLDER=`echo $x.name | cut -d '.' -f1`
+    OUTPUT=$wd_REMOTE/PatientFolder/$x
     METHOD=grid_etienne
 
  
-    python $PYTHONFILE --slide $x --output \$OUTPUT --method \$METHOD --tc 10 --size_tiles 224
+    python $PYTHONFILE --slide $x --output PatientFolder/Job_$x --method \$METHOD --tc 10 --size_tiles 224
+
     """
 }
-    
-    
