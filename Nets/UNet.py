@@ -14,15 +14,18 @@ def unet(split, data_gene, loss, batch_size, Weight, cn, skip, num_output):
 
     n.conv_d0a, n.relu_d0b = ConvRelu(n.data, 64, pad=0)
     n.conv_d0b, n.relu_d0c = ConvRelu(n.relu_d0b, 64, pad=0)
-    n.pool_d0c = Maxpool(n.relu_d0c)
+    n.drop_d0c = L.Dropout(n.relu_d0c, dropout_ratio=0.5, in_place=True)
+    n.pool_d0c = Maxpool(n.drop_d0c)
 
     n.conv_d1a, n.relu_d1b = ConvRelu(n.pool_d0c, 128, pad=0)
     n.conv_d1b, n.relu_d1c = ConvRelu(n.relu_d1b, 128, pad=0)
-    n.pool_d1c = Maxpool(n.relu_d1c)
+    n.drop_d1c = L.Dropout(n.relu_d1c, dropout_ratio=0.5, in_place=True)
+    n.pool_d1c = Maxpool(n.drop_d1c)
 
     n.conv_d2a, n.relu_d2b = ConvRelu(n.pool_d1c, 256, pad=0)
     n.conv_d2b, n.relu_d2c = ConvRelu(n.relu_d2b, 256, pad=0)
-    n.pool_d2c = Maxpool(n.relu_d2c)
+    n.drop_d2c = L.Dropout(n.relu_d2c, dropout_ratio=0.5, in_place=True)
+    n.pool_d2c = Maxpool(n.drop_d2c)
 
     n.conv_d3a, n.relu_d3b = ConvRelu(n.pool_d2c, 512, pad=0)
     n.conv_d3b, n.relu_d3c = ConvRelu(n.relu_d3b, 512, pad=0)
@@ -42,19 +45,19 @@ def unet(split, data_gene, loss, batch_size, Weight, cn, skip, num_output):
             n.drop_d4c, 512)
     if 3 not in skip:
         n.upconv_d3c_u2a, n.relu_u2a, n.crop_d2c, n.concat_d2cc_u2a, n.conv_u2b, n.relu_u2c, n.conv_u2c, n.relu_u2d = DeconvReCropConcatConvReConvRe(
-            n.relu_u3d, n.relu_d2c, 256)
+            n.relu_u3d, n.drop_d2c, 256)
     else:
         n.upconv_d3c_u2a, n.relu_u2a, n.conv_u2b, n.relu_u2c, n.conv_u2c, n.relu_u2d = DeconvReConvReConvRe(
             n.relu_u3d, 256)
     if 2 not in skip:
         n.upconv_d2c_u1a, n.relu_u1a, n.crop_d1c, n.concat_d1cc_u1a, n.conv_u1b, n.relu_u1c, n.conv_u1c, n.relu_u1d = DeconvReCropConcatConvReConvRe(
-            n.relu_u2d, n.relu_d1c, 128)
+            n.relu_u2d, n.drop_d1c, 128)
     else:
         n.upconv_d2c_u1a, n.relu_u1a, n.conv_u1b, n.relu_u1c, n.conv_u1c, n.relu_u1d = DeconvReConvReConvRe(
             n.relu_u2d, 128)
     if 1 not in skip:
         n.upconv_d1c_u0a, n.relu_u0a, n.crop_d0c, n.concat_d0cc_u0a, n.conv_u0b, n.relu_u0c, n.conv_u0c, n.relu_u0d = DeconvReCropConcatConvReConvRe(
-            n.relu_u1d, n.relu_d0c, 64, deconv_out=128)
+            n.relu_u1d, n.drop_d0c, 64, deconv_out=128)
     else:
         n.upconv_d1c_u0a, n.relu_u0a, n.conv_u0b, n.relu_u0c, n.conv_u0c, n.relu_u0d = DeconvReConvReConvRe(
             n.relu_u1d, 64, deconv_out=128)
