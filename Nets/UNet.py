@@ -14,11 +14,13 @@ def unet(split, data_gene, loss, batch_size, Weight, cn, skip, num_output):
 
     n.conv_d0a, n.relu_d0b = ConvRelu(n.data, 64, pad=0)
     n.conv_d0b, n.relu_d0c = ConvRelu(n.relu_d0b, 64, pad=0)
-    n.pool_d0c = Maxpool(n.relu_d0c)
+    n.drop_d0b = L.Dropout(n.relu_d0b, dropout_ratio=0.5, in_place=True)
+    n.pool_d0c = Maxpool(n.drop_d0c)
 
     n.conv_d1a, n.relu_d1b = ConvRelu(n.pool_d0c, 128, pad=0)
     n.conv_d1b, n.relu_d1c = ConvRelu(n.relu_d1b, 128, pad=0)
-    n.pool_d1c = Maxpool(n.relu_d1c)
+    n.drop_d1b = L.Dropout(n.relu_d1c, dropout_ratio=0.5, in_place=True)
+    n.pool_d1c = Maxpool(n.drop_d1c)
 
     n.conv_d2a, n.relu_d2b = ConvRelu(n.pool_d1c, 256, pad=0)
     n.conv_d2b, n.relu_d2c = ConvRelu(n.relu_d2b, 256, pad=0)

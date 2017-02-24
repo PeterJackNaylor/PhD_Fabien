@@ -81,7 +81,6 @@ def ComputeDistanceImage(lbl, thresh=1000, theta=1, dilation=True):
 
 
 def WeightMap(lbl, w_0, val, sigma=5, thresh=1000):
-    pdb.set_trace()
     new_res, bin_image = ComputeDistanceImage(lbl, thresh=thresh)
     new_lbl = FrequencyBalanceMatrix(lbl, val)
 
