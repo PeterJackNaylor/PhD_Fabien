@@ -8,12 +8,15 @@ REMOTE is thalassa
 
 
 params.folder = "/share/data40T_v2/Peter/PatientFolder/*"
-PATIENT = file(params.in)
+PATIENT = file(params.folder)
 
-params.text = "/share/data40T_v2/Peter/PatientFolder/*/ParameterDistribution"
-TEXT = file(params.in)
+params.text = "/share/data40T_v2/Peter/PatientFolder/*/ParameterDistribution.txt"
+TEXT = file(params.text)
 
+params.slideName = "/share/data40T_v2/Peter/PatientFolder/555777"
 
+params.CBS = "/share/data40T_v2/Peter/PythonScript/PhD_Fabien/CheckingBeforeSubmit.nf"
+CBS = file(params.CBS)
 
 HOST_NAME = "thalassa"
 
@@ -22,6 +25,7 @@ WD_REMOTE = "/share/data40T_v2/Peter"
 DATA_FOLDER = "Data"
 
 DISTRIBUTED_VERSION = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/DistributedVersion.py')
+
 
 
 
@@ -37,6 +41,8 @@ process AllJobs {
     input:
     file "param_job" from TEXT.splitText()
     file folder from PATIENT
+    file slide from params.slideName
+    file CBS
 
     """
     FIELD0=`echo $param_job | cut -d' ' -f2`
@@ -48,8 +54,8 @@ process AllJobs {
     OUTPUT=$folder
     SIZE=224
     PYTHONFILE=$folder/PredictionSlide.py
-
-    nextflow CheckingBeforeSubmit.nf --py \$PYTHON_FILE --x \$FIELD0 --y \$FIELD1 --size_x \$FIELD2 --size_y \$FIELD3 --ref_level \$FIELD4 --output \$OUTPUT --slide \$SLIDE --size \$SIZE -profiles cluster -resume
+    SLIDE=${slide.getBaseName()}.tiff
+    nextflow $CBS --py \$PYTHONFILE --x \$FIELD0 --y \$FIELD1 --size_x \$FIELD2 --size_y \$FIELD3 --ref_level \$FIELD4 --output \$OUTPUT --slide \$SLIDE --size \$SIZE -profile cluster -resume
 
     """
 
