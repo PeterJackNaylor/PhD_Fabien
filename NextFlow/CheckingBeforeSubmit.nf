@@ -16,7 +16,6 @@ SLIDE = file(params.slide)
 
 params.size = "224"
 
-nextflow CheckingBeforeSubmit.nf  --slide \$SLIDE --size \$SIZE
 
 
 process OneJob {

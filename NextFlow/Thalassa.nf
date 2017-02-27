@@ -17,9 +17,8 @@ DATA_FOLDER = "Data"
 
 DISTRIBUTED_VERSION = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/DistributedVersion.py')
 
-
-
-
+IMAGE_ANALYSER = file("Thalassa_ImageAnalyser.nf")
+CBS = file("CheckingBeforeSubmit.nf")
 
 process ChopPatient {
     profile = 'cluster'
@@ -33,17 +32,13 @@ process ChopPatient {
     val wd_REMOTE from WD_REMOTE
 
     output:
-    file "PatientFolder/Job_$x" into JOB_SUBMIT
-    file "PatientFolder/Job_$x/ParameterDistribution.txt" into PARAM_JOB
+    file "PatientFolder/Job_${x.getBaseName()}" into JOB_SUBMIT
+    file "PatientFolder/Job_${x.getBaseName()}/ParameterDistribution.txt" into PARAM_JOB
 
     """
-
-    FOLDER=`echo $x.name | cut -d '.' -f1`
-    OUTPUT=$wd_REMOTE/PatientFolder/$x
     METHOD=grid_etienne
-
  
-    python $PYTHONFILE --slide $x --output PatientFolder/Job_$x --method \$METHOD --tc 10 --size_tiles 224
+    python $PYTHONFILE --slide $x --output PatientFolder/Job_${x.getBaseName()} --method \$METHOD --tc 10 --size_tiles 224
 
     """
 }
@@ -56,11 +51,16 @@ process AnalyseEachChop {
 
     input:
     file param_job_txt from PARAM_JOB
-
+    file IMAGE_ANALYSER
+    file CBS
     """
 
-    PatientPath=`dirname $param_job_txt`
- 
-    nextflow Thalassa_ImageAnalyser.nf --folder \$PatientPath --text param_job_txt -profiles cluster -resume
+    PatientPath=TempOutput
+    parents=`readlink -f $param_job_txt`
+    parents=\${parents%/*}
+    slide=\${parents##*/}
+    slide=\${slide##_*}
+    echo \$slide
+    nextflow $IMAGE_ANALYSER --folder \$PatientPath --slideName \$slide --text $param_job_txt --CBS $CBS -profile cluster -resume
     """
 }
