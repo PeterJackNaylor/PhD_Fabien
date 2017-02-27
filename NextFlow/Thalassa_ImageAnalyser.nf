@@ -10,52 +10,63 @@ REMOTE is thalassa
 params.folder = "/share/data40T_v2/Peter/PatientFolder/*"
 PATIENT = file(params.folder)
 
-params.text = "/share/data40T_v2/Peter/PatientFolder/*/ParameterDistribution.txt"
-TEXT = file(params.text)
+params.parametertext = "/share/data40T_v2/Peter/PatientFolder/*/ParameterDistribution.txt"
+PARAMETERTEXT = file(params.parametertext)
 
 params.slideName = "/share/data40T_v2/Peter/PatientFolder/555777"
+SLIDENAME = file(params.slideName)
 
-params.CBS = "/share/data40T_v2/Peter/PythonScript/PhD_Fabien/CheckingBeforeSubmit.nf"
+params.py = "/share/data40T_v2/Peter/PatientFolder/*/PredictionSlide.py"
+PY = file(params.py)
+
+params.CBS = "/share/data40T_v2/Peter/PythonScript/PhD_Fabien/Nextflow/CheckingBeforeSubmit.nf"
 CBS = file(params.CBS)
 
 HOST_NAME = "thalassa"
 
-WD_REMOTE = "/share/data40T_v2/Peter"
 
 DATA_FOLDER = "Data"
 
 DISTRIBUTED_VERSION = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/DistributedVersion.py')
 
 
+process getTheFileAndSplitLines {
+
+        input:
+        val line from PARAMETERTEXT.splitText()
+
+        output:
+        val line into LINES_LIST
+
+        """
+
+        """
+}
 
 
-
-process AllJobs {
-
+process CutLine {
+    executor 'local'
 	profile = 'cluster'
-    validExitStatus 0,134
+    validExitStatus 0, 134
     clusterOptions = "-S /bin/bash"
-    publishDir WD_REMOTE, overwrite: false
-
+    maxForks 10
 
     input:
-    file "param_job" from TEXT.splitText()
-    file folder from PATIENT
-    file slide from params.slideName
-    file CBS
+    file slide from SLIDENAME
+    file cbs from CBS
+    file py from PY
+    file param_job from LINES_LIST
 
     """
-    FIELD0=`echo $param_job | cut -d' ' -f2`
-    FIELD1=`echo $param_job | cut -d' ' -f3`
-    FIELD2=`echo $param_job | cut -d' ' -f4`
-    FIELD3=`echo $param_job | cut -d' ' -f5`
-    FIELD4=`echo $param_job | cut -d' ' -f6`
-
-    OUTPUT=$folder
+    FIELD0=`cut -d' ' -f2 $param_job`
+    FIELD1=`cut -d' ' -f3 $param_job`
+    FIELD2=`cut -d' ' -f4 $param_job`
+    FIELD3=`cut -d' ' -f5 $param_job`
+    FIELD4=`cut -d' ' -f6 $param_job`
     SIZE=224
-    PYTHONFILE=$folder/PredictionSlide.py
-    SLIDE=${slide.getBaseName()}.tiff
-    nextflow $CBS --py \$PYTHONFILE --x \$FIELD0 --y \$FIELD1 --size_x \$FIELD2 --size_y \$FIELD3 --ref_level \$FIELD4 --output \$OUTPUT --slide \$SLIDE --size \$SIZE -profile cluster -resume
+    PYTHONFILE=PredictionSlide.py
+    SLIDE=${slide.getBaseName()}
+    nextflow $cbs --py $py --x \$FIELD0 --y \$FIELD1 --size_x \$FIELD2 --size_y \$FIELD3 --ref_level \$FIELD4 --slide \$SLIDE --size \$SIZE -profile cluster -resume
 
     """
 
