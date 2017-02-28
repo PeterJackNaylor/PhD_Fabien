@@ -20,6 +20,7 @@ DISTRIBUTED_VERSION = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/Wri
 
 IMAGE_ANALYSER = file("Thalassa_ImageAnalyser.nf")
 CBS = file("CheckingBeforeSubmit.nf")
+nextflow_cfg = file("nextflow.config")
 
 process ChopPatient {
     executor 'sge'
@@ -58,6 +59,7 @@ process AnalyseEachChop {
     file IMAGE_ANALYSER
     file CBS
     val biopsy_fold from BIOPSY_FOLD
+    file nextflow_cfg
     """
 
     parents=`readlink -f $param_job_txt`

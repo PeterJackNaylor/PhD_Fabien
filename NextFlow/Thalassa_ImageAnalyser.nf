@@ -11,8 +11,9 @@ params.folder = "/share/data40T_v2/Peter/PatientFolder/*"
 PATIENT = file(params.folder)
 
 params.parametertext = "/share/data40T_v2/Peter/PatientFolder/*/ParameterDistribution.txt"
-PARAMETERTEXT = file(params.parametertext)
+// PARAMETERTEXT = file(params.parametertext)
 
+PARAMETERTEXT = Channel.fromPath(params.parametertext).splitText(by:1)
 params.slideName = "/share/data40T_v2/Peter/PatientFolder/555777"
 SLIDENAME = file(params.slideName)
 
@@ -21,6 +22,7 @@ PY = file(params.py)
 
 params.CBS = "/share/data40T_v2/Peter/PythonScript/PhD_Fabien/Nextflow/CheckingBeforeSubmit.nf"
 CBS = file(params.CBS)
+nextflow_cfg = file("nextflow.config")
 
 HOST_NAME = "thalassa"
 
@@ -30,17 +32,17 @@ DATA_FOLDER = "Data"
 DISTRIBUTED_VERSION = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/DistributedVersion.py')
 
 
+
 process getTheFileAndSplitLines {
+    input:
+    val line from PARAMETERTEXT.splitText()
 
-        input:
-        val line from PARAMETERTEXT.splitText()
+    output:
+    val line into LINES_LIST
+    """
 
-        output:
-        val line into LINES_LIST
+    """
 
-        """
-
-        """
 }
 
 
@@ -56,6 +58,8 @@ process CutLine {
     file cbs from CBS
     file py from PY
     file param_job from LINES_LIST
+    file nextflow_cfg
+
 
     """
     FIELD0=`cut -d' ' -f2 $param_job`
@@ -66,10 +70,8 @@ process CutLine {
     SIZE=224
     PYTHONFILE=PredictionSlide.py
     SLIDE=${slide.getBaseName()}
-    nextflow $cbs --py $py --x \$FIELD0 --y \$FIELD1 --size_x \$FIELD2 --size_y \$FIELD3 --ref_level \$FIELD4 --slide \$SLIDE --size \$SIZE -profile cluster -resume
+    nextflow $cbs --py $py --x \$FIELD0 --y \$FIELD1 --size_x \$FIELD2 --size_y \$FIELD3 --ref_level \$FIELD4 --slide \$SLIDE --size \$SIZE -profile cluster
 
     """
-
-
 }
 
