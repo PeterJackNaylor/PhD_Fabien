@@ -5,6 +5,9 @@ from skimage import img_as_ubyte
 import pdb
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
+import FIMM_histo.deconvolution as deconv
+from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
+
 #==============================================================================
 #
 # def flip_vertical(picture):
@@ -35,17 +38,34 @@ from scipy.ndimage.filters import gaussian_filter
 
 
 def flip_vertical(picture):
+    """ 
+    vertical flip
+    takes an arbitrary image as entry
+    """
     res = cv2.flip(picture, 1)
     return res
 
 
 def flip_horizontal(picture):
+    """
+    horizontal flip
+    takes an arbitrary image as entry
+    """
     res = cv2.flip(picture, 0)
     return res
 
 
 class Transf(object):
-
+    """
+    Generic python object for data augmentation
+    Never call the transf class directly, always call
+    one of it's child. He takes in entry array of images 
+    and the generic function is _apply_.
+    You can modify parameters, such as the interpolation
+    method with SetFlag. The output type can be definied in 
+    OutputType or you can overide it in the child.
+    You can also override the name attribute.
+    """
     def __init__(self, name):
         self.name = name
 
@@ -118,7 +138,10 @@ class Transf(object):
 
 
 class Identity(Transf):
-
+    """
+    As you would expect, it does nothing... A bit like you.
+    Douch.
+    """
     def __init__(self):
 
         Transf.__init__(self, "identity")
@@ -131,7 +154,9 @@ class Identity(Transf):
 
 
 class Translation(Transf):
-
+    """
+    Does a translation of vector (x,y) and takes as parameters x,y (INTEGER)
+    """
     def __init__(self, x, y, enlarge=True):
 
         Transf.__init__(self, "Trans_" + str(x) + "_" + str(y))
@@ -176,7 +201,10 @@ class Translation(Transf):
 
 
 class Rotation(Transf):
+    """
+    Does a rotation of so much degrees.
 
+    """
     def __init__(self, deg, enlarge=True):
 
         Transf.__init__(self, "Rot_" + str(deg))
@@ -214,7 +242,9 @@ class Rotation(Transf):
 
 
 class Flip(Transf):
-
+    """
+    Does flips for 0 (vertical) and 1 (horizontal)
+    """
     def __init__(self, hori):
         if hori != 0 and hori != 1:
             print "you must give a integer, your parameter is ignored"
@@ -236,7 +266,9 @@ class Flip(Transf):
 
 
 class OutOfFocus(Transf):
-
+    """
+    Blurs the input images with a gaussian blurring of value sigma
+    """
     def __init__(self, sigma):
         Transf.__init__(self, "OutOfFocus_" + str(sigma))
         self.params = {"sigma": sigma}
@@ -259,7 +291,17 @@ class OutOfFocus(Transf):
 
 
 class ElasticDeformation(Transf):
+    """
+    Performs elastic deformation of the image in the same way.
+    Several parameters:
+    alpha: will be the scale by which we multiply the random displacement.
+    sigma: will be the variance of the random displacement.
+    Not to sure why sigma isn't directly incorporated in alpha... 
+    (or vice-versa)
+    alpha_affine: defines the bouding box for a variable I don't recall..
 
+
+    """
     def __init__(self, alpha, sigma, alpha_affine, seed=None):
         Transf.__init__(self, "ElasticDeform_" + str(alpha) +
                         "_" + str(sigma) + "_" + str(alpha_affine))
@@ -301,7 +343,6 @@ class ElasticDeformation(Transf):
                     (random_state.rand(*shape) * 2 - 1), sigma) * alpha
                 self.dy = gaussian_filter(
                     (random_state.rand(*shape) * 2 - 1), sigma) * alpha
-                # self.dz = np.zeros_like(self.dx)
 
             if len(shape) == 3:
                 x, y, z = np.meshgrid(np.arange(shape[1]), np.arange(
@@ -328,6 +369,114 @@ class ElasticDeformation(Transf):
             sub_res = map_coordinates(
                 img, indices, order=order, mode='reflect').reshape(shape)
             sub_res = self.OutputType(sub_res)
+            res += (sub_res,)
+            n_img += 1
+        return res
+
+
+def GreyValuePerturbation(image, k, b, MIN=0, MAX=255):
+    """
+    Performs an affine transformation of the greyscale image
+    input:
+        k: scale
+        b: offset
+        MIN and MAX (depends mostly on image type)
+    """
+
+    dims = image.shape
+    if dims != 2:
+        raise ValueError('Wrong image dimension, it should be greyscale!')
+    def AffineTransformation(x, aa=k, bb=b, nn=MIN, mm=MAX):
+       return max(nn, min(mm, int(aa * x + b)))
+
+    f = np.vectorize(AffineTransformation)
+    image = f(image)
+    return image
+
+
+
+class HE_Perturbation(Transf):
+    """
+    Transforms image in H/E, perfoms grey value variation on
+    this subset and then transforms it back.
+
+
+    """
+    def __init__(self, k1, k2, b1, b2, k3=1, b3=0):
+        Transf.__init__(self, "HE_Perturbation_" + str(k1) +
+                        "_" + str(b1) + "_" + str(k2) +
+                        "_" + str(b2) + "_" + str(k3) +
+                        "_" + str(b3) )
+        k = [k1, k2, k3]
+        b = [b1, b2, b3]
+        self.params = {"k": k,
+                       "b": b}
+    def _apply_(self, *image):
+        res = ()
+        n_img = 0
+        for img in image:
+            if n_img == 0:
+                ### transform image into HE
+                dec = deconv.Deconvolution()
+                dec.params['image_type'] = 'HEDab'
+
+                np_img = np.array(image)
+                dec_img = dec.colorDeconv(np_img[:, :, :3])
+
+                dec_img = dec_img.astype('uint8')
+                ### perturbe each channel H, E, Dab
+                for i in range(3):
+                    k_i = self.params['k'][i]
+                    b_i = self.params['b'][i]
+                    dec_img[:,:,i] = GreyValuePerturbation(dec_img[:, :, i], k_i, b_i)
+                ### Have to implement deconvolution of the deconvolution
+
+
+            else:
+                sub_res = img
+
+            res += (sub_res,)
+            n_img += 1
+        return res
+
+
+
+
+class HSV_Perturbation(Transf):
+    """
+    Transforms image in H/E, perfoms grey value variation on
+    this subset and then transforms it back.
+
+
+    """
+    def __init__(self, k1, k2, b1, b2, k3=1, b3=0):
+        Transf.__init__(self, "HSV_Perturbation_" + str(k1) +
+                        "_" + str(b1) + "_" + str(k2) +
+                        "_" + str(b2) + "_" + str(k3) +
+                        "_" + str(b3) )
+        k = [k1, k2, k3]
+        b = [b1, b2, b3]
+        self.params = {"k": k,
+                       "b": b}
+    def _apply_(self, *image):
+        res = ()
+        n_img = 0
+        for img in image:
+            if n_img == 0:
+                ### transform image into HSV
+                img = img.astype('float')
+                img = img / 255.
+                img = rgb_to_hsv(img)
+                ### perturbe each channel H, E, Dab
+                for i in range(3):
+                    k_i = self.params['k'][i] / 255.
+                    b_i = self.params['b'][i] / 255.
+                    img[:,:,i] = GreyValuePerturbation(img[:, :, i], k_i, b_i)
+                ### Have to implement deconvolution of the deconvolution
+                img = hsv_to_rgb(img)
+            else:
+                sub_res = img
+
             res += (sub_res,)
             n_img += 1
         return res
