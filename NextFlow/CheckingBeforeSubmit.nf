@@ -17,11 +17,12 @@ params.size = "224"
 
 
 
-process OneJob {
+process OneImage {
     executor 'sge'
 	profile = 'cluster'
     validExitStatus 0, 134
     clusterOptions = "-S /bin/bash"
+    errorStrategy 'retry' 
     publishDir PUBLISHDIR, overwrite: false
 
 
