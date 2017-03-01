@@ -75,14 +75,14 @@ def get_size(slide,size_x,size_y,level_from,level_to):
 
 
 
-def find_square(slide,x_i,y_i,level_resolution,nber_pixels,current_level):
+def find_square(slide, x_i ,y_i ,level_resolution ,nber_pixels ,current_level):
     #for a given pixel, returns a square centered on this pixel of a certain h and w
     ### I could add a white filter, so that shit images stay small
 
     #pdb.set_trace()
     x_0, y_0 = get_X_Y(slide, x_i ,y_i, current_level)
     if isinstance(nber_pixels, int):
-        h = np.ceil(np.sqrt(nber_pixels))
+        h = int(np.ceil(np.sqrt(nber_pixels)))
         w = h
     elif isinstance(nber_pixels, tuple):
         h = nber_pixels[0]

@@ -384,7 +384,7 @@ def GreyValuePerturbation(image, k, b, MIN=0, MAX=255):
     """
 
     dims = image.shape
-    if dims != 2:
+    if len(dims) != 2:
         raise ValueError('Wrong image dimension, it should be greyscale!')
     def AffineTransformation(x, aa=k, bb=b, nn=MIN, mm=MAX):
        return max(nn, min(mm, int(aa * x + b)))
