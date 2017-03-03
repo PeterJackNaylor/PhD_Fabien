@@ -18,8 +18,8 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import UsefulOpenSlide as UOS
 from TissueSegmentation import ROI_binary_mask, save
+from Deprocessing.Morphology import GetContours
 from optparse import OptionParser
-from sys import platform as _platform
 from skimage import measure
 import itertools
 from ImageTransf import flip_horizontal
@@ -230,7 +230,7 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
             list_roi = Best_Finder_rec(slide, lowest_res, new_x, new_y, w, h,
                                        ref_level, list_roi, number_of_pixels_max, marge, options)
 
-    elif method == 'SP_ROI':
+    elif method == 'SP_ROI_normal':
 
         lowest_res = len(slide.level_dimensions) - 2
 
@@ -238,18 +238,10 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
                                        slide.level_dimensions[lowest_res]))[:, :, 0:3]
 
         binary = ROI_binary_mask(s)
-        binary[binary > 0] = 255
+        contour_binary = GetContours(binary)
 
-        uniq, counts = np.unique(binary, return_counts=True)
-        background_val = uniq[np.argmax(counts)]
-        binary[binary != background_val] = background_val + 1
-        binary -= background_val
-
-        contour_binary = ndimage.morphology.morphological_gradient(
-            binary, size=(contour_size, contour_size))
         list_roi = []
-        mask = np.zeros(
-            shape=(binary.shape[0], binary.shape[1]), dtype='uint8')
+        mask = np.zeros(shape=(binary.shape[0], binary.shape[1]), dtype='uint8')
 
         if isinstance(N_squares, int):
             n_1 = N_squares / 2
@@ -266,6 +258,50 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
         list_contour_binary, mask = Sample_imagette(contour_binary, n_2, slide, ref_level,
                                                     number_of_pixels_max, lowest_res, mask)
         list_roi = list_outside + list_contour_binary
+
+    elif method == 'SP_ROI_tumor':
+
+        lowest_res = len(slide.level_dimensions) - 3
+
+        s = np.array(slide.read_region((0, 0), lowest_res, slide.level_dimensions[lowest_res]))[:, :, 0:3]
+        name_mask = name.replace("/Tumor/", "/Tumor_Mask/").replace(".tif", "_Mask.tif")
+        slide_tumor = openslide.open_slide(name_mask)
+        TumorLocation = np.array(slide_tumor.read_region((0, 0), lowest_res,
+                                       slide_tumor.level_dimensions[lowest_res]))[:, :, 0]
+
+        binary = ROI_binary_mask(s)
+        contour_binary = GetContours(binary)
+
+        binary[binary > 0] = 255
+        TumorLocation[TumorLocation > 0] = 255
+
+        NonTumorButTissue = binary.copy() - TumorLocation.copy()
+        NonTumorButTissue[NonTumorButTissue < 0] = 0 
+
+
+
+        list_roi = []
+        mask = np.zeros(shape=(binary.shape[0], binary.shape[1]), dtype='uint8')
+
+        if isinstance(N_squares, int):
+            n_1 = N_squares / 2
+            n_2 = n_1
+        elif isinstance(N_squares, tuple):
+            n_1 = N_squares[0]
+            n_2 = N_squares[1]
+            n_3 = N_squares[2]
+        else:
+            raise NameError("Issue number 0001")
+            return []
+
+        list_outside, mask = Sample_imagette(NonTumorButTissue, n_1, slide, ref_level,
+                                             number_of_pixels_max, lowest_res, mask)
+        list_inside, mask = Sample_imagette(TumorLocation, n_2, slide, ref_level,
+                                             number_of_pixels_max, lowest_res, mask)
+        list_contour_binary, mask = Sample_imagette(contour_binary, n_3, slide, ref_level,
+                                                    number_of_pixels_max, lowest_res, mask)
+        list_roi = list_outside + list_contour_binary
+
     elif method == "grid_fixed_size":
         sample = np.array(UOS.GetWholeImage(
             slide, level=(slide.level_count - 2)))[:, :, 0:3]

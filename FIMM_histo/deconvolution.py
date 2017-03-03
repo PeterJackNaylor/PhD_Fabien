@@ -56,6 +56,37 @@ class Deconvolution(object):
 
         imDecv = numpy.dot(self.log_transform(imin.astype('float')), M_inv.T)
         imout = self.exp_transform(imDecv)
+
+        return imout
+        
+    def colorDeconvHE(self, imin):
+        """
+        Does the opposite of colorDeconv
+        """
+        M_h_e_dab_meas = numpy.array([[0.650, 0.072, 0.268],
+                                      [0.704, 0.990, 0.570],
+                                      [0.286, 0.105, 0.776]])
+
+        # [H,E]
+        M_h_e_meas = numpy.array([[0.644211, 0.092789],
+                                  [0.716556, 0.954111],
+                                  [0.266844, 0.283111]])
+
+        if self.params['image_type'] == "HE":
+            # print "HE stain"
+            M = M_h_e_meas
+            
+        elif self.params['image_type'] == "HEDab":
+            # print "HEDab stain"
+            M = M_h_e_dab_meas
+
+        else:
+            # print "Unrecognized image type !! image type set to \"HE\" "
+            M = numpy.diag([1, 1, 1])
+            M_inv = numpy.diag([1, 1, 1])
+
+        imDecv = numpy.dot(self.log_transform(imin.astype('float')), M.T)
+        imout = self.exp_transform(imDecv)
 #        imout = numpy.zeros(imDecv.shape, dtype = numpy.uint8)
 
         # Normalization

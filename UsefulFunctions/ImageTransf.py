@@ -384,15 +384,18 @@ def GreyValuePerturbation(image, k, b, MIN=0, MAX=255):
     """
 
     dims = image.shape
-    if dims != 2:
+    if len(dims) != 2:
         raise ValueError('Wrong image dimension, it should be greyscale!')
     def AffineTransformation(x, aa=k, bb=b, nn=MIN, mm=MAX):
-       return max(nn, min(mm, int(aa * x + b)))
+        if mm == 255:
+            return max(nn, min(mm, int(aa * x + b)))
+        else:
+            return max(nn, min(mm, aa * x + b))
 
     f = np.vectorize(AffineTransformation)
     image = f(image)
     return image
-
+import matplotlib.pylab as plt
 
 
 class HE_Perturbation(Transf):
@@ -402,7 +405,10 @@ class HE_Perturbation(Transf):
 
 
     """
-    def __init__(self, k1, k2, b1, b2, k3=1, b3=0):
+    def __init__(self, ch1, ch2, ch3 = (1,0)):
+        k1, b1 = ch1
+        k2, b2 = ch2
+        k3, b3 = ch3
         Transf.__init__(self, "HE_Perturbation_" + str(k1) +
                         "_" + str(b1) + "_" + str(k2) +
                         "_" + str(b2) + "_" + str(k3) +
@@ -420,15 +426,20 @@ class HE_Perturbation(Transf):
                 dec = deconv.Deconvolution()
                 dec.params['image_type'] = 'HEDab'
 
-                np_img = np.array(image)
-                dec_img = dec.colorDeconv(np_img[:, :, :3])
-
+                np_img = np.array(img)
+                dec_img = dec.colorDeconv(np_img)
                 dec_img = dec_img.astype('uint8')
                 ### perturbe each channel H, E, Dab
                 for i in range(3):
-                    k_i = self.params['k'][i]
+                    k_i = float(self.params['k'][i])
                     b_i = self.params['b'][i]
                     dec_img[:,:,i] = GreyValuePerturbation(dec_img[:, :, i], k_i, b_i)
+                    fig, axes =plt.subplots(1,1)
+                    axes.imshow(img[:,:,i], "gray")
+                    axes.set_title('{} channel {}'.format(self.name,i))
+                    #plt.show()
+                sub_res = dec.colorDeconvHE(dec_img).astype('uint8')
+
                 ### Have to implement deconvolution of the deconvolution
 
 
@@ -440,8 +451,6 @@ class HE_Perturbation(Transf):
         return res
 
 
-
-
 class HSV_Perturbation(Transf):
     """
     Transforms image in H/E, perfoms grey value variation on
@@ -449,7 +458,10 @@ class HSV_Perturbation(Transf):
 
 
     """
-    def __init__(self, k1, k2, b1, b2, k3=1, b3=0):
+    def __init__(self, ch1, ch2, ch3 = (1,0)):
+        k1, b1 = ch1
+        k2, b2 = ch2
+        k3, b3 = ch3
         Transf.__init__(self, "HSV_Perturbation_" + str(k1) +
                         "_" + str(b1) + "_" + str(k2) +
                         "_" + str(b2) + "_" + str(k3) +
@@ -469,11 +481,13 @@ class HSV_Perturbation(Transf):
                 img = rgb_to_hsv(img)
                 ### perturbe each channel H, E, Dab
                 for i in range(3):
-                    k_i = self.params['k'][i] / 255.
+                    k_i = float(self.params['k'][i]) 
                     b_i = self.params['b'][i] / 255.
-                    img[:,:,i] = GreyValuePerturbation(img[:, :, i], k_i, b_i)
-                ### Have to implement deconvolution of the deconvolution
+                    img[:,:,i] = GreyValuePerturbation(img[:, :, i], k_i, b_i, MIN=0., MAX=1.)
+                    #plt.imshow(img[:,:,i], "gray")
+                    #plt.show()
                 img = hsv_to_rgb(img)
+                sub_res = img_as_ubyte(img)
             else:
                 sub_res = img
 
