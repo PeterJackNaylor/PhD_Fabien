@@ -387,12 +387,15 @@ def GreyValuePerturbation(image, k, b, MIN=0, MAX=255):
     if len(dims) != 2:
         raise ValueError('Wrong image dimension, it should be greyscale!')
     def AffineTransformation(x, aa=k, bb=b, nn=MIN, mm=MAX):
-       return max(nn, min(mm, int(aa * x + b)))
+        if mm == 255:
+            return max(nn, min(mm, int(aa * x + b)))
+        else:
+            return max(nn, min(mm, aa * x + b))
 
     f = np.vectorize(AffineTransformation)
     image = f(image)
     return image
-
+import matplotlib.pylab as plt
 
 
 class HE_Perturbation(Transf):
@@ -425,13 +428,16 @@ class HE_Perturbation(Transf):
 
                 np_img = np.array(img)
                 dec_img = dec.colorDeconv(np_img)
-                #pdb.set_trace()
                 dec_img = dec_img.astype('uint8')
                 ### perturbe each channel H, E, Dab
                 for i in range(3):
-                    k_i = self.params['k'][i]
+                    k_i = float(self.params['k'][i])
                     b_i = self.params['b'][i]
                     dec_img[:,:,i] = GreyValuePerturbation(dec_img[:, :, i], k_i, b_i)
+                    fig, axes =plt.subplots(1,1)
+                    axes.imshow(img[:,:,i], "gray")
+                    axes.set_title('{} channel {}'.format(self.name,i))
+                    #plt.show()
                 sub_res = dec.colorDeconvHE(dec_img).astype('uint8')
 
                 ### Have to implement deconvolution of the deconvolution
@@ -443,8 +449,6 @@ class HE_Perturbation(Transf):
             res += (sub_res,)
             n_img += 1
         return res
-
-
 
 
 class HSV_Perturbation(Transf):
@@ -477,7 +481,7 @@ class HSV_Perturbation(Transf):
                 img = rgb_to_hsv(img)
                 ### perturbe each channel H, E, Dab
                 for i in range(3):
-                    k_i = self.params['k'][i] 
+                    k_i = float(self.params['k'][i]) 
                     b_i = self.params['b'][i] / 255.
                     img[:,:,i] = GreyValuePerturbation(img[:, :, i], k_i, b_i, MIN=0., MAX=1.)
                     #plt.imshow(img[:,:,i], "gray")
