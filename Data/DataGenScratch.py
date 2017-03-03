@@ -55,11 +55,31 @@ class DataGenScratch(DataGen):
     """
     DataGen object that can deal with the Camelyon dataset
     """
-    def __init__(self, CamelyonTextFiles, split, seed):
+    def __init__(self, CamelyonTextFilesFolder, split, seed):
 
 
 
-    def LoadFiles(self.CamelyonTextFiles):
-        txt_parameter = os.path.join(self.CamelyonTextFiles, self.split, '.txt')
-        with open(txt_parameter, "r") as myfile:
+    def LoadFiles(self):
+
+        txt_parameter = os.path.join(self.CamelyonTextFilesFolder, self.split, '.txt')
+        table = pd.read_csv(txt_parameter, sep = " ", header = None)
+        listoflist = table.values.tolist()
+        if self.split = "test":
+             return listoflist
+        def f(*args):
+            out = ""
+            for el in args:
+                out += str(el)
+                out += "_"
+            return out[:-1]
+        only_str = map(f, listoflist)
+        n_transfom = len(self.transform)
+        all_combi = list(iter.tools.product(only_str, range(n_transfom)))
+        def g(el, el2):
+            list1 = el.split('_')
+            list1 += el2
+            return list1
+        listoflist2 = map(g, all_combi)
+        return listoflist2
+
             
