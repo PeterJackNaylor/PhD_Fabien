@@ -446,7 +446,6 @@ class HE_Perturbation(Transf):
 
 
 
-
 class HSV_Perturbation(Transf):
     """
     Transforms image in H/E, perfoms grey value variation on
