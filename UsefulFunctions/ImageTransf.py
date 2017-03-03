@@ -395,21 +395,19 @@ def GreyValuePerturbation(image, k, b, MIN=0, MAX=255):
     f = np.vectorize(AffineTransformation)
     image = f(image)
     return image
-import matplotlib.pylab as plt
-
 
 class HE_Perturbation(Transf):
     """
     Transforms image in H/E, perfoms grey value variation on
     this subset and then transforms it back.
-
+    WITH THOMAS RGB -> HE
 
     """
     def __init__(self, ch1, ch2, ch3 = (1,0)):
         k1, b1 = ch1
         k2, b2 = ch2
         k3, b3 = ch3
-        Transf.__init__(self, "HE_Perturbation_" + str(k1) +
+        Transf.__init__(self, "HE_Perturbation_Thomas_" + str(k1) +
                         "_" + str(b1) + "_" + str(k2) +
                         "_" + str(b2) + "_" + str(k3) +
                         "_" + str(b3) )
@@ -428,16 +426,15 @@ class HE_Perturbation(Transf):
 
                 np_img = np.array(img)
                 dec_img = dec.colorDeconv(np_img)
+                #pdb.set_trace()
                 dec_img = dec_img.astype('uint8')
                 ### perturbe each channel H, E, Dab
                 for i in range(3):
-                    k_i = float(self.params['k'][i])
+                    k_i = self.params['k'][i]
                     b_i = self.params['b'][i]
-                    dec_img[:,:,i] = GreyValuePerturbation(dec_img[:, :, i], k_i, b_i)
-                    fig, axes =plt.subplots(1,1)
-                    axes.imshow(img[:,:,i], "gray")
-                    axes.set_title('{} channel {}'.format(self.name,i))
-                    #plt.show()
+                    dec_img[:,:,i] = GreyValuePerturbation(dec_img[:, :, i], k_i, b_i, 
+                               MIN=0,
+                               MAX=255)
                 sub_res = dec.colorDeconvHE(dec_img).astype('uint8')
 
                 ### Have to implement deconvolution of the deconvolution

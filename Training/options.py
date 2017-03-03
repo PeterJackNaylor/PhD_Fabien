@@ -209,6 +209,13 @@ def GetOptions(verbose=True):
     for i in range(50):
         transform_list.append(Transf.ElasticDeformation(1.2, 24. / 512, 0.07))
 
+    perturbations = range(0.6, 1.4, 0.05)
+    for k_h in perturbations:
+        for k_e in perturbations:
+            transform_list.append(Transf.HE_Perturbation((k_h,0), (k_e,0), (1, 0)))
+    for k_b in perturbations:
+        for k_s in range(0.8,1.2,0.05):
+            transform_list.append(Transf.HE_Perturbation((1,0), (k_s,0), (k_b, 0)))   
     options.transform_list = transform_list
 
     options.wgt_param = (options.w_0, options.val_b,
