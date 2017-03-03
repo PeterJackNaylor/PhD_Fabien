@@ -12,7 +12,7 @@ disp_interval = 100
 leaveout = 1
 crop = 4
 
-base_lr_list = [0.01]
+base_lr_list = [0.001]
 
 batch_size = 1
 img_format = "RGB"
@@ -26,7 +26,7 @@ stepsize = 7000
 gamma = 0.1
 size_x = 224
 size_y = 224
-archi = "8"  # _16_8"
+archi = "32_16_8"  # _16_8"
 
 mode = "Fabien"
 hw = "gpu"
