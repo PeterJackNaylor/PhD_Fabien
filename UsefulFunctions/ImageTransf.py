@@ -396,6 +396,14 @@ def GreyValuePerturbation(image, k, b, MIN=0, MAX=255):
     image = f(image)
     return image
 
+
+    f = np.vectorize(AffineTransformation)
+    diff = np.max(image)
+    image = f(image)
+    diff -= np.max(image)
+    image += diff
+
+
 class HE_Perturbation(Transf):
     """
     Transforms image in H/E, perfoms grey value variation on
@@ -432,9 +440,12 @@ class HE_Perturbation(Transf):
                 for i in range(3):
                     k_i = self.params['k'][i]
                     b_i = self.params['b'][i]
+                    val = np.max(dec_img[:,:,i])
                     dec_img[:,:,i] = GreyValuePerturbation(dec_img[:, :, i], k_i, b_i, 
                                MIN=0,
                                MAX=255)
+                    val -= np.max(dec_img[:,:,i])
+                    dec_img[:,:,i] += val
                 sub_res = dec.colorDeconvHE(dec_img).astype('uint8')
 
                 ### Have to implement deconvolution of the deconvolution
