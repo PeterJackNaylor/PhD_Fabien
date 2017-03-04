@@ -489,3 +489,92 @@ class HSV_Perturbation(Transf):
             res += (sub_res,)
             n_img += 1
         return res
+
+from skimage import color
+
+class HE_Perturbation2(Transf):
+    """
+    Transforms image in H/E, perfoms grey value variation on
+    this subset and then transforms it back.
+
+
+    """
+    def __init__(self, ch1, ch2, ch3 = (1,0)):
+        k1, b1 = ch1
+        k2, b2 = ch2
+        k3, b3 = ch3
+        Transf.__init__(self, "HE_Perturbation_" + str(k1) +
+                        "_" + str(b1) + "_" + str(k2) +
+                        "_" + str(b2) + "_" + str(k3) +
+                        "_" + str(b3) )
+        k = [k1, k2, k3]
+        b = [b1, b2, b3]
+        self.params = {"k": k,
+                       "b": b}
+    def _apply_(self, *image):
+        res = ()
+        n_img = 0
+        for img in image:
+            if n_img == 0:
+
+                dec_img = color.rgb2hed(img)
+                ### perturbe each channel H, E, Dab
+                for i in range(3):
+                    k_i = self.params['k'][i]
+                    b_i = self.params['b'][i]
+                    dec_img[:,:,i] = GreyValuePerturbation(dec_img[:, :, i], k_i, b_i)
+                sub_res = color.hed2rgb(dec_img).astype('uint8')
+
+                ### Have to implement deconvolution of the deconvolution
+
+
+            else:
+                sub_res = img
+
+            res += (sub_res,)
+            n_img += 1
+        return res
+
+
+
+class HSV_Perturbation2(Transf):
+    """
+    Transforms image in H/E, perfoms grey value variation on
+    this subset and then transforms it back.
+
+
+    """
+    def __init__(self, ch1, ch2, ch3 = (1,0)):
+        k1, b1 = ch1
+        k2, b2 = ch2
+        k3, b3 = ch3
+        Transf.__init__(self, "HSV_Perturbation_" + str(k1) +
+                        "_" + str(b1) + "_" + str(k2) +
+                        "_" + str(b2) + "_" + str(k3) +
+                        "_" + str(b3) )
+        k = [k1, k2, k3]
+        b = [b1, b2, b3]
+        self.params = {"k": k,
+                       "b": b}
+    def _apply_(self, *image):
+        res = ()
+        n_img = 0
+        for img in image:
+            if n_img == 0:
+                ### transform image into HSV
+                img = color.rgb2hsv(img)
+                ### perturbe each channel H, E, Dab
+                for i in range(3):
+                    k_i = self.params['k'][i] 
+                    b_i = self.params['b'][i] 
+                    img[:,:,i] = GreyValuePerturbation(img[:, :, i], k_i, b_i, MIN=0., MAX=1.)
+                    #plt.imshow(img[:,:,i], "gray")
+                    #plt.show()
+                sub_res = color.hsv2rgb(img)
+            else:
+                sub_res = img
+
+            res += (sub_res,)
+            n_img += 1
+        return res
+
