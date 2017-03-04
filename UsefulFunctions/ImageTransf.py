@@ -6,7 +6,7 @@ import pdb
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
 import FIMM_histo.deconvolution as deconv
-from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
+from skimage import color
 
 #==============================================================================
 #
@@ -387,26 +387,27 @@ def GreyValuePerturbation(image, k, b, MIN=0, MAX=255):
     if len(dims) != 2:
         raise ValueError('Wrong image dimension, it should be greyscale!')
     def AffineTransformation(x, aa=k, bb=b, nn=MIN, mm=MAX):
-       return max(nn, min(mm, int(aa * x + b)))
+        if mm == 255:
+            return max(nn, min(mm, int(aa * x + b)))
+        else:
+            return max(nn, min(mm, aa * x + b))
 
     f = np.vectorize(AffineTransformation)
     image = f(image)
     return image
 
-
-
 class HE_Perturbation(Transf):
     """
     Transforms image in H/E, perfoms grey value variation on
     this subset and then transforms it back.
-
+    WITH THOMAS RGB -> HE
 
     """
     def __init__(self, ch1, ch2, ch3 = (1,0)):
         k1, b1 = ch1
         k2, b2 = ch2
         k3, b3 = ch3
-        Transf.__init__(self, "HE_Perturbation_" + str(k1) +
+        Transf.__init__(self, "HE_Perturbation_Thomas_" + str(k1) +
                         "_" + str(b1) + "_" + str(k2) +
                         "_" + str(b2) + "_" + str(k3) +
                         "_" + str(b3) )
@@ -431,7 +432,9 @@ class HE_Perturbation(Transf):
                 for i in range(3):
                     k_i = self.params['k'][i]
                     b_i = self.params['b'][i]
-                    dec_img[:,:,i] = GreyValuePerturbation(dec_img[:, :, i], k_i, b_i)
+                    dec_img[:,:,i] = GreyValuePerturbation(dec_img[:, :, i], k_i, b_i, 
+                               MIN=0,
+                               MAX=255)
                 sub_res = dec.colorDeconvHE(dec_img).astype('uint8')
 
                 ### Have to implement deconvolution of the deconvolution
@@ -446,58 +449,12 @@ class HE_Perturbation(Transf):
 
 
 
-class HSV_Perturbation(Transf):
-    """
-    Transforms image in H/E, perfoms grey value variation on
-    this subset and then transforms it back.
-
-
-    """
-    def __init__(self, ch1, ch2, ch3 = (1,0)):
-        k1, b1 = ch1
-        k2, b2 = ch2
-        k3, b3 = ch3
-        Transf.__init__(self, "HSV_Perturbation_" + str(k1) +
-                        "_" + str(b1) + "_" + str(k2) +
-                        "_" + str(b2) + "_" + str(k3) +
-                        "_" + str(b3) )
-        k = [k1, k2, k3]
-        b = [b1, b2, b3]
-        self.params = {"k": k,
-                       "b": b}
-    def _apply_(self, *image):
-        res = ()
-        n_img = 0
-        for img in image:
-            if n_img == 0:
-                ### transform image into HSV
-                img = img.astype('float')
-                img = img / 255.
-                img = rgb_to_hsv(img)
-                ### perturbe each channel H, E, Dab
-                for i in range(3):
-                    k_i = self.params['k'][i] 
-                    b_i = self.params['b'][i] / 255.
-                    img[:,:,i] = GreyValuePerturbation(img[:, :, i], k_i, b_i, MIN=0., MAX=1.)
-                    #plt.imshow(img[:,:,i], "gray")
-                    #plt.show()
-                img = hsv_to_rgb(img)
-                sub_res = img_as_ubyte(img)
-            else:
-                sub_res = img
-
-            res += (sub_res,)
-            n_img += 1
-        return res
-
-from skimage import color
-
 class HE_Perturbation2(Transf):
     """
     Transforms image in H/E, perfoms grey value variation on
-    this subset and then transforms it back.
-
-
+    this subset and then transforms it back. 1 is made with
+    Thomas' rgb to he whereas this one is made with the one 
+    from skimage.
     """
     def __init__(self, ch1, ch2, ch3 = (1,0)):
         k1, b1 = ch1
@@ -537,7 +494,7 @@ class HE_Perturbation2(Transf):
 
 
 
-class HSV_Perturbation2(Transf):
+class HSV_Perturbation(Transf):
     """
     Transforms image in H/E, perfoms grey value variation on
     this subset and then transforms it back.

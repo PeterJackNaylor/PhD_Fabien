@@ -17,7 +17,8 @@ from scipy import ndimage
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import UsefulOpenSlide as UOS
-from TissueSegmentation import ROI_binary_mask, save, GetContours
+from TissueSegmentation import ROI_binary_mask, save
+from Deprocessing.Morphology import GetContours
 from optparse import OptionParser
 from skimage import measure
 import itertools
@@ -260,26 +261,21 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
 
     elif method == 'SP_ROI_tumor':
 
-        lowest_res = len(slide.level_dimensions) - 2
+        lowest_res = len(slide.level_dimensions) - 3
 
-        s = np.array(slide.read_region((0, 0), lowest_res,
-                                       slide.level_dimensions[lowest_res]))[:, :, 0:3]
+        s = np.array(slide.read_region((0, 0), lowest_res, slide.level_dimensions[lowest_res]))[:, :, 0:3]
         name_mask = name.replace("/Tumor/", "/Tumor_Mask/").replace(".tif", "_Mask.tif")
         slide_tumor = openslide.open_slide(name_mask)
-
         TumorLocation = np.array(slide_tumor.read_region((0, 0), lowest_res,
-                                       slide_tumor.level_dimensions[lowest_res]))[:, :, 0:3]
-
-
-
-        s[s > 0] = 255
-        TumorLocation[TumorLocation > 0] = 255
+                                       slide_tumor.level_dimensions[lowest_res]))[:, :, 0]
 
         binary = ROI_binary_mask(s)
-
         contour_binary = GetContours(binary)
 
-        NonTumorButTissue = s.copy() - TumorLocation.copy()
+        binary[binary > 0] = 255
+        TumorLocation[TumorLocation > 0] = 255
+
+        NonTumorButTissue = binary.copy() - TumorLocation.copy()
         NonTumorButTissue[NonTumorButTissue < 0] = 0 
 
 
