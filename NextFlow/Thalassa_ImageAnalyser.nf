@@ -45,10 +45,20 @@ process getTheFileAndSplitLines {
 
 }
 
+/* process splitLines{
+    input:
+    val line into LINES_LIST
+    output:
+
+
+
+
+}
+*/
 
 process CutLine {
     executor 'local'
-	profile = 'cluster'
+    profile = 'cluster'
     validExitStatus 0, 134
     clusterOptions = "-S /bin/bash"
     maxForks 10
@@ -70,8 +80,14 @@ process CutLine {
     SIZE=224
     PYTHONFILE=PredictionSlide.py
     SLIDE=${slide.getBaseName()}
-    nextflow $cbs --py $py --x \$FIELD0 --y \$FIELD1 --size_x \$FIELD2 --size_y \$FIELD3 --ref_level \$FIELD4 --slide \$SLIDE --size \$SIZE -profile cluster
+    
+    OUTPUT_FILE=/share/data40T_v2/Peter/PatientFolder/Job_\$SLIDE\\/tiled/\$FIELD0\\_\$FIELD1\\_\$FIELD2\\_\$FIELD3\\_\$FIELD4.tiff
 
+    if [ ! -f \$OUTPUT_FILE ]; then
+        nextflow $cbs --py $py --x \$FIELD0 --y \$FIELD1 --size_x \$FIELD2 --size_y \$FIELD3 --ref_level \$FIELD4 --slide \$SLIDE --size \$SIZE -profile cluster
+    else
+        echo 'File exists, terminating process'
+    fi
     """
 }
 
