@@ -70,8 +70,14 @@ process CutLine {
     SIZE=224
     PYTHONFILE=PredictionSlide.py
     SLIDE=${slide.getBaseName()}
-    nextflow $cbs --py $py --x \$FIELD0 --y \$FIELD1 --size_x \$FIELD2 --size_y \$FIELD3 --ref_level \$FIELD4 --slide \$SLIDE --size \$SIZE -profile cluster
+    
+    OUTPUT_FILE=/share/data40T_v2/Peter/PatientFolder/Job_\$SLIDE/tiled/\$FIELD0_\$FIELD1_\$FIELD2_\$FIELD3_\$FIELD4_\$FIELD5.tiff
 
+    if [ ! -f \$OUTPUT_FILE ]; then
+        nextflow $cbs --py $py --x \$FIELD0 --y \$FIELD1 --size_x \$FIELD2 --size_y \$FIELD3 --ref_level \$FIELD4 --slide \$SLIDE --size \$SIZE -profile cluster
+    else
+        echo 'File exists, terminating process'
+    fi
     """
 }
 
