@@ -120,7 +120,7 @@ def DeconvReCropConcatConvReConvRe(bottom1, bridge2, val, deconv_out=None):
     return deconv, relu1, croped, concat, conv2, relu2, conv3, relu3
 
 
-def DataLayer(split, data_gene, batch_size, cn, Weight):
+def DataLayer(split, data_gene, batch_size, cn, Weight, pylayer= 'DataLayer'):
 
     pydata_params = dict()
     pydata_params["split"] = split
@@ -131,7 +131,6 @@ def DataLayer(split, data_gene, batch_size, cn, Weight):
     pydata_params["seed"] = 1337
     pydata_params["Weight"] = Weight
 
-    pylayer = 'DataLayer'
 
     if not Weight:
         data, label = L.Python(module='CustomLayersPeter', layer=pylayer,

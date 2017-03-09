@@ -89,7 +89,11 @@ def FindTicket(RGB_image, _3tuple=(80, 80, 80)):
         temp_image_3[:, :, i] = temp_image_1
 
     temp_resultat = temp_image_3.sum(axis=2)
-    temp_resultat[temp_resultat > 0] = 1
+
+    temp_resultat[temp_resultat > 2] = 3
+    temp_resultat[temp_resultat < 3] = 0
+    temp_resultat[temp_resultat == 3] = 1
+    
     #temp_resultat = Filling_holes_2(temp_resultat)
     temp_resultat = closing(temp_resultat, disk(20))
     temp_resultat = opening(temp_resultat, disk(20))
@@ -123,7 +127,7 @@ def save(original, contour=None, name="random_picture.png"):
     plt.close()
 
 
-def ROI_binary_mask(sample, size=5):
+def ROI_binary_mask(sample, size=5, ticket=(80, 80, 80)):
     #  very slow function at resolution 4
     PreprocRes = np.copy(sample)
 
@@ -131,7 +135,7 @@ def ROI_binary_mask(sample, size=5):
         # this one is painfully slow..
         PreprocRes[:, :, i] = Preprocessing(sample[:, :, i])
     res = combining(PreprocRes)
-    ticket = FindTicket(sample)
+    ticket = FindTicket(sample, ticket)
     res = res - ticket
     res[res > 0] = 1
     res[res < 0] = 0

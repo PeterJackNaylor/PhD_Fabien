@@ -1,10 +1,9 @@
 from UsefulOpenSlide import GetImage
-from CuttingPatches import ROI
+from CuttingPatches import ROI, ROI_binary_mask, GetContours
 import numpy as np
 from optparse import OptionParser
 import os
 import pdb
-
 
 def GetLabel(name, para):
     if "Normal" in name:
@@ -57,6 +56,8 @@ if __name__ == "__main__":
 
     parser.add_option("-t", "--type", dest="method",
                       help="Expecting Tumor or Normal")
+    parser.add_option("--ticket_val", dest="ticket_val", default=80, type="int",
+                      help="Pixel value to cut ticket.")
 
     (options, args) = parser.parse_args()
 
@@ -69,11 +70,27 @@ if __name__ == "__main__":
     name = basename
     name = os.path.join('/share/data40T_v2/CAMELYON16_data/{}', name)
     name = name.format(options.method)
+
     list_roi = ROI(name, ref_level=0, disk_size=4, thresh=230, black_spots=None,
         number_of_pixels_max=50176, verbose=False, marge=0, method=method,
-        contour_size=3, N_squares=(200, 50, 300), seed=None, cut_whitescore=0.8)
-
+        contour_size=3, N_squares=(200, 300, 50), seed=None, cut_whitescore=0.8,
+        ticket_val=options.ticket_val)
 
     FILENAME = name.replace(".tif", ".txt")
     FILEPATH = os.path.join(options.output_folder, basename).replace('.tif', '.txt')
     CreateFileParam(FILEPATH, list_roi, basename)
+'''
+    import openslide as op
+    from scipy.misc import imsave
+    slide = op.open_slide(name)
+    lowest_res = len(slide.level_dimensions) - 2
+    s = np.array(slide.read_region((0, 0), lowest_res,
+                                       slide.level_dimensions[lowest_res]))[:, :, 0:3]
+
+    binary = ROI_binary_mask(s)
+    contour_binary = GetContours(binary)
+    s[ contour_binary > 0] = [0,0,0]
+
+    imsave(os.path.join("/share/data40T_v2/Checking", basename), s)
+'''
+

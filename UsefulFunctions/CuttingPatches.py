@@ -173,7 +173,10 @@ def GimmeGrid(slide, res, level=4, fixed_size=(512, 512)):
 
 def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
         number_of_pixels_max=1000000, verbose=False, marge=0, method='grid',
-        mask_address=None, contour_size=3, N_squares=100, seed=None, fixed_size_in=(512,  512), fixed_size_out=(512, 512), cut_whitescore=0.8):
+        mask_address=None, contour_size=3, N_squares=100, seed=None, 
+        fixed_size_in=(512,  512), fixed_size_out=(512, 512), cut_whitescore=0.8,
+        ticket_val=80):
+    triple_tup = (ticket_val, ticket_val, ticket_val)
     # creates a grid of the all interesting places on the image
 
     if seed is not None:
@@ -194,7 +197,7 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
         s = np.array(slide.read_region((0, 0), lowest_res,
                                        slide.level_dimensions[lowest_res]))[:, :, 0:3]
 
-        binary = ROI_binary_mask(s)
+        binary = ROI_binary_mask(s, ticket=triple_tup)
         stru = [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
         blobs, number_of_blobs = ndimage.label(binary, structure=stru)
         for i in range(1, number_of_blobs + 1):
@@ -213,7 +216,7 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
         s = np.array(slide.read_region((0, 0), lowest_res,
                                        slide.level_dimensions[lowest_res]))[:, :, 0:3]
 
-        binary = ROI_binary_mask(s)
+        binary = ROI_binary_mask(s, ticket=triple_tup)
         stru = [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
         blobs, number_of_blobs = ndimage.label(binary, structure=stru)
         for i in range(1, number_of_blobs + 1):
@@ -237,7 +240,7 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
         s = np.array(slide.read_region((0, 0), lowest_res,
                                        slide.level_dimensions[lowest_res]))[:, :, 0:3]
 
-        binary = ROI_binary_mask(s)
+        binary = ROI_binary_mask(s, ticket=triple_tup)
         contour_binary = GetContours(binary)
 
         list_roi = []
@@ -260,7 +263,7 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
         list_roi = list_outside + list_contour_binary
 
     elif method == 'SP_ROI_tumor':
-
+        #pdb.set_trace()
         lowest_res = len(slide.level_dimensions) - 3
 
         s = np.array(slide.read_region((0, 0), lowest_res, slide.level_dimensions[lowest_res]))[:, :, 0:3]
@@ -269,13 +272,13 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
         TumorLocation = np.array(slide_tumor.read_region((0, 0), lowest_res,
                                        slide_tumor.level_dimensions[lowest_res]))[:, :, 0]
 
-        binary = ROI_binary_mask(s)
+        binary = ROI_binary_mask(s, ticket=triple_tup).astype('uint8')
         contour_binary = GetContours(binary)
 
         binary[binary > 0] = 255
         TumorLocation[TumorLocation > 0] = 255
 
-        NonTumorButTissue = binary.copy() - TumorLocation.copy()
+        NonTumorButTissue = binary - TumorLocation.copy()
         NonTumorButTissue[NonTumorButTissue < 0] = 0 
 
 
@@ -293,14 +296,14 @@ def ROI(name, ref_level=4, disk_size=4, thresh=None, black_spots=None,
         else:
             raise NameError("Issue number 0001")
             return []
-
+        
         list_outside, mask = Sample_imagette(NonTumorButTissue, n_1, slide, ref_level,
                                              number_of_pixels_max, lowest_res, mask)
         list_inside, mask = Sample_imagette(TumorLocation, n_2, slide, ref_level,
                                              number_of_pixels_max, lowest_res, mask)
         list_contour_binary, mask = Sample_imagette(contour_binary, n_3, slide, ref_level,
                                                     number_of_pixels_max, lowest_res, mask)
-        list_roi = list_outside + list_contour_binary
+        list_roi = list_outside + list_inside + list_contour_binary
 
     elif method == "grid_fixed_size":
         sample = np.array(UOS.GetWholeImage(

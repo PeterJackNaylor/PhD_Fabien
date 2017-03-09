@@ -195,7 +195,15 @@ def GetOptions(verbose=True):
         options.patients = ['141549']
 #    options.patients = ['581910',
 #                        '162438', '588626', '160120', '498959']
+    options = AddTransforms(options)
+    
 
+    options.wgt_param = (options.w_0, options.val_b,
+                         options.val_n, options.sig_WGT)
+
+    return (options, args)
+
+def AddTransforms(options):
     transform_list = [Transf.Identity(),
                       Transf.Flip(0),
                       Transf.Flip(1)]
@@ -218,8 +226,4 @@ def GetOptions(verbose=True):
         for k_s in small_perturbation:
             transform_list.append(Transf.HE_Perturbation((1,0), (k_s,0), (k_b, 0)))   
     options.transform_list = transform_list
-
-    options.wgt_param = (options.w_0, options.val_b,
-                         options.val_n, options.sig_WGT)
-
-    return (options, args)
+    return options 

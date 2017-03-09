@@ -60,6 +60,9 @@ process AnalyseEachChop {
     file CBS
     val biopsy_fold from BIOPSY_FOLD
     file nextflow_cfg
+
+    output:
+    file "${param_job_txt.getParent()}" into JOBS
     """
 
     parents=`readlink -f $param_job_txt`

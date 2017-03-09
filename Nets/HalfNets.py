@@ -3,44 +3,43 @@ import os
 import caffe
 from caffe import layers as L, params as P
 from caffe.coord_map import crop
+import numpy as np
 
+mean_val_array = [104, 116, 122]
+
+mean_val = dict(mean_value=mean_val_array)
 
 def MakeHalfDeconvNet(options):
-    dgtrain = options.dgtrain
-    dgtest = options.dgtest
-    cn = options.cn
+    split = options.split
+    dg = options.dg
     loss = options.loss
-    bs = options.batch_size
-    path = os.path.join(options.wd, options.cn)
+    bs = options.bs
+    cn = options.cn
     num_output = options.num_output
-    with open(os.path.join(path, 'train.prototxt'), 'w') as f:
-        f.write(str(HalfDeconvNet('train', dgtrain, loss, bs, cn, num_output)))
-
-    with open(os.path.join(path, 'test.prototxt'), 'w') as f:
-        f.write(str(HalfDeconvNet('test', dgtest, loss, 1, cn, num_output)))
-
-
+    path = options.output_folder
+    print os.path.join(path, split + '.prototxt')
+    with open(os.path.join(path, split + '.prototxt'), 'w') as f:
+        f.write(str(HalfDeconvNet(split, dg, loss, bs, cn, num_output)))
 
 def HalfDeconvNet(split, data_gene, loss, batch_size, cn, num_output):
     n = caffe.NetSpec()
 
-    n.data, n.label = DataLayer(split, data_gene, batch_size, cn, False)
+    n.data, n.label = L.Data(batch_size=batch_size, backend=P.Data.LMDB, 
+                             source=data_gene, transform_param=mean_val ,ntop=2)
 
     n.conv1_1, n.BatchNormalize1_1, n.scaler1_1, n.relu1_1 = ConvBnRelu(
         n.data, 64, 3, 1, 1)
     n.conv1_2, n.BatchNormalize1_2, n.scaler1_2, n.relu1_2 = ConvBnRelu(
         n.relu1_1, 64, 3, 1, 1)
 
-    n.pool1, n.pool1_mask = Maxpool(
-        n.relu1_2, ks=2, stride=2, ntop=2)
+    n.pool1 = Maxpool(n.relu1_2, ks=2, stride=2)
 
     n.conv2_1, n.BatchNormalize2_1, n.scaler2_1, n.relu2_1 = ConvBnRelu(
         n.pool1, 128, 3, 1, 1)
     n.conv2_2, n.BatchNormalize2_2, n.scaler2_2, n.relu2_2 = ConvBnRelu(
         n.relu2_1, 128, 3, 1, 1)
 
-    n.pool2, n.pool2_mask = Maxpool(
-        n.relu2_2, ks=2, stride=2, ntop=2)
+    n.pool2 = Maxpool(n.relu2_2, ks=2, stride=2)
 
     n.conv3_1, n.BatchNormalize3_1, n.scaler3_1, n.relu3_1 = ConvBnRelu(
         n.pool2, 256, 3, 1, 1)
@@ -49,8 +48,7 @@ def HalfDeconvNet(split, data_gene, loss, batch_size, cn, num_output):
     n.conv3_3, n.BatchNormalize3_3, n.scaler3_3, n.relu3_3 = ConvBnRelu(
         n.relu3_2, 256, 3, 1, 1)
 
-    n.pool3, n.pool3_mask = Maxpool(
-        n.relu3_3, ks=2, stride=2, ntop=2)
+    n.pool3 = Maxpool(n.relu3_3, ks=2, stride=2)
 
     n.conv4_1, n.BatchNormalize4_1, n.scaler4_1, n.relu4_1 = ConvBnRelu(
         n.pool3, 512, 3, 1, 1)
@@ -59,8 +57,7 @@ def HalfDeconvNet(split, data_gene, loss, batch_size, cn, num_output):
     n.conv4_3, n.BatchNormalize4_3, n.scaler4_3, n.relu4_3 = ConvBnRelu(
         n.relu4_2, 512, 3, 1, 1)
 
-    n.pool4, n.pool4_mask = Maxpool(
-        n.relu4_3, ks=2, stride=2, ntop=2)
+    n.pool4 = Maxpool(n.relu4_3, ks=2, stride=2)
 
     n.conv5_1, n.BatchNormalize5_1, n.scaler5_1, n.relu5_1 = ConvBnRelu(
         n.pool4, 512, 3, 1, 1)
@@ -69,8 +66,7 @@ def HalfDeconvNet(split, data_gene, loss, batch_size, cn, num_output):
     n.conv5_3, n.BatchNormalize5_3, n.scaler5_3, n.relu5_3 = ConvBnRelu(
         n.relu5_2, 512, 3, 1, 1)
 
-    n.pool5, n.pool5_mask = Maxpool(
-        n.relu5_3, ks=2, stride=2, ntop=2)
+    n.pool5 = Maxpool(n.relu5_3, ks=2, stride=2)
 
     n.fc6, n.BatchNormalize6, n.scaler6_1, n.relu6 = ConvBnRelu(
         n.pool5, 4096, ks=7, stride=1, pad=0)

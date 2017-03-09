@@ -10,7 +10,7 @@ import random
 class DataLayer(caffe.Layer):
 
     def setup(self, bottom, top):
-
+        #pdb.set_trace()
         params = eval(self.param_str)
         self.split = params['split']
         self.classifier_name = params['classifier_name']
@@ -47,6 +47,7 @@ class DataLayer(caffe.Layer):
         if self.random:
             random.seed(self.seed)
             self.key = self.datagen.RandomKey(True)
+        # pdb.set_trace()
 
     def reshape(self, bottom, top):
         # load image + label image pair
@@ -158,6 +159,12 @@ class DataLayer(caffe.Layer):
         # pdb.set_trace()
         return in_, label, weight
 
+class DataLayerCAM16(DataLayer):
+
+    def Prepare2DImage(self, img):
+        res = np.zeros(shape=(1,1,1))
+        res[0,0,0] = img
+        return res
 
 def duplicate_channel(blob, n_c):
     return np.tile(blob, (n_c, 1, 1, 1)).transpose((1, 0, 2, 3))
