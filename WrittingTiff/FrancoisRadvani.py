@@ -6,6 +6,12 @@ from createfold import GetNet, PredImageFromNet, DynamicWatershedAlias, dilation
 import caffe
 import pdb
 from Deprocessing.Transfer import ChangeEnv
+import progressbar
+
+
+
+
+
 stepSize = 180
 windowSize = (224 , 224)
 param = 7
@@ -75,8 +81,8 @@ def crop(image):
     
 if __name__ == "__main__":
     
-    PATH = "/data/users/pnaylor/Bureau/New_images_TMA_ICA/*40x.png"
-    OUT = "/data/users/pnaylor/Bureau/Out"
+    PATH = "/data/users/pnaylor/Documents/Python/Francois/New_images_TMA_ICA/*40x.png"
+    OUT = "/data/users/pnaylor/Documents/Python/Francois/Out"
 
 
 
@@ -91,7 +97,9 @@ if __name__ == "__main__":
     net_1 = GetNet(cn_1, wd_1)
     net_2 = GetNet(cn_2, wd_1)
 
-    for path in ImagesToProcess:
+    progress = progressbar.ProgressBar()
+
+    for path in progress(ImagesToProcess):
         outfile = os.path.basename(path)
         outfile = os.path.join(OUT, outfile)
         #pdb.set_trace()
