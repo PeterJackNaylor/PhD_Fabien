@@ -67,13 +67,13 @@ def PredOneImage(path, outfile, c, f, net1, net2):
     # pdb.set_trace()
     if not os.path.isfile(outfile):
         #pdb.set_trace()
-        image = imread(path)
+        image = imread(path)[:,:,0:3]
         image = c(image)
         image = f(image, net1, net2)
         imsave(outfile, image)
     else:
-        print "Files exists"
-
+        #print "Files exists"
+	pass
 
 def crop(image):
     return image[50:-30,:]
