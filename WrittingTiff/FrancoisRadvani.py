@@ -66,10 +66,10 @@ def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize, param=pa
 def PredOneImage(path, outfile, c, f, net1, net2):
     # pdb.set_trace()
     if not os.path.isfile(outfile):
-        pdb.set_trace()
+        #pdb.set_trace()
         image = imread(path)
         image = c(image)
-        image = f(image)
+        image = f(image, net1, net2)
         imsave(outfile, image)
     else:
         print "Files exists"
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
     ImagesToProcess = glob.glob(PATH)
     caffe.set_mode_cpu()
-    cn_1 = "FCN_0.01_0.99_0.0005"
+    cn_1 = "FCN_0.01_0.99_0.005"
     wd_1 = "/data/users/pnaylor/Documents/Python/Francois"#"/share/data40T_v2/Peter/pretrained_models"
     cn_2 = "DeconvNet_0.01_0.99_0.0005"
     wd_2 = wd_1
