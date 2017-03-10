@@ -66,10 +66,10 @@ def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize, param=pa
 def PredOneImage(path, outfile, c, f, net1, net2):
     # pdb.set_trace()
     if not os.path.isfile(outfile):
-        pdb.set_trace()
+        #pdb.set_trace()
         image = imread(path)
         image = c(image)
-        image = f(image)
+        image = f(image, net1, net2)
         imsave(outfile, image)
     else:
         print "Files exists"
