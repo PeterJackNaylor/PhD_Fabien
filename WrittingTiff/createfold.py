@@ -136,7 +136,7 @@ def GetNet(cn, wd):
     root_directory = wd + "/" + cn + "/"
     if 'FCN' not in cn:
         folder = root_directory + "temp_files/"
-        weight = folder + "weights." + cn + ".caffemodel"
+        weight = folder + "weights." + cn + "_141549" + ".caffemodel"
         deploy = root_directory + "test.prototxt"
     else:
         folder = root_directory + "FCN8/temp_files/"
