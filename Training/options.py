@@ -224,6 +224,6 @@ def AddTransforms(options):
             transform_list.append(Transf.HE_Perturbation((k_h,0), (k_e,0), (1, 0)))
     for k_b in perturbations:
         for k_s in small_perturbation:
-            transform_list.append(Transf.HE_Perturbation((1,0), (k_s,0), (k_b, 0)))   
+            transform_list.append(Transf.HSV_Perturbation((1,0), (k_s,0), (k_b, 0)))   
     options.transform_list = transform_list
     return options 
