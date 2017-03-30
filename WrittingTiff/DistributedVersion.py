@@ -165,14 +165,19 @@ def sliding_window(image, stepSize, windowSize):
             yield (x, y, x + windowSize[0], y + windowSize[1], res_img)
 
 from scipy import misc
-def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
+def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder = 10):
     #pdb.set_trace() 
     x_s, y_s, z_s = image.shape
     result = np.zeros(shape=(x_s, y_s, 2))
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
         prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
+        y_b += removeFromBorder
+        y_e -= removeFromBorder
+        x_b += removeFromBorder
+        x_e -= removeFromBorder
         result[y_b:y_e, x_b:x_e, 0] += prob_image1
         result[y_b:y_e, x_b:x_e, 1] += 1.
+    result[np.where(result[:,:,1] == 0), 1] = 1
     prob_map = result[:, :, 0] / result[:, :, 1]
     bin_map = prob_map > 0.5 + 0.0
     bin_map = bin_map.astype(np.uint8)

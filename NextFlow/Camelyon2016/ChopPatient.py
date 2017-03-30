@@ -4,6 +4,7 @@ import numpy as np
 from optparse import OptionParser
 import os
 import pdb
+from scipy.misc import imsave
 
 def GetLabel(name, para):
     if "Normal" in name:
@@ -33,7 +34,6 @@ def CreateFileParam(name, list, file):
     and each line as parameters
     """
     f = open(name, "wb")
-    print name
     for line, para in enumerate(list):
 
         Label = GetLabel(file, para)
@@ -79,6 +79,13 @@ if __name__ == "__main__":
     FILENAME = name.replace(".tif", ".txt")
     FILEPATH = os.path.join(options.output_folder, basename).replace('.tif', '.txt')
     CreateFileParam(FILEPATH, list_roi, basename)
+
+
+    basename_png = basename.replace('.tif','') + "{}_{}_{}_{}_{}.png"
+    FILEPATH = os.path.join(options.output_folder, basename_png)
+    for para in list_roi:
+        img = GetImage(name, para)
+        imsave(FILEPATH.format(*para), img)
 '''
     import openslide as op
     from scipy.misc import imsave

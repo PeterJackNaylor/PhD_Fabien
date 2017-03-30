@@ -30,12 +30,15 @@ def HreconstructionErosion(prob_img, h):
     return recons
 
 
-def find_maxima(img, convertuint8=False, inverse=False):
+def find_maxima(img, convertuint8=False, inverse=False, mask=None):
     img = PrepareProb(img, convertuint8=convertuint8, inverse=inverse)
     recons = HreconstructionErosion(img, 1)
-    return recons - img
-
-
+    if mask is None:
+        return recons - img
+    else:
+        res = recons - img
+        res[mask==0] = 0
+        return res
 def GetContours(img):
     """
     The image has to be a binary image 
@@ -67,7 +70,7 @@ def DynamicWatershedAlias(p_img, lamb):
 
 
     Hrecons = HreconstructionErosion(Probs_inv, lamb)
-    markers_Probs_inv = find_maxima(Hrecons)
+    markers_Probs_inv = find_maxima(Hrecons, mask = b_img)
     markers_Probs_inv = label(markers_Probs_inv)
     ws_labels = watershed(Hrecons, markers_Probs_inv, mask=b_img)
     arrange_label = ArrangeLabel(ws_labels)

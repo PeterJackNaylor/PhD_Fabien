@@ -7,6 +7,7 @@ from caffe.proto import caffe_pb2
 from optparse import OptionParser
 import os
 import cPickle as pkl
+import pdb
 
 if __name__ == "__main__":
     parser = OptionParser()
@@ -34,12 +35,14 @@ if __name__ == "__main__":
 
     datum = caffe_pb2.Datum()
     dg = pkl.load(open(options.dg, "rb"))
-    key = dg.RandomKey(False)
+    key = 0
     key = dg.NextKeyRandList(key)
-
+    pdb.set_trace()
     item_id = -1
 
     for x in range(dg.length):
+        if x == dg.length - 1:
+            pdb.set_trace()
         item_id += 1
 
         data, label = dg[key]
