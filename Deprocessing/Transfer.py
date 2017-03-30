@@ -37,7 +37,6 @@ def ChangeDataGenPath(path, folder):
     pkl.dump(dg_train, open(datagen_train, "w"))
     pkl.dump(dg_test, open(datagen_test, "w"))
 
-
 def ChangePrototxt(protofile, folder):
     """
     Modifyies the protofile so that he know where to find the datagen

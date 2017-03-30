@@ -12,7 +12,7 @@ import progressbar
 
 
 
-stepSize = 180
+stepSize = 120
 windowSize = (224 , 224)
 param = 7
 
@@ -34,25 +34,39 @@ def sliding_window(image, stepSize, windowSize):
             yield (x, y, x + windowSize[0], y + windowSize[1], res_img)
 
 
-def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
+def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder = 10):
     #pdb.set_trace() 
     x_s, y_s, z_s = image.shape
     result = np.zeros(shape=(x_s, y_s, 2))
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
         prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
-        result[y_b:y_e, x_b:x_e, 0] += prob_image1
+        val = removeFromBorder
+        y_b += val
+        y_e -= val
+        x_b += val
+        x_e -= val
+        if val != 0:
+            result[y_b:y_e, x_b:x_e, 0] += prob_image1[val:-val, val:-val]
+            #imsave("Slide/{}_{}_{}_{}.png".format(y_b,y_e,x_b,x_e), prob_image1)
+        else:
+            result[y_b:y_e, x_b:x_e, 0] += prob_image1
+        
         result[y_b:y_e, x_b:x_e, 1] += 1.
+    x, y = np.where(result[:,:,1] == 0)
+    result[x, y, 1] = 1
     prob_map = result[:, :, 0] / result[:, :, 1]
     bin_map = prob_map > 0.5 + 0.0
     bin_map = bin_map.astype(np.uint8)
     return prob_map, bin_map
 
-def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize, param=param):
-    prob_image1, bin_image1 = PredLargeImageFromNet(net_1, image, stepSize, windowSize)
-    prob_image2, bin_image2 = PredLargeImageFromNet(net_2, image, stepSize, windowSize)
+
+def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize, param=param, border=10):
+    prob_image1, bin_image1 = PredLargeImageFromNet(net1, image, stepSize, windowSize, border)
+    prob_image2, bin_image2 = PredLargeImageFromNet(net2, image, stepSize, windowSize, border)
     
     #pdb.set_trace()
-    segmentation_mask = DynamicWatershedAlias(prob_image1, param)
+    prob = ( prob_image1 + prob_image2 ) / 2.
+    segmentation_mask = DynamicWatershedAlias(prob, param)
     segmentation_mask[segmentation_mask > 0] = 1
     contours = dilation(segmentation_mask, disk(2)) - \
         erosion(segmentation_mask, disk(2))
@@ -61,7 +75,7 @@ def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize, param=pa
     image[x, y] = np.array([0, 0, 0])
 
 
-    return image
+    return image, prob
 
 def PredOneImage(path, outfile, c, f, net1, net2):
     # pdb.set_trace()
@@ -96,7 +110,7 @@ if __name__ == "__main__":
     ChangeEnv("/data/users/pnaylor/Bureau/ToAnnotate", os.path.join(wd_1, cn_2))
     net_1 = GetNet(cn_1, wd_1)
     net_2 = GetNet(cn_2, wd_1)
-
+    #net_2 = None
     progress = progressbar.ProgressBar()
 
     for path in progress(ImagesToProcess):

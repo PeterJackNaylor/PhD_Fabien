@@ -12,7 +12,7 @@ import cPickle as pkl
 from RandomUtils import CheckExistants, CheckFile
 from UsefulFunctions.UsefulOpenSlide import GetImage
 import pandas as pd
-
+import scipy
 
 class DataGenScratch(DataGen):
     """
@@ -101,10 +101,12 @@ class DataGenScratch(DataGen):
         para = [l["x"].values[0], l["y"].values[0], l["size_x"].values[0],
                 l["size_y"].values[0], l["ref_level"].values[0]]
         domainLabel = l["DomaineLabel"].values[0]
-        state = domainLabel.split('_')[0]
-        img_path = os.path.join(self.pathfolder, state, domainLabel)
+        domainLabel = domainLabel.replace(".tif", "")
 
-        return np.array(GetImage(img_path, para))[:,:,0:3]
+        name = domainLabel + "{}_{}_{}_{}_{}.png"
+        img_path = os.path.join(self.pathfolder, name).format(*para)
+
+        return scipy.misc.imread(img_path)[:,:,0:3]
 
     def RandomKey(self, rand):
         if not rand:
@@ -129,7 +131,7 @@ class DataGenScratch(DataGen):
         if n_min + self.BIG_N > self.length:
             self.lines = self.length - (n_min + self.BIG_N)
         else:
-            self.lines = self.BIG_N
+            self.lines = min(self.BIG_N, self.length)
 
         df = pd.read_csv("my_little_helper_{}.txt".format(self.split), header=None, sep=" ",
                         skiprows=n_min, nrows=self.lines)
@@ -142,18 +144,18 @@ class DataGenScratch(DataGen):
             self.SetRandomList()
             self.key_iter = 0
             self.lines_seen = 0
-            self.lines = self.BIG_N
             self.length = self.n_max * self.t_max
+            self.lines = min(self.BIG_N, self.length)
             self.lines_seen = 0
         else:  # pdb.set_trace()
             self.key_iter += 1
 
-        if self.key_iter == self.lines:
+        if self.key_iter == self.lines - 1:
             self.lines_seen += self.key_iter
             self.key_iter = 0
             if self.lines_seen == self.length:
                 self.lines_seen = 0
-                self.LoadBatch(0)
+                #self.LoadBatch(0)
         return self.RandomList.loc[self.key_iter].values
 
     def NextKey(self, key):
