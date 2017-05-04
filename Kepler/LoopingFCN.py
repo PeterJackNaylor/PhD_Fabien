@@ -5,14 +5,14 @@ from os import environ
 
 net = 'FCN'
 raw_data = "/data/users/pnaylor/Bureau/ToAnnotate"
-wd = "/data/users/pnaylor/Documents/Python/Experiences2/MoreData"
+wd = "/data/users/pnaylor/Documents/Python/Experiences2/HSV_HE"
 weight = "/data/users/pnaylor/Documents/Python/FCN/model/fcn32s-heavy-pascal.caffemodel"
-niter = 20000
+niter = 10000
 disp_interval = 100
 leaveout = 1
 crop = 4
 
-base_lr_list = [0.001]
+base_lr_list = [0.1]
 
 batch_size = 1
 img_format = "RGB"
@@ -20,9 +20,9 @@ loss = 'softmax'
 
 momentum_list = [0.99]
 
-weight_decay_list = [0.0005] #, 0.00005]
+weight_decay_list = [0.005] #, 0.00005]
 
-stepsize = 7000
+stepsize = 3000
 gamma = 0.1
 size_x = 224
 size_y = 224

@@ -50,9 +50,9 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize):
 def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize, param=param):
     prob_image1, bin_image1 = PredLargeImageFromNet(net_1, image, stepSize, windowSize)
     prob_image2, bin_image2 = PredLargeImageFromNet(net_2, image, stepSize, windowSize)
-    
+    prob_image = ( prob_image1 + prob_image2 ) / 2    
     #pdb.set_trace()
-    segmentation_mask = DynamicWatershedAlias(prob_image1, param)
+    segmentation_mask = DynamicWatershedAlias(prob_image, param)
     segmentation_mask[segmentation_mask > 0] = 1
     contours = dilation(segmentation_mask, disk(2)) - \
         erosion(segmentation_mask, disk(2))
@@ -61,7 +61,7 @@ def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize, param=pa
     image[x, y] = np.array([0, 0, 0])
 
 
-    return image
+    return image, prob_image
 
 def PredOneImage(path, outfile, c, f, net1, net2):
     # pdb.set_trace()
@@ -69,8 +69,9 @@ def PredOneImage(path, outfile, c, f, net1, net2):
         #pdb.set_trace()
         image = imread(path)[:,:,0:3]
         image = c(image)
-        image = f(image, net1, net2)
+        image, prob = f(image, net1, net2)
         imsave(outfile, image)
+	imsave(outfile.replace('.png', '_prob.png'), prob)
     else:
         #print "Files exists"
 	pass
