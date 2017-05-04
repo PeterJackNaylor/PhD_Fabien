@@ -24,6 +24,8 @@ def MakeHalfDeconvNet(options):
 def HalfDeconvNet(split, data_gene, loss, batch_size, cn, num_output):
     n = caffe.NetSpec()
 
+#    n.data, n.label = DataLayer(split, data_gene, batch_size, cn, False, ntop=)
+
     n.data, n.label = L.Data(batch_size=batch_size, backend=P.Data.LMDB, 
                              source=data_gene, transform_param=mean_val ,ntop=2)
 

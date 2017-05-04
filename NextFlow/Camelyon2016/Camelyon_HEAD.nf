@@ -24,6 +24,11 @@ ROI_PY = file('ChopPatient.py')
 MAKEPROTOTXT = file("MakePrototxt.py")
 MAKESOLVER = file("MakeSolver.py")
 
+TRAINTESTPY = file("TrainTestSet.py")
+MAKEDATAGEN = file("MakeDataGen.py")
+TRAIN_PY = file("TrainingWithSaves.py")
+LEVELDB = file("WriteLevelDB.py")
+
 LR = 0.001
 MOMENTUM = 0.99
 WEIGHT_DECAY = 0.00005
@@ -38,20 +43,18 @@ N_ITER = 1000
 DISP_INTERVAL = 100
 NUMBER_OF_TEST = 1
 
-TRAINTESTPY = file("TrainTestSet.py")
-MAKEDATAGEN = file("MakeDataGen.py")
-TRAIN_PY = file("TrainingWithSaves.py")
-LEVELDB = file("WriteLevelDB.py")
-
 
 process ChopNormalPatient {
 
     executor 'sge'
     profile = 'cluster'
+    queue = "all.q"
     validExitStatus 0
-    clusterOptions = "-S /bin/bash"
-    publishDir WD_REMOTE, mode: "copy", overwrite: false
+    clusterOptions = "-S /bin/bash -l mem_free=1G"
+    publishDir WD_REMOTE, overwrite: false
     maxForks = 100
+    errorStrategy 'retry' 
+    maxErrors 5
 
     input:
     file normal from TIFF_NORMAL
@@ -60,6 +63,7 @@ process ChopNormalPatient {
 
     output:
     file "${normal.getBaseName()}.txt" into DB_N
+    file "*.png" into DB_N_IMG
     
     """
     python $ROI_PY --output . --type 'Normal' --file $normal --ticket_val $ticket_val
@@ -70,10 +74,13 @@ process ChopTumorPatient {
 
     executor 'sge'
     profile = 'cluster'
+    queue = "all.q"
     validExitStatus 0
-    clusterOptions = "-S /bin/bash"
-    publishDir WD_REMOTE, mode: "copy", overwrite: false
+    clusterOptions = "-S /bin/bash -l mem_free=1G"
+    publishDir WD_REMOTE, overwrite: false
     maxForks = 100
+    errorStrategy 'retry' 
+    maxErrors 5
 
     input:
     file tumor from TIFF_TUMOR
@@ -81,6 +88,7 @@ process ChopTumorPatient {
 
     output:
     file "${tumor.getBaseName()}.txt" into DB_T
+    file "*.png" into DB_T_IMG
 
     """
     python $ROI_PY --output . --type 'Tumor' --file $tumor
@@ -93,7 +101,7 @@ process CreateTrainTestSet {
     executor 'local'
     profile = 'cluster'
     validExitStatus 0
-    clusterOptions = "-S /bin/bash"
+    clusterOptions = "-S /bin/bash -l h_vmem=1G"
     publishDir WD_DG, mode: "copy", overwrite: false
     maxForks = 1
 
@@ -104,6 +112,7 @@ process CreateTrainTestSet {
     file traintestset from TRAINTESTPY
     file makedatagen from MAKEDATAGEN
     file wait from DB_N .mix(DB_T) .toList()
+    file pathfolder from WD_DG
 
     output:
     file "train.txt" into DG_TRAIN, DG_TRAIN2
@@ -116,17 +125,16 @@ process CreateTrainTestSet {
 
     script:
     """
-    echo 'bou'
     python $traintestset --input $txt_fold --output . --nber_patient $nber_patient --split_value $split_value
-    python $makedatagen --input train.txt --output train.pkl --split train
-    python $makedatagen --input test.txt  --output test.pkl  --split test    
+    python $makedatagen --input train.txt --output train.pkl --split train --pathfolder $txt_fold
+    python $makedatagen --input test.txt  --output test.pkl  --split test --pathfolder $txt_fold
     """
 }
 
 /* check if data gen still works as plan */ 
 process CreateTrainPrototxt {
-    executor 'sge'
-    profile = 'sge'
+    executor 'local'
+    profile = 'cluster'
     validExitStatus 0,134
     clusterOptions = "-S /bin/bash"
     publishDir WD_DG, overwrite: false
@@ -150,7 +158,7 @@ process CreateTrainPrototxt {
 
 process CreateTestPrototxt {
 
-    executor 'sge'
+    executor 'local'
     profile = 'cluster'
     validExitStatus 0,134
     clusterOptions = "-S /bin/bash"
@@ -174,7 +182,7 @@ process CreateTestPrototxt {
 
 process CreateSolver {
 
-    executor 'sge'
+    executor 'local'
     profile = 'cluster'
     validExitStatus 0,134
     clusterOptions = "-S /bin/bash"
@@ -205,7 +213,7 @@ process CreateSolver {
     """
 }
 
-
+ 
 
 process CreateLMDB_test {
 
@@ -261,6 +269,7 @@ process CreateLMDB_train {
     """
 }
 
+
 process Training {
 
     executor 'sge'
@@ -280,6 +289,12 @@ process Training {
     file test_prototxt from TEST_PROTOTXT2
     file train_lmdb from TRAIN_LMDB
     file test_lmdb from TEST_LMDB
+//    file test_pkl from DG_TESTING2
+//    file DG_HELPER_TEST
+//    file DG_TEST2
+//    file train_pkl from DG_TRAINING2
+//    file DG_HELPER_TRAIN
+//    file DG_TRAIN2
 
     beforeScript 'export PYTHONPATH=/cbio/donnees/pnaylor/PythonPKG/caffe_peter_crf_cbio/python:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/FCN_Segmentation:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/UsefulFunctions:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/Nets:/share/data40T/pnaylor/Cam16/scripts/challengecam/cluster:/share/data40T/pnaylor/Cam16/scripts/challengecam/PythonPatch:/share/data40T/pnaylor/Cam16/scripts/challengecam/RandomForest_Peter:/share/apps/user_apps/smil_0.8.1/lib/Smil/'
 
@@ -288,4 +303,3 @@ process Training {
     python $train --solver $solver --wd . --cn testCAM16 --n_iter $n_iter --disp_interval $disp_interval --number_of_test $number_of_test --num testCAM16
     """
 }
-

@@ -8,6 +8,7 @@ from random import shuffle
 import os
 from scipy import misc
 import nibabel as ni
+from Deprocessing.Morphology import generate_wsl
 from UsefulFunctions.RandomUtils import CheckExistants, CheckFile
 
 from UsefulFunctions.ImageTransf import Identity, flip_vertical, flip_horizontal
@@ -15,6 +16,7 @@ from UsefulFunctions.WeightMaps import ComputeWeightMap
 import copy
 import itertools
 
+from skimage import measure
 
 def MakeDataGen(options):
     dgtrain = options.dgtrain
@@ -171,7 +173,7 @@ class DataGen(object):
             self.return_path = False
         if self.return_path:
             img_lbl_Mwgt += (img_path,)
-
+        print "Delivered"
         return img_lbl_Mwgt
 
     def Weight_path(self):
@@ -258,16 +260,30 @@ class DataGen(object):
 
     def SetTransformation(self, list_object):
         self.transforms = list_object
-
     def LoadGT(self, path, normalize=True):
         image = ni.load(path)
         img = image.get_data()
-        img[img > 0] = 1
+        img = measure.label(img)
+        wsl = generate_wsl(img[:,:,0])
+        img[ img > 0 ] = 1
+        wsl[ wsl > 0 ] = 1
+        img[:,:,0] = img[:,:,0] - wsl
+
         if len(img.shape) == 3:
             img = img[:, :, 0].transpose()
         else:
             img = img.transpose()
+        #img[ img > 0 ] = 1
         return img
+    # def LoadGT(self, path, normalize=True):
+    #     image = ni.load(path)
+    #     img = image.get_data()
+    #     img[img > 0] = 1
+    #     if len(img.shape) == 3:
+    #         img = img[:, :, 0].transpose()
+    #     else:
+    #         img = img.transpose()
+    #     return img
 
     def LoadImage(self, path):
         if not hasattr(self, "img_format"):

@@ -10,30 +10,29 @@ import random
 class DataLayer(caffe.Layer):
 
     def setup(self, bottom, top):
-        #pdb.set_trace()
+
         params = eval(self.param_str)
         self.split = params['split']
         self.classifier_name = params['classifier_name']
         self.mean = np.array(params['mean'])
-
         self.normalize = params.get('normalize', False)
         self.random = params.get('randomize', True)
         self.seed = params.get('seed', None)
         self.batch_size = params.get('batch_size', 1)
         self.Weight = params.get('Weight', False)
-	# pdb.set_trace()
         self.datagen = pkl.load(open(params['datagen'], 'rb'))
+
         if not self.datagen.Weight:
             n_tops = 2
             n_tops_str = "two"
         else:
             n_tops = 3
             n_tops_str = "three"
-        # two tops: data and label
+
         if len(top) != n_tops:
             raise Exception(
                 "Need to define {} tops: data and label.".format(n_tops_str))
-        # data layers have no bottoms
+
         if len(bottom) != 0:
             raise Exception("Do not define a bottom.")
 	
@@ -47,12 +46,10 @@ class DataLayer(caffe.Layer):
         if self.random:
             random.seed(self.seed)
             self.key = self.datagen.RandomKey(True)
-        # pdb.set_trace()
 
     def reshape(self, bottom, top):
         # load image + label image pair
 
-        # pdb.set_trace()
         if self.batch_size == 1:
             if not self.Weight:
                 self.data, self.label = self.loadImageAndGT(self.key)
@@ -60,25 +57,28 @@ class DataLayer(caffe.Layer):
                 self.data, self.label, self.weight = self.loadWithWeight(
                     self.key)
                 top[2].reshape(self.batch_size, *self.weight.shape)
-            # self.data = self.data[np.newaxis, ...]
-            # self.label = self.label[np.newaxis, ...]    
+
             top[0].reshape(self.batch_size, *self.data.shape)
             top[1].reshape(self.batch_size, *self.label.shape)
 
         else:
+
             if not self.Weight:
                 data, label = self.loadImageAndGT(self.key)
             else:
                 data, label, weight = self.loadWithWeight(self.key)
 
             x, y, z = data.shape
-            x_l, y_l, z_l = label.shape
+
+            if isinstance(label, int):
+                x_l , y_l, z_l = 1, 1, 1
+            else:
+                x_l, y_l, z_l = label.shape
 
             self.data = np.zeros(shape=(self.batch_size, x, y, z))
             self.label = np.zeros(shape=(self.batch_size, x_l, y_l, z_l))
             if self.Weight:
-                self.weight = np.zeros(
-                    shape=(self.batch_size, x_l, y_l, z_l), dtype=np.float32)
+                self.weight = np.zeros(shape=(self.batch_size, x_l, y_l, z_l), dtype=np.float32)
                 self.weight[0] = weight
             self.data[0], self.label[0] = data, label
 
@@ -89,28 +89,27 @@ class DataLayer(caffe.Layer):
                 else:
                     self.data[i], self.label[i], self.weight[
                         i] = self.loadWithWeight(self.key)
-                # reshape tops to fit (leading 1 is for batch dimension)
+
             top[0].reshape(self.batch_size, *data.shape)
-            top[1].reshape(self.batch_size, *label.shape)
+            top[1].reshape(self.batch_size, x_l, y_l, z_l)
 
             if self.Weight:
                 top[2].reshape(self.batch_size, *weight.shape)
 
     def forward(self, bottom, top):
-        # assign output
-        # pdb.set_trace()
+
         top[0].data[...] = self.data
-        # self.label[self.label > 0] = 1
         top[1].data[...] = self.label
+
         if self.Weight:
             weight = self.weight
             if 0 in weight:
                 weight[weight > 0] = 1
             top[2].data[...] = weight
+
         self.Nextkey()
-        #from scipy.misc import imsave
-        #imsave("/data/users/pnaylor/Documents/new/{}_{}_{}_{}_GT.png".format(*self.key), self.label[0,:,:])
-        #imsave("/data/users/pnaylor/Documents/new/{}_{}_{}_{}.png".format(*self.key), self.data.transpose(1,2,0))
+
+
     def backward(self, top, propagate_down, bottom):
         pass
 
@@ -123,6 +122,8 @@ class DataLayer(caffe.Layer):
             self.key = self.datagen.NextKey(self.key)
 
     def PrepareImg(self, img):
+        if isinstance(img, int):
+            return img
         if len(img.shape) == 2:
             in_ = self.Prepare2DImage(img)
         else:
@@ -135,6 +136,8 @@ class DataLayer(caffe.Layer):
         return in_
 
     def Prepare2DImage(self, img):
+        if isinstance(img, int):
+            return img
         if len(img) == 3:
             img = img.transpose((2, 0, 1))
         else:
@@ -159,12 +162,7 @@ class DataLayer(caffe.Layer):
         # pdb.set_trace()
         return in_, label, weight
 
-class DataLayerCAM16(DataLayer):
 
-    def Prepare2DImage(self, img):
-        res = np.zeros(shape=(1,1,1))
-        res[0,0,0] = img
-        return res
 
 def duplicate_channel(blob, n_c):
     return np.tile(blob, (n_c, 1, 1, 1)).transpose((1, 0, 2, 3))
