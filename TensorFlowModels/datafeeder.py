@@ -6,11 +6,15 @@ from tensorflow.contrib import learn
 from tensorflow.contrib.learn.python.learn.estimators import model_fn as model_fn_lib
 import pdb
 
+tf.logging.set_verbosity(tf.logging.INFO)
+
 LEARNING_RATE = 0.01
 
 transform_list = [Transf.Identity(),
                   Transf.Flip(0),
                   Transf.Flip(1)]
+
+transform_list_test = [Transf.Identity()]
 
 width = 224
 height = 224
@@ -22,7 +26,7 @@ MEAN = np.array([104.00699, 116.66877, 122.67892])
 dg = DataGen('/home/pnaylor/Documents/Data/ToAnnotate', crop = 4, 
              size=(width, height), transforms=transform_list)
 dg_test = DataGen('/home/pnaylor/Documents/Data/ToAnnotate', split="test",
-                  crop = 4, size=(width, height), transforms=transform_list)
+                  crop = 4, size=(width, height), transforms=transform_list_test)
 
 def data_iterator():
     """ A simple data iterator """
@@ -127,12 +131,44 @@ def cnn_model_fn(features, labels, mode):
 
 def main(unused_argv):
 
-    model_params = {"learning_rate": LEARNING_RATE}
+    validation_metrics = {
+    "accuracy":
+        learn.MetricSpec(
+            metric_fn=tf.contrib.metrics.streaming_accuracy,
+            prediction_key=learn.PredictionKey.
+            CLASSES),
+    "precision":
+        learn.MetricSpec(
+            metric_fn=tf.contrib.metrics.streaming_precision,
+            prediction_key=learn.PredictionKey.
+            CLASSES),
+    "recall":
+        learn.MetricSpec(
+            metric_fn=tf.contrib.metrics.streaming_recall,
+            prediction_key=learn.PredictionKey.
+            CLASSES),
+    "auc"
+    }
 
+    validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(
+        input_fn=data_iterator_test().next,
+        every_n_steps=100,
+        eval_steps=dg_test.length,
+        metrics=validation_metrics,
+        early_stopping_metric='loss',
+        early_stopping_metric_minimize=True,
+        early_stopping_rounds=500)
 
     myclassifier = learn.Estimator(
-        model_fn=cnn_model_fn, model_dir="/tmp/PangNet_model30")
-    myclassifier.fit(input_fn = data_iterator().next, steps=20000)
+        model_fn=cnn_model_fn,
+        model_dir="/tmp/new",
+        config=learn.RunConfig(save_checkpoints_secs=5))
+
+    myclassifier.fit(
+        input_fn = data_iterator().next, 
+        steps=20000,
+        monitors=[validation_monitor]
+        )
     metrics = {
         "accuracy":
             learn.MetricSpec(
@@ -140,14 +176,14 @@ def main(unused_argv):
     }
 
     eval_results = myclassifier.evaluate(
-        input_fn = data_iterator_test().next, steps=100,  metrics=metrics)
+        input_fn = data_iterator_test().next, steps=100,  metrics=validation_metrics)
     print(eval_results) 
 
 import matplotlib.pylab as plt
 
 def plot():
     myclassifier = learn.Estimator(                        
-        model_fn=cnn_model_fn, model_dir="/tmp/PangNet_model30")
+        model_fn=cnn_model_fn, model_dir="/tmp/new")
     output = list(myclassifier.predict(input_fn =  data_iterator_test().next))
     fig, axes = plt.subplots(2,2)
     axes[0,0].imshow((output[0]['input']+MEAN).astype('uint8'))
