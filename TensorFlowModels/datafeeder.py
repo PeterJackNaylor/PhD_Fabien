@@ -9,6 +9,7 @@ import pdb
 tf.logging.set_verbosity(tf.logging.INFO)
 
 LEARNING_RATE = 0.01
+DECAY_RATE= 0.5
 
 transform_list = [Transf.Identity(),
                   Transf.Flip(0),
@@ -19,9 +20,9 @@ transform_list_test = [Transf.Identity()]
 width = 224
 height = 224
 dim = 3 
-batch_size = 2
+batch_size = 1
 MEAN = np.array([104.00699, 116.66877, 122.67892])
-
+epoch = dg.length
 
 dg = DataGen('/home/pnaylor/Documents/Data/ToAnnotate', crop = 4, 
              size=(width, height), transforms=transform_list)
@@ -67,7 +68,8 @@ def data_iterator_test():
 
 def cnn_model_fn(features, labels, mode):
     input_layer = tf.reshape(features, [-1, width, height, dim])
-
+    n = np.random.randint(0,1000)
+    tf.summary.image("image{}".format(n) ,input_layer)
     # Convolutional Layer #1
 
     conv1 = tf.layers.conv2d(
@@ -77,21 +79,21 @@ def cnn_model_fn(features, labels, mode):
         padding="same",
         activation=tf.nn.relu)#,
         #kernel_initializer=tf.contrib.layers.xavier_initializer)
-
+    tf.summary.histogram("conv1", conv1)
     conv2 = tf.layers.conv2d(
         inputs=conv1,
         filters=8,
         kernel_size=[5, 5],
         padding="same",
         activation=tf.nn.relu)
-
+    tf.summary.histogram("conv2", conv2)
     conv3 = tf.layers.conv2d(
         inputs=conv2,
         filters=8,
         kernel_size=[5, 5],
         padding="same",
         activation=tf.nn.relu)
-
+    tf.summary.histogram("conv3", conv3)
     logits = tf.layers.conv2d(
         inputs=conv3,
         filters=2,
@@ -109,12 +111,19 @@ def cnn_model_fn(features, labels, mode):
             onehot_labels=onehot_labels, logits=logits)
 
       # Configure the Training Op (for TRAIN mode)
+
     if mode == learn.ModeKeys.TRAIN:
+        def mydecay():
+            return tf.train.exponential_decay(LEARNING_RATE, 
+                                              tf.contrib.framework.get_global_step(),
+                                              epoch / 2,
+                                              DECAY_RATE)
         train_op = tf.contrib.layers.optimize_loss(
             loss=loss,
             global_step=tf.contrib.framework.get_global_step(),
-            learning_rate=0.001,
-            optimizer="SGD")
+            learning_rate=LEARNING_RATE,
+            optimizer="SGD",
+            learning_rate_decay_fn=mydecay)
 
       # Generate Predictions
     predictions = {
@@ -146,8 +155,7 @@ def main(unused_argv):
         learn.MetricSpec(
             metric_fn=tf.contrib.metrics.streaming_recall,
             prediction_key=learn.PredictionKey.
-            CLASSES),
-    "auc"
+            CLASSES)
     }
 
     validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(
@@ -161,7 +169,7 @@ def main(unused_argv):
 
     myclassifier = learn.Estimator(
         model_fn=cnn_model_fn,
-        model_dir="/tmp/new",
+        model_dir="/tmp/newish",
         config=learn.RunConfig(save_checkpoints_secs=5))
 
     myclassifier.fit(
