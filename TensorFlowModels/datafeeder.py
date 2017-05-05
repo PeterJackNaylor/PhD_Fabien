@@ -23,9 +23,9 @@ batch_size = 2
 MEAN = np.array([104.00699, 116.66877, 122.67892])
 
 
-dg = DataGen('/home/pnaylor/Documents/Data/ToAnnotate', crop = 4, 
+dg = DataGen('/share/data40T_v2/Peter/Data/ToAnnotate', crop = 4, 
              size=(width, height), transforms=transform_list)
-dg_test = DataGen('/home/pnaylor/Documents/Data/ToAnnotate', split="test",
+dg_test = DataGen('/share/data40T_v2/Peter/Data/ToAnnotate', split="test",
                   crop = 4, size=(width, height), transforms=transform_list_test)
 
 def data_iterator():
@@ -147,17 +147,21 @@ def main(unused_argv):
             metric_fn=tf.contrib.metrics.streaming_recall,
             prediction_key=learn.PredictionKey.
             CLASSES),
-    "auc"
+    "auc":
+        learn.MetricSpec(
+            metric_fn=tf.contrib.metrics.streaming_auc,
+            prediction_key=learn.PredictionKey.
+            CLASSES)
     }
 
     validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(
         input_fn=data_iterator_test().next,
-        every_n_steps=100,
+        every_n_steps=500,
         eval_steps=dg_test.length,
         metrics=validation_metrics,
-        early_stopping_metric='loss',
+        early_stopping_metric='auc',
         early_stopping_metric_minimize=True,
-        early_stopping_rounds=500)
+        early_stopping_rounds=1000)
 
     myclassifier = learn.Estimator(
         model_fn=cnn_model_fn,
@@ -176,7 +180,7 @@ def main(unused_argv):
     }
 
     eval_results = myclassifier.evaluate(
-        input_fn = data_iterator_test().next, steps=100,  metrics=validation_metrics)
+        input_fn = data_iterator_test().next, steps=dg_test.length,  metrics=validation_metrics)
     print(eval_results) 
 
 import matplotlib.pylab as plt
