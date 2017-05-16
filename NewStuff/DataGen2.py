@@ -10,6 +10,7 @@ import nibabel as ni
 from Deprocessing.Morphology import generate_wsl
 from UsefulFunctions.RandomUtils import CheckExistants, CheckFile
 from UsefulFunctions.ImageTransf import Identity, Flip, flip_horizontal, flip_vertical
+import UsefulFunctions.ImageTransf as Transf
 from UsefulFunctions.WeightMaps import ComputeWeightMap
 import itertools
 from skimage import measure
@@ -461,6 +462,35 @@ def CheckNumberForUnet(n):
                     ans = True
 
     return ans
+
+
+def ListTransform():
+    transform_list = [Transf.Identity(),
+                      Transf.Flip(0),
+                      Transf.Flip(1)]
+    for rot in np.arange(1, 360, 4):
+        transform_list.append(Transf.Rotation(rot, enlarge=True))
+
+    for sig in [1, 2, 3, 4]:
+        transform_list.append(Transf.OutOfFocus(sig))
+
+    for i in range(50):
+        transform_list.append(Transf.ElasticDeformation(1.2, 24. / 512, 0.07))
+
+    perturbations = [ i / 100. for i in range(60, 140, 5)]
+    small_perturbation = [ i / 100. for i in range(80, 120, 5)]
+    for k_h in perturbations:
+        for k_e in perturbations:
+            transform_list.append(Transf.HE_Perturbation((k_h,0), (k_e,0), (1, 0)))
+    for k_b in perturbations:
+        for k_s in small_perturbation:
+            transform_list.append(Transf.HSV_Perturbation((1,0), (k_s,0), (k_b, 0))) 
+
+    transform_list_test = [Transf.Identity()]
+
+    return transform_list, transform_list_test
+
+
 
 if __name__ == "__main__":
 

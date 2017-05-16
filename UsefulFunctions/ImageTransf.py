@@ -197,7 +197,7 @@ class Translation(Transf):
                 res += (self.OutputType(cv2.warpAffine(image,
                                                        M, (cols, rows)), flags=flags), )
             n_img += 1
-            return res
+        return res
 
 
 class Rotation(Transf):
@@ -260,7 +260,6 @@ class Flip(Transf):
                 sub_res = flip_horizontal(img)
             else:
                 sub_res = flip_vertical(img)
-
             res += (self.OutputType(sub_res),)
         return res
 
