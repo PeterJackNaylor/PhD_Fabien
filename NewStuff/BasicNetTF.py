@@ -88,7 +88,3 @@ def CropAndMerge(Input1, Input2, Size1, Size2, Channels, Name):
         crop = tf.slice(Input1, [0, diff, diff, 0], [-1, Size2, Size2, Channels])
         concat = tf.concat([Input2, crop], axis=3)
         return concat
-
-
-
-tf.summary.scalar('cross_entropy', xent)

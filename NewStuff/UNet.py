@@ -29,7 +29,7 @@ DG_TEST  = DataGen(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH),
                    transforms=transform_list_test, UNet=True)
 
 
-def FeedDict(Train, DGTrain=DG_TRAIN, DGTest=DG_TEST, 
+def FeedDict(Train, Inputs, Labels, DGTrain=DG_TRAIN, DGTest=DG_TEST, 
               BatchSize=BATCH_SIZE, Width=WIDTH, Height=HEIGHT,
               Mean=MEAN, Dim=3):
     """Make a TensorFlow feed_dict: maps data onto Tensor placeholders."""
@@ -53,13 +53,13 @@ def FeedDict(Train, DGTrain=DG_TRAIN, DGTest=DG_TEST,
             ImagesBatch[i], LabelsBatch[i] = DGTest[key]   
             ImagesBatch[i] -= Mean
 
-    return {x: ImagesBatch, y_: LabelsBatch}
+    return {Inputs: ImagesBatch, Labels: LabelsBatch}
 
 
 
 def Training(LearningRate, ImageSizeIn, ImageSizeOut):
 
-    Logits, Labels = UNetModel(ImageSizeIn, ImageSizeOut)
+    Logits, Inputs, Labels = UNetModel(ImageSizeIn, ImageSizeOut)
     Predicted = tf.argmax(input=Logits, axis=3)
     Labels = tf.to_int64(Labels)
 
@@ -122,7 +122,7 @@ def Training(LearningRate, ImageSizeIn, ImageSizeOut):
 
     tf.summary.scalar('Learning rate', LearningRate)
 
-    return loss, optimizer, accuracy, F1, recall, precision
+    return loss, optimizer, accuracy, F1, recall, precision, Inputs, Labels
 
 
 def UNetModel(ImageSizeIn, ImageSizeOut):
@@ -185,7 +185,7 @@ def UNetModel(ImageSizeIn, ImageSizeOut):
 
     logits = PTF.ConvLayerWithoutRelu(Out1_4, 64, 2, 1, "BeforeLoss", padding)
 
-    return logits, Label
+    return logits, Input, Label
 
 
 with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
@@ -200,14 +200,14 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
     writer.add_graph(sess.graph)
 
 
-    loss, optimizer, accuracy, F1, recall, precision = Training(LEARNING_RATE, WIDTH + 184, WIDTH)
+    loss, optimizer, accuracy, F1, recall, precision, Inputs, Labels = Training(LEARNING_RATE, WIDTH + 184, WIDTH)
 
 
     for i in range(N_ITER_MAX):
         if i % N_RECORD == 0:
-            s, acc = sess.run([merged_summary, accuracy], feed_dict=FeedDict(False))
+            s, acc = sess.run([merged_summary, accuracy], feed_dict=FeedDict(False, Inputs, Labels))
             test_writer.add_summary(s, i)
             print('Accuracy at step %s: %s' % (i, acc))
         else:
-            s, _ = sess.run([merged_summary, optimizer], feed_dict=FeedDict(True))
+            s, _ = sess.run([merged_summary, loss], feed_dict=FeedDict(True, Inputs, Labels))
             train_writer.add_summary(s, i)
