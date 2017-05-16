@@ -1,14 +1,7 @@
 import tensorflow as tf
-
+import numpy as np
 
 XAVIER = tf.contrib.layers.xavier_initializer_conv2d()
-
-
-
-IMAGE_SIZE_IN =
-IMAGE_SIZE_OUT = 
-NUM_LABEL =  
-DIM = 
 CONSTANT_INIT = 0.1
 
 def InputLayer(ImageSizeIn, ImageSizeOut, Dim, NumLabel, Weight=False, Summary = True):
@@ -40,12 +33,12 @@ def ConvLayer(Input, ChannelsIn, ChannelsOut, ks, Name, padding, Summary = True)
         b_ = tf.get_variable("B", [ChannelsOut],
                     initializer=tf.constant_initializer(CONSTANT_INIT))
 
-        conv = tf.nn.conv2d(Input, w, strides=[1,1,1,1], padding=padding)
-        act = tf.nn.relu(conv + b)
+        conv = tf.nn.conv2d(Input, w_, strides=[1,1,1,1], padding=padding)
+        act = tf.nn.relu(conv + b_)
 
         if Summary:
-            tf.summary.histogram("weights", w)
-            tf.summary.histogram("biases", b)
+            tf.summary.histogram("weights", w_)
+            tf.summary.histogram("biases", b_)
             tf.summary.histogram("activations", act)
 
         return act
@@ -57,9 +50,9 @@ def ConvLayerWithoutRelu(Input, ChannelsIn, ChannelsOut, ks, Name, padding, Summ
         w_ = tf.get_variable("W", kernel_shape, 
                     initializer=XAVIER)
         if Summary:
-            tf.summary.histogram("weights", w)
+            tf.summary.histogram("weights", w_)
 
-        return tf.nn.conv2d(Input, w, strides=[1,1,1,1], padding=padding)
+        return tf.nn.conv2d(Input, w_, strides=[1,1,1,1], padding=padding)
 
 
 
@@ -74,13 +67,13 @@ def TransposeConvLayer(Input, ChannelsIn, ChannelsOut, Outsize, ks, Name, paddin
                     initializer=tf.constant_initializer(CONSTANT_INIT))
 
         OutputShape = np.array([None, Outsize, Outsize, ChannelsOut])
-        trans_conv = tf.nn.conv2d_transpose(Input, w, output_shape=OutputShape,
+        trans_conv = tf.nn.conv2d_transpose(Input, w_, output_shape=OutputShape,
                                             strides=[1,1,1,1], padding=padding)
-        act = tf.nn.relu(trans_conv + b)
+        act = tf.nn.relu(trans_conv + b_)
 
         if Summary:
-            tf.summary.histogram("weights", w)
-            tf.summary.histogram("biases", b)
+            tf.summary.histogram("weights", w_)
+            tf.summary.histogram("biases", b_)
             tf.summary.histogram("activations", act)
 
         return act

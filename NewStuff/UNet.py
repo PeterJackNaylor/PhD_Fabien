@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import BasicNetTF as PTF
 import tensorflow as tf
+import BasicNetTF as PTF
 import numpy as np
 from DataGen2 import DataGen, ListTransform
 
@@ -24,9 +24,9 @@ BATCH_SIZE = 4
 
 transform_list, transform_list_test = ListTransform()
 DG_TRAIN = DataGen(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
-                   transforms=transform_list, Unet=True)
+                   transforms=transform_list, UNet=True)
 DG_TEST  = DataGen(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
-                   transforms=transform_list_test, Unet=True)
+                   transforms=transform_list_test, UNet=True)
 
 
 def FeedDict(Train, DGTrain=DG_TRAIN, DGTest=DG_TEST, 
@@ -196,7 +196,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
 
 
     merged_summary = tf.summary.merge_all()
-    writer = tf.summary.FileWrite(SAVE_DIR)
+    writer = tf.summary.FileWriter(SAVE_DIR)
     writer.add_graph(sess.graph)
 
 
@@ -209,5 +209,5 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
             test_writer.add_summary(s, i)
             print('Accuracy at step %s: %s' % (i, acc))
         else:
-            s, _ = sess.run([merged_summary, train_step], feed_dict=FeedDict(True))
+            s, _ = sess.run([merged_summary, optimizer], feed_dict=FeedDict(True))
             train_writer.add_summary(s, i)
