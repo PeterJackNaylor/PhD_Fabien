@@ -81,7 +81,6 @@ class DataGen(object):
         if key[3] > self.crop - 1:
             raise Exception("Value exceed number of crops")
 
-
         img_path = self.patient_img[numero][key[1]]
         lbl_path = img_path.replace("Slide", "GT").replace(".png", ".nii.gz")
         
@@ -159,7 +158,6 @@ class DataGen(object):
         if len(img.shape) == 3:
             img = img[:, :, 0].transpose()
         else:
-
             img = img.transpose()
         return img
 
@@ -496,8 +494,7 @@ if __name__ == "__main__":
 
     path = "/home/pnaylor/Documents/Data/ToAnnotate"
 
-    transf = [Identity(), Flip(1), Flip(0)]
-    transf_test = [Identity()]
+    transf, transf_test = ListTransform()
 
     size = (256, 256)
     crop = 4
@@ -507,9 +504,9 @@ if __name__ == "__main__":
                  split="train", leave_out=1, UNet=UNet)
     DG_test = DataGen(path, crop=crop, size=size, transforms=transf_test,
                  split="test", leave_out=1, UNet=UNet)
-
-    img, lbl = DG[0,0,0,2]
-    img_test, lbl_test = DG[0,0,2,3]
+    print len(transf)
+    img, lbl = DG[0,0,160,2]
+    img_test, lbl_test = DG[0,0,171, 2]
 
     fig, axes = plt.subplots(2,2)
     if UNet:

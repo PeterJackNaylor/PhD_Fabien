@@ -126,15 +126,16 @@ class Transf(object):
             return cv2.INTER_LINEAR
 
     def OutputType(self, image):
-        # pdb.set_trace()
         if image.dtype == "uint8":
             return image
-        elif image.dtype == "uint16":
-            cvuint8 = cv2.convertScaleAbs(image)
-            return cvuint8
         else:
-            image = img_as_ubyte(image)
-            return image
+            return image.astype(np.uint8)
+        # elif image.dtype == "uint16":
+        #     cvuint8 = cv2.convertScaleAbs(image)
+        #     return cvuint8
+        # else:
+        #     image = img_as_ubyte(image)
+        #     return image
 
 
 class Identity(Transf):

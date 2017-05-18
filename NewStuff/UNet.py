@@ -4,7 +4,7 @@ import tensorflow as tf
 import BasicNetTF as PTF
 import numpy as np
 from DataGen2 import DataGen, ListTransform
-
+import pdb
 
 
 
@@ -125,16 +125,22 @@ def Training(LearningRate, ImageSizeIn, ImageSizeOut):
     return loss, optimizer, accuracy, F1, recall, precision, Inputs, Labels
 
 
+def print_dim(text ,tensor):
+    print text, tensor.get_shape()
+    print 
+
 def UNetModel(ImageSizeIn, ImageSizeOut):
 
     ks = 3
     padding = "VALID"
 
     Input, Label = PTF.InputLayer(ImageSizeIn, ImageSizeOut, 3, 1, Weight=False)
-    
+    pdb.set_trace()
     Out1_1 = PTF.ConvLayer(Input, 3, 64, ks, "Conv1_1", padding)
     Out1_2 = PTF.ConvLayer(Out1_1, 64, 64, ks, "Conv1_2", padding)
+    print print_dim("Out1_2", Out1_2)
     ImageSize1_2 = ImageSizeIn - 4
+    print ImageSize1_2
     MaxPool1 = tf.nn.max_pool(Out1_2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="VALID", name="Maxpool1")
 
     Out2_1 = PTF.ConvLayer(MaxPool1, 64, 128, ks, "Conv2_1", padding)
@@ -149,7 +155,9 @@ def UNetModel(ImageSizeIn, ImageSizeOut):
 
     Out4_1 = PTF.ConvLayer(MaxPool3, 256, 512, ks, "Conv4_1", padding)
     Out4_2 = PTF.ConvLayer(Out4_1, 512, 512, ks, "Conv4_2", padding)
+    print_dim("Out4_2", Out4_2)
     ImageSize4_2 = ImageSize3_2 / 2 - 4
+    print ImageSize4_2
     MaxPool4 = tf.nn.max_pool(Out4_2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="VALID", name="Maxpool4")
 
     Out5_1 = PTF.ConvLayer(MaxPool4, 512, 1024, ks, "Conv5_1", padding)
@@ -189,7 +197,7 @@ def UNetModel(ImageSizeIn, ImageSizeOut):
 
 
 with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
-    init = tf.initialize_all_variables()
+    init = tf.global_variables_initializer()
     sess.run(init)
     train_writer = tf.summary.FileWriter(SAVE_DIR + '/train', sess.graph)
     test_writer = tf.summary.FileWriter(SAVE_DIR + '/test')
