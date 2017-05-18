@@ -19,9 +19,9 @@ batch_size = 2
 MEAN = np.array([104.00699, 116.66877, 122.67892])
 
 
-dg = DataGen('/home/pnaylor/Documents/Data/ToAnnotate', crop = 4, 
+dg = DataGen('/data/users/pnaylor/Bureau/ToAnnotate', crop = 4, 
              size=(width, height), transforms=transform_list)
-dg_test = DataGen('/home/pnaylor/Documents/Data/ToAnnotate', split="test",
+dg_test = DataGen('/data/users/pnaylor/Bureau/ToAnnotate', split="test",
                   crop = 4, size=(width, height), transforms=transform_list)
 
 def data_iterator():

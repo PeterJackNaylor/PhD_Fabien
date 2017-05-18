@@ -88,7 +88,7 @@ def crop(image):
 if __name__ == "__main__":
     
     PATH = "/data/users/pnaylor/Documents/Python/Francois/New_images_TMA_ICA/*40x.png"
-    OUT = "/data/users/pnaylor/Documents/Python/Francois/Out"
+    OUT = "/data/users/pnaylor/Documents/Python/Francois/Out_One"
 
 
 
