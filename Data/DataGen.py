@@ -173,7 +173,7 @@ class DataGen(object):
             self.return_path = False
         if self.return_path:
             img_lbl_Mwgt += (img_path,)
-        print "Delivered"
+
         return img_lbl_Mwgt
 
     def Weight_path(self):
