@@ -116,7 +116,7 @@ def crop(image):
 if __name__ == "__main__":
     
     PATH = "/data/users/pnaylor/Documents/Python/Francois/Only_one_images/*40x.png"
-    OUT = "/data/users/pnaylor/Documents/Python/Francois/Out"
+    OUT = "/data/users/pnaylor/Documents/Python/Francois/Out_One"
 
 
 
