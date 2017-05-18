@@ -126,15 +126,16 @@ class Transf(object):
             return cv2.INTER_LINEAR
 
     def OutputType(self, image):
-        # pdb.set_trace()
         if image.dtype == "uint8":
             return image
-        elif image.dtype == "uint16":
-            cvuint8 = cv2.convertScaleAbs(image)
-            return cvuint8
         else:
-            image = img_as_ubyte(image)
-            return image
+            return image.astype(np.uint8)
+        # elif image.dtype == "uint16":
+        #     cvuint8 = cv2.convertScaleAbs(image)
+        #     return cvuint8
+        # else:
+        #     image = img_as_ubyte(image)
+        #     return image
 
 
 class Identity(Transf):
@@ -197,7 +198,7 @@ class Translation(Transf):
                 res += (self.OutputType(cv2.warpAffine(image,
                                                        M, (cols, rows)), flags=flags), )
             n_img += 1
-            return res
+        return res
 
 
 class Rotation(Transf):
@@ -260,7 +261,6 @@ class Flip(Transf):
                 sub_res = flip_horizontal(img)
             else:
                 sub_res = flip_vertical(img)
-
             res += (self.OutputType(sub_res),)
         return res
 
