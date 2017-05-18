@@ -7,14 +7,21 @@ import caffe
 import pdb
 from Deprocessing.Transfer import ChangeEnv
 import progressbar
+from scipy.ndimage.morphology import morphological_gradient
 
 
 
 
 
-stepSize = 120
+stepSize = 80
 windowSize = (224 , 224)
 param = 7
+
+def Contours(bin_image, contour_size=3):
+    # Computes the contours
+    grad = morphological_gradient(bin_image, size=(contour_size, contour_size))
+    return grad
+
 
 def sliding_window(image, stepSize, windowSize):
     # slide a window across the imag
@@ -68,12 +75,13 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
             y_e -= val
             x_b += val
             x_e -= val
+	    # pdb.set_trace()
             if val != 0:
                 result[y_b:y_e, x_b:x_e, 1] = prob_image1[val:-val, val:-val]
                 #imsave("Slide/{}_{}_{}_{}.png".format(y_b,y_e,x_b,x_e), prob_image1)
             else:
                 result[y_b:y_e, x_b:x_e, 1] = prob_image1
-            result[y_b:y_e, x_b:x_e, 0] = np.argmax(result[y_b:y_e, x_b:x_e,:], axis=2)
+            result[y_b:y_e, x_b:x_e, 0] = np.max(result[y_b:y_e, x_b:x_e,:], axis=2)
 
         prob_map = result[:, :, 0].copy()
         bin_map = prob_map > 0.5 + 0.0
@@ -97,14 +105,18 @@ def PostProcess(prob_image, param=param):
 def PredOneImage(path, outfile, c, f, net1, net2):
     # pdb.set_trace()
     if not os.path.isfile(outfile):
-        #pdb.set_trace()
         image = imread(path)[:,:,0:3]
         image = c(image)
-        prob = f(image, net1, net2, method="max")
-        imsave(outfile.replace('wsl_{}.png', '_prob.png'), prob)
-        for param in range(4,25):
-            image_seg = PostProcess(prob)
-            imsave(outfile.format(param), image_seg)
+        prob = f(image, net1, net2, method="avg")
+	imsave(outfile.replace('.png','_raw.png'), image)
+        imsave(outfile.replace('.png', '_prob.png'), prob)
+        for param in range(6,35,2):
+            image_seg = PostProcess(prob,param)
+	    ContourSegmentation = Contours(image_seg)
+    	    x_, y_ = np.where(ContourSegmentation > 0)
+	    image_segmented = image.copy()
+	    image_segmented[x_,y_,:] = np.array([0,0,0])
+	    imsave(outfile.replace('.png', '_wsl_{}.png').format(param), image_segmented)
     else:
         #print "Files exists"
         pass
@@ -116,7 +128,7 @@ def crop(image):
 if __name__ == "__main__":
     
     PATH = "/data/users/pnaylor/Documents/Python/Francois/Only_one_images/*40x.png"
-    OUT = "/data/users/pnaylor/Documents/Python/Francois/Out_One"
+    OUT = "/data/users/pnaylor/Documents/Python/Francois/AVG"
 
 
 
@@ -136,7 +148,6 @@ if __name__ == "__main__":
     for path in progress(ImagesToProcess):
         outfile = os.path.basename(path)
         outfile = os.path.join(OUT, outfile)
-        #pdb.set_trace()
         PredOneImage(path, outfile, crop,  pred_f, net_1, net_2)
 
 
