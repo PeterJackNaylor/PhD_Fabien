@@ -254,12 +254,11 @@ if __name__ == "__main__":
 
 def Training(LearningRate, ImageSizeIn, ImageSizeOut, BatchSize=BATCH_SIZE):
 
-
     
-
     with tf.name_scope('Metrics'):
 
         with tf.name_scope('CorrectPrediction'):
+
 
             correct_prediction = tf.equal(Predicted, LabelsInt)
 

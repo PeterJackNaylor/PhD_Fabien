@@ -34,18 +34,33 @@ for k_b in perturbations:
     for k_s in small_perturbation:
         transform_list.append(Transf.HSV_Perturbation((1,0), (k_s,0), (k_b, 0))) 
 
+<<<<<<< HEAD
+width = 508
+height = 508
+dim = 3 
+BATCH_SIZE = 2
+MEAN = np.array([104.00699, 116.66877, 122.67892])
+=======
 transform_list_test = [Transf.Identity()]
 
 width = 508
 height = 508
 dim = 3 
+>>>>>>> 2ef035bb0ae4e308c2ce5cad9bd66cc334ea92fb
 
 MEAN = np.array([104.00699, 116.66877, 122.67892])
 
+<<<<<<< HEAD
+dg = DataGen('/data/users/pnaylor/Bureau/ToAnnotate', crop = 1, 
+             size=(324, 324), transforms=transform_list, Unet=True)
+dg_test = DataGen('/data/users/pnaylor/Bureau/ToAnnotate', split="test",
+                  crop = 1, size=(324, 324), transforms=transform_list
+=======
 dg = DataGen('/share/data40T_v2/Peter/Data/ToAnnotate', crop = 1, 
              size=(324, 324), transforms=transform_list, Unet=True)
 dg_test = DataGen('/share/data40T_v2/Peter/Data/ToAnnotate', split="test",
                   crop = 1, size=(324, 324), transforms=transform_list_test
+>>>>>>> 2ef035bb0ae4e308c2ce5cad9bd66cc334ea92fb
                   , Unet=True)
 epoch = dg.length
 print epoch
@@ -95,12 +110,39 @@ def cnn_model_fn(features, labels, mode):
     input_layer = tf.reshape(features, [-1, width, height, dim])
     tf.summary.image("image" ,input_layer)
     # Convolutional Layer #1
+<<<<<<< HEAD
+    conv1_1, bn1_1, relu1_1 = ConvBnRelu(input_layer, 64, 3, "VALID") # n - 4
+    conv1_2, bn1_2, relu1_2 = ConvBnRelu(relu1_1, 64, 3, "VALID") # n - 8
+=======
     conv1_1, bn1_1, relu1_1 = ConvBnRelu(input_layer, 64, 3, "VALID", "relu1_1") # n - 4
     conv1_2, bn1_2, relu1_2 = ConvBnRelu(relu1_1, 64, 3, "VALID", "relu1_2") # n - 8
+>>>>>>> 2ef035bb0ae4e308c2ce5cad9bd66cc334ea92fb
 
     n1 = width - 4
     pool1 = Maxpool(relu1_2) # (n - 8) /2
 
+<<<<<<< HEAD
+    conv2_1, bn2_1, relu2_1 = ConvBnRelu(pool1, 128, 3, "VALID") # ((n-8)/2) - 4
+    conv2_2, bn2_2, relu2_2 = ConvBnRelu(relu2_1, 128, 3, "VALID") # ((n-8)/2) - 8
+    n2 = n1 / 2 - 4
+    pool2 = Maxpool(relu2_2) # (((n-8)/2) - 8) /2
+
+    conv3_1, bn3_1, relu3_1 = ConvBnRelu(pool2, 256, 3, "VALID") # (((n-8)/2) - 8) /2 - 4
+    conv3_2, bn3_2, relu3_2 = ConvBnRelu(relu3_1, 256, 3, "VALID") # (((n-8)/2) - 8) /2 - 8
+    n3 = n2 / 2 - 4
+    pool3 = Maxpool(relu3_2) # ((((n-8)/2) - 8) /2 - 8 ) / 2
+
+    conv4_1, bn4_1, relu4_1 = ConvBnRelu(pool3, 512, 3, "VALID") # ((((n-8)/2)-8)/2-8)/2 - 4
+    conv4_2, bn4_2, relu4_2 = ConvBnRelu(relu4_1, 512, 3, "VALID") # ((((n-8)/2)-8)/2-8)/2 - 8
+    n4 = n3 / 2 - 4
+    pool4 = Maxpool(relu4_2) #(((((n-8)/2)-8)/2-8)/2 - 8)/2
+
+    conv5_1, bn5_1, relu5_1 = ConvBnRelu(pool4, 1024, 3, "VALID") #(((((n-8)/2)-8)/2-8)/2 - 8)/2 - 4
+    conv5_2, bn5_2, relu5_2 = ConvBnRelu(relu5_1, 1024, 3, "VALID") #(((((n-8)/2)-8)/2-8)/2 - 8)/2 - 8
+    n5 = n4 / 2 - 4
+
+    deconv_To_4, bn_To_4, relu_To_4 = DeconvBnRelu(relu5_2, 512, 2, padding = "VALID")
+=======
     conv2_1, bn2_1, relu2_1 = ConvBnRelu(pool1, 128, 3, "VALID", "relu2_1") # ((n-8)/2) - 4
     conv2_2, bn2_2, relu2_2 = ConvBnRelu(relu2_1, 128, 3, "VALID", "relu2_2") # ((n-8)/2) - 8
     n2 = n1 / 2 - 4
@@ -121,18 +163,28 @@ def cnn_model_fn(features, labels, mode):
     n5 = n4 / 2 - 4
 
     deconv_To_4, bn_To_4, relu_To_4 = DeconvBnRelu(relu5_2, 512, 2, "VALID", "derelu4")
+>>>>>>> 2ef035bb0ae4e308c2ce5cad9bd66cc334ea92fb
                                 ##((((((n-8)/2)-8)/2-8)/2 - 8)/2 - 8) * 2
 
     n4_deconv = n5 * 2 
     diff4 = (n4 - n4_deconv) / 2
     
     crop_relu4_2 = tf.slice(relu4_2, [0, diff4, diff4, 0], [-1, n4_deconv, n4_deconv, 512])
+<<<<<<< HEAD
+
+    concat4 = tf.concat([relu_To_4, crop_relu4_2], axis=3)
+
+    conv4_3, bn4_3, relu4_3 = ConvBnRelu(concat4, 512, 3, "VALID") ##((((((n-8)/2)-8)/2-8)/2 - 8)/2 - 8) * 2 - 4
+    conv4_4, bn4_4, relu4_4 = ConvBnRelu(relu4_3, 512, 3, "VALID") ##((((((n-8)/2)-8)/2-8)/2 - 8)/2 - 8) * 2 - 8
+    deconv_To_3, bn_To_3, relu_To_3 = DeconvBnRelu(relu4_4, 256, 2, padding = "VALID")
+=======
 
     concat4 = tf.concat([relu_To_4, crop_relu4_2], axis=3)
 
     conv4_3, bn4_3, relu4_3 = ConvBnRelu(concat4, 512, 3, "VALID", "relu4_3") ##((((((n-8)/2)-8)/2-8)/2 - 8)/2 - 8) * 2 - 4
     conv4_4, bn4_4, relu4_4 = ConvBnRelu(relu4_3, 512, 3, "VALID", "relu4_4") ##((((((n-8)/2)-8)/2-8)/2 - 8)/2 - 8) * 2 - 8
     deconv_To_3, bn_To_3, relu_To_3 = DeconvBnRelu(relu4_4, 256, 2, "VALID", "derelu3")
+>>>>>>> 2ef035bb0ae4e308c2ce5cad9bd66cc334ea92fb
 
     n3_deconv = (n4_deconv - 4) * 2
     diff3 = (n3 - n3_deconv) / 2
@@ -140,9 +192,15 @@ def cnn_model_fn(features, labels, mode):
     crop_relu3_2 = tf.slice(relu3_2, [0, diff3, diff3, 0], [-1, n3_deconv, n3_deconv, 256])
     concat3 = tf.concat([relu_To_3, crop_relu3_2], axis=3)
 
+<<<<<<< HEAD
+    conv3_3, bn3_3, relu3_3 = ConvBnRelu(concat3, 256, 3, "VALID") ##((((((n-8)/2)-8)/2-8)/2 - 8)/2 - 8) * 2 - 4
+    conv3_4, bn3_4, relu3_4 = ConvBnRelu(relu3_3, 256, 3, "VALID") ##((((((n-8)/2)-8)/2-8)/2 - 8)/2 - 8) * 2 - 8
+    deconv_To_2, bn_To_2, relu_To_2 = DeconvBnRelu(relu3_4, 128, 2, padding = "VALID")
+=======
     conv3_3, bn3_3, relu3_3 = ConvBnRelu(concat3, 256, 3, "VALID", "relu3_3") ##((((((n-8)/2)-8)/2-8)/2 - 8)/2 - 8) * 2 - 4
     conv3_4, bn3_4, relu3_4 = ConvBnRelu(relu3_3, 256, 3, "VALID", "relu3_4") ##((((((n-8)/2)-8)/2-8)/2 - 8)/2 - 8) * 2 - 8
     deconv_To_2, bn_To_2, relu_To_2 = DeconvBnRelu(relu3_4, 128, 2, "VALID", "derelu2")
+>>>>>>> 2ef035bb0ae4e308c2ce5cad9bd66cc334ea92fb
 
     n2_deconv = (n3_deconv - 4) * 2
     diff2 = (n2 - n2_deconv) / 2 
@@ -157,6 +215,13 @@ def cnn_model_fn(features, labels, mode):
 
     n1_deconv = (n2_deconv - 4) * 2
     diff1 = (n1 - n1_deconv) / 2 
+<<<<<<< HEAD
+
+    crop_relu1_2 = tf.slice(relu1_2, [0, diff1, diff1, 0], [BATCH_SIZE, n1_deconv, n1_deconv, 64])
+    concat1 = tf.concat([relu_To_1, crop_relu1_2], axis=3) 
+    print_dim("concat1 :", concat1)
+=======
+>>>>>>> 2ef035bb0ae4e308c2ce5cad9bd66cc334ea92fb
 
     crop_relu1_2 = tf.slice(relu1_2, [0, diff1, diff1, 0], [BATCH_SIZE, n1_deconv, n1_deconv, 64])
     concat1 = tf.concat([relu_To_1, crop_relu1_2], axis=3) 
@@ -249,6 +314,12 @@ def data_iterator_test():
 
 def main(unused_argv):
 
+    model_params = {"learning_rate": LEARNING_RATE}
+
+
+    myclassifier = learn.Estimator(
+        model_fn=cnn_model_fn, model_dir="/tmp/UNet")
+    myclassifier.fit(input_fn = data_iterator().next, steps=20000)
     validation_metrics = {
     "accuracy":
         learn.MetricSpec(
@@ -291,13 +362,6 @@ def main(unused_argv):
         steps=100 * epoch,
         monitors=[validation_monitor]
         )
-    metrics = {
-        "accuracy":
-            learn.MetricSpec(
-                metric_fn=tf.metrics.accuracy, prediction_key="classes"),
-    }
-
-    eval_results = myclassifier.evaluate(
         input_fn = data_iterator_test().next, steps=dg_test.length,  metrics=validation_metrics)
     print(eval_results)
 
@@ -319,6 +383,3 @@ def plot():
 
 if __name__ == "__main__":
     tf.app.run()
-
-
-

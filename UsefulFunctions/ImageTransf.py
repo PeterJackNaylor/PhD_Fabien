@@ -126,7 +126,6 @@ class Transf(object):
             return cv2.INTER_LINEAR
 
     def OutputType(self, image):
-        # pdb.set_trace()
         if image.dtype == "uint8":
             return image
         else:
