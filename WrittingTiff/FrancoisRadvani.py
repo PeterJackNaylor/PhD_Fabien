@@ -9,6 +9,7 @@ from Deprocessing.Transfer import ChangeEnv
 import progressbar
 from scipy.ndimage.morphology import morphological_gradient
 from skimage.segmentation import clear_border
+from skimage.morphology import remove_small_objects
 
 
 
@@ -57,13 +58,17 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
         inter_result = prob_image1[val:-val, val:-val] if val!= 0 else prob_image1
 
         if ClearBorder:
+
             inter_bin = (inter_result > 0.5 + 0.0).astype(np.uint8)
             inter_bin = clear_border(inter_bin)
             inter_result[inter_bin == 0] = 0
 
         if method == 'avg':
+	    inter_mean = np.ones_like(inter_result)
+            inter_result[inter_bin == 0] = 0
+            inter_mean[ inter_bin == 0 ] = 0
             result[y_b:y_e, x_b:x_e, 0] += inter_result
-            result[y_b:y_e, x_b:x_e, 1] += 1.
+            result[y_b:y_e, x_b:x_e, 1] += inter_mean
 
         elif method == "max":
             result[y_b:y_e, x_b:x_e, 1] = inter_result
@@ -95,7 +100,7 @@ def PostProcess(prob_image, param=param):
     return segmentation_mask
 
 
-def PredOneImage(path, outfile, c, f, net1, net2):
+def PredOneImage(path, outfile, c, f, net1, net2, ClearSmallObjects=None):
     # pdb.set_trace()
     if not os.path.isfile(outfile):
         image = imread(path)[:,:,0:3]
@@ -105,6 +110,8 @@ def PredOneImage(path, outfile, c, f, net1, net2):
         imsave(outfile.replace('.png', '_prob.png'), prob)
         for param in range(6,10,2):
             image_seg = PostProcess(prob,param)
+	    if ClearSmallObjects is not None:
+	        image_seg = remove_small_objects(image_seg, ClearSmallObjects)
             ContourSegmentation = Contours(image_seg)
             x_, y_ = np.where(ContourSegmentation > 0)
             image_segmented = image.copy()
@@ -123,12 +130,12 @@ if __name__ == "__main__":
     PATH = "/data/users/pnaylor/Documents/Python/Francois/Only_one_images/*40x.png"
     OUT = "/data/users/pnaylor/Documents/Python/Francois/ClearBorders"
 
-
+    ClearSmallObjects = 150
 
     ImagesToProcess = glob.glob(PATH)
     caffe.set_mode_gpu()
     cn_1 = "FCN_0.01_0.99_0.005"
-    wd_1 = "/data/users/pnaylor/Documents/Python/Francois"#"/share/data40T_v2/Peter/pretrained_models"
+    wd_1 = "/data/users/pnaylor/Documents/Python/Francois" #"/share/data40T_v2/Peter/pretrained_models"
     cn_2 = "DeconvNet_0.01_0.99_0.0005"
     wd_2 = wd_1
     ChangeEnv("/data/users/pnaylor/Bureau/ToAnnotate", os.path.join(wd_1, cn_1))
@@ -141,6 +148,6 @@ if __name__ == "__main__":
     for path in progress(ImagesToProcess):
         outfile = os.path.basename(path)
         outfile = os.path.join(OUT, outfile)
-        PredOneImage(path, outfile, crop,  pred_f, net_1, net_2)
+        PredOneImage(path, outfile, crop,  pred_f, net_1, net_2, ClearSmallObjects)
 
 
