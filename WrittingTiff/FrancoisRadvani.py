@@ -9,7 +9,7 @@ from Deprocessing.Transfer import ChangeEnv
 import progressbar
 from scipy.ndimage.morphology import morphological_gradient
 from skimage.segmentation import clear_border
-
+from skimage.morphology import reconstruction
 
 
 
@@ -40,8 +40,13 @@ def sliding_window(image, stepSize, windowSize):
                 res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
             yield (x, y, x + windowSize[0], y + windowSize[1], res_img)
 
+def RemoveBordersByReconstruction(Img, BorderSize = 10):
+    g = Img.copy()
+    g[BorderSize:-BorderSize, BorderSize:-BorderSize] = 0
+    return Img - reconstruction(g, Img, 'erosions')
 
-def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder = 10, method="avg", ClearBorder = True):
+
+def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder = 10, method="avg", ClearBorder = "RemoveBorderObjects"):
     #pdb.set_trace() 
     x_s, y_s, z_s = image.shape
     result = np.zeros(shape=(x_s, y_s, 2))
@@ -56,10 +61,13 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
 
         inter_result = prob_image1[val:-val, val:-val] if val!= 0 else prob_image1
 
-        if ClearBorder:
+        if ClearBorder == "RemoveBorderObjects":
             inter_bin = (inter_result > 0.5 + 0.0).astype(np.uint8)
             inter_bin = clear_border(inter_bin)
             inter_result[inter_bin == 0] = 0
+        elif ClearBorder == "Reconstruction":
+            inter_result = RemoveBordersByReconstruction(inter_result, removeFromBorder)
+            inter_bin = test
 
         if method == 'avg':
             result[y_b:y_e, x_b:x_e, 0] += inter_result
@@ -82,7 +90,8 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
     return prob_map, bin_map
 
 
-def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize, param=param, border=10, method="avg"):
+def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize,
+           param=param, border=10, method="avg", borderImage = "Reconstruction"):
     prob_image1, bin_image1 = PredLargeImageFromNet(net1, image, stepSize, windowSize, border, method)
     prob_image2, bin_image1 = PredLargeImageFromNet(net1, image, stepSize, windowSize, border, method)
     
@@ -100,7 +109,7 @@ def PredOneImage(path, outfile, c, f, net1, net2):
     if not os.path.isfile(outfile):
         image = imread(path)[:,:,0:3]
         image = c(image)
-        prob = f(image, net1, net2, method="avg")
+        prob = f(image, net1, net2, method="max")
         imsave(outfile.replace('.png','_raw.png'), image)
         imsave(outfile.replace('.png', '_prob.png'), prob)
         for param in range(6,10,2):
