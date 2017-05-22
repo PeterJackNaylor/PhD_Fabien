@@ -57,11 +57,13 @@ def generate_wsl(ws):
     grad = dilation(ws, se) - ero
     grad[ws == 0] = 0
     grad[grad > 0] = 255
-    try:
-        return img_as_ubyte(grad)
-    except:
-        grad = grad.astype(np.uint8)
-        return grad
+    grad[grad > 0] = 255
+    # pdb.set_trace()
+    #try:
+    #    return img_as_ubyte(grad)
+    #except:
+    grad = grad.astype(np.uint8)
+    return grad
 
 def DynamicWatershedAlias(p_img, lamb):
     #pdb.set_trace()
