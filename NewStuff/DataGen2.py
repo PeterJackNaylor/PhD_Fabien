@@ -472,8 +472,8 @@ def ListTransform():
     for sig in [1, 2, 3, 4]:
         transform_list.append(Transf.OutOfFocus(sig))
 
-    for i in range(50):
-        transform_list.append(Transf.ElasticDeformation(1.2, 24. / 512, 0.07))
+#    for i in range(50):
+#        transform_list.append(Transf.ElasticDeformation(1.2, 24. / 512, 0.07))
 
     perturbations = [ i / 100. for i in range(60, 140, 5)]
     small_perturbation = [ i / 100. for i in range(80, 120, 5)]
@@ -496,7 +496,7 @@ if __name__ == "__main__":
 
     transf, transf_test = ListTransform()
 
-    size = (256, 256)
+    size = (212, 212)
     crop = 4
     UNet = False
 
