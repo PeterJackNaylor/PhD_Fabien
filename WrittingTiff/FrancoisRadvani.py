@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import glob
 import os
 from scipy.misc import imread, imsave
@@ -43,7 +45,7 @@ def sliding_window(image, stepSize, windowSize):
 def RemoveBordersByReconstruction(Img, BorderSize = 10):
     g = Img.copy()
     g[BorderSize:-BorderSize, BorderSize:-BorderSize] = 0
-    return Img - reconstruction(g, Img, 'erosions')
+    return Img - reconstruction(g, Img, 'dilation')
 
 
 def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder = 10, method="avg", ClearBorder = "RemoveBorderObjects"):
@@ -65,9 +67,16 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
             inter_bin = (inter_result > 0.5 + 0.0).astype(np.uint8)
             inter_bin = clear_border(inter_bin)
             inter_result[inter_bin == 0] = 0
+	elif ClearBorder == "RemoveBorderWithDWS":
+	    inter_bin = PostProcess(inter_result, param)
+	    pdb.set_trace()
+            inter_bin = clear_border(inter_bin)
+            inter_result[inter_bin == 0] = 0
         elif ClearBorder == "Reconstruction":
             inter_result = RemoveBordersByReconstruction(inter_result, removeFromBorder)
-            # inter_bin = 
+            if method == "avg":
+		print "avg not implemented with Reconstruction for clear border, switched to max"
+		method = "max"
 
         if method == 'avg':
 	    inter_mean = np.ones_like(inter_result)
@@ -94,9 +103,9 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
 
 
 def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize,
-           param=param, border=10, method="avg", borderImage = "Reconstruction"):
-    prob_image1, bin_image1 = PredLargeImageFromNet(net1, image, stepSize, windowSize, border, method)
-    prob_image2, bin_image1 = PredLargeImageFromNet(net1, image, stepSize, windowSize, border, method)
+           param=param, border=10, method="avg", borderImage = "RemoveBorderWithDWS"):
+    prob_image1, bin_image1 = PredLargeImageFromNet(net1, image, stepSize, windowSize, border, method, borderImage)
+    prob_image2, bin_image1 = PredLargeImageFromNet(net1, image, stepSize, windowSize, border, method, borderImage)
     
     #pdb.set_trace()
     prob = ( prob_image1 + prob_image2 ) / 2.
