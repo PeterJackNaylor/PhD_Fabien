@@ -64,9 +64,9 @@ def generate_wsl(ws):
     grad = grad.astype(np.uint8)
     return grad
 
-def DynamicWatershedAlias(p_img, lamb):
+def DynamicWatershedAlias(p_img, lamb, p_thresh = 0.5):
     #pdb.set_trace()
-    b_img = (p_img > 0.5) + 0
+    b_img = (p_img > p_thresh) + 0
     Probs_inv = PrepareProb(p_img)
 
 
