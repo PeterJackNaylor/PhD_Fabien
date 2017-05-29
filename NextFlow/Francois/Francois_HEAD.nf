@@ -6,7 +6,7 @@ wd_datagen = "/share/data40T_v2/Peter/Francois"
 
 PY = file("first.py")
 CHANGEENV = file('ChangeEnv.py')
-params.in = file("/share/data40T_v2/Peter/Francois/New_images_TMA_ICA/*") 
+params.in = file("/share/data40T_v2/Peter/Francois/New_images_TMA_ICA2/*") 
 params.out = file("/share/data40T_v2/Peter/Francois/Out")
 
 
