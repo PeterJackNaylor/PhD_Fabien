@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import time
 import glob
 import os
 from scipy.misc import imread, imsave
@@ -15,9 +16,9 @@ from skimage.morphology import reconstruction, remove_small_objects
 from skimage.morphology import remove_small_objects
 
 
-stepSize = 80
+stepSize = 10
 windowSize = (224 , 224)
-param = 7
+param = 5
 
 def Contours(bin_image, contour_size=3):
     # Computes the contours
@@ -42,16 +43,18 @@ def sliding_window(image, stepSize, windowSize):
                 res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
             yield (x, y, x + windowSize[0], y + windowSize[1], res_img)
 
-def RemoveBordersByReconstruction(Img, BorderSize = 10):
+def RemoveBordersByReconstruction(Img, BorderSize = 1):
     g = Img.copy()
     g[BorderSize:-BorderSize, BorderSize:-BorderSize] = 0
-    return Img - reconstruction(g, Img, 'dilation')
+    ToRemove = reconstruction(g, Img, 'dilation')
+    return Img - ToRemove, np.mean(ToRemove)
 
 
-def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder = 10, method="avg", ClearBorder = "RemoveBorderObjects"):
+def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder = 10, method="avg", ClearBorder = "RemoveBorderObjects", threshold = 0.5):
     #pdb.set_trace() 
     x_s, y_s, z_s = image.shape
     result = np.zeros(shape=(x_s, y_s, 2))
+    thresh_list = []
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
         prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
         val = removeFromBorder
@@ -68,12 +71,17 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
             inter_bin = clear_border(inter_bin)
             inter_result[inter_bin == 0] = 0
 	elif ClearBorder == "RemoveBorderWithDWS":
+	    # pdb.set_trace()
 	    inter_bin = PostProcess(inter_result, param)
-	    pdb.set_trace()
-            inter_bin = clear_border(inter_bin)
-            inter_result[inter_bin == 0] = 0
+            inter_bin_without = clear_border(inter_bin, bgval = 0)
+	    inter_bin_without = inter_bin - inter_bin_without
+	    inter_bin_without[inter_bin_without > 0] = 1  
+            inter_result[inter_bin_without == 1] = 0
+	    inter_bin = 1 - inter_bin_without.copy()
         elif ClearBorder == "Reconstruction":
-            inter_result = RemoveBordersByReconstruction(inter_result, removeFromBorder)
+            
+	    inter_result, thresh = RemoveBordersByReconstruction(inter_result, removeFromBorder)
+	    thresh_list += [thresh]
             if method == "avg":
 		print "avg not implemented with Reconstruction for clear border, switched to max"
 		method = "max"
@@ -97,22 +105,27 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
     elif method == "max":
         prob_map = result[:, :, 0].copy()
 
-    bin_map = prob_map > 0.5 + 0.0
+    if ClearBorder == "Reconstruction":
+
+	threshold = threshold - np.mean(thresh_list)
+
+    bin_map = prob_map > threshold + 0.0
     bin_map = bin_map.astype(np.uint8)
-    return prob_map, bin_map
+    return prob_map, bin_map, threshold
 
 
 def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize,
-           param=param, border=10, method="avg", borderImage = "RemoveBorderWithDWS"):
-    prob_image1, bin_image1 = PredLargeImageFromNet(net1, image, stepSize, windowSize, border, method, borderImage)
-    prob_image2, bin_image1 = PredLargeImageFromNet(net1, image, stepSize, windowSize, border, method, borderImage)
+           param=param, border=1, method="avg", borderImage = "Reconstruction"):
+    prob_image1, bin_image1 , threshold1 = PredLargeImageFromNet(net1, image, stepSize, windowSize, border, method, borderImage)
+    prob_image2, bin_image1 , threshold2 = PredLargeImageFromNet(net1, image, stepSize, windowSize, border, method, borderImage)
     
-    #pdb.set_trace()
-    prob = ( prob_image1 + prob_image2 ) / 2.
-    return prob
 
-def PostProcess(prob_image, param=param):
-    segmentation_mask = DynamicWatershedAlias(prob_image, param)
+    thresh = ( threshold1 + threshold2 ) / 2.
+    prob = ( prob_image1 + prob_image2 ) / 2.
+    return prob, thresh
+
+def PostProcess(prob_image, param=param, thresh = 0.5):
+    segmentation_mask = DynamicWatershedAlias(prob_image, param, thresh)
     return segmentation_mask
 
 
@@ -121,11 +134,11 @@ def PredOneImage(path, outfile, c, f, net1, net2, ClearSmallObjects=None):
     if not os.path.isfile(outfile):
         image = imread(path)[:,:,0:3]
         image = c(image)
-        prob = f(image, net1, net2, method="max")
+        prob, thresh = f(image, net1, net2, method="max")
         imsave(outfile.replace('.png','_raw.png'), image)
         imsave(outfile.replace('.png', '_prob.png'), prob)
-        for param in range(6,10,2):
-            image_seg = PostProcess(prob,param)
+        for param in range(6,30,2):
+            image_seg = PostProcess(prob, param, thresh)
 	    if ClearSmallObjects is not None:
 	        image_seg = remove_small_objects(image_seg, ClearSmallObjects)
             ContourSegmentation = Contours(image_seg)
@@ -146,7 +159,7 @@ if __name__ == "__main__":
     PATH = "/data/users/pnaylor/Documents/Python/Francois/Only_one_images/*40x.png"
     OUT = "/data/users/pnaylor/Documents/Python/Francois/ClearBorders"
 
-    ClearSmallObjects = 150
+    ClearSmallObjects = 50
 
     ImagesToProcess = glob.glob(PATH)
     caffe.set_mode_gpu()
@@ -160,10 +173,13 @@ if __name__ == "__main__":
     net_2 = GetNet(cn_2, wd_1)
     #net_2 = None
     progress = progressbar.ProgressBar()
-
+    TIME = time.time()
     for path in progress(ImagesToProcess):
         outfile = os.path.basename(path)
         outfile = os.path.join(OUT, outfile)
         PredOneImage(path, outfile, crop,  pred_f, net_1, net_2, ClearSmallObjects)
+    diff_time = time.time() - TIME
+    print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600) / 60, diff_time % 60)
+
 
 
