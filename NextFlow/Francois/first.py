@@ -1,10 +1,13 @@
 from optparse import OptionParser
 import caffe
-from WrittingTiff.FrancoisRadvani import pred_f, crop
+from WrittingTiff.FrancoisRadvani import pred_f, crop, PostProcess, Contours
 from Deprocessing.Transfer import ChangeEnv
 import os
 from WrittingTiff.createfold import GetNet
 from scipy.misc import imread, imsave
+import numpy as np
+from skimage.morphology import remove_small_objects
+from UsefulFunctions.RandomUtils import CheckOrCreate
 import pdb
 if __name__ == "__main__":
     
@@ -32,16 +35,33 @@ if __name__ == "__main__":
     net_1 = GetNet(cn_1, wd_1)
     net_2 = GetNet(cn_2, wd_1)
 
+    param_ws = 10
+    ClearSmallObjects = 50
+
     base = os.path.basename(options.file_name).replace(".png", "")
+    base = base + "/" + base
 
+    base_img = os.path.join(options.output, base + "_RAW.png")
     base_seg = os.path.join(options.output, base + "_seg.png")
-    base_prob= os.path.join(options.output, base + "_prob.png")
-
+    base_prob = os.path.join(options.output, base + "_prob.png")
+    base_bin = os.path.join(options.output, base + "_bin.png")
 
     image = imread(options.file_name)[:,:,0:3]
     image = crop(image)
-    image, prob = pred_f(image, net_1, net_2, stepSize=204, windowSize=(224, 224), param=7, border = 10)
-    imsave(base_seg, image)
+    prob = pred_f(image, net_1, net_2, stepSize=204, windowSize=(224, 224), param=7, border = 1,
+                  borderImage = "Reconstruction", method = "avg")
+    bin_image = PostProcess(prob, param_ws)
+    if ClearSmallObjects:
+        bin_image = remove_small_objects(bin_image, ClearSmallObjects)
+
+    ContourSegmentation = Contours(bin_image)
+    x_, y_ = np.where(ContourSegmentation > 0)
+    seg_image = bin_image.copy()
+    seg_image[x_,y_,:] = np.array([0,0,0])
+
+    imsave(base_img, image)
+    imsave(base_bin, bin_image)
+    imsave(base_seg, seg_image)
     imsave(base_prob, prob)
 
 
