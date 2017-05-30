@@ -119,8 +119,8 @@ def PredOneImage(path, outfile, c, f, net1, net2, ClearSmallObjects=None):
         imsave(outfile.replace('.png', '_prob.png'), prob)
         for param in range(6,10,2):
             image_seg = PostProcess(prob,param)
-	    if ClearSmallObjects is not None:
-	        image_seg = remove_small_objects(image_seg, ClearSmallObjects)
+            if ClearSmallObjects is not None:
+	           image_seg = remove_small_objects(image_seg, ClearSmallObjects)
             ContourSegmentation = Contours(image_seg)
             x_, y_ = np.where(ContourSegmentation > 0)
             image_segmented = image.copy()

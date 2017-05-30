@@ -52,11 +52,11 @@ def BatchNorm(Input, n_out, phase_train, scope='bn', decay=0.9, eps=1e-5):
     """
     Code taken from http://stackoverflow.com/a/34634291/2267819
     """
-    with tf.variable_scope(scope):
-        beta = tf.get_variable(name='beta', shape=[n_out], initializer=tf.constant_initializer(0.0)
-                               , trainable=True)
-        gamma = tf.get_variable(name='gamma', shape=[n_out], initializer=tf.random_normal_initializer(1.0, 0.02),
-                                trainable=True)
+    with tf.name_scope(scope):
+        init_beta = tf.constant(0.0, shape=[n_out])
+        beta = tf.Variable(init_beta, name="beta")
+        init_gamma = tf.random_normal([n_out], 1.0, 0.02)
+        gamma = tf.Variable(init_gamma)
         batch_mean, batch_var = tf.nn.moments(Input, [0, 1, 2], name='moments')
         ema = tf.train.ExponentialMovingAverage(decay=decay)
 

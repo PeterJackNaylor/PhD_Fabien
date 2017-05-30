@@ -11,19 +11,19 @@ import time
 
 
 
-CUDA_NODE = 0 
-SAVE_DIR = "/share/data40T_v2/Peter/tmp/UNet/DecayLR8"
-N_ITER_MAX = 1000
+CUDA_NODE = 1 
+SAVE_DIR = "/share/data40T_v2/Peter/tmp/UNet/LONG_With_1"
+N_ITER_MAX = 200000
 N_TRAIN_SAVE = 100
 N_TEST_SAVE = 200
-LEARNING_RATE = 0.01
+LEARNING_RATE = 1.
 MEAN = np.array([104.00699, 116.66877, 122.67892])
 HEIGHT = 212 
 WIDTH = 212
 CROP = 4
 PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
 BATCH_SIZE = 6
-LRSTEP = 200
+LRSTEP = 20000
 SUMMARY = True
 S = SUMMARY
 

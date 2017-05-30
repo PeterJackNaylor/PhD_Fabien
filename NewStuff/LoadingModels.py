@@ -9,7 +9,7 @@ import numpy as np
 import pdb
 
 CUDA_NODE = 0
-LOAD_DIR = "/share/data40T_v2/Peter/tmp/UNet/4/test/model.ckpt-10000.meta"
+LOAD_DIR = "/share/data40T_v2/Peter/tmp/UNet/DecayLR10/test/model.ckpt-1000.meta"
 HEIGHT = 212 
 WIDTH = 212
 CROP = 4
@@ -45,9 +45,11 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     print("Model restored.")
     for i in range(DG_TEST.length):
-        predic, logits = sess.run([Predicted, Logits], feed_dict=FeedDict(True, Input, Label, PhaseTrain, DGTrain=DG_TRAIN, DGTest=DG_TEST, 
+        predic, logits, input_out = sess.run([Predicted, Logits, Input], feed_dict=FeedDict(False, Input, Label, PhaseTrain, DGTrain=DG_TRAIN, DGTest=DG_TEST, 
                                                           BatchSize=BATCH_SIZE, Width=WIDTH, Height=HEIGHT,
                                                           Mean=MEAN, Dim=3))   
-        pdb.set_trace()
-        imsave('/share/data40T_v2/Peter/tmp/Pics/pred_{}.png'.format(i), predic)
+        #pdb.set_trace()
+        imsave('/share/data40T_v2/Peter/tmp/Pics/pred_{}.png'.format(i), predic[0,:,:,0])
+       # pdb.set_trace()
+        imsave('/share/data40T_v2/Peter/tmp/Pics/pred_{}_true.png'.format(i), input_out[0,92:-92,92:-92,:] + MEAN)
 
