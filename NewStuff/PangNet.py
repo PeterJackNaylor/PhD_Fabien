@@ -10,22 +10,24 @@ import time
 
 
 
-
-CUDA_NODE = 1 
-SAVE_DIR = "/share/data40T_v2/Peter/tmp/UNet/LONG_With_1"
-N_ITER_MAX = 200000
-N_TRAIN_SAVE = 100
-N_TEST_SAVE = 200
-LEARNING_RATE = 1.
+CUDA_NODE = 0
+SAVE_DIR = "/tmp/Pang/4"
+N_ITER_MAX = 2000
+N_TRAIN_SAVE = 4
+N_TEST_SAVE = 8
+LEARNING_RATE = 0.01
+MOMENTUM = 0.99
 MEAN = np.array([122.67892, 116.66877 ,104.00699])
-HEIGHT = 212 
-WIDTH = 212
+HEIGHT = 224 
+WIDTH = 224
 CROP = 4
 PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
-BATCH_SIZE = 6
-LRSTEP = 20000
+PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
+BATCH_SIZE = 8
+LRSTEP = 200
 SUMMARY = True
 S = SUMMARY
+WEIGHT_FILE = "/home/pnaylor/Downloads/vgg16_weights.npz"
 
 
 
@@ -35,9 +37,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(CUDA_NODE)
 
 transform_list, transform_list_test = ListTransform()
 DG_TRAIN = DataGen(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
-                   transforms=transform_list, UNet=True)
+                   transforms=transform_list)
 DG_TEST  = DataGen(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
-                   transforms=transform_list_test, UNet=True)
+                   transforms=transform_list_test)
 
 
 def FeedDict(Train, Inputs, Labels, PhaseTrain, DGTrain=DG_TRAIN, DGTest=DG_TEST, 
@@ -45,7 +47,7 @@ def FeedDict(Train, Inputs, Labels, PhaseTrain, DGTrain=DG_TRAIN, DGTest=DG_TEST
               Mean=MEAN, Dim=3):
     """Make a TensorFlow feed_dict: maps data onto Tensor placeholders."""
 
-    ImagesBatch = np.zeros(shape=(BatchSize, Width + 184, Height + 184, Dim), dtype='float')
+    ImagesBatch = np.zeros(shape=(BatchSize, Width, Height, Dim), dtype='float')
     LabelsBatch = np.zeros(shape=(BatchSize, Width, Height, 1), dtype='float')   
 
     if Train:
@@ -61,75 +63,26 @@ def FeedDict(Train, Inputs, Labels, PhaseTrain, DGTrain=DG_TRAIN, DGTest=DG_TEST
         for i in range(BatchSize):
 
             key = DGTest.NextKeyRandList(0)
+            key = [0,0,0,0]
             ImagesBatch[i], LabelsBatch[i,:,:,0] = DGTest[key]   
             ImagesBatch[i] -= Mean
 
     return {Inputs: ImagesBatch, Labels: LabelsBatch, PhaseTrain: Train}
 
+def PangModel(Input, PhaseTrain, ImageSizeIn, ImageSizeOut, KeepProbability):
+
+    ks = 5
+    padding = "SAME"
+
+    Out1_1 = PTF.ConvBatchLayer(Input, 3, 8, ks, "conv1_1", padding, PhaseTrain, S)
+    Out1_2 = PTF.ConvBatchLayer(Out1_1, 8, 8, ks, "conv1_2", padding, PhaseTrain, S)
+    Out1_3 = PTF.ConvBatchLayer(Out1_2, 8, 8, ks, "conv1_3", padding, PhaseTrain, S)
 
 
-
-def UNetModel(Input, PhaseTrain, ImageSizeIn, ImageSizeOut, KeepProbability):
-
-    ks = 3
-    padding = "VALID"
-
-    Out1_1 = PTF.ConvBatchLayer(Input, 3, 64, ks, "Conv1_1", padding, PhaseTrain, S)
-    Out1_2 = PTF.ConvBatchLayer(Out1_1, 64, 64, ks, "Conv1_2", padding, PhaseTrain, S)
-    ImageSize1_2 = ImageSizeIn - 4
-    MaxPool1 = tf.nn.max_pool(Out1_2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="VALID", name="Maxpool1")
-
-    Out2_1 = PTF.ConvBatchLayer(MaxPool1, 64, 128, ks, "Conv2_1", padding, PhaseTrain, S)
-    Out2_2 = PTF.ConvBatchLayer(Out2_1, 128, 128, ks, "Conv2_2", padding, PhaseTrain, S)
-    ImageSize2_2 = ImageSize1_2 / 2 - 4
-    MaxPool2 = tf.nn.max_pool(Out2_2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="VALID", name="Maxpool2")
-
-    Out3_1 = PTF.ConvBatchLayer(MaxPool2, 128, 256, ks, "Conv3_1", padding, PhaseTrain, S)
-    Out3_2 = PTF.ConvBatchLayer(Out3_1, 256, 256, ks, "Conv3_2", padding, PhaseTrain, S)
-    ImageSize3_2 = ImageSize2_2 / 2 - 4
-    MaxPool3 = tf.nn.max_pool(Out3_2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="VALID", name="Maxpool3")
-
-    Out4_1 = PTF.ConvBatchLayer(MaxPool3, 256, 512, ks, "Conv4_1", padding, PhaseTrain, S)
-    Out4_2 = PTF.ConvBatchLayer(Out4_1, 512, 512, ks, "Conv4_2", padding, PhaseTrain, S)
-    ImageSize4_2 = ImageSize3_2 / 2 - 4
-    MaxPool4 = tf.nn.max_pool(Out4_2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="VALID", name="Maxpool4")
-
-    Out5_1 = PTF.ConvBatchLayer(MaxPool4, 512, 1024, ks, "Conv5_1", padding, PhaseTrain, S)
-    Out5_2 = PTF.ConvBatchLayer(Out5_1, 1024, 1024, ks, "Conv5_2", padding, PhaseTrain, S)
-    ImageSizeTransposeConv4 = (ImageSize4_2 / 2 - 4) * 2
-    TranCon4 = PTF.TransposeConvLayer(Out5_2, 1024, 512, 2, "TransposeConv4", padding, PhaseTrain, S)
-
-    #### 
-    Concat4 = PTF.CropAndMerge(Out4_2, TranCon4, ImageSize4_2, ImageSizeTransposeConv4, "Concat4") # Concat has 1024 features maps
-    Out4_3 = PTF.ConvBatchLayer(Concat4, 1024, 512, ks, "Conv4_3", padding, PhaseTrain, S)
-    Out4_4 = PTF.ConvBatchLayer(Out4_3, 512, 512, ks, "Conv4_4", padding, PhaseTrain, S)
-    ImageSizeTransposeConv3 = (ImageSizeTransposeConv4 - 4) * 2
-    TranCon3 = PTF.TransposeConvLayer(Out4_4, 512, 256, 2, "TransposeConv3", padding, PhaseTrain, S)
-
-    ####
-    Concat3 = PTF.CropAndMerge(Out3_2, TranCon3, ImageSize3_2, ImageSizeTransposeConv3, "Concat3") # Concat has 512 features maps
-    Out3_3 = PTF.ConvBatchLayer(Concat3, 512, 256, ks, "Conv3_3", padding, PhaseTrain, S)
-    Out3_4 = PTF.ConvBatchLayer(Out3_3, 256, 256, ks, "Conv3_4", padding, PhaseTrain, S)
-    ImageSizeTransposeConv2 = (ImageSizeTransposeConv3 - 4) * 2
-    TranCon2 = PTF.TransposeConvLayer(Out3_4, 256, 128, 2, "TransposeConv2", padding, PhaseTrain, S)
-
-    ####
-    Concat2 = PTF.CropAndMerge(Out2_2, TranCon2, ImageSize2_2, ImageSizeTransposeConv2, "Concat2") # Concat has 256 features maps
-    Out2_3 = PTF.ConvBatchLayer(Concat2, 256, 128, ks, "Conv2_3", padding, PhaseTrain, S)
-    Out2_4 = PTF.ConvBatchLayer(Out2_3, 128, 128, ks, "Conv2_4", padding, PhaseTrain, S)
-    ImageSizeTransposeConv1 = (ImageSizeTransposeConv2 - 4) * 2
-    TranCon1 = PTF.TransposeConvLayer(Out2_4, 128, 64, 2, "TransposeConv1", padding, PhaseTrain, S)
-
-    ####
-    Concat1 = PTF.CropAndMerge(Out1_2, TranCon1, ImageSize1_2, ImageSizeTransposeConv1, "Concat2") # Concat has 128 features maps
-    Out1_3 = PTF.ConvBatchLayer(Concat1, 128, 64, ks, "Conv1_3", padding, PhaseTrain, S)
-    Out1_4 = PTF.ConvBatchLayer(Out1_3, 64, 64, ks, "Conv1_4", padding, PhaseTrain, S)
-
-    logits = PTF.ConvBatchLayerWithoutRelu(Out1_4, 64, 2, 1, "BeforeLoss", padding, PhaseTrain, S)
+    logits = PTF.ConvLayer(Out1_3, 8, 2, ks, "logits", padding, PhaseTrain, S)
     annotation_pred = tf.argmax(logits, dimension=3, name="Prediction")
-
+    print logits.get_shape()
     return tf.expand_dims(annotation_pred, dim=3), logits
-
 
 def train(LossVal, VarList, LearningRate, LRUpdate):
 
@@ -143,28 +96,29 @@ def train(LossVal, VarList, LearningRate, LRUpdate):
 
 #    optimizer = tf.train.GradientDescentOptimizer(learning_rate)
 #    grads = optimizer.compute_gradients(LossVal, var_list=VarList)
-    optimizer = (tf.train.GradientDescentOptimizer(learning_rate).minimize(LossVal, global_step=global_step))
-
+    optimizer = (tf.train.MomentumOptimizer(learning_rate, MOMENTUM).minimize(LossVal, global_step=global_step))
 #    return optimizer.apply_gradients(grads)
     return optimizer
 
 def main(argv=None):
 
+    weight_file = WEIGHT_FILE
     KeepProbability = tf.placeholder(tf.float32, name="keep_probabilty")
     PhaseTrain = tf.placeholder(tf.bool, name='phase_train')
-    Input, Label = PTF.InputLayer(WIDTH + 184, WIDTH, 3, PhaseTrain, S, BS=BATCH_SIZE, Weight=False)
+    Input, Label = PTF.InputLayer(WIDTH, WIDTH, 3, PhaseTrain, S, BS=BATCH_SIZE, Weight=False)
     
 
     LabelInt = tf.to_int64(Label)
-    Predicted, Logits = UNetModel(Input, PhaseTrain, WIDTH + 184, WIDTH, KeepProbability)
+    Predicted, Logits = PangModel(Input, PhaseTrain, WIDTH, WIDTH, KeepProbability)
+
     if S:
         tf.summary.image("pred_annotation", tf.cast(Predicted, tf.uint8), max_outputs=4)
 
     with tf.name_scope('Loss'):
-
-        Loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=Logits,
-                                                                              labels=tf.squeeze(LabelInt, squeeze_dims=[3]),
-                                                                              name="entropy"))
+        onehot_labels = tf.one_hot(indices=tf.cast(tf.squeeze(Label, axis=3), tf.int32), depth=2)
+        print onehot_labels.get_shape()
+        Loss = tf.losses.softmax_cross_entropy(
+            onehot_labels=onehot_labels, logits=Logits)
         tf.summary.scalar('Loss', Loss)
 
     with tf.name_scope('Accuracy'):
@@ -218,8 +172,10 @@ def main(argv=None):
     ckpt = tf.train.get_checkpoint_state(SAVE_DIR + '/train')
 
     if ckpt and ckpt.model_checkpoint_path:
+
         saver.restore(sess, ckpt.model_checkpoint_path)
         print("Model restored...")
+
     TIME = time.time()
     for steps in range(1, N_ITER_MAX+1):
 

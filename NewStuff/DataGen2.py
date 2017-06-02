@@ -446,6 +446,26 @@ class DataGen(object):
         self.GetPatients(path)
         self.SortPatients()
 
+    def Batch(self, key, batch_size):
+
+        if self.UNet:
+            Width_Images = self.size[0] + 184
+            Height_Images = self.size[1] + 184
+        else:
+            Width_Images = self.size[0]
+            Height_Images = self.size[1]
+
+        ImagesBatch = np.zeros(shape=(batch_size, Width_Images, Height_Images, 3), dtype='float')
+        LabelsBatch = np.zeros(shape=(batch_size, self.size[0], self.size[1], 1), dtype='float')
+        
+        for i in range(batch_size):
+            key = self.NextKeyRandList(0)
+            ImagesBatch[i], LabelsBatch[i,:,:,0] = self[key]
+
+        return ImagesBatch, LabelsBatch
+
+
+
 def CheckNumberForUnet(n):
 
     ans = False

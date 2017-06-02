@@ -29,7 +29,9 @@ def print_dim(text ,tensor):
     print text, tensor.get_shape()
     print 
 
-def ConvLayer(Input, ChannelsIn, ChannelsOut, ks, Name, padding, PhaseTrain, Summary = True, debug=DEBUG):
+def ConvLayer(Input, ChannelsIn, ChannelsOut, ks, Name, 
+              padding, PhaseTrain, Summary = True, debug=DEBUG,
+              fine_tune = False):
     with tf.name_scope(Name):
 
         StddevW = 1 / float(ks ** 2 * (ChannelsOut + ChannelsIn))
@@ -46,7 +48,11 @@ def ConvLayer(Input, ChannelsIn, ChannelsOut, ks, Name, padding, PhaseTrain, Sum
             tf.summary.histogram("activations", act)
         if debug:
             print_dim(Name, act)
-        return act
+        if not fine_tune:
+            return act
+        else:
+            return act, [w_, b_]
+
 
 def BatchNorm(Input, n_out, phase_train, scope='bn', decay=0.9, eps=1e-5):
     """
