@@ -4,6 +4,8 @@ from DataGen2 import DataGen, ListTransform
 import os
 from scipy.misc import imsave
 import math
+from sklearn.metrics import confusion_matrix
+
 def add_to_regularization_and_summary(var):
     if var is not None:
         tf.summary.histogram(var.op.name, var)
@@ -58,8 +60,37 @@ class ConvolutionalNeuralNetwork:
         self.init_model_architecture()
         self.init_training_graph()
         self.DEBUG = DEBUG
+            
+
+    def regularize_model(self, trainable_var):
         if self.DEBUG:
+            for var in trainable_var:
+                self.add_to_regularization_and_summary(var)
             self.WritteSummaryImages()
+        else:
+            for var in trainable_var:
+                self.add_to_regularization(var)
+
+
+    def add_to_regularization_and_summary(self, var):
+        if var is not None:
+            tf.summary.histogram(var.op.name, var)
+            tf.add_to_collection("reg_loss", tf.nn.l2_loss(var))
+
+    def add_to_regularization(self, var):
+        if var is not None:
+            tf.add_to_collection("reg_loss", tf.nn.l2_loss(var))
+
+
+    def add_activation_summary(self, var):
+        if var is not None:
+            tf.summary.histogram(var.op.name + "/activation", var)
+            tf.summary.scalar(var.op.name + "/sparsity", tf.nn.zero_fraction(var))
+
+
+    def add_gradient_summary(self, grad, var):
+        if grad is not None:
+            tf.summary.histogram(var.op.name + "/gradient", grad)
 
 
     def input_node_f(self):
@@ -89,6 +120,7 @@ class ConvolutionalNeuralNetwork:
     def weight_xavier(self, ks, inchannels, outchannels, scope_name, name="W"):
         xavier_std = math.sqrt( 1. / float(ks * ks * inchannels) )
         return self.weight_const_f(ks, inchannels, outchannels, xavier_std, scope_name, name=name)
+
     def biases_const_f(self, const, shape, scope_name, name="B"):
         with tf.name_scope(scope_name):
             return tf.Variable(tf.constant(const, shape=[shape]), name=name)
@@ -115,17 +147,9 @@ class ConvolutionalNeuralNetwork:
         self.logits_weight = self.weight_xavier(1, 8, 2, "logits/")
         self.logits_biases = self.biases_const_f(0.1, 2, "logits/")
 
-        self.keep_prob = tf.Variable(0.5)
+        self.keep_prob = tf.Variable(0.5, name="dropout_prob")
 
         print('Model variables initialised')
-
-    def WritteSummary(self):
-        tf.summary.histogram('conv1_W', self.conv1_weights)
-        tf.summary.histogram('conv2_W', self.conv2_weights)
-        tf.summary.histogram('conv3_W', self.conv3_weights)
-        tf.summary.histogram('conv1_B', self.conv1_biases)
-        tf.summary.histogram('conv2_B', self.conv2_biases)
-        tf.summary.histogram('conv3_B', self.conv3_biases)
 
     def WritteSummaryImages(self):
         tf.summary.image("Input", self.input_node, max_outputs=1)
@@ -169,7 +193,7 @@ class ConvolutionalNeuralNetwork:
 
 #        self.loss += 5e-4 * self.regularizers
         tf.summary.scalar("entropy", self.loss)
-        self.batch = tf.Variable(0)
+        self.batch = tf.Variable(0, name = "batch_iterator")
 
         self.train_prediction = tf.nn.softmax(logits)
 
@@ -182,6 +206,30 @@ class ConvolutionalNeuralNetwork:
         print('Computational graph initialised')
 
 
+metrics = []
+    metrics.append((loss, 'Loss'))
+    acc = np.diag(hist).sum() / hist.sum()
+    metrics.append((acc, 'Overall accuracy:'))
+    metrics.append((1 - acc, 'Pixel error'))
+    acc1 = (np.diag(hist) + 0.0) / hist.sum(1)
+    metrics.append((np.nanmean(acc1), "Mean accuracy:"))
+    iu = np.diag(hist) / (hist.sum(1) +
+                          hist.sum(0) - np.diag(hist))
+    metrics.append((np.nanmean(iu), "Intersection Over Union : "))
+    freq = hist.sum(1) / hist.sum()
+    metrics.append(((freq[freq > 0] * iu[freq > 0]).sum(), "fwavacc"))
+
+    if n_cl == 2 :
+        recall = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[1, 0])
+        metrics.append((recall, "Recall"))
+        prec = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1])
+        metrics.append((prec, "Precision"))
+        metrics.append((recall, 'True positive'))
+        true_neg = (hist[0, 0] + 0.0) / (hist[0, 1] + hist[0, 0])
+        metrics.append((true_neg, 'True negatives'))
+        metrics.append(((recall + true_neg) / 2, 'Performance'))
+        F1 = 2 * prec * recall / (prec + recall)
+
     def error_rate(self, predictions, labels, iter):
 
         predictions = np.argmax(predictions, 3)
@@ -190,12 +238,23 @@ class ConvolutionalNeuralNetwork:
         #     imsave("/tmp/pred/pred_{}_{}.png".format(i, iter), predictions[i])
         #     imsave("/tmp/pred/label_{}_{}.png".format(i, iter), labels[i])
 
-        correct = np.sum( predictions == labels )
+        cm = confusion_matrix(labels, predictions, labels=[0, 1]).astype(np.float)
         b, x, y = predictions.shape
         total = b * x * y
-        print correct, total
-        error = 100 - (100 * float(correct) / float(total))
-        return error
+
+        TP = cm[1, 1]
+        TN = cm[0, 0]
+        FN = cm[0, 1]
+        FP = cm[1, 0]
+
+        acc = (TP + TN) / (TP + TN + FN + FP) * 100
+        acc1 = np.mean([TP / (TP + FP), TN / (TN + FN)]) * 100
+        recall = TP / (TP + FN)
+        precision = TP / (TP + FP)
+        F1 = 2 * precision * recall / (recall + precision)
+        error = 100 - acc
+
+        return error, acc, acc1, recall * 100, precision * 100, F1 * 100
 
     def optimization(self, var_list):
         #self.optimizer = tf.train.MomentumOptimizer(self.learning_rate, 0.9).minimize(
@@ -217,15 +276,10 @@ class ConvolutionalNeuralNetwork:
                              num_training,
                              0.95,
                              staircase=True)
-
+        tf.summary.scalar("learning_rate", self.learning_rate)
         trainable_var = tf.trainable_variables()
-        if self.DEBUG:
-            for var in trainable_var:
-                add_to_regularization_and_summary(var)
-        else:
-            for var in trainable_var:
-                add_to_regularization(var)
-
+        
+        self.regularize_model(trainable_var)
         self.optimization(trainable_var)
 
         tf.global_variables_initializer().run()
@@ -253,15 +307,14 @@ class ConvolutionalNeuralNetwork:
 
             if step % self.N_PRINT == 0:
                 summary_writer.add_summary(s, step)                
-                error = self.error_rate(predictions, batch_labels, step)
+                error, acc, acc1, recall, prec, f1 = self.error_rate(predictions, batch_labels, step)
                 print('Step %d of %d' % (step, steps))
-                print('Mini-batch loss: %.5f Error: %.5f Learning rate: %.5f' % 
-                      (l, error, lr))
-                print('Validation error: %.1f%%' % self.error_rate(
+                print('Mini-batch loss: %.5f \n Error: %.5f \n acc1: %.5f \n recall: %5.f \n prec: %5.f \n f1 : %5.f \n Learning rate: %.5f \n' % 
+                      (l, error, acc1, recall, prec, f1, lr))
+                print('Validation error: %.1f%% Accuracy: %1.f%% \n acc1: %.1f%% \n recall: %1.f%% \n prec: %1.f%% \n f1 : %1.f%% \n' % self.error_rate(
                       self.test_prediction.eval(
                       feed_dict={self.input_node : Xval}),
                       (Yval).astype(np.float32), str(step) + "test"))
-
 
 
 if __name__== "__main__":
@@ -270,7 +323,7 @@ if __name__== "__main__":
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(CUDA_NODE)
 
-    SAVE_DIR = "/tmp/object/230"
+    SAVE_DIR = "/tmp/object/1"
     N_ITER_MAX = 20000
     N_TRAIN_SAVE = 100
     N_TEST_SAVE = 100
@@ -281,11 +334,11 @@ if __name__== "__main__":
     CROP = 4
     PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
     PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
+    PATH = "/data/users/pnaylor/Bureau/Data/ToAnnotate"
     BATCH_SIZE = 1
     LRSTEP = 200
     SUMMARY = True
     S = SUMMARY
-    WEIGHT_FILE = "/home/pnaylor/Downloads/vgg16_weights.npz"
 
 
     transform_list, transform_list_test = ListTransform()
