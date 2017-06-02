@@ -3,7 +3,7 @@ import numpy as np
 from DataGen2 import DataGen, ListTransform
 import os
 from scipy.misc import imsave
-
+import math
 def add_to_regularization_and_summary(var):
     if var is not None:
         tf.summary.histogram(var.op.name, var)
@@ -86,6 +86,9 @@ class ConvolutionalNeuralNetwork:
                               stddev=stddev,
                               seed=self.SEED))
 
+    def weight_xavier_const_f(self, ks, inchannels, outchannels, scope_name, name="W"):
+        xavier_std = math.sqrt( 1. / float(ks * ks * inchannels) )
+        return self.weight_const_f(ks, inchannels, outchannels, xavier_std, scope_name, name=name)
     def biases_const_f(self, const, shape, scope_name, name="B"):
         with tf.name_scope(scope_name):
             return tf.Variable(tf.constant(const, shape=[shape]), name=name)
