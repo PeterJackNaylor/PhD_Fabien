@@ -86,7 +86,7 @@ class ConvolutionalNeuralNetwork:
                               stddev=stddev,
                               seed=self.SEED))
 
-    def weight_xavier_const_f(self, ks, inchannels, outchannels, scope_name, name="W"):
+    def weight_xavier(self, ks, inchannels, outchannels, scope_name, name="W"):
         xavier_std = math.sqrt( 1. / float(ks * ks * inchannels) )
         return self.weight_const_f(ks, inchannels, outchannels, xavier_std, scope_name, name=name)
     def biases_const_f(self, const, shape, scope_name, name="B"):
@@ -103,16 +103,16 @@ class ConvolutionalNeuralNetwork:
 
         self.train_labels_node = self.label_node_f()
 
-        self.conv1_weights = self.weight_const_f(5, self.NUM_CHANNELS, 8, 0.1, "conv1/")
+        self.conv1_weights = self.weight_xavier(5, self.NUM_CHANNELS, 8, "conv1/")
         self.conv1_biases = self.biases_const_f(0.1, 8, "conv1/")
 
-        self.conv2_weights = self.weight_const_f(5, 8, 8, 0.1, "conv2/")
+        self.conv2_weights = self.weight_xavier(5, 8, 8, "conv2/")
         self.conv2_biases = self.biases_const_f(0.1, 8, "conv2/")
 
-        self.conv3_weights = self.weight_const_f(5, 8, 8, 0.1, "conv3/")
+        self.conv3_weights = self.weight_xavier(5, 8, 8, "conv3/")
         self.conv3_biases = self.biases_const_f(0.1, 8, "conv3/")
 
-        self.logits_weight = self.weight_const_f(1, 8, 2, 0.1, "logits/")
+        self.logits_weight = self.weight_xavier(1, 8, 2, "logits/")
         self.logits_biases = self.biases_const_f(0.1, 2, "logits/")
 
         self.keep_prob = tf.Variable(0.5)
