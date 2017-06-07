@@ -175,7 +175,7 @@ class ConvolutionalNeuralNetwork:
 
             with tf.name_scope('Accuracy'):
 
-                LabelInt = tf.to_int64(self.train_labels_node)
+                LabelInt = tf.squeeze(tf.cast(self.train_labels_node, tf.int64), squeeze_dims=[3])
                 CorrectPrediction = tf.equal(self.predictions, LabelInt)
                 self.accuracy = tf.reduce_mean(tf.cast(CorrectPrediction, tf.float32))
                 tf.summary.scalar("accuracy", self.accuracy)
@@ -224,8 +224,8 @@ class ConvolutionalNeuralNetwork:
 
         predictions = np.argmax(predictions, 3)
         labels = labels[:,:,:,0]
-        
-        cm = confusion_matrix(labels, predictions, labels=[0, 1]).astype(np.float)
+
+        cm = confusion_matrix(labels.flatten(), predictions.flatten(), labels=[0, 1]).astype(np.float)
         b, x, y = predictions.shape
         total = b * x * y
 
@@ -256,16 +256,15 @@ class ConvolutionalNeuralNetwork:
 
     def LearningRateSchedule(self, lr, k, epoch):
 
-        self.global_step = tf.Variable(0, trainable=False)
-
+        self.global_step = tf.Variable(0., trainable=False)
 
         if self.LRSTEP == "epoch/2":
 
-            decay_step = epoch / 2
+            decay_step = float(epoch) / 2
         
         else:
 
-            decay_step = self.LRSTEP
+            decay_step = float(self.LRSTEP)
           
         self.learning_rate = tf.train.exponential_decay(
                                  lr,
@@ -278,7 +277,7 @@ class ConvolutionalNeuralNetwork:
     def Validation(self, DG_TEST, step):
         
         n_test = DG_TEST.length
-        n_batch = float(n_test) / self.BATCH_SIZE 
+        n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
 
         l, acc, F1, recall, precision, meanacc = 0., 0., 0., 0., 0., 0.
 
@@ -298,9 +297,9 @@ class ConvolutionalNeuralNetwork:
         l, acc, F1, recall, precision, meanacc = np.array([l, acc, F1, recall, precision, meanacc]) / n_batch
 
 
-        print('  Validation loss: %.1f%%' % l)
-        print('      Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
-
+        print('  Validation loss: %.1f' % l)
+        print('       Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
+        self.saver.save(self.sess, SAVE_DIR + '/' + "model.ckpt", step)
 
     def Saver(self):
         print("Setting up Saver...")
@@ -356,8 +355,8 @@ class ConvolutionalNeuralNetwork:
                 error, acc, acc1, recall, prec, f1 = self.error_rate(predictions, batch_labels, step)
                 print('  Step %d of %d' % (step, steps))
                 print('  Learning rate: %.5f \n') % lr
-                print('      Mini-batch loss: %.5f \n       Error: %.5f \n       acc1: %.5f \n       recall: %5.f \n       prec: %5.f \n       f1 : %5.f \n' % 
-                      (l, error, acc1, recall, prec, f1))
+                print('  Mini-batch loss: %.5f \n       Accuracy: %.1f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % 
+                      (l, acc, acc1, recall, prec, f1))
                 self.Validation(DGTest, step)
 
 
@@ -378,8 +377,8 @@ if __name__== "__main__":
     CROP = 4
     PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
     PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
-    PATH = "/data/users/pnaylor/Bureau/Data/ToAnnotate"
-    BATCH_SIZE = 1
+    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
+    BATCH_SIZE = 2
     LRSTEP = 200
     SUMMARY = True
     S = SUMMARY
