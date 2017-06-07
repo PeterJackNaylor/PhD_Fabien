@@ -20,6 +20,7 @@ class ConvolutionalNeuralNetwork:
         NUM_TEST=10000,
         STEPS=2000,
         LRSTEP=200,
+        DECAY_EMA=0.9999,
         N_PRINT = 100,
         LOG="/tmp/net",
         SEED=42,
@@ -35,6 +36,7 @@ class ConvolutionalNeuralNetwork:
         self.STEPS = STEPS
         self.N_PRINT = N_PRINT
         self.LRSTEP = LRSTEP
+        self.DECAY_EMA = DECAY_EMA
         self.LOG = LOG
         self.SEED = SEED
 
@@ -250,11 +252,11 @@ class ConvolutionalNeuralNetwork:
         if self.DEBUG:
             for grad, var in grads:
                 self.add_gradient_summary(grad, var)
-        self.optimizer = optimizer.apply_gradients(grads)        
+        self.optimizer = optimizer.apply_gradients(grads, global_step=self.global_step)        
 
     def LearningRateSchedule(self, lr, k, epoch):
 
-        global_step = tf.Variable(0, trainable=False)
+        self.global_step = tf.Variable(0, trainable=False)
 
 
         if self.LRSTEP == "epoch/2":
@@ -267,13 +269,13 @@ class ConvolutionalNeuralNetwork:
           
         self.learning_rate = tf.train.exponential_decay(
                                  lr,
-                                 global_step,
+                                 self.global_step,
                                  decay_step,
                                  k,
                                  staircase=True)  
         tf.summary.scalar("learning_rate", self.learning_rate)
 
-    def Validation(self, DG_TEST):
+    def Validation(self, DG_TEST, step):
         
         n_test = DG_TEST.length
         n_batch = float(n_test) / self.BATCH_SIZE 
@@ -308,6 +310,11 @@ class ConvolutionalNeuralNetwork:
             self.saver.restore(self.sess, ckpt.model_checkpoint_path)
             print("Model restored...")
 
+    def ExponentialMovingAverage(self, var_list, decay=0.9999):
+        
+        self.ema = tf.train.ExponentialMovingAverage(decay=decay)
+
+
     def train(self, DGTrain, DGTest, saver=True):
 
         epoch = DGTrain.length
@@ -318,7 +325,7 @@ class ConvolutionalNeuralNetwork:
         
         self.regularize_model(trainable_var)
         self.optimization(trainable_var)
-
+        self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
         tf.global_variables_initializer().run()
 
         summary_writer = tf.summary.FileWriter(self.LOG, graph=self.sess.graph)
@@ -351,7 +358,7 @@ class ConvolutionalNeuralNetwork:
                 print('  Learning rate: %.5f \n') % lr
                 print('      Mini-batch loss: %.5f \n       Error: %.5f \n       acc1: %.5f \n       recall: %5.f \n       prec: %5.f \n       f1 : %5.f \n' % 
                       (l, error, acc1, recall, prec, f1))
-                self.Validation(DGTest)
+                self.Validation(DGTest, step)
 
 
 if __name__== "__main__":
