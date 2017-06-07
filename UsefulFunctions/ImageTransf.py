@@ -7,7 +7,8 @@ from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
 import FIMM_histo.deconvolution as deconv
 from skimage import color
-
+from scipy.misc import imsave
+import progressbar
 #==============================================================================
 #
 # def flip_vertical(picture):
@@ -343,20 +344,37 @@ class ElasticDeformation(Transf):
                     (random_state.rand(*shape) * 2 - 1), sigma) * alpha
                 self.dy = gaussian_filter(
                     (random_state.rand(*shape) * 2 - 1), sigma) * alpha
-
-            if len(shape) == 3:
-                x, y, z = np.meshgrid(np.arange(shape[1]), np.arange(
-                    shape[0]), np.arange(shape[2]), indexing='ij')
-                indices = np.reshape(
-                    x + self.dx, (-1, 1)), np.reshape(y + self.dy, (-1, 1)), np.reshape(z, (-1, 1))
-            elif len(shape) == 2:
-                x, y = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]), indexing='ij')
-                if len(self.dx.shape) == 3:
-                    indices = np.reshape(x + np.mean(self.dx, axis=2), (-1, 1)), np.reshape(y + np.mean(self.dy, axis=2), (-1, 1))
+            if shape[0:2] == self.dx.shape[0:2]:
+                if len(shape) == 3:
+                    x, y, z = np.meshgrid(np.arange(shape[1]), np.arange(
+                        shape[0]), np.arange(shape[2]), indexing='ij')
+                    indices = np.reshape(
+                        x + self.dx, (-1, 1)), np.reshape(y + self.dy, (-1, 1)), np.reshape(z, (-1, 1))
+                elif len(shape) == 2:
+                    x, y = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]), indexing='ij')
+                    if len(self.dx.shape) == 3:
+                        indices = np.reshape(x + np.mean(self.dx, axis=2), (-1, 1)), np.reshape(y + np.mean(self.dy, axis=2), (-1, 1))
+                    else:
+                        indices = np.reshape(x + self.dx, (-1, 1)), np.reshape(y + self.dy, (-1, 1))
                 else:
-                    indices = np.reshape(x + self.dx, (-1, 1)), np.reshape(y + self.dy, (-1, 1))
+                    print "Error"
+            elif shape[0] > self.dx.shape[0]:
+                print "not possible"
             else:
-                print "Error"
+                offset = (self.dx.shape[0] - shape[0]) / 2
+                if len(shape) == 3:
+                    x, y, z = np.meshgrid(np.arange(shape[1]), np.arange(
+                        shape[0]), np.arange(shape[2]), indexing='ij')
+                    indices = np.reshape(
+                        x + self.dx[offset:-offset,offset:-offset], (-1, 1)), np.reshape(y + self.dy[offset:-offset,offset:-offset], (-1, 1)), np.reshape(z, (-1, 1))
+                elif len(shape) == 2:
+                    x, y = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]), indexing='ij')
+                    if len(self.dx.shape) == 3:
+                        indices = np.reshape(x + np.mean(self.dx[offset:-offset, offset:-offset], axis=2), (-1, 1)), np.reshape(y + np.mean(self.dy[offset:-offset, offset:-offset], axis=2), (-1, 1))
+                    else:
+                        indices = np.reshape(x + self.dx[offset:-offset, offset:-offset], (-1, 1)), np.reshape(y + self.dy[offset:-offset, offset:-offset], (-1, 1))
+                else:
+                    print "Error"
             if n_img == 1:
                 order = 0
                 flags = cv2.INTER_NEAREST
@@ -395,13 +413,6 @@ def GreyValuePerturbation(image, k, b, MIN=0, MAX=255):
     f = np.vectorize(AffineTransformation)
     image = f(image)
     return image
-
-
-    f = np.vectorize(AffineTransformation)
-    diff = np.max(image)
-    image = f(image)
-    diff -= np.max(image)
-    image += diff
 
 
 class HE_Perturbation(Transf):
@@ -545,4 +556,108 @@ class HSV_Perturbation(Transf):
             res += (sub_res,)
             n_img += 1
         return res
+
+def ListTransform(n_rot=4, n_elastic=50, n_he=50, n_hsv = 50):
+    transform_list = [Identity(),
+                      Flip(0),
+                      Flip(1)]
+    for rot in np.arange(1, 360, n_rot):
+        transform_list.append(Rotation(rot, enlarge=True))
+
+    for sig in [1, 2, 3, 4]:
+        transform_list.append(OutOfFocus(sig))
+
+    for i in range(n_elastic):
+        transform_list.append(ElasticDeformation(1.2, 24. / 512, 0.07))
+
+    k_h = np.random.normal(1.,0.07, n_he)
+    k_e = np.random.normal(1.,0.07, n_he)
+
+    for i in range(n_he):
+        transform_list.append(HE_Perturbation((k_h[i],0), (k_e[i],0), (1, 0)))
+
+
+    k_s = np.random.normal(1.,0.01, n_hsv)
+    k_v = np.random.normal(1.,0.07, n_hsv)
+
+    for i in range(n_hsv):
+        transform_list.append(HSV_Perturbation((1,0), (k_s[i],0), (k_v[i], 0))) 
+
+    transform_list_test = [Identity()]
+
+    return transform_list, transform_list_test
+
+
+
+if __name__ == '__main__':
+    
+
+    from NewStuff.DataGen2 import DataGen
+    import matplotlib.pylab as plt
+    import pdb
+    from scipy.ndimage.morphology import morphological_gradient
+    HEIGHT = 512
+    WIDTH = 512
+    CROP = 1
+    PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
+    PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
+    PATH = "/data/users/pnaylor/Bureau/Data/ToAnnotate"
+    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
+    a, b, aa = 1.2, 24. / 512, 0.07
+
+    transform_list = [Identity(), ElasticDeformation(a,b,aa), 
+                      Rotation(130.), Flip(1), OutOfFocus(3),
+                      HE_Perturbation((1.25,0),(1.25,0),(1,0)), HSV_Perturbation((1,0),(1.15,0),(1.35,0))
+                      ]
+    transform_list, _ = ListTransform(45, 20, 20, 20)
+    f = 5
+    def Contours(bin_image, contour_size=3):
+        # Computes the contours
+        grad = morphological_gradient(bin_image, size=(contour_size, contour_size))
+        return grad
+
+    DG_TRAIN = DataGen(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
+                       transforms=transform_list, UNet=True)
+
+    plot_one = False
+    save_all = True
+
+    if plot_one:
+        fig, axes = plt.subplots(2,2)
+        n = 92
+        img_id, lbl_id = DG_TRAIN[0,0,0,0]
+        img_el, lbl_el = DG_TRAIN[0,0,f,0]
+        sub_id = img_id[n:-n,n:-n]
+        sub_el = img_el[n:-n,n:-n]
+        
+        ContourSegmentation = Contours(lbl_id)
+        x_, y_ = np.where(ContourSegmentation > 0)
+        image_segmented_id = sub_id.copy()
+        image_segmented_id[x_,y_,:] = np.array([0,0,0])
+        ContourSegmentation = Contours(lbl_el)
+        x_, y_ = np.where(ContourSegmentation > 0)
+        image_segmented_el = sub_el.copy()
+        image_segmented_el[x_,y_,:] = np.array([0,0,0])
+        axes[0,0].imshow(sub_id)
+        axes[0,1].imshow(image_segmented_id)
+        axes[1,0].imshow(sub_el)
+        axes[1,1].imshow(image_segmented_el)
+    #    pdb.set_trace()
+        fig.show()
+    elif save_all:
+        count = 0
+        n_trans = len(transform_list)
+        total = CROP * n_trans
+        for f in range(n_trans):
+            for j in range(CROP):
+                n = 92
+                img_el, lbl_el = DG_TRAIN[0,0,f,j]
+                lbl_el[lbl_el > 0] = 255
+                #imsave("%04i_Augmented.png" %count, img_el)
+                imsave("%04i_RAW.png" %count, img_el[n:-n, n:-n])
+                #imsave("%04i_TRUTH.png" %count, lbl_el)
+                count += 1
+                print "{} / {}".format(count, total)
+
+
 

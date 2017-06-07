@@ -16,18 +16,20 @@ import itertools
 from skimage import measure
 import pdb
 import matplotlib.pylab as plt
-
+import time
 
 class DataGen(object):
 
     def __init__(self, path, crop=1, size=None, transforms=None,
                  split="train", leave_out=1, seed_=None, name="optionnal",
-                 img_format="RGB", wgt_param=None, UNet=False, 
+                 img_format="RGB", wgt_param=None, UNet=False, perc_trans=1.,
                  return_path=False):
 
         self.path = path
         self.name = name
         self.transforms = transforms
+        self.perc_trans = perc_trans
+        self.n_trans = int(self.perc_trans * len(self.transforms))
         self.crop = crop
         self.split = split
         self.leave_out = leave_out
@@ -74,7 +76,7 @@ class DataGen(object):
             raise Exception(
                 "Patient {} doesn't have {} possible images.".format(self.patients_iter[key[0]], key[1]))
         
-        if key[2] > len(self.transforms):
+        if key[2] > self.n_trans:
             raise Exception(
                 "Value exceed number of possible transformation for {}ing".format(self.split))
 
@@ -93,8 +95,7 @@ class DataGen(object):
             ## add wegiht check for 0
             wgt_path = self.Weight_path(img_path)
             img_lbl_Mwgt += (self.LoadWeight(wgt_path), )
-
-
+        #pdb.set_trace()
         if self.UNet:
             img_lbl_Mwgt = self.Unet_cut(*img_lbl_Mwgt)
 
@@ -107,12 +108,15 @@ class DataGen(object):
 
         if self.random_crop:
             img_lbl_Mwgt = self.CropImgLbl(*img_lbl_Mwgt)
-        
-        if self.return_path:
-            img_lbl_Mwgt += (img_path,)
 
         if self.UNet:
             CheckNumberForUnet(img_lbl_Mwgt[0].shape[0])
+            img_lbl_Mwgt = self.ReduceDimUNet(*img_lbl_Mwgt)    
+
+        if self.return_path:
+            img_lbl_Mwgt += (img_path,)
+
+            
         return img_lbl_Mwgt
 
 
@@ -197,6 +201,10 @@ class DataGen(object):
         x = iterable[1].shape[0]
         y = iterable[1].shape[1]
 
+        if self.UNet:
+            x -= 184
+            y -= 184
+
         x_step = x / num_per_side
         y_step = y / num_per_side
 
@@ -209,7 +217,7 @@ class DataGen(object):
                 for j in range(y_step, y + 1, y_step):
                     if number == quarter: 
                         
-                        if n_img == 0 and self.UNet:
+                        if self.UNet:
                             n = 92
                             res += (iter[(i_old):(i+2*n), (j_old):(j+2*n)],)
                         else:
@@ -223,9 +231,13 @@ class DataGen(object):
 
     def CropImgLbl(self, *kargs):
 
-        dim = kargs[1].shape
+        dim = kargs[0].shape
         x = dim[0]
         y = dim[1]
+        if self.UNet:
+            x -= 184
+            y -= 184
+
         x_prime = self.size[0]
         y_prime = self.size[1]
         x_rand = randint(0, x - x_prime)
@@ -233,7 +245,7 @@ class DataGen(object):
         res = ()
         for i in range(len(kargs)):
 
-            if i==0 and self.UNet:
+            if self.UNet:
                 n = 92
                 res += (self.RandomCropGen(kargs[i], (x_prime + 2*n, y_prime + 2*n), (x_rand, y_rand)),)
             else:
@@ -251,10 +263,22 @@ class DataGen(object):
 
         return img[x_rand:(x_rand + x_prime), y_rand:(y_rand + y_prime)]
 
+    def ReduceDimUNet(self, *kargs):
+        res = ()
+        res += (kargs[0],)
+        n = 92
+        for i in range(1, len(kargs)):
+            res += (kargs[i][n:-n,n:-n],)
+        return res
 
     def Unet_cut(self, *kargs):
+        res = ()
+        for i in range(0, len(kargs)):
+            res += (self.UNetAugment(kargs[i]),)
+        return res
 
-        dim = kargs[0].shape
+    def UNetAugment(self, img):
+        dim = img.shape
         i = 0
         new_dim = ()
         for c in dim:
@@ -271,7 +295,7 @@ class DataGen(object):
 #        assert CheckNumberForUnet(
 #            dim[0] + 2 * n), "Dim not suited for UNet, it will create a wierd net"
         # middle
-        result[n:-n, n:-n] = kargs[0].copy()
+        result[n:-n, n:-n] = img.copy()
         # top middle
         result[0:n, n:-n] = flip_horizontal(result[n:(2 * n), n:-n])
         # bottom middle
@@ -281,12 +305,7 @@ class DataGen(object):
         # right whole
         result[:, -n::] = flip_vertical(result[:, -(2 * n):-n])
         result = result.astype("uint8")
-        res = (result, )
-        for i in range(1, len(kargs)):
-            res += (kargs[i],)
-
-        return res
-
+        return result
 
     def RandomKey(self, rand):
 
@@ -298,7 +317,7 @@ class DataGen(object):
             a = randint(0, len(self.patients_iter) - 1)
             numero = self.patients_iter[a]
             b = randint(0, len(self.patient_img[numero]) - 1)
-            c = randint(0, len(self.transforms) - 1)
+            c = randint(0, len(self.n_trans) - 1)
             d = randint(0, self.crop - 1)
 
             return [a, b, c, d]
@@ -339,19 +358,16 @@ class DataGen(object):
 
         train_patient = [el for el in self.patient_num if el not in test_patient]
 
-
-        number_of_transforms = len(self.transforms)
-
         if self.split == "train":
 
             images_train = [len(glob.glob(self.path + "/Slide_{}".format(el) + "/*.png")) for el in train_patient]
-            self.length = np.sum(images_train) * self.crop * number_of_transforms
+            self.length = np.sum(images_train) * self.crop * self.n_trans
             self.patients_iter = train_patient
 
         else:
 
             images_test = [len(glob.glob(self.path + "/Slide_{}".format(el) + "/*.png")) for el in test_patient]
-            self.length = np.sum(images_test) * self.crop * number_of_transforms
+            self.length = np.sum(images_test) * self.crop * self.n_trans
             self.patients_iter = test_patient
 
         self.SetRandomList() ## needed? 
@@ -371,7 +387,7 @@ class DataGen(object):
             i += 1
             nber_per_patient = len(self.patient_img[num])
             lists += (range(nber_per_patient),)
-            lists += (range(len(self.transforms)),)
+            lists += (np.random.randint(0, len(self.transforms), self.n_trans),)
             lists += (range(self.crop),)
             
             AllPossibleKeys += list(itertools.product(*lists))
@@ -426,12 +442,12 @@ class DataGen(object):
         if self.split == "train":
 
             train_images = [len(glob.glob(self.path + "/Slide_{}".format(el) + "/*.png")) for el in train_patient]
-            self.length = np.sum(train_images) * self.crop * number_of_transforms
+            self.length = np.sum(train_images) * self.crop * self.n_trans
             self.patients_iter = train_patient
 
         else:
             test_images = [len(glob.glob(self.path + "/Slide_{}".format(el) + "/*.png")) for el in test_patient]
-            self.length = np.sum(test_images) * self.crop * number_of_transforms
+            self.length = np.sum(test_images) * self.crop * self.n_trans
             self.patients_iter = test_patient
 
 
@@ -447,7 +463,7 @@ class DataGen(object):
         self.SortPatients()
 
     def Batch(self, key, batch_size):
-
+        """ optimize this part """
         if self.UNet:
             Width_Images = self.size[0] + 184
             Height_Images = self.size[1] + 184
@@ -513,35 +529,57 @@ def ListTransform():
 if __name__ == "__main__":
 
     path = "/home/pnaylor/Documents/Data/ToAnnotate"
+    path = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
 
     transf, transf_test = ListTransform()
 
     size = (212, 212)
     crop = 4
     UNet = False
+    perc_trans = 1.
 
     DG = DataGen(path, crop=crop, size=size, transforms=transf,
-                 split="train", leave_out=1, UNet=UNet)
+                 split="train", leave_out=1, UNet=UNet, perc_trans=perc_trans)
     DG_test = DataGen(path, crop=crop, size=size, transforms=transf_test,
                  split="test", leave_out=1, UNet=UNet)
-    print len(transf)
-    img, lbl = DG[0,0,160,2]
-    img_test, lbl_test = DG[0,0,171, 2]
+    plot_img = False
+    timing = True
+    if plot_img:
+        print len(transf), len(transf)*perc_trans
+        print DG.n_trans
+        print DG.length
+        img, lbl = DG[0,0,160,2]
+        img_test, lbl_test = DG[0,0,171, 2]
 
-    fig, axes = plt.subplots(2,2)
-    if UNet:
-        axes[0,0].imshow(img[92:-92,92:-92,:]) 
-        axes[0,1].imshow(lbl)
+        fig, axes = plt.subplots(2,2)
+        if UNet:
+            axes[0,0].imshow(img[92:-92,92:-92,:]) 
+            axes[0,1].imshow(lbl)
 
-        axes[1,0].imshow(img_test[92:-92,92:-92,:])
-        axes[1,1].imshow(lbl_test)
+            axes[1,0].imshow(img_test[92:-92,92:-92,:])
+            axes[1,1].imshow(lbl_test)
 
-        plt.show()
-    else:
-        axes[0,0].imshow(img) 
-        axes[0,1].imshow(lbl)
+            plt.show()
+        else:
+            axes[0,0].imshow(img) 
+            axes[0,1].imshow(lbl)
 
-        axes[1,0].imshow(img_test)
-        axes[1,1].imshow(lbl_test)
+            axes[1,0].imshow(img_test)
+            axes[1,1].imshow(lbl_test)
 
-        plt.show()
+            plt.show()
+
+    elif timing:
+        N_ITER = 10
+        BS = 6
+        now = time.time()
+        for i in range(N_ITER):
+            img_b, lbl_b = DG.Batch(0, BS)
+        diff_time = time.time() - now
+        print "Time elasped for {} number of tests:".format(N_ITER)
+        print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600)/ 60, diff_time % 60)
+        diff_time = (diff_time) / N_ITER 
+
+        print "Average time per batch of size {}:".format(BS)
+        print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600)/ 60, diff_time % 60)
+
