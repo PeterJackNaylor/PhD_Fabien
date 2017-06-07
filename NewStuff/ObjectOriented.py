@@ -311,7 +311,13 @@ class ConvolutionalNeuralNetwork:
 
     def ExponentialMovingAverage(self, var_list, decay=0.9999):
         
-        self.ema = tf.train.ExponentialMovingAverage(decay=decay)
+        ema = tf.train.ExponentialMovingAverage(decay=decay)
+        maintain_averages_op = ema.apply(var_list)
+
+        # Create an op that will update the moving averages after each training
+        # step.  This is what we will use in place of the usual training op.
+        with tf.control_dependencies([self.optimizer]):
+            self.training_op = tf.group(maintain_averages_op)
 
 
     def train(self, DGTrain, DGTest, saver=True):
@@ -325,6 +331,7 @@ class ConvolutionalNeuralNetwork:
         self.regularize_model(trainable_var)
         self.optimization(trainable_var)
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
+
         tf.global_variables_initializer().run()
 
         summary_writer = tf.summary.FileWriter(self.LOG, graph=self.sess.graph)
@@ -343,8 +350,9 @@ class ConvolutionalNeuralNetwork:
             feed_dict = {self.input_node: batch_data,
                          self.train_labels_node: batch_labels}
 
+            # self.optimizer is replaced by self.training_op for the exponential moving decay
             _, l, lr, predictions, s = self.sess.run(
-                        [self.optimizer, self.loss, self.learning_rate,
+                        [self.training_op, self.loss, self.learning_rate,
                          self.train_prediction, merged_summary],
                         feed_dict=feed_dict)
 
