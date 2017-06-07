@@ -1,54 +1,40 @@
 import tensorflow as tf
 import numpy as np
-from DataGen2 import DataGen, ListTransform
+from DataGen2 import DataGen
+from UsefulFunctions.ImageTransf import ListTransform
 import os
 from scipy.misc import imsave
 import math
 from sklearn.metrics import confusion_matrix
-
-def add_to_regularization_and_summary(var):
-    if var is not None:
-        tf.summary.histogram(var.op.name, var)
-        tf.add_to_collection("reg_loss", tf.nn.l2_loss(var))
-
-def add_to_regularization(var):
-    if var is not None:
-        tf.add_to_collection("reg_loss", tf.nn.l2_loss(var))
-
-
-def add_activation_summary(var):
-    if var is not None:
-        tf.summary.histogram(var.op.name + "/activation", var)
-        tf.summary.scalar(var.op.name + "/sparsity", tf.nn.zero_fraction(var))
-
-
-def add_gradient_summary(grad, var):
-    if grad is not None:
-        tf.summary.histogram(var.op.name + "/gradient", grad)
-
+from datetime import datetime
+ 
 class ConvolutionalNeuralNetwork:
     def __init__(
         self,
         LEARNING_RATE=0.01,
+        K=0.96,
         BATCH_SIZE=10,
         IMAGE_SIZE=28,
         NUM_LABELS=10,
         NUM_CHANNELS=1,
         NUM_TEST=10000,
         STEPS=2000,
+        LRSTEP=200,
         N_PRINT = 100,
         LOG="/tmp/net",
         SEED=42,
         DEBUG=True):
 
         self.LEARNING_RATE = LEARNING_RATE
+        self.K = K
         self.BATCH_SIZE = BATCH_SIZE
         self.IMAGE_SIZE = IMAGE_SIZE
         self.NUM_LABELS = NUM_LABELS
         self.NUM_CHANNELS = NUM_CHANNELS
-        self.NUM_TEST = NUM_TEST
+#        self.NUM_TEST = NUM_TEST
         self.STEPS = STEPS
         self.N_PRINT = N_PRINT
+        self.LRSTEP = LRSTEP
         self.LOG = LOG
         self.SEED = SEED
 
@@ -59,8 +45,8 @@ class ConvolutionalNeuralNetwork:
         self.init_vars()
         self.init_model_architecture()
         self.init_training_graph()
+        self.Saver()
         self.DEBUG = DEBUG
-            
 
     def regularize_model(self, trainable_var):
         if self.DEBUG:
@@ -174,70 +160,69 @@ class ConvolutionalNeuralNetwork:
         print('Model architecture initialised')
 
     def init_training_graph(self):
-#        dropout = tf.nn.dropout(self.hidden1, self.keep_prob, seed=self.SEED)
 
-        logits = self.conv_layer_f(self.relu3, self.logits_weight, [1,1,1,1], "logits/")
-        #logits = self.relu_layer_f(logits_conv, self.logits_biases, "logits/")
+        with tf.name_scope('Evaluation'):
+            logits = self.conv_layer_f(self.relu3, self.logits_weight, [1,1,1,1], "logits/")
+            self.predictions = tf.argmax(logits, axis=3)
+            
+            with tf.name_scope('Loss'):
+                self.loss = tf.reduce_mean((tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,
+                                                                          labels=tf.squeeze(tf.cast(self.train_labels_node, tf.int32), squeeze_dims=[3]),
+                                                                          name="entropy")))
+                tf.summary.scalar("entropy", self.loss)
 
-        #one_hot_labels = tf.one_hot(tf.cast(self.train_labels_node, tf.uint8), depth = 2)
-        # self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
-        #                           logits=logits, labels=one_hot_labels))
-        self.predictions = tf.argmax(logits, axis=3)
-        self.loss = tf.reduce_mean((tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,
-                                                                      labels=tf.squeeze(tf.cast(self.train_labels_node, tf.int32), squeeze_dims=[3]),
-                                                                      name="entropy")))
-        #self.regularizers = (
-        #    tf.nn.l2_loss(self.conv1_weights) + tf.nn.l2_loss(self.conv1_biases) +
-        #    tf.nn.l2_loss(self.conv2_weights) + tf.nn.l2_loss(self.conv2_biases) +
-        #    tf.nn.l2_loss(self.conv3_weights) + tf.nn.l2_loss(self.conv3_biases))
+            with tf.name_scope('Accuracy'):
 
-#        self.loss += 5e-4 * self.regularizers
-        tf.summary.scalar("entropy", self.loss)
-        self.batch = tf.Variable(0, name = "batch_iterator")
+                LabelInt = tf.to_int64(self.train_labels_node)
+                CorrectPrediction = tf.equal(self.predictions, LabelInt)
+                self.accuracy = tf.reduce_mean(tf.cast(CorrectPrediction, tf.float32))
+                tf.summary.scalar("accuracy", self.accuracy)
 
-        self.train_prediction = tf.nn.softmax(logits)
+            with tf.name_scope('Prediction'):
 
-        #predictions = tf.matmul(self.hidden1, self.fc2_weights) + self.fc2_biases
-        #self.validation_prediction = tf.nn.softmax(predictions)
-        self.test_prediction = tf.nn.softmax(logits)
+                self.TP = tf.count_nonzero(self.predictions * LabelInt)
+                self.TN = tf.count_nonzero((self.predictions - 1) * (LabelInt - 1))
+                self.FP = tf.count_nonzero(self.predictions * (LabelInt - 1))
+                self.FN = tf.count_nonzero((self.predictions - 1) * LabelInt)
+
+            with tf.name_scope('Precision'):
+
+                self.precision = tf.divide(self.TP, tf.add(self.TP, self.FP))
+                tf.summary.scalar('Precision', self.precision)
+
+            with tf.name_scope('Recall'):
+
+                self.recall = tf.divide(self.TP, tf.add(self.TP, self.TN))
+                tf.summary.scalar('Recall', self.recall)
+
+            with tf.name_scope('F1'):
+
+                num = tf.multiply(self.precision, self.recall)
+                dem = tf.add(self.precision, self.recall)
+                self.F1 = tf.scalar_mul(2, tf.divide(num, dem))
+                tf.summary.scalar('F1', self.F1)
+
+            with tf.name_scope('MeanAccuracy'):
+                
+                Nprecision = tf.divide(self.TN, tf.add(self.TN, self.FN))
+                self.MeanAcc = tf.divide(tf.add(self.precision, Nprecision) ,2)
+
+            self.batch = tf.Variable(0, name = "batch_iterator")
+
+            self.train_prediction = tf.nn.softmax(logits)
+
+            self.test_prediction = tf.nn.softmax(logits)
 
         tf.global_variables_initializer().run()
 
         print('Computational graph initialised')
 
 
-metrics = []
-    metrics.append((loss, 'Loss'))
-    acc = np.diag(hist).sum() / hist.sum()
-    metrics.append((acc, 'Overall accuracy:'))
-    metrics.append((1 - acc, 'Pixel error'))
-    acc1 = (np.diag(hist) + 0.0) / hist.sum(1)
-    metrics.append((np.nanmean(acc1), "Mean accuracy:"))
-    iu = np.diag(hist) / (hist.sum(1) +
-                          hist.sum(0) - np.diag(hist))
-    metrics.append((np.nanmean(iu), "Intersection Over Union : "))
-    freq = hist.sum(1) / hist.sum()
-    metrics.append(((freq[freq > 0] * iu[freq > 0]).sum(), "fwavacc"))
-
-    if n_cl == 2 :
-        recall = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[1, 0])
-        metrics.append((recall, "Recall"))
-        prec = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1])
-        metrics.append((prec, "Precision"))
-        metrics.append((recall, 'True positive'))
-        true_neg = (hist[0, 0] + 0.0) / (hist[0, 1] + hist[0, 0])
-        metrics.append((true_neg, 'True negatives'))
-        metrics.append(((recall + true_neg) / 2, 'Performance'))
-        F1 = 2 * prec * recall / (prec + recall)
-
     def error_rate(self, predictions, labels, iter):
 
         predictions = np.argmax(predictions, 3)
         labels = labels[:,:,:,0]
-        # for i in range(labels.shape[0]):
-        #     imsave("/tmp/pred/pred_{}_{}.png".format(i, iter), predictions[i])
-        #     imsave("/tmp/pred/label_{}_{}.png".format(i, iter), labels[i])
-
+        
         cm = confusion_matrix(labels, predictions, labels=[0, 1]).astype(np.float)
         b, x, y = predictions.shape
         total = b * x * y
@@ -248,9 +233,10 @@ metrics = []
         FP = cm[1, 0]
 
         acc = (TP + TN) / (TP + TN + FN + FP) * 100
-        acc1 = np.mean([TP / (TP + FP), TN / (TN + FN)]) * 100
-        recall = TP / (TP + FN)
         precision = TP / (TP + FP)
+        acc1 = np.mean([precision, TN / (TN + FN)]) * 100
+        recall = TP / (TP + FN)
+        
         F1 = 2 * precision * recall / (recall + precision)
         error = 100 - acc
 
@@ -263,20 +249,71 @@ metrics = []
         grads = optimizer.compute_gradients(self.loss, var_list=var_list)
         if self.DEBUG:
             for grad, var in grads:
-                add_gradient_summary(grad, var)
+                self.add_gradient_summary(grad, var)
         self.optimizer = optimizer.apply_gradients(grads)        
 
-    def train(self, DGTrain, DGTest):
+    def LearningRateSchedule(self, lr, k, epoch):
 
-        num_training = DGTrain.length
+        global_step = tf.Variable(0, trainable=False)
 
+
+        if self.LRSTEP == "epoch/2":
+
+            decay_step = epoch / 2
+        
+        else:
+
+            decay_step = self.LRSTEP
+          
         self.learning_rate = tf.train.exponential_decay(
-                             self.LEARNING_RATE,
-                             self.batch * self.BATCH_SIZE,
-                             num_training,
-                             0.95,
-                             staircase=True)
+                                 lr,
+                                 global_step,
+                                 decay_step,
+                                 k,
+                                 staircase=True)  
         tf.summary.scalar("learning_rate", self.learning_rate)
+
+    def Validation(self, DG_TEST):
+        
+        n_test = DG_TEST.length
+        n_batch = float(n_test) / self.BATCH_SIZE 
+
+        l, acc, F1, recall, precision, meanacc = 0., 0., 0., 0., 0., 0.
+
+
+        for i in range(n_batch):
+            Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
+            feed_dict = {self.input_node: Xval,
+                         self.train_labels_node: Yval}
+            l_tmp, acc_tmp, F1_tmp, recall_tmp, precision_tmp, meanacc_tmp = self.sess.run([self.loss, self.accuracy, self.F1, self.recall, self.precision, self.MeanAcc], feed_dict=feed_dict)
+            l += l_tmp
+            acc += acc_tmp
+            F1 += F1_tmp
+            recall += recall_tmp
+            precision += precision_tmp
+            meanacc += meanacc_tmp
+
+        l, acc, F1, recall, precision, meanacc = np.array([l, acc, F1, recall, precision, meanacc]) / n_batch
+
+
+        print('  Validation loss: %.1f%%' % l)
+        print('      Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
+
+
+    def Saver(self):
+        print("Setting up Saver...")
+        self.saver = tf.train.Saver()
+        ckpt = tf.train.get_checkpoint_state(self.LOG)
+        if ckpt and ckpt.model_checkpoint_path:
+            self.saver.restore(self.sess, ckpt.model_checkpoint_path)
+            print("Model restored...")
+
+    def train(self, DGTrain, DGTest, saver=True):
+
+        epoch = DGTrain.length
+
+        self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
+
         trainable_var = tf.trainable_variables()
         
         self.regularize_model(trainable_var)
@@ -288,7 +325,7 @@ metrics = []
         merged_summary = tf.summary.merge_all()
         steps = self.STEPS
 
-        Xval, Yval = DGTest.Batch(0, self.BATCH_SIZE)
+        
         # for i in range(Xval.shape[0]):
         #     imsave("/tmp/image_{}.png".format(i), Xval[i])
         #     imsave("/tmp/label_{}.png".format(i), Yval[i,:,:,0])
@@ -306,15 +343,15 @@ metrics = []
                         feed_dict=feed_dict)
 
             if step % self.N_PRINT == 0:
+                i = datetime.now()
+                print i.strftime('%Y/%m/%d %H:%M:%S: \n ')
                 summary_writer.add_summary(s, step)                
                 error, acc, acc1, recall, prec, f1 = self.error_rate(predictions, batch_labels, step)
-                print('Step %d of %d' % (step, steps))
-                print('Mini-batch loss: %.5f \n Error: %.5f \n acc1: %.5f \n recall: %5.f \n prec: %5.f \n f1 : %5.f \n Learning rate: %.5f \n' % 
-                      (l, error, acc1, recall, prec, f1, lr))
-                print('Validation error: %.1f%% Accuracy: %1.f%% \n acc1: %.1f%% \n recall: %1.f%% \n prec: %1.f%% \n f1 : %1.f%% \n' % self.error_rate(
-                      self.test_prediction.eval(
-                      feed_dict={self.input_node : Xval}),
-                      (Yval).astype(np.float32), str(step) + "test"))
+                print('  Step %d of %d' % (step, steps))
+                print('  Learning rate: %.5f \n') % lr
+                print('      Mini-batch loss: %.5f \n       Error: %.5f \n       acc1: %.5f \n       recall: %5.f \n       prec: %5.f \n       f1 : %5.f \n' % 
+                      (l, error, acc1, recall, prec, f1))
+                self.Validation(DGTest)
 
 
 if __name__== "__main__":
@@ -323,8 +360,8 @@ if __name__== "__main__":
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(CUDA_NODE)
 
-    SAVE_DIR = "/tmp/object/1"
-    N_ITER_MAX = 20000
+    SAVE_DIR = "/tmp/object/short"
+    N_ITER_MAX = 2000
     N_TRAIN_SAVE = 100
     N_TEST_SAVE = 100
     LEARNING_RATE = 0.001
@@ -354,6 +391,7 @@ if __name__== "__main__":
                                        NUM_LABELS=2,
                                        NUM_CHANNELS=3,
                                        STEPS=N_ITER_MAX,
+                                       LRSTEP=LRSTEP,
                                        N_PRINT=N_TRAIN_SAVE,
                                        LOG=SAVE_DIR,
                                        SEED=42)
