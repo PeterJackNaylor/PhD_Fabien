@@ -206,29 +206,6 @@ class ConvolutionalNeuralNetwork:
         print('Computational graph initialised')
 
 
-metrics = []
-    metrics.append((loss, 'Loss'))
-    acc = np.diag(hist).sum() / hist.sum()
-    metrics.append((acc, 'Overall accuracy:'))
-    metrics.append((1 - acc, 'Pixel error'))
-    acc1 = (np.diag(hist) + 0.0) / hist.sum(1)
-    metrics.append((np.nanmean(acc1), "Mean accuracy:"))
-    iu = np.diag(hist) / (hist.sum(1) +
-                          hist.sum(0) - np.diag(hist))
-    metrics.append((np.nanmean(iu), "Intersection Over Union : "))
-    freq = hist.sum(1) / hist.sum()
-    metrics.append(((freq[freq > 0] * iu[freq > 0]).sum(), "fwavacc"))
-
-    if n_cl == 2 :
-        recall = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[1, 0])
-        metrics.append((recall, "Recall"))
-        prec = (hist[1, 1] + 0.0) / (hist[1, 1] + hist[0, 1])
-        metrics.append((prec, "Precision"))
-        metrics.append((recall, 'True positive'))
-        true_neg = (hist[0, 0] + 0.0) / (hist[0, 1] + hist[0, 0])
-        metrics.append((true_neg, 'True negatives'))
-        metrics.append(((recall + true_neg) / 2, 'Performance'))
-        F1 = 2 * prec * recall / (prec + recall)
 
     def error_rate(self, predictions, labels, iter):
 
@@ -238,7 +215,7 @@ metrics = []
         #     imsave("/tmp/pred/pred_{}_{}.png".format(i, iter), predictions[i])
         #     imsave("/tmp/pred/label_{}_{}.png".format(i, iter), labels[i])
 
-        cm = confusion_matrix(labels, predictions, labels=[0, 1]).astype(np.float)
+        cm = confusion_matrix(labels.flatten(), predictions.flatten(), labels=[0, 1]).astype(np.float)
         b, x, y = predictions.shape
         total = b * x * y
 
@@ -323,7 +300,7 @@ if __name__== "__main__":
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(CUDA_NODE)
 
-    SAVE_DIR = "/tmp/object/1"
+    SAVE_DIR = "/tmp/object/2"
     N_ITER_MAX = 20000
     N_TRAIN_SAVE = 100
     N_TEST_SAVE = 100
@@ -334,8 +311,8 @@ if __name__== "__main__":
     CROP = 4
     PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
     PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
-    PATH = "/data/users/pnaylor/Bureau/Data/ToAnnotate"
-    BATCH_SIZE = 1
+    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
+    BATCH_SIZE = 32
     LRSTEP = 200
     SUMMARY = True
     S = SUMMARY
