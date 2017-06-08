@@ -51,7 +51,7 @@ class UNet(ConvolutionalNeuralNetwork):
         self.input_node = self.input_node_f()
 
         self.train_labels_node = self.label_node_f()
-        n_features = 64
+        n_features = 16
 
         self.conv1_1weights = self.weight_xavier(3, self.NUM_CHANNELS, n_features, "conv1_1/")
         self.conv1_1biases = self.biases_const_f(0.1, n_features, "conv1_1/")
@@ -257,7 +257,7 @@ if __name__== "__main__":
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(CUDA_NODE)
 
-    SAVE_DIR = "/tmp/object/unet/short"
+    SAVE_DIR = "/tmp/object/unet/small/1"
     N_ITER_MAX = 2000
     N_TRAIN_SAVE = 100
     N_TEST_SAVE = 100
@@ -270,13 +270,14 @@ if __name__== "__main__":
     PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
     PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
 #    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
-    BATCH_SIZE = 2
+    BATCH_SIZE = 32
     LRSTEP = 200
     SUMMARY = True
     S = SUMMARY
 
 
     transform_list, transform_list_test = ListTransform()
+    pdb.set_trace()
     DG_TRAIN = DataGen(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True)
 
