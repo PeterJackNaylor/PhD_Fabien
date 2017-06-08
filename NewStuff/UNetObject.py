@@ -271,7 +271,7 @@ if __name__== "__main__":
     PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
 #    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
     BATCH_SIZE = 2
-    LRSTEP = 200
+    LRSTEP = "epoch/2"
     SUMMARY = True
     S = SUMMARY
 
@@ -279,6 +279,8 @@ if __name__== "__main__":
     transform_list, transform_list_test = ListTransform()
     DG_TRAIN = DataGen(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True)
+    
+    N_ITER_MAX = 200 * DG_TRAIN.length
 
     DG_TEST  = DataGen(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True)
