@@ -159,12 +159,14 @@ class ConvolutionalNeuralNetwork:
                                        [1,1,1,1], "conv3/")
         self.relu3 = self.relu_layer_f(self.conv3, self.conv3_biases, "conv3/")
 
+        self.last = self.relu3
+
         print('Model architecture initialised')
 
     def init_training_graph(self):
 
         with tf.name_scope('Evaluation'):
-            logits = self.conv_layer_f(self.relu3, self.logits_weight, [1,1,1,1], "logits/")
+            logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
             self.predictions = tf.argmax(logits, axis=3)
             
             with tf.name_scope('Loss'):
@@ -299,7 +301,7 @@ class ConvolutionalNeuralNetwork:
 
         print('  Validation loss: %.1f' % l)
         print('       Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
-        self.saver.save(self.sess, SAVE_DIR + '/' + "model.ckpt", step)
+        self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
 
     def Saver(self):
         print("Setting up Saver...")
@@ -386,6 +388,8 @@ if __name__== "__main__":
     PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
     PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
     PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
+    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
+
     BATCH_SIZE = 2
     LRSTEP = 200
     SUMMARY = True
