@@ -209,7 +209,7 @@ class ConvolutionalNeuralNetwork:
                 Nprecision = tf.divide(self.TN, tf.add(self.TN, self.FN))
                 self.MeanAcc = tf.divide(tf.add(self.precision, Nprecision) ,2)
 
-            self.batch = tf.Variable(0, name = "batch_iterator")
+            #self.batch = tf.Variable(0, name = "batch_iterator")
 
             self.train_prediction = tf.nn.softmax(logits)
 
