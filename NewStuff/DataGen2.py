@@ -21,15 +21,6 @@ import multiprocessing
 from multiprocessing import Queue
 from joblib import Parallel, delayed
 
-import copy_reg, types
-
-def _pickle_method(m):
-    if m.im_self is None:
-        return getattr, (m.im_class, m.im_func.func_name)
-    else:
-        return getattr, (m.im_self, m.im_func.func_name)
-
-copy_reg.pickle(types.MethodType, _pickle_method)
 
 
 def LoadImageBatch(path, img_format):
@@ -61,7 +52,9 @@ def OpenReadProcess(img_p, lbl_p, DG, f, crop_n):
     img = LoadImageBatch(img_p, DG.img_format)
     lbl = LoadGTBatch(lbl_p)
     img_lbl = (img, lbl)
-    return DG.Process(img_lbl, f, crop_n)
+    img_lbl = DG.Process(img_lbl, f, crop_n)
+    
+    return img_lbl
 
 def LoadGTBatch(path, normalize=True):
 
@@ -571,6 +564,7 @@ class DataGen(object):
             for i in range(batch_size):
                 key = self.NextKeyRandList(0)
                 ImagesBatch[i], LabelsBatch[i,:,:,0] = self[key]
+                pdb.set_trace()
         else:
             print "hay, using multiprocessing"
             IMG_list, LBL_list = [], []
@@ -590,26 +584,9 @@ class DataGen(object):
             pdb.set_trace()
             res = Parallel(n_jobs=4)(delayed(OpenReadProcess)(img_p, lbl_p, self, f, crop_n) for img_p, lbl_p, f, crop_n in ITERABLE)
 
-            multiprocessing.freeze_support()
-            pool = multiprocessing.Pool(multiprocessing.cpu_count())
-            keys = [self.NextKeyRandList(0) for i in range(batch_size)]
+            for i in range(len(res)):
+                ImagesBatch[i], LabelsBatch[i,:,:,0] = res[i]
 
-            
-            def f(k, i, out_q):
-                x, y = self[k]
-                out_q.put({"img":x, "lbl":y})
-            out_q = Queue()
-            jobs = []
-            for i, k in enumerate(keys):
-                p = multiprocessing.Process(target=f, args=(k, i, out_q))
-                jobs.append(p)
-                p.start()
-            resultdict = {}
-            for i in range(len(keys)):
-                resultdict.update(out_q.get())
-            for p in jobs:
-                p.join()
-            pdb.set_trace()
         return ImagesBatch, LabelsBatch
 
 
@@ -643,14 +620,14 @@ def ListTransform():
 #    for i in range(50):
 #        transform_list.append(Transf.ElasticDeformation(1.2, 24. / 512, 0.07))
 
-    perturbations = [ i / 100. for i in range(60, 140, 5)]
-    small_perturbation = [ i / 100. for i in range(80, 120, 5)]
-    for k_h in perturbations:
-        for k_e in perturbations:
-            transform_list.append(Transf.HE_Perturbation((k_h,0), (k_e,0), (1, 0)))
-    for k_b in perturbations:
-        for k_s in small_perturbation:
-            transform_list.append(Transf.HSV_Perturbation((1,0), (k_s,0), (k_b, 0))) 
+#    perturbations = [ i / 100. for i in range(60, 140, 5)]
+#    small_perturbation = [ i / 100. for i in range(80, 120, 5)]
+#    for k_h in perturbations:
+#        for k_e in perturbations:
+#            transform_list.append(Transf.HE_Perturbation((k_h,0), (k_e,0), (1, 0)))
+#    for k_b in perturbations:
+#        for k_s in small_perturbation:
+#            transform_list.append(Transf.HSV_Perturbation((1,0), (k_s,0), (k_b, 0))) 
 
     transform_list_test = [Transf.Identity()]
 
@@ -704,7 +681,7 @@ if __name__ == "__main__":
     elif timing:
 
         N_ITER = 10
-        BS = 32
+        BS = 2
         now = time.time()
         for i in range(N_ITER):
             img_b, lbl_b = DG.Batch(0, BS)
