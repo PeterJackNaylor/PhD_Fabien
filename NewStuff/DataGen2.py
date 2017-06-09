@@ -498,7 +498,6 @@ class DataGen(object):
             self.key_iter += 1
         if self.key_iter == self.length:
             self.key_iter = 0
-        print self.RandomList[self.key_iter]
 
         return self.RandomList[self.key_iter]
 
