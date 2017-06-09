@@ -17,6 +17,10 @@ from skimage import measure
 import pdb
 import matplotlib.pylab as plt
 import time
+#import multiprocessing
+#from multiprocessing import Queue
+#from joblib import Parallel, delayed
+
 
 class DataGen(object):
 
@@ -473,11 +477,34 @@ class DataGen(object):
 
         ImagesBatch = np.zeros(shape=(batch_size, Width_Images, Height_Images, 3), dtype='float')
         LabelsBatch = np.zeros(shape=(batch_size, self.size[0], self.size[1], 1), dtype='float')
-        
-        for i in range(batch_size):
-            key = self.NextKeyRandList(0)
-            ImagesBatch[i], LabelsBatch[i,:,:,0] = self[key]
 
+        MultipleProcess = True
+        if MultipleProcess:
+            for i in range(batch_size):
+                key = self.NextKeyRandList(0)
+                ImagesBatch[i], LabelsBatch[i,:,:,0] = self[key]
+        else:
+            print "hay, using multiprocessing"
+            multiprocessing.freeze_support()
+            pool = multiprocessing.Pool(multiprocessing.cpu_count())
+            keys = [self.NextKeyRandList(0) for i in range(batch_size)]
+
+            
+            def f(k, i, out_q):
+                x, y = self[k]
+                out_q.put({"img":x, "lbl":y})
+            out_q = Queue()
+            jobs = []
+            for i, k in enumerate(keys):
+                p = multiprocessing.Process(target=f, args=(k, i, out_q))
+                jobs.append(p)
+                p.start()
+            resultdict = {}
+            for i in range(len(keys)):
+                resultdict.update(out_q.get())
+            for p in jobs:
+                p.join()
+            pdb.set_trace()
         return ImagesBatch, LabelsBatch
 
 
@@ -570,8 +597,9 @@ if __name__ == "__main__":
             plt.show()
 
     elif timing:
+
         N_ITER = 10
-        BS = 6
+        BS = 32
         now = time.time()
         for i in range(N_ITER):
             img_b, lbl_b = DG.Batch(0, BS)

@@ -257,7 +257,7 @@ if __name__== "__main__":
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(CUDA_NODE)
 
-    SAVE_DIR = "/tmp/object/unet/small/1"
+    SAVE_DIR = "/tmp/object/unet/1/long_0.001"
     N_ITER_MAX = 2000
     N_TRAIN_SAVE = 100
     N_TEST_SAVE = 100
@@ -271,15 +271,16 @@ if __name__== "__main__":
     PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
 #    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
     BATCH_SIZE = 32
-    LRSTEP = 200
+    LRSTEP = "epoch/2"
     SUMMARY = True
     S = SUMMARY
 
 
     transform_list, transform_list_test = ListTransform()
-    pdb.set_trace()
     DG_TRAIN = DataGen(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
-                       transforms=transform_list, UNet=True)
+                       transforms=transform_list, UNet=True, perc_trans=1.)
+    
+    N_ITER_MAX = 200 * DG_TRAIN.length // BATCH_SIZE
 
     DG_TEST  = DataGen(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True)
