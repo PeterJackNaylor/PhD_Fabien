@@ -51,7 +51,7 @@ class UNet(ConvolutionalNeuralNetwork):
         self.input_node = self.input_node_f()
 
         self.train_labels_node = self.label_node_f()
-        n_features = 64
+        n_features = 16
 
         self.conv1_1weights = self.weight_xavier(3, self.NUM_CHANNELS, n_features, "conv1_1/")
         self.conv1_1biases = self.biases_const_f(0.1, n_features, "conv1_1/")
@@ -256,7 +256,7 @@ if __name__== "__main__":
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(CUDA_NODE)
 
-    SAVE_DIR = "/tmp/object/unet/long_0.001"
+    SAVE_DIR = "/tmp/object/unet/1/long_0.001"
     N_ITER_MAX = 2000
     N_TRAIN_SAVE = 100
     N_TEST_SAVE = 100
@@ -269,7 +269,7 @@ if __name__== "__main__":
     PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
     PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
 #    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
-    BATCH_SIZE = 2
+    BATCH_SIZE = 32
     LRSTEP = "epoch/2"
     SUMMARY = True
     S = SUMMARY
@@ -277,9 +277,9 @@ if __name__== "__main__":
 
     transform_list, transform_list_test = ListTransform()
     DG_TRAIN = DataGen(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
-                       transforms=transform_list, UNet=True)
+                       transforms=transform_list, UNet=True, perc_trans=1.)
     
-    N_ITER_MAX = 200 * DG_TRAIN.length
+    N_ITER_MAX = 200 * DG_TRAIN.length // BATCH_SIZE
 
     DG_TEST  = DataGen(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True)

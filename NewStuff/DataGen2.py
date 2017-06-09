@@ -17,8 +17,8 @@ from skimage import measure
 import pdb
 import matplotlib.pylab as plt
 import time
-import multiprocessing
-from multiprocessing import Queue
+#import multiprocessing
+#from multiprocessing import Queue
 from joblib import Parallel, delayed
 from UsefulFunctions.ImageTransf import ListTransform
 
@@ -77,8 +77,8 @@ class DataGen(object):
 
     def __init__(self, path, crop=1, size=None, transforms=None,
                  split="train", leave_out=1, seed_=None, name="optionnal",
-                 img_format="RGB", wgt_param=None, UNet=False, perc_trans=1.,
-                 return_path=False):
+                 img_format="RGB", wgt_param=None, UNet=False, N_JOBS=1, 
+		         perc_trans=1., return_path=False):
 
         self.path = path
         self.name = name
@@ -105,7 +105,7 @@ class DataGen(object):
         self.size = size
 
         self.UNet = UNet
-
+        self.N_JOBS = N_JOBS
 
     def ReLoad(self, split):
         self.split = split
@@ -498,6 +498,7 @@ class DataGen(object):
             self.key_iter += 1
         if self.key_iter == self.length:
             self.key_iter = 0
+        print self.RandomList[self.key_iter]
 
         return self.RandomList[self.key_iter]
 
@@ -560,13 +561,12 @@ class DataGen(object):
         ImagesBatch = np.zeros(shape=(batch_size, Width_Images, Height_Images, 3), dtype='float')
         LabelsBatch = np.zeros(shape=(batch_size, self.size[0], self.size[1], 1), dtype='float')
 
-        MultipleProcess = False
+        MultipleProcess = self.N_JOBS != 1
         if not MultipleProcess:
             for i in range(batch_size):
                 key = self.NextKeyRandList(0)
                 ImagesBatch[i], LabelsBatch[i,:,:,0] = self[key]
         else:
-            print "hay, using multiprocessing"
             IMG_list, LBL_list = [], []
             f_list = []
             crop_list = []
@@ -580,9 +580,7 @@ class DataGen(object):
 
             ITERABLE = zip(IMG_list, LBL_list, f_list, crop_list)
 
-                
-            pdb.set_trace()
-            res = Parallel(n_jobs=4)(delayed(OpenReadProcess)(img_p, lbl_p, self, f, crop_n) for img_p, lbl_p, f, crop_n in ITERABLE)
+            res = Parallel(n_jobs=self.N_JOBS)(delayed(OpenReadProcess)(img_p, lbl_p, self, f, crop_n) for img_p, lbl_p, f, crop_n in ITERABLE)
 
             for i in range(len(res)):
                 ImagesBatch[i], LabelsBatch[i,:,:,0] = res[i]
@@ -611,24 +609,28 @@ if __name__ == "__main__":
 
     path = "/home/pnaylor/Documents/Data/ToAnnotate"
     path = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
+    path = "/data/users/pnaylor/Bureau/ToAnnotate"
+    path = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
 
     transf, transf_test = ListTransform()
 
     size = (212, 212)
     crop = 4
     UNet = False
-    perc_trans = 1.
+    perc_trans = .75
 
     DG = DataGen(path, crop=crop, size=size, transforms=transf,
-                 split="train", leave_out=1, UNet=UNet, perc_trans=perc_trans)
+                 split="train", leave_out=1, UNet=UNet, N_JOBS=1, perc_trans=perc_trans)
     DG_test = DataGen(path, crop=crop, size=size, transforms=transf_test,
-                 split="test", leave_out=1, UNet=UNet)
-    plot_img = False
+                 split="test", leave_out=1, UNet=UNet, N_JOBS=1)
+    plot_img = True
     timing = False
     if plot_img:
         print len(transf), len(transf)*perc_trans
         print DG.n_trans
         print DG.length
+        print transf[160]
+        print transf[171]
         img, lbl = DG[0,0,160,2]
         img_test, lbl_test = DG[0,0,171, 2]
 
@@ -653,7 +655,7 @@ if __name__ == "__main__":
     elif timing:
 
         N_ITER = 10
-        BS = 2
+        BS = 64
         now = time.time()
         for i in range(N_ITER):
             img_b, lbl_b = DG.Batch(0, BS)
