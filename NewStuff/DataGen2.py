@@ -20,6 +20,7 @@ import time
 import multiprocessing
 from multiprocessing import Queue
 from joblib import Parallel, delayed
+from UsefulFunctions.ImageTransf import ListTransform
 
 
 
@@ -559,12 +560,11 @@ class DataGen(object):
         ImagesBatch = np.zeros(shape=(batch_size, Width_Images, Height_Images, 3), dtype='float')
         LabelsBatch = np.zeros(shape=(batch_size, self.size[0], self.size[1], 1), dtype='float')
 
-        MultipleProcess = True
+        MultipleProcess = False
         if not MultipleProcess:
             for i in range(batch_size):
                 key = self.NextKeyRandList(0)
                 ImagesBatch[i], LabelsBatch[i,:,:,0] = self[key]
-                pdb.set_trace()
         else:
             print "hay, using multiprocessing"
             IMG_list, LBL_list = [], []
@@ -607,34 +607,6 @@ def CheckNumberForUnet(n):
     return ans
 
 
-def ListTransform():
-    transform_list = [Transf.Identity(),
-                      Transf.Flip(0),
-                      Transf.Flip(1)]
-    for rot in np.arange(1, 360, 4):
-        transform_list.append(Transf.Rotation(rot, enlarge=True))
-
-    for sig in [1, 2, 3, 4]:
-        transform_list.append(Transf.OutOfFocus(sig))
-
-#    for i in range(50):
-#        transform_list.append(Transf.ElasticDeformation(1.2, 24. / 512, 0.07))
-
-#    perturbations = [ i / 100. for i in range(60, 140, 5)]
-#    small_perturbation = [ i / 100. for i in range(80, 120, 5)]
-#    for k_h in perturbations:
-#        for k_e in perturbations:
-#            transform_list.append(Transf.HE_Perturbation((k_h,0), (k_e,0), (1, 0)))
-#    for k_b in perturbations:
-#        for k_s in small_perturbation:
-#            transform_list.append(Transf.HSV_Perturbation((1,0), (k_s,0), (k_b, 0))) 
-
-    transform_list_test = [Transf.Identity()]
-
-    return transform_list, transform_list_test
-
-
-
 if __name__ == "__main__":
 
     path = "/home/pnaylor/Documents/Data/ToAnnotate"
@@ -652,7 +624,7 @@ if __name__ == "__main__":
     DG_test = DataGen(path, crop=crop, size=size, transforms=transf_test,
                  split="test", leave_out=1, UNet=UNet)
     plot_img = False
-    timing = True
+    timing = False
     if plot_img:
         print len(transf), len(transf)*perc_trans
         print DG.n_trans

@@ -541,7 +541,7 @@ class HSV_Perturbation(Transf):
         for img in image:
             if n_img == 0:
                 ### transform image into HSV
-                img = color.rgb2hsv(img)
+                img = color.rgb2hsv(img).astype('uint8')
                 ### perturbe each channel H, E, Dab
                 for i in range(3):
                     k_i = self.params['k'][i] 
