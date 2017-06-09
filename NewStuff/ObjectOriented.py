@@ -284,7 +284,7 @@ class ConvolutionalNeuralNetwork:
 
         if self.LRSTEP == "epoch/2":
 
-            decay_step = float(epoch) / 2
+            decay_step = float(epoch) / (2 * self.BATCH_SIZE)
         
         else:
 

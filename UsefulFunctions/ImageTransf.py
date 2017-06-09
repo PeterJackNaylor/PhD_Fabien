@@ -540,16 +540,17 @@ class HSV_Perturbation(Transf):
         n_img = 0
         for img in image:
             if n_img == 0:
+                #pdb.set_trace()
                 ### transform image into HSV
-                img = color.rgb2hsv(img).astype('uint8')
+                img = img_as_ubyte(color.rgb2hsv(img))
                 ### perturbe each channel H, E, Dab
                 for i in range(3):
                     k_i = self.params['k'][i] 
                     b_i = self.params['b'][i] 
-                    img[:,:,i] = GreyValuePerturbation(img[:, :, i], k_i, b_i, MIN=0., MAX=1.)
+                    img[:,:,i] = GreyValuePerturbation(img[:, :, i], k_i, b_i, MIN=0., MAX=255)
                     #plt.imshow(img[:,:,i], "gray")
                     #plt.show()
-                sub_res = color.hsv2rgb(img)
+                sub_res = img_as_ubyte(color.hsv2rgb(img))
             else:
                 sub_res = img
 
@@ -607,10 +608,11 @@ if __name__ == '__main__':
 
     transform_list = [Identity(), ElasticDeformation(a,b,aa), 
                       Rotation(130.), Flip(1), OutOfFocus(3),
-                      HE_Perturbation((1.25,0),(1.25,0),(1,0)), HSV_Perturbation((1,0),(1.15,0),(1.35,0))
+                      HE_Perturbation((1.25,0),(1.25,0),(1,0)), HSV_Perturbation((1,0),(1.15,0),(1.45,0))
                       ]
     transform_list, _ = ListTransform(45, 20, 20, 20)
-    f = 5
+    print len(transform_list)
+    f = 70
     def Contours(bin_image, contour_size=3):
         # Computes the contours
         grad = morphological_gradient(bin_image, size=(contour_size, contour_size))
@@ -619,8 +621,8 @@ if __name__ == '__main__':
     DG_TRAIN = DataGen(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True)
 
-    plot_one = False
-    save_all = True
+    plot_one = True
+    save_all = False
 
     if plot_one:
         fig, axes = plt.subplots(2,2)
