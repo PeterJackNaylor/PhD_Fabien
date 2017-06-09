@@ -479,7 +479,7 @@ class DataGen(object):
         LabelsBatch = np.zeros(shape=(batch_size, self.size[0], self.size[1], 1), dtype='float')
 
         MultipleProcess = False
-        if MultipleProcess:
+        if not MultipleProcess:
             for i in range(batch_size):
                 key = self.NextKeyRandList(0)
                 ImagesBatch[i], LabelsBatch[i,:,:,0] = self[key]

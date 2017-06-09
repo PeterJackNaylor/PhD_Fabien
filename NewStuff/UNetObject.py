@@ -244,7 +244,6 @@ class UNet(ConvolutionalNeuralNetwork):
 
         self.conv1_4 = self.conv_layer_f(self.relu1_3, self.conv1_4weights, "conv1_4/")
         self.relu1_4 = self.relu_layer_f(self.conv1_4, self.conv1_4biases, "conv1_4/")
-        print_dim("last", self.relu1_4)
         self.last = self.relu1_4
 
         print('Model architecture initialised')

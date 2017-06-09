@@ -118,6 +118,28 @@ class ConvolutionalNeuralNetwork:
         return tf.nn.max_pool(i_layer, ksize=ksize, strides=strides, 
                               padding=padding, name=name)
 
+    def BatchNorm(self, Input, n_out, phase_train, scope='bn', decay=0.9, eps=1e-5):
+        """
+        Code taken from http://stackoverflow.com/a/34634291/2267819
+        """
+        with tf.name_scope(scope):
+            init_beta = tf.constant(0.0, shape=[n_out])
+            beta = tf.Variable(init_beta, name="beta")
+            init_gamma = tf.random_normal([n_out], 1.0, 0.02)
+            gamma = tf.Variable(init_gamma)
+            batch_mean, batch_var = tf.nn.moments(Input, [0, 1, 2], name='moments')
+            ema = tf.train.ExponentialMovingAverage(decay=decay)
+
+            def mean_var_with_update():
+                ema_apply_op = ema.apply([batch_mean, batch_var])
+                with tf.control_dependencies([ema_apply_op]):
+                    return tf.identity(batch_mean), tf.identity(batch_var)
+
+            mean, var = tf.cond(phase_train,
+                                mean_var_with_update,
+                                lambda: (ema.average(batch_mean), ema.average(batch_var)))
+            normed = tf.nn.batch_normalization(Input, mean, var, beta, gamma, eps)
+        return normed
     def init_vars(self):
         self.input_node = self.input_node_f()
 
@@ -320,7 +342,6 @@ class ConvolutionalNeuralNetwork:
         # step.  This is what we will use in place of the usual training op.
         with tf.control_dependencies([self.optimizer]):
             self.training_op = tf.group(maintain_averages_op)
-
 
     def train(self, DGTrain, DGTest, saver=True):
 
