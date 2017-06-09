@@ -22,6 +22,56 @@ import time
 #from joblib import Parallel, delayed
 
 
+
+def LoadImageBatch(path, img_format):
+    image = misc.imread(path)
+    if image.shape[2] == 4:
+        image = image[:, :, 0:3]
+
+    if img_format == "HEDab":
+        dec = deconv.Deconvolution()
+        dec.params['image_type'] = 'HEDab'
+
+        np_img = np.array(image)
+        dec_img = dec.colorDeconv(np_img[:, :, :3])
+
+        image = dec_img.astype('uint8')
+
+    elif img_format == "HE":
+        dec = deconv.Deconvolution()
+        dec.params['image_type'] = 'HEDab'
+
+        np_img = np.array(image)
+        dec_img = dec.colorDeconv(np_img[:, :, :3])
+
+        image = dec_img.astype('uint8')
+
+    return image
+
+def OpenReadProcess(img_p, lbl_p, DG, f, crop_n):
+    img = LoadImageBatch(img_p, DG.img_format)
+    lbl = LoadGTBatch(lbl_p)
+    img_lbl = (img, lbl)
+    img_lbl = DG.Process(img_lbl, f, crop_n)
+    
+    return img_lbl
+
+def LoadGTBatch(path, normalize=True):
+
+    image = ni.load(path)
+    img = image.get_data()
+    img = measure.label(img)
+    wsl = generate_wsl(img[:,:,0])
+    img[ img > 0 ] = 1
+    wsl[ wsl > 0 ] = 1
+    img[:,:,0] = img[:,:,0] - wsl
+    if len(img.shape) == 3:
+        img = img[:, :, 0].transpose()
+    else:
+        img = img.transpose()
+    return img
+
+
 class DataGen(object):
 
     def __init__(self, path, crop=1, size=None, transforms=None,
@@ -94,21 +144,57 @@ class DataGen(object):
         img_lbl_Mwgt += (self.LoadImage(img_path), )
         img_lbl_Mwgt += (self.LoadGT(lbl_path), )
 
-
         if self.Weight:
             ## add wegiht check for 0
             wgt_path = self.Weight_path(img_path)
             img_lbl_Mwgt += (self.LoadWeight(wgt_path), )
-        #pdb.set_trace()
-        if self.UNet:
-            img_lbl_Mwgt = self.Unet_cut(*img_lbl_Mwgt)
 
         f = self.transforms[key[2]]
+        crop_n = key[3]
+        img_lbl_Mwgt = self.Process(img_lbl_Mwgt, f, crop_n)
+
+        if self.return_path:
+            img_lbl_Mwgt += (img_path,)                    
+        
+        return img_lbl_Mwgt
+
+    def KeyPath(self, key):
+        if len(key) != 4:
+            print "key given: ", key
+            print "key length %d" % len(key)
+            raise Exception('Wrong number of keys')
+
+        if key[0] > len(self.patients_iter):
+            raise Exception(
+                "Value exceed number of patients available for {}ing.".format(self.split))
+        numero = self.patients_iter[key[0]]
+        n_patient = len(self.patient_img[numero])
+        
+        if key[1] > n_patient:
+            raise Exception(
+                "Patient {} doesn't have {} possible images.".format(self.patients_iter[key[0]], key[1]))
+        
+        if key[2] > self.n_trans:
+            raise Exception(
+                "Value exceed number of possible transformation for {}ing".format(self.split))
+
+        if key[3] > self.crop - 1:
+            raise Exception("Value exceed number of crops")
+
+        img_path = self.patient_img[numero][key[1]]
+        lbl_path = img_path.replace("Slide", "GT").replace(".png", ".nii.gz")
+        return img_path, lbl_path
+
+    def Process(self, img_lbl_Mwgt, f, crop_n):
+
+
+        if self.UNet:
+            img_lbl_Mwgt = self.Unet_cut(*img_lbl_Mwgt)
 
         img_lbl_Mwgt = f._apply_(*img_lbl_Mwgt)  # change _apply_
 
         if self.crop != 1:
-            img_lbl_Mwgt = self.DivideImage(key[3], *img_lbl_Mwgt)
+            img_lbl_Mwgt = self.DivideImage(crop_n, *img_lbl_Mwgt)
 
         if self.random_crop:
             img_lbl_Mwgt = self.CropImgLbl(*img_lbl_Mwgt)
@@ -117,12 +203,7 @@ class DataGen(object):
             CheckNumberForUnet(img_lbl_Mwgt[0].shape[0])
             img_lbl_Mwgt = self.ReduceDimUNet(*img_lbl_Mwgt)    
 
-        if self.return_path:
-            img_lbl_Mwgt += (img_path,)
-
-            
         return img_lbl_Mwgt
-
 
     def LoadImage(self, path):
 
@@ -192,7 +273,7 @@ class DataGen(object):
         except:
             self.wgt_dir = ComputeWeightMap(self.path, w_0, val, sigma)
 
-        return self.wgt_path
+        return self.wgt_dir
 
 
     def DivideImage(self, quarter, *iterable):
@@ -478,33 +559,34 @@ class DataGen(object):
         ImagesBatch = np.zeros(shape=(batch_size, Width_Images, Height_Images, 3), dtype='float')
         LabelsBatch = np.zeros(shape=(batch_size, self.size[0], self.size[1], 1), dtype='float')
 
-        MultipleProcess = False
+        MultipleProcess = True
         if not MultipleProcess:
             for i in range(batch_size):
                 key = self.NextKeyRandList(0)
                 ImagesBatch[i], LabelsBatch[i,:,:,0] = self[key]
+                pdb.set_trace()
         else:
             print "hay, using multiprocessing"
-            multiprocessing.freeze_support()
-            pool = multiprocessing.Pool(multiprocessing.cpu_count())
-            keys = [self.NextKeyRandList(0) for i in range(batch_size)]
+            IMG_list, LBL_list = [], []
+            f_list = []
+            crop_list = []
+            for i in range(batch_size):
+                key = self.NextKeyRandList(0)
+                img_path, lbl_path = self.KeyPath(key)
+                IMG_list.append(img_path)
+                LBL_list.append(lbl_path)
+                f_list.append(self.transforms[key[2]])
+                crop_list.append(key[3])
 
-            
-            def f(k, i, out_q):
-                x, y = self[k]
-                out_q.put({"img":x, "lbl":y})
-            out_q = Queue()
-            jobs = []
-            for i, k in enumerate(keys):
-                p = multiprocessing.Process(target=f, args=(k, i, out_q))
-                jobs.append(p)
-                p.start()
-            resultdict = {}
-            for i in range(len(keys)):
-                resultdict.update(out_q.get())
-            for p in jobs:
-                p.join()
+            ITERABLE = zip(IMG_list, LBL_list, f_list, crop_list)
+
+                
             pdb.set_trace()
+            res = Parallel(n_jobs=4)(delayed(OpenReadProcess)(img_p, lbl_p, self, f, crop_n) for img_p, lbl_p, f, crop_n in ITERABLE)
+
+            for i in range(len(res)):
+                ImagesBatch[i], LabelsBatch[i,:,:,0] = res[i]
+
         return ImagesBatch, LabelsBatch
 
 
@@ -538,14 +620,14 @@ def ListTransform():
 #    for i in range(50):
 #        transform_list.append(Transf.ElasticDeformation(1.2, 24. / 512, 0.07))
 
-    perturbations = [ i / 100. for i in range(60, 140, 5)]
-    small_perturbation = [ i / 100. for i in range(80, 120, 5)]
-    for k_h in perturbations:
-        for k_e in perturbations:
-            transform_list.append(Transf.HE_Perturbation((k_h,0), (k_e,0), (1, 0)))
-    for k_b in perturbations:
-        for k_s in small_perturbation:
-            transform_list.append(Transf.HSV_Perturbation((1,0), (k_s,0), (k_b, 0))) 
+#    perturbations = [ i / 100. for i in range(60, 140, 5)]
+#    small_perturbation = [ i / 100. for i in range(80, 120, 5)]
+#    for k_h in perturbations:
+#        for k_e in perturbations:
+#            transform_list.append(Transf.HE_Perturbation((k_h,0), (k_e,0), (1, 0)))
+#    for k_b in perturbations:
+#        for k_s in small_perturbation:
+#            transform_list.append(Transf.HSV_Perturbation((1,0), (k_s,0), (k_b, 0))) 
 
     transform_list_test = [Transf.Identity()]
 
@@ -599,7 +681,7 @@ if __name__ == "__main__":
     elif timing:
 
         N_ITER = 10
-        BS = 32
+        BS = 2
         now = time.time()
         for i in range(N_ITER):
             img_b, lbl_b = DG.Batch(0, BS)
