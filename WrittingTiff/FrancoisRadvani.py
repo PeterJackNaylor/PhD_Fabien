@@ -70,24 +70,24 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
             inter_bin = (inter_result > 0.5 + 0.0).astype(np.uint8)
             inter_bin = clear_border(inter_bin)
             inter_result[inter_bin == 0] = 0
-	elif ClearBorder == "RemoveBorderWithDWS":
-	    # pdb.set_trace()
-	    inter_bin = PostProcess(inter_result, param)
+        elif ClearBorder == "RemoveBorderWithDWS":
+        # pdb.set_trace()
+            inter_bin = PostProcess(inter_result, param)
             inter_bin_without = clear_border(inter_bin, bgval = 0)
-	    inter_bin_without = inter_bin - inter_bin_without
-	    inter_bin_without[inter_bin_without > 0] = 1  
+            inter_bin_without = inter_bin - inter_bin_without
+            inter_bin_without[inter_bin_without > 0] = 1  
             inter_result[inter_bin_without == 1] = 0
-	    inter_bin = 1 - inter_bin_without.copy()
+            inter_bin = 1 - inter_bin_without.copy()
         elif ClearBorder == "Reconstruction":
             
-	    inter_result, thresh = RemoveBordersByReconstruction(inter_result, removeFromBorder)
-	    thresh_list += [thresh]
+            inter_result, thresh = RemoveBordersByReconstruction(inter_result, removeFromBorder)
+            thresh_list += [thresh]
             if method == "avg":
-		print "avg not implemented with Reconstruction for clear border, switched to max"
-		method = "max"
+                print "avg not implemented with Reconstruction for clear border, switched to max"
+                method = "max"
 
         if method == 'avg':
-	    inter_mean = np.ones_like(inter_result)
+            inter_mean = np.ones_like(inter_result)
             inter_result[inter_bin == 0] = 0
             inter_mean[ inter_bin == 0 ] = 0
             result[y_b:y_e, x_b:x_e, 0] += inter_result
@@ -107,7 +107,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
 
     if ClearBorder == "Reconstruction":
 
-	threshold = threshold - np.mean(thresh_list)
+        threshold = threshold - np.mean(thresh_list)
 
     bin_map = prob_map > threshold + 0.0
     bin_map = bin_map.astype(np.uint8)

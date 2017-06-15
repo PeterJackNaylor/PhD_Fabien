@@ -61,27 +61,33 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
 
-    if "Tumor" in options.method:
-        method = "SP_ROI_tumor"
-    else:
-        method = "SP_ROI_normal"
-
     basename = options.file
     name = basename
     name = os.path.join('/share/data40T_v2/CAMELYON16_data/{}', name)
     name = name.format(options.method)
 
-    list_roi = ROI(name, ref_level=0, disk_size=4, thresh=230, black_spots=None,
-        number_of_pixels_max=50176, verbose=False, marge=0, method=method,
-        contour_size=3, N_squares=(200, 300, 50), seed=None, cut_whitescore=0.8,
-        ticket_val=options.ticket_val)
+
+
+    if "Tumor" in options.method:
+        method = "SP_ROI_tumor"
+        list_roi = ROI(name, ref_level=0, disk_size=4, thresh=230, black_spots=None,
+            number_of_pixels_max=50176, verbose=False, marge=0, method=method,
+            contour_size=3, N_squares=(150, 300, 50), seed=None, cut_whitescore=0.8,
+            ticket_val=options.ticket_val)
+
+    else:
+        method = "SP_ROI_normal"
+        list_roi = ROI(name, ref_level=0, disk_size=4, thresh=230, black_spots=None,
+            number_of_pixels_max=50176, verbose=False, marge=0, method=method,
+            contour_size=3, N_squares=(100, 100, 50), seed=None, cut_whitescore=0.8,
+            ticket_val=options.ticket_val)
 
     FILENAME = name.replace(".tif", ".txt")
     FILEPATH = os.path.join(options.output_folder, basename).replace('.tif', '.txt')
     CreateFileParam(FILEPATH, list_roi, basename)
 
 
-    basename_png = basename.replace('.tif','') + "{}_{}_{}_{}_{}.png"
+    basename_png = basename.replace('.tif','') + "_{}_{}_{}_{}_{}.png"
     FILEPATH = os.path.join(options.output_folder, basename_png)
     for para in list_roi:
         img = GetImage(name, para)

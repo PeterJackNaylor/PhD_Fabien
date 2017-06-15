@@ -42,20 +42,23 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
 
-
     txt_loc = join(options.input, "*.txt")
     first = True
     for files in g.glob(txt_loc):
-
-        colname = ['x', 'y', 'size_x', 'size_y', 'ref_level',
-                         'DomainLabel', 'Label']
-        table = pd.read_csv(files, sep = " ", header = None, 
-                            names=colname, nrows=20)
-        if first:
-            result = table.copy()
-            first = False
+        if "train.txt" in files or "test.txt" in files:
+            pass
         else:
-            result = result.append(table)
+            colname = ['x', 'y', 'size_x', 'size_y', 'ref_level',
+                             'DomainLabel', 'Label']
+            table = pd.read_csv(files, sep = " ", header = None, 
+                                names=colname)#, nrows=20)
+            if 0 or 1 in np.unique(table['DomainLabel']):
+                pdb.set_trace()
+            if first:
+                result = table.copy()
+                first = False
+            else:
+                result = result.append(table)
     patient = np.unique(result['DomainLabel'])
     TumorPatient = [f for f in patient if "Tumor" in f]
     NormalPatient = [f for f in patient if "Normal" in f]
@@ -65,7 +68,7 @@ if __name__ == "__main__":
 
     n_normal = len(NormalPatient)
     n_tumor = len(TumorPatient)
-
+    
     test_tumor = TumorPatient[0:int(options.split_value * n_tumor)]
     test_normal = NormalPatient[0:int(options.split_value * n_normal)] 
 
@@ -79,7 +82,6 @@ if __name__ == "__main__":
     TrainTable = result.copy() 
     for pat_id in test_tumor + test_normal:
         TrainTable = TrainTable[TrainTable["DomainLabel"] != pat_id]
-
     TrainTable = myspecialshuffling(TrainTable, options.loops)
     TrainTable.to_csv(join(options.output,'train.txt'),sep = " ", header = None)
 

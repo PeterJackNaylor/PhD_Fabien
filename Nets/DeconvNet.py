@@ -4,7 +4,6 @@ import caffe
 from caffe import layers as L, params as P
 from caffe.coord_map import crop
 
-
 def deconvnet(split, data_gene, loss, batch_size, Weight, cn, num_output):
     n = caffe.NetSpec()
     if not Weight:
