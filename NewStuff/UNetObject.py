@@ -260,14 +260,14 @@ if __name__== "__main__":
     N_ITER_MAX = 2000
     N_TRAIN_SAVE = 100
     N_TEST_SAVE = 100
-    LEARNING_RATE = 0.001
+    LEARNING_RATE = 0.0001
     MEAN = np.array([122.67892, 116.66877 ,104.00699])
     HEIGHT = 212 
     WIDTH = 212
     CROP = 4
     PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
-    PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
-    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
+#    PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
+#    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
 #    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
     BATCH_SIZE = 32
     LRSTEP = "epoch/2"

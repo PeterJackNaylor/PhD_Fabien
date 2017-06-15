@@ -78,7 +78,7 @@ class DataGen(object):
     def __init__(self, path, crop=1, size=None, transforms=None,
                  split="train", leave_out=1, seed_=None, name="optionnal",
                  img_format="RGB", wgt_param=None, UNet=False, N_JOBS=1, 
-		         perc_trans=1., return_path=False):
+                 perc_trans=1., return_path=False):
 
         self.path = path
         self.name = name
