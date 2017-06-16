@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from UNetObject import UNet
 import tensorflow as tf
 import numpy as np
@@ -211,10 +213,10 @@ if __name__== "__main__":
     CROP = 4
     PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
 #    PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
-#    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
+    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
 #    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
 
-    BATCH_SIZE = 64
+    BATCH_SIZE = 32
     LRSTEP = "epoch/2"
     SUMMARY = True
     S = SUMMARY
