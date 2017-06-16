@@ -1,7 +1,7 @@
 from DataGen2 import DataGen
 import glob
 import itertools
-from random import shuffle
+from random import shuffle, sample
 import numpy as np
 
 
@@ -28,7 +28,7 @@ class DataGenRandomT(DataGen):
             self.length = np.sum(images_test) * self.crop 
             self.patients_iter = test_patient
 
-        self.SetRandomList() ## needed? 
+        self.SetRandomList()  
 
 
     def GeneratePossibleKeys(self):
@@ -42,7 +42,7 @@ class DataGenRandomT(DataGen):
             i += 1
             nber_per_patient = len(self.patient_img[num])
             lists += (range(nber_per_patient),)
-            lists += (-1,)
+            lists += ([-1],)
             lists += (range(self.crop),)
             
             AllPossibleKeys += list(itertools.product(*lists))
@@ -73,3 +73,25 @@ class DataGenRandomT(DataGen):
         
 
         return (a, b, c, d)
+
+    def SortPatients(self):
+
+        if self.seed is not None:
+            seed(self.seed)
+
+        n = len(self.patient_num)
+        test_patient = sample(self.patient_num, self.leave_out)
+        train_patient = [el for el in self.patient_num if el not in test_patient]
+        number_of_transforms = len(self.transforms)
+
+        if self.split == "train":
+
+            train_images = [len(glob.glob(self.path + "/Slide_{}".format(el) + "/*.png")) for el in train_patient]
+            self.length = np.sum(train_images) * self.crop
+            self.patients_iter = train_patient
+
+        else:
+            test_images = [len(glob.glob(self.path + "/Slide_{}".format(el) + "/*.png")) for el in test_patient]
+            self.length = np.sum(test_images) * self.crop
+            self.patients_iter = test_patient
+

@@ -3,7 +3,7 @@ import tensorflow as tf
 import os
 import numpy as np
 from UsefulFunctions.ImageTransf import ListTransform
-from DataGen2 import DataGen
+from DataGenRandomT import DataGenRandomT
 import pdb
 
 def print_dim(text ,tensor):
@@ -267,7 +267,7 @@ if __name__== "__main__":
     CROP = 4
     PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
 #    PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
-#    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
+    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
 #    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
     BATCH_SIZE = 32
     LRSTEP = "epoch/2"
@@ -276,12 +276,12 @@ if __name__== "__main__":
 
 
     transform_list, transform_list_test = ListTransform()
-    DG_TRAIN = DataGen(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
+    DG_TRAIN = DataGenRandomT(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True, perc_trans=1.)
     
     N_ITER_MAX = 200 * DG_TRAIN.length // BATCH_SIZE
 
-    DG_TEST  = DataGen(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+    DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True)
 
     model = UNet(LEARNING_RATE=LEARNING_RATE,
