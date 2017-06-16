@@ -28,7 +28,7 @@ class DataGenRandomT(DataGen2):
         self.SetRandomList() ## needed? 
 
 
-	def GeneratePossibleKeys(self):
+    def GeneratePossibleKeys(self):
         len_key = 4
 
         AllPossibleKeys = []
