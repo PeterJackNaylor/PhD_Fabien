@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from DataGen2 import DataGen
 import glob
 import itertools
@@ -28,7 +30,7 @@ class DataGenRandomT(DataGen):
             self.length = np.sum(images_test) * self.crop 
             self.patients_iter = test_patient
 
-        self.SetRandomList() ## needed? 
+        self.SetRandomList() 
 
 
     def GeneratePossibleKeys(self):
@@ -42,7 +44,7 @@ class DataGenRandomT(DataGen):
             i += 1
             nber_per_patient = len(self.patient_img[num])
             lists += (range(nber_per_patient),)
-            lists += (-1,)
+            lists += ([-1],)
             lists += (range(self.crop),)
             
             AllPossibleKeys += list(itertools.product(*lists))

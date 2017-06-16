@@ -224,7 +224,7 @@ if __name__== "__main__":
     DG_TRAIN = DataGenRandomT(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True)
     N_ITER_MAX = 200 * DG_TRAIN.length // BATCH_SIZE
-    DG_TEST  = DataGen(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+    DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True)
 
     model = UNetBatchNorm(LEARNING_RATE=LEARNING_RATE,
