@@ -1,8 +1,11 @@
 from DataGen2 import DataGen
+import glob
+import itertools
+from random import shuffle
+import numpy as np
 
 
-
-class DataGenRandomT(DataGen2):
+class DataGenRandomT(DataGen):
 
     def SetPatient(self, num):
 
