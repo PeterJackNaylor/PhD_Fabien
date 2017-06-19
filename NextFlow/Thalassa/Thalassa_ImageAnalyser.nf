@@ -45,7 +45,8 @@ process getTheFileAndSplitLines {
 
 }
 
-/* process splitLines{
+/* 
+process splitLines{
     input:
     val line into LINES_LIST
     output:
@@ -78,7 +79,6 @@ process CutLine {
     FIELD3=`cut -d' ' -f5 $param_job`
     FIELD4=`cut -d' ' -f6 $param_job`
     SIZE=224
-    PYTHONFILE=PredictionSlide.py
     SLIDE=${slide.getBaseName()}
     
     OUTPUT_FILE=/share/data40T_v2/Peter/PatientFolder/Job_\$SLIDE\\/tiled/\$FIELD0\\_\$FIELD1\\_\$FIELD2\\_\$FIELD3\\_\$FIELD4.tiff
