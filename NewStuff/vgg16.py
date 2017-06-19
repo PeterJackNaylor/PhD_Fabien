@@ -188,7 +188,7 @@ class VGG16(UNetBatchNorm):
         self.relu3_3 = self.relu_layer_f(self.conv3_3, self.conv3_3biases, "conv3_3/")     
 
 
-        self.pool3_4 = self.max_pool(self.relu3_2, name="pool3_4")
+        self.pool3_4 = self.max_pool(self.relu3_3, name="pool3_4")
 
 
         self.conv4_1 = self.conv_layer_f(self.pool3_4, self.conv4_1weights, "conv4_1/")
@@ -201,7 +201,7 @@ class VGG16(UNetBatchNorm):
         self.relu4_3 = self.relu_layer_f(self.conv4_3, self.conv4_3biases, "conv4_3/")
 
 
-        self.pool4_5 = self.max_pool(self.relu4_2, name="pool4_5")
+        self.pool4_5 = self.max_pool(self.relu4_3, name="pool4_5")
 
 
         self.conv5_1 = self.conv_layer_f(self.pool4_5, self.conv5_1weights, "conv5_1/")
@@ -454,7 +454,7 @@ if __name__ == "__main__":
 
     path = "/share/data40T_v2/CAMELYON16_precut"
     path = options.path
-    transforms, _ = ListTransform()
+    transforms, _ = ListTransform(n_rot = 45, n_elastic=0, n_he=10, n_hsv=10)
     size = (HEIGHT, WIDTH)
 
     DG = DataGen(path, transforms, _, size)

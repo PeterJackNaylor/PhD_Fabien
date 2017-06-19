@@ -35,8 +35,6 @@ if __name__ == "__main__":
 
     parser.add_option("-o", "--output", dest="output",
                       help="Where to the ouput txt files")
-
-
     parser.add_option("--split_value", dest="split_value",type="float",
                       help="Split ratio between number of images cancer/non cancer and nber of patient in test with normal or tumor")
     parser.add_option("--loops", dest="loops", type="int", default=1,
@@ -69,8 +67,8 @@ if __name__ == "__main__":
     shuffle(NormalPatient)
 
     n_normal = len(NormalPatient)
-    n_tumor  = len(TumorPatient)
-
+    n_tumor = len(TumorPatient)
+    
     test_tumor = TumorPatient[0:int(options.split_value * n_tumor)]
     test_normal = NormalPatient[0:int(options.split_value * n_normal)] 
 

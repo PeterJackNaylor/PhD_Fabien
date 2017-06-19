@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
+
 from UNetObject import UNet
 import tensorflow as tf
 import numpy as np
 from datetime import datetime
 import os
-from DataGen2 import DataGen
+from DataGenRandomT import DataGenRandomT
 from UsefulFunctions.ImageTransf import ListTransform
 import math
 import pdb
@@ -200,7 +202,7 @@ if __name__== "__main__":
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(CUDA_NODE)
 
-    SAVE_DIR = "/tmp/object/unet/bn/0.0001"
+    
     N_ITER_MAX = 2000
     N_TRAIN_SAVE = 100
     N_TEST_SAVE = 100
@@ -211,20 +213,20 @@ if __name__== "__main__":
     CROP = 4
     PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
 #    PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
-#    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
+    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
 #    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
 
-    BATCH_SIZE = 64
+    BATCH_SIZE = 32
     LRSTEP = "epoch/2"
     SUMMARY = True
     S = SUMMARY
-
+    SAVE_DIR = "/tmp/object/unet/bn/{}".format(LEARNING_RATE)
 
     transform_list, transform_list_test = ListTransform()
-    DG_TRAIN = DataGen(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
+    DG_TRAIN = DataGenRandomT(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True)
     N_ITER_MAX = 200 * DG_TRAIN.length // BATCH_SIZE
-    DG_TEST  = DataGen(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+    DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True)
 
     model = UNetBatchNorm(LEARNING_RATE=LEARNING_RATE,
