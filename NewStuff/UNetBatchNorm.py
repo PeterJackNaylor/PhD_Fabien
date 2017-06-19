@@ -154,7 +154,7 @@ class UNetBatchNorm(UNet):
 
         trainable_var = tf.trainable_variables()
         
-        self.regularize_model(trainable_var)
+        self.regularize_model()
         self.optimization(trainable_var)
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
 

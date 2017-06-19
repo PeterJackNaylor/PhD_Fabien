@@ -24,7 +24,9 @@ class ConvolutionalNeuralNetwork:
         N_PRINT = 100,
         LOG="/tmp/net",
         SEED=42,
-        DEBUG=True):
+        DEBUG=True,
+        WEIGHT_DECAY=0.00005,
+        LOSS_FUNC=tf.nn.l2_loss):
 
         self.LEARNING_RATE = LEARNING_RATE
         self.K = K
@@ -49,25 +51,29 @@ class ConvolutionalNeuralNetwork:
         self.init_training_graph()
         self.Saver()
         self.DEBUG = DEBUG
+        self.var_to_reg = []
+        self.var_to_sum = []
+        self.loss_func = LOSS_FUNC
+        self.weight_decay = WEIGHT_DECAY
 
-    def regularize_model(self, trainable_var):
+    def regularize_model(self):
         if self.DEBUG:
-            for var in trainable_var:
-                self.add_to_regularization_and_summary(var)
+            for var in self.var_to_sum + self.var_to_reg:
+                self.add_to_summary(var)
             self.WritteSummaryImages()
-        else:
-            for var in trainable_var:
-                self.add_to_regularization(var)
+        
+        for var in self.var_to_reg:
+            self.add_to_regularization(var)
 
 
-    def add_to_regularization_and_summary(self, var):
+
+    def add_to_summary(self, var):
         if var is not None:
             tf.summary.histogram(var.op.name, var)
-            tf.add_to_collection("reg_loss", tf.nn.l2_loss(var))
 
     def add_to_regularization(self, var):
         if var is not None:
-            tf.add_to_collection("reg_loss", tf.nn.l2_loss(var))
+            self.loss = self.loss + self.weight_decay * self.loss_func(var)
 
 
     def add_activation_summary(self, var):
@@ -97,13 +103,18 @@ class ConvolutionalNeuralNetwork:
 
     def relu_layer_f(self, i_layer, biases, scope_name):
         with tf.name_scope(scope_name):
-            return tf.nn.relu(tf.nn.bias_add(i_layer, biases))
+            act = tf.nn.relu(tf.nn.bias_add(i_layer, biases))
+            self.var_to_sum.append(act)
+            return act
 
-    def weight_const_f(self, ks, inchannels, outchannels, stddev, scope_name, name="W"):
+    def weight_const_f(self, ks, inchannels, outchannels, stddev, scope_name, name="W", reg="True"):
         with tf.name_scope(scope_name):
-            return  tf.Variable(tf.truncated_normal([ks, ks, inchannels, outchannels],  # 5x5 filter, depth 32.
+            K = tf.Variable(tf.truncated_normal([ks, ks, inchannels, outchannels],  # 5x5 filter, depth 32.
                               stddev=stddev,
                               seed=self.SEED))
+            self.var_to_reg.append(K)
+            self.var_to_sum.append(K)
+            return K
 
     def weight_xavier(self, ks, inchannels, outchannels, scope_name, name="W"):
         xavier_std = math.sqrt( 1. / float(ks * ks * inchannels) )
@@ -111,7 +122,9 @@ class ConvolutionalNeuralNetwork:
 
     def biases_const_f(self, const, shape, scope_name, name="B"):
         with tf.name_scope(scope_name):
-            return tf.Variable(tf.constant(const, shape=[shape]), name=name)
+            b = tf.Variable(tf.constant(const, shape=[shape]), name=name)
+            self.var_to_sum.append(b)
+            return b
 
     def max_pool(self, i_layer, ksize=[1,2,2,1], strides=[1,2,2,1],
                  padding="SAME", name="MaxPool"):
@@ -351,7 +364,7 @@ class ConvolutionalNeuralNetwork:
 
         trainable_var = tf.trainable_variables()
         
-        self.regularize_model(trainable_var)
+        self.regularize_model()
         self.optimization(trainable_var)
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
 
