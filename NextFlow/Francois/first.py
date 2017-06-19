@@ -9,6 +9,8 @@ import numpy as np
 from skimage.morphology import remove_small_objects
 from UsefulFunctions.RandomUtils import CheckOrCreate
 import pdb
+
+
 if __name__ == "__main__":
     
 
@@ -39,6 +41,7 @@ if __name__ == "__main__":
     ClearSmallObjects = 50
 
     base = os.path.basename(options.file_name).replace(".png", "")
+    CheckOrCreate(base)
     base = base + "/" + base
 
     base_img = os.path.join(options.output, base + "_RAW.png")
@@ -48,15 +51,15 @@ if __name__ == "__main__":
 
     image = imread(options.file_name)[:,:,0:3]
     image = crop(image)
-    prob = pred_f(image, net_1, net_2, stepSize=204, windowSize=(224, 224), param=7, border = 1,
+    prob, thresh = pred_f(image, net_1, net_2, stepSize=204, windowSize=(224, 224), param=7, border = 1,
                   borderImage = "Reconstruction", method = "avg")
-    bin_image = PostProcess(prob, param_ws)
+    bin_image = PostProcess(prob, param_ws, thresh=thresh)
     if ClearSmallObjects:
         bin_image = remove_small_objects(bin_image, ClearSmallObjects)
 
     ContourSegmentation = Contours(bin_image)
     x_, y_ = np.where(ContourSegmentation > 0)
-    seg_image = bin_image.copy()
+    seg_image = image.copy()
     seg_image[x_,y_,:] = np.array([0,0,0])
 
     imsave(base_img, image)

@@ -10,6 +10,7 @@ VGG16 = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/NewStuff/vgg16.py
 
 
 ALL_FOLDER = file("/share/data40T_v2/CAMELYON16_precut")
+TENSORBOARD = file('/share/data40T_v2/TrainingOutput')
 
 TICKET_VAL = 60
 SPLIT_RATIO = 0.1
@@ -105,8 +106,8 @@ process Training {
     validExitStatus 0 
     queue = "cuda.q"
     clusterOptions = "-S /bin/bash"
-    publishDir ALL_FOLDER, mode: "copy", overwrite: false
-    maxForks = 1
+    publishDir TENSORBOARD, mode: "copy", overwrite: false
+    maxForks = 2
 
     input:
     file path from ALL_FOLDER
@@ -115,9 +116,13 @@ process Training {
     each feat from ARCH_FEATURES
     each lr from LEARNING_RATE
     file train_txt from TRAIN_TXT
+
+    beforeScript "source /share/data40T_v2/Peter/CUDA_LOCK/.whichNODE"
+    afterScript "source /share/data40T_v2/Peter/CUDA_LOCK/.freeNODE"
+
     script:
     """
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $vgg --gpu 0 --epoch 5 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $vgg --epoch 10 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat
 
     """
 }
