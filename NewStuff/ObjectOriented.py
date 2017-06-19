@@ -271,32 +271,33 @@ class ConvolutionalNeuralNetwork:
     def optimization(self, var_list):
         #self.optimizer = tf.train.MomentumOptimizer(self.learning_rate, 0.9).minimize(
         #    self.loss, global_step=self.batch)
-        optimizer = tf.train.AdamOptimizer(self.learning_rate)
-        grads = optimizer.compute_gradients(self.loss, var_list=var_list)
-        if self.DEBUG:
-            for grad, var in grads:
-                self.add_gradient_summary(grad, var)
-        self.optimizer = optimizer.apply_gradients(grads, global_step=self.global_step)        
+        with tf.name_scope('optimizer'):
+            optimizer = tf.train.AdamOptimizer(self.learning_rate)
+            grads = optimizer.compute_gradients(self.loss, var_list=var_list)
+            if self.DEBUG:
+                for grad, var in grads:
+                    self.add_gradient_summary(grad, var)
+            self.optimizer = optimizer.apply_gradients(grads, global_step=self.global_step)        
 
     def LearningRateSchedule(self, lr, k, epoch):
+        with tf.name_scope('LearningRateSchedule'):
+            self.global_step = tf.Variable(0., trainable=False)
 
-        self.global_step = tf.Variable(0., trainable=False)
+            if self.LRSTEP == "epoch/2":
 
-        if self.LRSTEP == "epoch/2":
+                decay_step = float(epoch) / (2 * self.BATCH_SIZE)
+            
+            else:
 
-            decay_step = float(epoch) / (2 * self.BATCH_SIZE)
-        
-        else:
-
-            decay_step = float(self.LRSTEP)
-          
-        self.learning_rate = tf.train.exponential_decay(
-                                 lr,
-                                 self.global_step,
-                                 decay_step,
-                                 k,
-                                 staircase=True)  
-        tf.summary.scalar("learning_rate", self.learning_rate)
+                decay_step = float(self.LRSTEP)
+              
+            self.learning_rate = tf.train.exponential_decay(
+                                     lr,
+                                     self.global_step,
+                                     decay_step,
+                                     k,
+                                     staircase=True)  
+            tf.summary.scalar("learning_rate", self.learning_rate)
 
     def Validation(self, DG_TEST, step):
         
@@ -321,6 +322,17 @@ class ConvolutionalNeuralNetwork:
         l, acc, F1, recall, precision, meanacc = np.array([l, acc, F1, recall, precision, meanacc]) / n_batch
 
 
+        summary = tf.Summary()
+        summary.value.add(tag="Test/Accuracy", simple_value=acc)
+        summary.value.add(tag="Test/Loss", simple_value=l)
+        summary.value.add(tag="Test/F1", simple_value=F1)
+        summary.value.add(tag="Test/Recall", simple_value=recall)
+        summary.value.add(tag="Test/Precision", simple_value=precision)
+        summary.value.add(tag="Test/Performance", simple_value=meanacc)
+
+        self.summary_test_writer.add_summary(summary, step)
+
+
         print('  Validation loss: %.1f' % l)
         print('       Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
         self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
@@ -334,14 +346,15 @@ class ConvolutionalNeuralNetwork:
             print("Model restored...")
 
     def ExponentialMovingAverage(self, var_list, decay=0.9999):
-        
-        ema = tf.train.ExponentialMovingAverage(decay=decay)
-        maintain_averages_op = ema.apply(var_list)
+        with tf.name_scope('ExponentialMovingAverage'):
 
-        # Create an op that will update the moving averages after each training
-        # step.  This is what we will use in place of the usual training op.
-        with tf.control_dependencies([self.optimizer]):
-            self.training_op = tf.group(maintain_averages_op)
+            ema = tf.train.ExponentialMovingAverage(decay=decay)
+            maintain_averages_op = ema.apply(var_list)
+
+            # Create an op that will update the moving averages after each training
+            # step.  This is what we will use in place of the usual training op.
+            with tf.control_dependencies([self.optimizer]):
+                self.training_op = tf.group(maintain_averages_op)
 
     def train(self, DGTrain, DGTest, saver=True):
 
@@ -357,7 +370,10 @@ class ConvolutionalNeuralNetwork:
 
         tf.global_variables_initializer().run()
 
-        summary_writer = tf.summary.FileWriter(self.LOG, graph=self.sess.graph)
+        self.summary_test_writer = tf.summary.FileWriter(self.LOG + '/test',
+                                            graph=self.sess.graph)
+
+        self.summary_writer = tf.summary.FileWriter(self.LOG + '/train', graph=self.sess.graph)
         merged_summary = tf.summary.merge_all()
         steps = self.STEPS
 
@@ -382,7 +398,7 @@ class ConvolutionalNeuralNetwork:
             if step % self.N_PRINT == 0:
                 i = datetime.now()
                 print i.strftime('%Y/%m/%d %H:%M:%S: \n ')
-                summary_writer.add_summary(s, step)                
+                self.summary_writer.add_summary(s, step)                
                 error, acc, acc1, recall, prec, f1 = self.error_rate(predictions, batch_labels, step)
                 print('  Step %d of %d' % (step, steps))
                 print('  Learning rate: %.5f \n') % lr

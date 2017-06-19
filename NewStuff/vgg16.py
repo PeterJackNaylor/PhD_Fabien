@@ -32,7 +32,6 @@ class VGG16(UNetBatchNorm):
         LRSTEP=200,
         DECAY_EMA=0.9999,
         N_PRINT = 100,
-        N_REPEATS=100,
         N_FEATURES = 16,
         LOG="/tmp/net",
         SEED=42,
@@ -61,7 +60,6 @@ class VGG16(UNetBatchNorm):
         self.init_training_graph()
         self.Saver()
         self.DEBUG = DEBUG
-        self.N_REPEATS = 100
         self.N_EPOCHS = N_EPOCHS
         self.N_FEATURES = N_FEATURES
 
@@ -317,6 +315,15 @@ class VGG16(UNetBatchNorm):
 
         l, acc, F1, recall, precision, meanacc = np.array([l, acc, F1, recall, precision, meanacc]) / n_batch
 
+        summary = tf.Summary()
+        summary.value.add(tag="Test/Accuracy", simple_value=acc)
+        summary.value.add(tag="Test/Loss", simple_value=l)
+        summary.value.add(tag="Test/F1", simple_value=F1)
+        summary.value.add(tag="Test/Recall", simple_value=recall)
+        summary.value.add(tag="Test/Precision", simple_value=precision)
+        summary.value.add(tag="Test/Performance", simple_value=meanacc)
+
+        self.summary_test_writer.add_summary(summary, step)
 
         print('  Validation loss: %.1f' % l)
         print('       Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
@@ -326,7 +333,7 @@ class VGG16(UNetBatchNorm):
 
     def train(self, DG, saver=True):
 
-        epoch = DG.n_train * self.N_REPEATS
+        epoch = DG.n_train 
 
         self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
 
@@ -338,7 +345,10 @@ class VGG16(UNetBatchNorm):
 
         tf.global_variables_initializer().run()
 
-        summary_writer = tf.summary.FileWriter(self.LOG, graph=self.sess.graph)
+        self.summary_test_writer = tf.summary.FileWriter(self.LOG + '/test',
+                                            graph=self.sess.graph)
+
+        self.summary_writer = tf.summary.FileWriter(self.LOG + '/train', graph=self.sess.graph)
         merged_summary = tf.summary.merge_all()
         steps = self.N_EPOCHS * epoch
 
@@ -357,7 +367,7 @@ class VGG16(UNetBatchNorm):
             if step % self.N_PRINT == 0:
                 i = datetime.now()
                 print i.strftime('%Y/%m/%d %H:%M:%S: \n ')
-                summary_writer.add_summary(s, step)                
+                self.summary_writer.add_summary(s, step)                
                 error, acc, acc1, recall, prec, f1 = self.error_rate(predictions, batch_labels, step)
                 print('  Step %d of %d' % (step, steps))
                 print('  Learning rate: %.5f \n') % lr
@@ -397,8 +407,8 @@ if __name__ == "__main__":
 
     parser = OptionParser()
 
-    parser.add_option("--gpu", dest="gpu", default="0", type="string",
-                      help="Input file (raw data)")
+#    parser.add_option("--gpu", dest="gpu", default="0", type="string",
+#                      help="Input file (raw data)")
 
     parser.add_option("--path", dest="path", type="string",
                       help="Where to collect the patches")
@@ -420,7 +430,7 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = options.gpu
+#    os.environ["CUDA_VISIBLE_DEVICES"] = options.gpu
 
     
     N_FEATURES = options.n_features
@@ -433,9 +443,10 @@ if __name__ == "__main__":
     HEIGHT = 224 
     WIDTH = 224
     
-    CROP = 4
     
     BATCH_SIZE = options.bs
+    if N_FEATURES == 64:
+        BATCH_SIZE = BATCH_SIZE // 2
     LRSTEP = "epoch/2"
     SUMMARY = True
     S = SUMMARY
@@ -460,7 +471,6 @@ if __name__ == "__main__":
                                        N_PRINT=N_TRAIN_SAVE,
                                        LOG=SAVE_DIR,
                                        N_FEATURES=N_FEATURES,
-                                       N_REPEATS=100,
                                        SEED=42)
 
     model.train(DG)
