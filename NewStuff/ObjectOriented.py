@@ -45,14 +45,15 @@ class ConvolutionalNeuralNetwork:
         self.sess = tf.InteractiveSession()
 
         self.sess.as_default()
+        
+        self.var_to_reg = []
+        self.var_to_sum = []
 
         self.init_vars()
         self.init_model_architecture()
         self.init_training_graph()
         self.Saver()
         self.DEBUG = DEBUG
-        self.var_to_reg = []
-        self.var_to_sum = []
         self.loss_func = LOSS_FUNC
         self.weight_decay = WEIGHT_DECAY
 
