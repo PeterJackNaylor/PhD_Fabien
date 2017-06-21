@@ -10,7 +10,7 @@ BS = 32
 
 process Training {
 
-    executor 'sge'
+    executor 'local'
     profile = 'GPU'
     validExitStatus 0 
     queue = "cuda.q"
@@ -25,14 +25,14 @@ process Training {
 //    val pat from PATIENT
     each feat from ARCH_FEATURES
     each lr from LEARNING_RATE
-    
+    each wd from WEIGHT_DECAY    
 
     beforeScript "source /data/users/pnaylor/CUDA_LOCK/.whichNODE"
     afterScript "source /data/users/pnaylor/CUDA_LOCK/.freeNODE"
 
     script:
     """
-    python $py --epoch 1000 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat
+    python $py --epoch 1000 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd
 
     """
 }

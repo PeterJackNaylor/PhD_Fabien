@@ -1,3 +1,4 @@
+import pdb
 import tensorflow as tf
 import numpy as np
 from DataGen2 import DataGen
@@ -49,6 +50,9 @@ class ConvolutionalNeuralNetwork:
         self.var_to_reg = []
         self.var_to_sum = []
 
+        self.var_to_reg = []
+        self.var_to_sum = []
+
         self.init_vars()
         self.init_model_architecture()
         self.init_training_graph()
@@ -71,9 +75,10 @@ class ConvolutionalNeuralNetwork:
     def add_to_summary(self, var):
         if var is not None:
             tf.summary.histogram(var.op.name, var)
-
+	    
     def add_to_regularization(self, var):
         if var is not None:
+	    print var
             self.loss = self.loss + self.weight_decay * self.loss_func(var)
 
 
