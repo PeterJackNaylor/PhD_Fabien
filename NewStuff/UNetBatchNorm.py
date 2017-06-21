@@ -170,7 +170,10 @@ class UNetBatchNorm(UNet):
 
         tf.global_variables_initializer().run()
 
-        summary_writer = tf.summary.FileWriter(self.LOG, graph=self.sess.graph)
+        self.summary_test_writer = tf.summary.FileWriter(self.LOG + '/test',
+                                            graph=self.sess.graph)
+
+        self.summary_writer = tf.summary.FileWriter(self.LOG + '/train', graph=self.sess.graph)
         merged_summary = tf.summary.merge_all()
         steps = self.STEPS
 

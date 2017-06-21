@@ -309,7 +309,7 @@ class ConvolutionalNeuralNetwork:
             elif "epoch" in self.LRSTEP:
                 num = int(self.LRSTEP[:-5])
                 decay_step = float(num) * float(epoch) / self.BATCH_SIZE
-
+            else:
                 decay_step = float(self.LRSTEP)
               
             self.learning_rate = tf.train.exponential_decay(
