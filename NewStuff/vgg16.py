@@ -458,7 +458,7 @@ if __name__ == "__main__":
     size = (HEIGHT, WIDTH)
 
     DG = DataGen(path, transforms, _, size)
-
+#    pdb.set_trace()
 #    train_batch, lbl_batch = DG.NextBatch(train= True, bs = 4)
 
     model = VGG16(LEARNING_RATE=LEARNING_RATE,
