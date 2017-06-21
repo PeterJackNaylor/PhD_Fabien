@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from optparse import OptionParser
 from UNetObject import UNet
 import tensorflow as tf
 import numpy as np
@@ -198,34 +198,73 @@ class UNetBatchNorm(UNet):
 
 if __name__== "__main__":
 
-    CUDA_NODE = 1
+    parser = OptionParser()
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(CUDA_NODE)
+#    parser.add_option("--gpu", dest="gpu", default="0", type="string",
+#                      help="Input file (raw data)")
+
+    parser.add_option("--path", dest="path", type="string",
+                      help="Where to collect the patches")
+
+    parser.add_option("--log", dest="log",
+                      help="log dir")
+
+    parser.add_option("--learning_rate", dest="lr", type="float",
+                      help="learning_rate")
+
+    parser.add_option("--batch_size", dest="bs", type="int",
+                      help="batch size")
+
+    parser.add_option("--epoch", dest="epoch", type="int",
+                      help="number of epochs")
+
+    parser.add_option("--n_features", dest="n_features", type="int",
+                      help="number of channels on first layers")
+
+    parser.add_option("--weight_decay", dest="weight_decay", type="float",
+                      help="weight decay value")
+
+    (options, args) = parser.parse_args()
+
+#    os.environ["CUDA_VISIBLE_DEVICES"] = options.gpu
 
     
-    N_ITER_MAX = 2000
+    N_FEATURES = options.n_features
+    WEIGHT_DECAY = options.weight_decay
     N_TRAIN_SAVE = 100
-    N_TEST_SAVE = 100
-    LEARNING_RATE = 0.0001
+    LEARNING_RATE = options.lr
+    SAVE_DIR = options.log + "/" + "{}_{}_{}" .format(N_FEATURES, WEIGHT_DECAY, LEARNING_RATE)
+    
     MEAN = np.array([122.67892, 116.66877 ,104.00699])
-    HEIGHT = 212
-    WIDTH = 212
-    CROP = 4
-    PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
-#    PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
-    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
-#    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
-
-    BATCH_SIZE = 32
+    
+    HEIGHT = 224 
+    WIDTH = 224
+    
+    
+    BATCH_SIZE = options.bs
     LRSTEP = "epoch/2"
     SUMMARY = True
     S = SUMMARY
-    SAVE_DIR = "/tmp/object/unet/bn/{}".format(LEARNING_RATE)
+    N_EPOCH = options.epoch
+
+    PATH = options.path
+
+
+    HEIGHT = 212
+    WIDTH = 212
+
+    N_TRAIN_SAVE = 100
+    MEAN = np.array([122.67892, 116.66877 ,104.00699])
+ 
+    CROP = 4
+
 
     transform_list, transform_list_test = ListTransform()
+
     DG_TRAIN = DataGenRandomT(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True)
-    N_ITER_MAX = 1000 * DG_TRAIN.length // BATCH_SIZE
+    N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
+
     DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True)
 
@@ -238,6 +277,7 @@ if __name__== "__main__":
                                        LRSTEP=LRSTEP,
                                        N_PRINT=N_TRAIN_SAVE,
                                        LOG=SAVE_DIR,
-                                       SEED=42)
+                                       SEED=42,
+                                       WEIGHT_DECAY=WEIGHT_DECAY)
 
     model.train(DG_TRAIN, DG_TEST)

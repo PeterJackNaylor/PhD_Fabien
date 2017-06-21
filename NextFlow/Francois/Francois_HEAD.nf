@@ -9,8 +9,8 @@ PYextract = file("second.py")
 
 
 CHANGEENV = file('ChangeEnv.py')
-params.in = file("/share/data40T_v2/Peter/Francois/New_images_TMA_ICA2/*") 
-params.out = file("/share/data40T_v2/Peter/Francois/Out")
+params.in = file("/share/data40T_v2/Peter/Francois/New_images_TMA_ICA/*") 
+params.out = file("/share/data40T_v2/Peter/Francois/OutTest")
 
 
 
@@ -39,6 +39,7 @@ process ProcessPatient {
 
     executor 'sge'
     profile = 'cluster'
+    queue = "all.q"
     validExitStatus 0, 134
     clusterOptions = "-S /bin/bash"
     memory = '15G'
@@ -68,9 +69,8 @@ process ExtractFeatures {
 
     executor 'sge'
     profile = 'cluster'
-    validExitStatus 0, 134
+    validExitStatus 0
     clusterOptions = "-S /bin/bash"
-    memory = '15G'
     publishDir params.out, mode: "copy", overwrite: false
     maxForks = 50
     errorStrategy 'retry' 
@@ -81,10 +81,10 @@ process ExtractFeatures {
     file py from PYextract
 
     output:
-    file "$folder/$folder_table.csv" // or numpy check groovy
+    file "$folder/${folder}_table.csv" // or numpy check groovy
 
     """
-    python $py --file $image_raw
+    python $py --folder_name $folder
     """
 
 }
