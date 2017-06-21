@@ -117,6 +117,9 @@ process Training {
     each lr from LEARNING_RATE
     file train_txt from TRAIN_TXT
 
+    output:
+    file "${feat}_${lr}" into RESULTS
+
     beforeScript "source /share/data40T_v2/Peter/CUDA_LOCK/.whichNODE"
     afterScript "source /share/data40T_v2/Peter/CUDA_LOCK/.freeNODE"
 
