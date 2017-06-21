@@ -159,6 +159,11 @@ class ConvolutionalNeuralNetwork:
                                 lambda: (ema.average(batch_mean), ema.average(batch_var)))
             normed = tf.nn.batch_normalization(Input, mean, var, beta, gamma, eps)
         return normed
+
+    def DropOutLayer(self, Input, scope="DropOut"):
+        with tf.name_scope(scope):
+            return tf.nn.dropout(Input, self.keep_prob)  ##keep prob has to be defined in init_var
+
     def init_vars(self):
         self.input_node = self.input_node_f()
 
