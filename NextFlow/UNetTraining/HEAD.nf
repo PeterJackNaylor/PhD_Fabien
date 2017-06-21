@@ -22,7 +22,7 @@ process Training {
     file path from IMAGE_FOLD
     file py from PY
     val bs from BS
-    val pat from PATIENT
+//    val pat from PATIENT
     each feat from ARCH_FEATURES
     each lr from LEARNING_RATE
     
