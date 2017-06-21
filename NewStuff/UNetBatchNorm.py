@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from optparse import OptionParser
 from UNetObject import UNet
 import tensorflow as tf
 import numpy as np
@@ -118,10 +118,12 @@ class UNetBatchNorm(UNet):
 
         print('Model variables initialised')
 
+
     def Validation(self, DG_TEST, step):
         
         n_test = DG_TEST.length
         n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
+
 
         l, acc, F1, recall, precision, meanacc = 0., 0., 0., 0., 0., 0.
 
@@ -141,11 +143,19 @@ class UNetBatchNorm(UNet):
 
         l, acc, F1, recall, precision, meanacc = np.array([l, acc, F1, recall, precision, meanacc]) / n_batch
 
+        summary = tf.Summary()
+        summary.value.add(tag="Test/Accuracy", simple_value=acc)
+        summary.value.add(tag="Test/Loss", simple_value=l)
+        summary.value.add(tag="Test/F1", simple_value=F1)
+        summary.value.add(tag="Test/Recall", simple_value=recall)
+        summary.value.add(tag="Test/Precision", simple_value=precision)
+        summary.value.add(tag="Test/Performance", simple_value=meanacc)
+
+        self.summary_test_writer.add_summary(summary, step)
 
         print('  Validation loss: %.1f' % l)
         print('       Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
         self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
-
     def train(self, DGTrain, DGTest, saver=True):
 
         epoch = DGTrain.length
@@ -160,16 +170,12 @@ class UNetBatchNorm(UNet):
 
         tf.global_variables_initializer().run()
 
-        summary_writer = tf.summary.FileWriter(self.LOG, graph=self.sess.graph)
+        self.summary_test_writer = tf.summary.FileWriter(self.LOG + '/test',
+                                            graph=self.sess.graph)
+
+        self.summary_writer = tf.summary.FileWriter(self.LOG + '/train', graph=self.sess.graph)
         merged_summary = tf.summary.merge_all()
         steps = self.STEPS
-
-        
-        # for i in range(Xval.shape[0]):
-        #     imsave("/tmp/image_{}.png".format(i), Xval[i])
-        #     imsave("/tmp/label_{}.png".format(i), Yval[i,:,:,0])
-
-
 
         for step in range(steps):
             batch_data, batch_labels = DGTrain.Batch(0, self.BATCH_SIZE)
@@ -186,7 +192,7 @@ class UNetBatchNorm(UNet):
             if step % self.N_PRINT == 0:
                 i = datetime.now()
                 print i.strftime('%Y/%m/%d %H:%M:%S: \n ')
-                summary_writer.add_summary(s, step)                
+                self.summary_writer.add_summary(s, step)                
                 error, acc, acc1, recall, prec, f1 = self.error_rate(predictions, batch_labels, step)
                 print('  Step %d of %d' % (step, steps))
                 print('  Learning rate: %.5f \n') % lr
@@ -194,38 +200,75 @@ class UNetBatchNorm(UNet):
                       (l, acc, acc1, recall, prec, f1))
                 self.Validation(DGTest, step)
 
-
-
 if __name__== "__main__":
 
-    CUDA_NODE = 1
+    parser = OptionParser()
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(CUDA_NODE)
+#    parser.add_option("--gpu", dest="gpu", default="0", type="string",
+#                      help="Input file (raw data)")
+
+    parser.add_option("--path", dest="path", type="string",
+                      help="Where to collect the patches")
+
+    parser.add_option("--log", dest="log",
+                      help="log dir")
+
+    parser.add_option("--learning_rate", dest="lr", type="float",
+                      help="learning_rate")
+
+    parser.add_option("--batch_size", dest="bs", type="int",
+                      help="batch size")
+
+    parser.add_option("--epoch", dest="epoch", type="int",
+                      help="number of epochs")
+
+    parser.add_option("--n_features", dest="n_features", type="int",
+                      help="number of channels on first layers")
+
+    parser.add_option("--weight_decay", dest="weight_decay", type="float",
+                      help="weight decay value")
+
+    (options, args) = parser.parse_args()
+
+#    os.environ["CUDA_VISIBLE_DEVICES"] = options.gpu
 
     
-    N_ITER_MAX = 2000
+    N_FEATURES = options.n_features
+    WEIGHT_DECAY = options.weight_decay
     N_TRAIN_SAVE = 100
-    N_TEST_SAVE = 100
-    LEARNING_RATE = 0.0001
+    LEARNING_RATE = options.lr
+    SAVE_DIR = options.log + "/" + "{}_{}_{}" .format(N_FEATURES, WEIGHT_DECAY, LEARNING_RATE)
+    
     MEAN = np.array([122.67892, 116.66877 ,104.00699])
-    HEIGHT = 212
-    WIDTH = 212
-    CROP = 4
-    PATH = '/share/data40T_v2/Peter/Data/ToAnnotate'
-#    PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
-    PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
-#    PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
-
-    BATCH_SIZE = 32
-    LRSTEP = "epoch/2"
+    
+    HEIGHT = 224 
+    WIDTH = 224
+    
+    
+    BATCH_SIZE = options.bs
+    LRSTEP = "10epoch"
     SUMMARY = True
     S = SUMMARY
-    SAVE_DIR = "/tmp/object/unet/bn/{}".format(LEARNING_RATE)
+    N_EPOCH = options.epoch
+
+    PATH = options.path
+
+
+    HEIGHT = 212
+    WIDTH = 212
+
+    N_TRAIN_SAVE = 100
+    MEAN = np.array([122.67892, 116.66877 ,104.00699])
+ 
+    CROP = 4
+
 
     transform_list, transform_list_test = ListTransform()
+
     DG_TRAIN = DataGenRandomT(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True)
-    N_ITER_MAX = 200 * DG_TRAIN.length // BATCH_SIZE
+    N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
+
     DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True)
 
@@ -238,6 +281,7 @@ if __name__== "__main__":
                                        LRSTEP=LRSTEP,
                                        N_PRINT=N_TRAIN_SAVE,
                                        LOG=SAVE_DIR,
-                                       SEED=42)
+                                       SEED=42,
+                                       WEIGHT_DECAY=WEIGHT_DECAY)
 
     model.train(DG_TRAIN, DG_TEST)

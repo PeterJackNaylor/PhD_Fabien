@@ -79,7 +79,7 @@ class VGG16(UNetBatchNorm):
         self.input_node = self.input_node_f()
 
         self.train_labels_node = self.label_node_f()
-        n_features = N_FEATURES
+        n_features = self.N_FEATURES
 
         self.conv1_1weights = self.weight_xavier(3, self.NUM_CHANNELS, n_features, "conv1_1/")
         self.conv1_1biases = self.biases_const_f(0.1, n_features, "conv1_1/")
@@ -140,7 +140,7 @@ class VGG16(UNetBatchNorm):
         self.logits_weights = self.weight_xavier(1, 64 * n_features, 2, "logits/")
         self.logits_biases = self.biases_const_f(0.1, 2, "logits/")
 
-        self.keep_prob = tf.Variable(0.5, name="dropout_prob")
+        self.keep_prob = tf.placeholder(tf.float32, name="dropout_prob")
 
         print('Model variables initialised')
 
@@ -219,13 +219,14 @@ class VGG16(UNetBatchNorm):
 
         self.fc6 = self.conv_layer_f(self.pool5_fc, self.fc6_weights, "fc6/", padding="VALID")
         self.fc6_relu = self.relu_layer_f(self.fc6, self.fc6_biases, "fc6/")
-
+        self.fc6_dropout = self.DropOutLayer(self.fc6_relu, "fc6/")
         self.fc7 = self.conv_layer_f(self.fc6_relu, self.fc7_weights, "fc7/")
         self.fc7_relu = self.relu_layer_f(self.fc7, self.fc7_biases, "fc7/")
+        self.fc7_dropout = self.DropOutLayer(self.fc7_relu, "fc7/")
 
 
 
-        self.conv_logit = self.conv_layer_f(self.fc7_relu, self.logits_weights, "logits/")
+        self.conv_logit = self.conv_layer_f(self.fc7_dropout, self.logits_weights, "logits/")
         self.relu_logit = self.relu_layer_f(self.conv_logit, self.logits_biases, "logits/")
         self.last = self.relu_logit
 
@@ -304,7 +305,8 @@ class VGG16(UNetBatchNorm):
             Xval, Yval = DG.NextBatch(train=False, bs = self.BATCH_SIZE)
             feed_dict = {self.input_node: Xval,
                          self.train_labels_node: Yval,
-                         self.is_training: False}
+                         self.is_training: False,
+                         self.keep_prob: 1.0}
             l_tmp, acc_tmp, F1_tmp, recall_tmp, precision_tmp, meanacc_tmp = self.sess.run([self.loss, self.accuracy, self.F1, self.recall, self.precision, self.MeanAcc], feed_dict=feed_dict)
             l += l_tmp
             acc += acc_tmp
@@ -331,7 +333,7 @@ class VGG16(UNetBatchNorm):
 
 
 
-    def train(self, DG, saver=True):
+    def train(self, DG, saver=True, DropOutProb=0.5):
 
         epoch = DG.n_train 
 
@@ -356,7 +358,8 @@ class VGG16(UNetBatchNorm):
             batch_data, batch_labels = DG.NextBatch(train = True, bs = self.BATCH_SIZE)
             feed_dict = {self.input_node: batch_data,
                          self.train_labels_node: batch_labels,
-                         self.is_training: True}
+                         self.is_training: True,
+                         self.keep_prob: DropOutProb}
 
             # self.optimizer is replaced by self.training_op for the exponential moving decay
             _, l, lr, predictions, s = self.sess.run(

@@ -1,3 +1,4 @@
+import pdb
 import tensorflow as tf
 import numpy as np
 from DataGen2 import DataGen
@@ -45,14 +46,18 @@ class ConvolutionalNeuralNetwork:
         self.sess = tf.InteractiveSession()
 
         self.sess.as_default()
+        
+        self.var_to_reg = []
+        self.var_to_sum = []
+
+        self.var_to_reg = []
+        self.var_to_sum = []
 
         self.init_vars()
         self.init_model_architecture()
         self.init_training_graph()
         self.Saver()
         self.DEBUG = DEBUG
-        self.var_to_reg = []
-        self.var_to_sum = []
         self.loss_func = LOSS_FUNC
         self.weight_decay = WEIGHT_DECAY
 
@@ -70,9 +75,10 @@ class ConvolutionalNeuralNetwork:
     def add_to_summary(self, var):
         if var is not None:
             tf.summary.histogram(var.op.name, var)
-
+	    
     def add_to_regularization(self, var):
         if var is not None:
+	    print var
             self.loss = self.loss + self.weight_decay * self.loss_func(var)
 
 
@@ -153,6 +159,11 @@ class ConvolutionalNeuralNetwork:
                                 lambda: (ema.average(batch_mean), ema.average(batch_var)))
             normed = tf.nn.batch_normalization(Input, mean, var, beta, gamma, eps)
         return normed
+
+    def DropOutLayer(self, Input, scope="DropOut"):
+        with tf.name_scope(scope):
+            return tf.nn.dropout(Input, self.keep_prob)  ##keep prob has to be defined in init_var
+
     def init_vars(self):
         self.input_node = self.input_node_f()
 
@@ -300,8 +311,10 @@ class ConvolutionalNeuralNetwork:
 
                 decay_step = float(epoch) / (2 * self.BATCH_SIZE)
             
+            elif "epoch" in self.LRSTEP:
+                num = int(self.LRSTEP[:-5])
+                decay_step = float(num) * float(epoch) / self.BATCH_SIZE
             else:
-
                 decay_step = float(self.LRSTEP)
               
             self.learning_rate = tf.train.exponential_decay(
