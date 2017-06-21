@@ -118,10 +118,12 @@ class UNetBatchNorm(UNet):
 
         print('Model variables initialised')
 
+
     def Validation(self, DG_TEST, step):
         
         n_test = DG_TEST.length
         n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
+
 
         l, acc, F1, recall, precision, meanacc = 0., 0., 0., 0., 0., 0.
 
@@ -141,11 +143,19 @@ class UNetBatchNorm(UNet):
 
         l, acc, F1, recall, precision, meanacc = np.array([l, acc, F1, recall, precision, meanacc]) / n_batch
 
+        summary = tf.Summary()
+        summary.value.add(tag="Test/Accuracy", simple_value=acc)
+        summary.value.add(tag="Test/Loss", simple_value=l)
+        summary.value.add(tag="Test/F1", simple_value=F1)
+        summary.value.add(tag="Test/Recall", simple_value=recall)
+        summary.value.add(tag="Test/Precision", simple_value=precision)
+        summary.value.add(tag="Test/Performance", simple_value=meanacc)
+
+        self.summary_test_writer.add_summary(summary, step)
 
         print('  Validation loss: %.1f' % l)
         print('       Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
         self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
-
     def train(self, DGTrain, DGTest, saver=True):
 
         epoch = DGTrain.length
@@ -164,13 +174,6 @@ class UNetBatchNorm(UNet):
         merged_summary = tf.summary.merge_all()
         steps = self.STEPS
 
-        
-        # for i in range(Xval.shape[0]):
-        #     imsave("/tmp/image_{}.png".format(i), Xval[i])
-        #     imsave("/tmp/label_{}.png".format(i), Yval[i,:,:,0])
-
-
-
         for step in range(steps):
             batch_data, batch_labels = DGTrain.Batch(0, self.BATCH_SIZE)
             feed_dict = {self.input_node: batch_data,
@@ -186,15 +189,13 @@ class UNetBatchNorm(UNet):
             if step % self.N_PRINT == 0:
                 i = datetime.now()
                 print i.strftime('%Y/%m/%d %H:%M:%S: \n ')
-                summary_writer.add_summary(s, step)                
+                self.summary_writer.add_summary(s, step)                
                 error, acc, acc1, recall, prec, f1 = self.error_rate(predictions, batch_labels, step)
                 print('  Step %d of %d' % (step, steps))
                 print('  Learning rate: %.5f \n') % lr
                 print('  Mini-batch loss: %.5f \n       Accuracy: %.1f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % 
                       (l, acc, acc1, recall, prec, f1))
                 self.Validation(DGTest, step)
-
-
 
 if __name__== "__main__":
 
@@ -242,7 +243,7 @@ if __name__== "__main__":
     
     
     BATCH_SIZE = options.bs
-    LRSTEP = "epoch/2"
+    LRSTEP = "10epoch"
     SUMMARY = True
     S = SUMMARY
     N_EPOCH = options.epoch

@@ -301,7 +301,9 @@ class ConvolutionalNeuralNetwork:
 
                 decay_step = float(epoch) / (2 * self.BATCH_SIZE)
             
-            else:
+            elif "epoch" in self.LRSTEP:
+                num = int(self.LRSTEP[:-5])
+                decay_step = float(num) * float(epoch) / self.BATCH_SIZE
 
                 decay_step = float(self.LRSTEP)
               
