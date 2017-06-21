@@ -27,6 +27,9 @@ process Training {
     each lr from LEARNING_RATE
     each wd from WEIGHT_DECAY    
 
+    output:
+    file "${feat}_${wd}_${lr}" into RESULTS
+
     beforeScript "source /data/users/pnaylor/CUDA_LOCK/.whichNODE"
     afterScript "source /data/users/pnaylor/CUDA_LOCK/.freeNODE"
 
