@@ -50,6 +50,7 @@ class VGG16(UNetBatchNorm):
         self.DECAY_EMA = DECAY_EMA
         self.LOG = LOG
         self.SEED = SEED
+        self.N_FEATURES = N_FEATURES
 
         self.sess = tf.InteractiveSession()
 
@@ -61,7 +62,6 @@ class VGG16(UNetBatchNorm):
         self.Saver()
         self.DEBUG = DEBUG
         self.N_EPOCHS = N_EPOCHS
-        self.N_FEATURES = N_FEATURES
 
 
     def conv_layer_f(self, i_layer, w_var, scope_name, strides=[1,1,1,1], padding="SAME"):
