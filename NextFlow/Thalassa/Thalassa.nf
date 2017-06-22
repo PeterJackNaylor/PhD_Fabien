@@ -88,7 +88,7 @@ process subImage {
 
 }
 
-process GetMax {
+/*process GetMax {
 
     
-}
+}*/

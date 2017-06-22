@@ -185,6 +185,9 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
         y_e -= val
         x_b += val
         x_e -= val
+        n_id = np.random.randint(0,1000)
+        imsave("/share/data40T_v2/Peter/prob/{}.png".format(n_id), prob_image1)
+        imsave("/share/data40T_v2/Peter/rgb/{}.png".format(n_id), window)
         if val != 0:
             result[y_b:y_e, x_b:x_e, 0] += prob_image1[val:-val, val:-val]
             #imsave("Slide/{}_{}_{}_{}.png".format(y_b,y_e,x_b,x_e), prob_image1)
@@ -199,6 +202,13 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder =
     bin_map = bin_map.astype(np.uint8)
 
     return prob_map, bin_map
+
+
+
+def sum_f(img):
+    return np.sum(img)
+
+list_f=[sum_f]
 
 def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=marge, list_f=list_f):
     caffe.set_mode_cpu()
@@ -219,6 +229,7 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=m
 
 
     return image, table
+
 
 
 def analyse_bin(bin_image, marge, list_f):
@@ -307,6 +318,9 @@ def PredImage(options):
     print "outfile : {}".format(outfile)
     print "f : ", options.f
     PredOneImage(slide, para, outfile, options.f, options)
+
+
+from tifffile import imsave
 
 def PredOneImage(slide, para, outfile, f, options):
     # pdb.set_trace()

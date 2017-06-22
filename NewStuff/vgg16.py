@@ -31,11 +31,13 @@ class VGG16(UNetBatchNorm):
         N_EPOCHS=10,
         LRSTEP=200,
         DECAY_EMA=0.9999,
-        N_PRINT = 100,
-        N_FEATURES = 16,
+        N_PRINT=100,
+        N_FEATURES=16,
+        WEIGHT_DECAY=0.0005,
         LOG="/tmp/net",
         SEED=42,
-        DEBUG=True):
+        DEBUG=True,
+        LOSS_FUNC=tf.nn.l2_loss):
 
         self.LEARNING_RATE = LEARNING_RATE
         self.K = K
@@ -52,6 +54,11 @@ class VGG16(UNetBatchNorm):
         self.SEED = SEED
         self.N_FEATURES = N_FEATURES
 
+        self.var_to_reg = []
+        self.var_to_sum = []
+        self.N_FEATURES = N_FEATURES
+        self.weight_decay = WEIGHT_DECAY
+
         self.sess = tf.InteractiveSession()
 
         self.sess.as_default()
@@ -61,6 +68,8 @@ class VGG16(UNetBatchNorm):
         self.init_training_graph()
         self.Saver()
         self.DEBUG = DEBUG
+        self.loss_func = LOSS_FUNC
+
         self.N_EPOCHS = N_EPOCHS
 
 
@@ -341,7 +350,7 @@ class VGG16(UNetBatchNorm):
 
         trainable_var = tf.trainable_variables()
         
-        self.regularize_model(trainable_var)
+        self.regularize_model()
         self.optimization(trainable_var)
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
 
@@ -430,6 +439,8 @@ if __name__ == "__main__":
 
     parser.add_option("--n_features", dest="n_features", type="int",
                       help="number of channels on first layers")
+    parser.add_option("--weight_decay", dest="weight_decay", type="float",
+                      help="weight decay")
 
     (options, args) = parser.parse_args()
 
@@ -437,6 +448,7 @@ if __name__ == "__main__":
 
     
     N_FEATURES = options.n_features
+    WEIGHT_DECAY = options.weight_decay
     N_TRAIN_SAVE = 100
     LEARNING_RATE = options.lr
     SAVE_DIR = options.log + "/" + "{}_{}" .format(N_FEATURES, LEARNING_RATE)
@@ -461,7 +473,7 @@ if __name__ == "__main__":
     size = (HEIGHT, WIDTH)
 
     DG = DataGen(path, transforms, _, size)
-
+#    pdb.set_trace()
 #    train_batch, lbl_batch = DG.NextBatch(train= True, bs = 4)
 
     model = VGG16(LEARNING_RATE=LEARNING_RATE,
@@ -475,5 +487,4 @@ if __name__ == "__main__":
                                        LOG=SAVE_DIR,
                                        N_FEATURES=N_FEATURES,
                                        SEED=42)
-
     model.train(DG)
