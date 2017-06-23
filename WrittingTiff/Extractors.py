@@ -1,5 +1,5 @@
 import numpy as np
-from skimage.morphology import watershed, dilation, disk
+from skimage.morphology import watershed, dilation, disk, reconstruction
 from skimage.measure import regionprops, label
 import pandas as pd
 from scipy.misc import imread
@@ -7,26 +7,33 @@ from skimage.color import rgb2gray
 import pdb
 from scipy.misc import imsave
 
-def bin_analyser(RGB_image, bin_image, list_feature, pandas_table=False, do_label=True):
+def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=False, do_label=True):
+    bin_image_copy = bin_image.copy()
+    if marge is not None:
+        seed = np.zeros_like(bin_image_copy)
+        seed[marge:-marge, marge:-marge] = 1
+        mask = bin_image_copy.copy()
+        mask[ mask > 0 ] = 1
+        mask[marge:-marge, marge:-marge] = 1
+        reconstructed = reconstruction(seed, mask, 'dilation')
+        bin_image_copy[reconstructed == 0] = 0
     if do_label:
-        bin_image = label(bin_image)
-    else:
-        bin_image = bin_image
+        bin_image_copy = label(bin_image_copy)
 
-    if len(np.unique(bin_image)) != 2:
-        if len(np.unique(bin_image)) == 1:
-            if 0 in bin_image:
+    if len(np.unique(bin_image_copy)) != 2:
+        if len(np.unique(bin_image_copy)) == 1:
+            if 0 in bin_image_copy:
                 print "Return blank matrix."
-                return bin_image
+                return bin_image_copy
             else:
                 print "Error, must give a bin image."
     
     GrowRegion_N = NeededGrownRegion(list_feature)
-    img = {0: bin_image}
-    RegionProp = {0: regionprops(bin_image)}
+    img = {0: bin_image_copy}
+    RegionProp = {0: regionprops(bin_image_copy)}
     for val in GrowRegion_N:
         if val != 0:
-            img[val] = GrowRegion(bin_image, val)
+            img[val] = GrowRegion(bin_image_copy, val)
             RegionProp[val] = regionprops(img[val])
 
     n = len(RegionProp[0])

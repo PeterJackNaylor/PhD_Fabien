@@ -12,16 +12,13 @@ BIOPSY_FOLD = params.in
 HOST_NAME = "thalassa"
 
 MARGE = 100
-WD_REMOTE = "/share/data40T_v2/Peter"
+WD_REMOTE = "/share/data40T_v2/Peter/PatientFolder"
 
 DATA_FOLDER = "Data"
 
 DISTRIBUTED_VERSION = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/DistributedVersion.py')
-
-IMAGE_ANALYSER = file("Thalassa_ImageAnalyser.nf")
-
-CBS = file("CheckingBeforeSubmit.nf")
-
+GETMAX = file('GetMax.py')
+ASSEMBLE = file("Assemble.py")
 nextflow_cfg = file("nextflow.config")
 
 process ChopPatient {
@@ -54,41 +51,84 @@ ALL_CONFIG = Channel.fromPath('/share/data40T_v2/Peter/PatientFolder/Job_*/Param
 
 process subImage {
     executor 'sge'
+    memory '9 GB'
     profile = 'cluster'
     validExitStatus 0,134
     clusterOptions = "-S /bin/bash"
     publishDir WD_REMOTE, overwrite: false
+    maxForks = 40
+    errorStrategy 'retry' 
+    maxErrors 5
 
 
     input:
-    val param_job_txt from ALL_CONFIG
+    val p from ALL_CONFIG
     file param from PARAM_JOB.first()
     val inputt from params.in
     val marge from MARGE2.first()
 
     output:
-    file "Job_*/tiled/*.tiff" into IMAGE_PROCESSED
-    file "Job_*/table/*.npy" into TABLE_PROCESSED
+    file "Job_${p.split()[6]}/tiled/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into IMAGE_PROCESSED, IMAGE_PROCESSED2
+    file "Job_${p.split()[6]}/table/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.npy" into TABLE_PROCESSED
     """
 
-    FIELD0=`echo '$param_job_txt' |cut -d' ' -f2`
-    FIELD1=`echo '$param_job_txt' |cut -d' ' -f3`
-    FIELD2=`echo '$param_job_txt' |cut -d' ' -f4`
-    FIELD3=`echo '$param_job_txt' |cut -d' ' -f5`
-    FIELD4=`echo '$param_job_txt' |cut -d' ' -f6`
-    FIELD5=`echo '$param_job_txt' |cut -d' ' -f7`
 
-    ln -s /share/data40T_v2/Peter/PatientFolder/Job_\$FIELD5/PredictionSlide.py PredictionSlide.py
-    ln -s /share/data40T_v2/Peter/PatientFolder/Job_\$FIELD5 Job_\$FIELD5
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${p.split()[6]}/PredictionSlide.py PredictionSlide.py
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${p.split()[6]} Job_${p.split()[6]}
 
-    python PredictionSlide.py -x \$FIELD0 -y \$FIELD1 --size_x \$FIELD2 --size_y \$FIELD3 --ref_level \$FIELD4 --output PatientFolder/Job_\$FIELD5/ --slide $inputt\$FIELD5.tiff --size 224 --marge $marge
+    python PredictionSlide.py -x ${p.split()[1]} -y ${p.split()[2]} --size_x ${p.split()[3]} --size_y ${p.split()[4]} --ref_level ${p.split()[5]} --output Job_${p.split()[6]} --slide $inputt${p.split()[6]}.tiff --size 224 --marge $marge
 
     """
 
 
 }
 
-/*process GetMax {
+//TABLE_PROCESSED.subscribe { println "value: $it" }
+FEATURES_TO_VISU = [0, 1, 2]
+process GetMax {
+    executor 'sge'
+    profile = 'cluster'
+    validExitStatus 0
+    clusterOptions = "-S /bin/bash"
+    publishDir WD_REMOTE, overwrite: false
+    maxForks = 200
+//    errorStrategy 'retry' 
+    maxErrors 5
 
+    input:
+    file table from TABLE_PROCESSED 
+    file py from GETMAX
+    each feat from FEATURES_TO_VISU 
+    output:
+    file "*.npy" into METRICS
+
+    """
+    python $py --table $table --feat $feat
+    """
     
+}
+/*
+process BringToGether {
+    executor 'sge'
+    profile = 'cluster'
+    validExitStatus 0
+    clusterOptions = "-S /bin/bash"
+    publishDir WD_REMOTE, overwrite: false
+    maxForks = 20
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    file metrics from METRICS
+    file py from ASSEMBLE
+    output:
+    file "METRIC_GENERAL.npy" into METRIC_GEN
+
+    """
+    python $py --path .
+    """
+
+
 }*/
+
+

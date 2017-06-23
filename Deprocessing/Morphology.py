@@ -90,3 +90,7 @@ def ArrangeLabel(mat):
         mat = ArrangeLabel(mat)
     return mat
 
+
+def PostProcess(prob_image, param=7, thresh = 0.5):
+    segmentation_mask = DynamicWatershedAlias(prob_image, param, thresh)
+    return segmentation_mask
