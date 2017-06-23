@@ -54,6 +54,34 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
     else:
         return TABLE
 
+
+def bin_to_color(RGB_image, bin_image, feat_vec, marge=None, do_label=True):
+    bin_image_copy = bin_image.copy()
+    res = np.zeros(shape=(bin_image.shape[0], bin_image.shape[1], 3))
+    if marge is not None:
+        seed = np.zeros_like(bin_image_copy)
+        seed[marge:-marge, marge:-marge] = 1
+        mask = bin_image_copy.copy()
+        mask[ mask > 0 ] = 1
+        mask[marge:-marge, marge:-marge] = 1
+        reconstructed = reconstruction(seed, mask, 'dilation')
+        bin_image_copy[reconstructed == 0] = 0
+    if do_label:
+        bin_image_copy = label(bin_image_copy)
+
+    if len(np.unique(bin_image_copy)) != 2:
+        if len(np.unique(bin_image_copy)) == 1:
+            if 0 in bin_image_copy:
+                print "Return blank matrix."
+                return bin_image_copy
+            else:
+                print "Error, must give a bin image."
+    RegProp = regionprops(bin_image_copy)
+    for i in range(len(RegProp)):
+        mini_reg = RegProp[i]
+        bin_image_copy[mini_reg.coords] = feat_vec[i]
+    return bin_image_copy
+
 def NeededGrownRegion(list_feature):
     res = []
     for feat in list_feature:

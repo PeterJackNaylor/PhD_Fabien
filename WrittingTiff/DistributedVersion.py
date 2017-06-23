@@ -177,8 +177,7 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=m
     x, y = np.where(contours == 1)
     image[x, y] = np.array([0, 0, 0])
 
-
-    return image, table
+    return image, table, bin_image1, prob_image1
 
 
 ##########################
@@ -245,6 +244,8 @@ def PredImage(options):
 
     CheckOrCreate(os.path.join(options.output, "tiled"))
     CheckOrCreate(os.path.join(options.output, "table"))
+    CheckOrCreate(os.path.join(options.output, "bin"))
+    CheckOrCreate(os.path.join(options.output, "prob"))
     print "slide :{}".format(slide)
     print "para : ", para
     print "outfile : {}".format(outfile)
@@ -258,9 +259,11 @@ def PredOneImage(slide, para, outfile, f, options):
     # pdb.set_trace()
     slide = openslide.open_slide(slide)
     image = np.array(GetImage(slide, para))[:,:,:3]
-    image, table = f(image, marge=options.marge)
+    image, table, bin, prob = f(image, marge=options.marge)
     imsave(outfile, image, resolution=[1.0,1.0])
     np.save(outfile.replace('.tiff', ".npy").replace("tiled", "table"), table)
+    imsave(outfile.replace("tiled", "bin"), bin)
+    imsave(outfile.replace("tiled", "prob"), prob)
 
 def CheckJob(parameter_file, output_folder):
     f = open(parameter_file, "r")
