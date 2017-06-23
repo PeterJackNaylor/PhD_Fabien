@@ -43,14 +43,19 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
     for i in range(n):
         for j, feat in enumerate(list_feature):
             tmp_regionprop = RegionProp[feat._return_n_extension()][i]
-            bin_crop = tmp_regionprop.image.astype(np.uint8)
-            x_m, y_m, x_M, y_M = tmp_regionprop.bbox
-            img_crop = RGB_image[x_m:x_M, y_m:y_M]
-            TABLE[i,j] = feat._apply_region(img_crop, bin_crop)
-            
+            TABLE[i,j] = feat._apply_region(tmp_regionprop ,RGB_image)
+
+
     if pandas_table:
+        names = []
+        for el in list_feature:
+            if el.size != 1:
+                for it in range(el.size):
+                    names.append(el._return_name()[it])
+            else:
+                names.append(el._return_name())
         feature_name = [el._return_name() for el in list_feature]
-        return pd.DataFrame(TABLE, columns=feature_name)
+        return pd.DataFrame(TABLE, columns=names)
     else:
         return TABLE
 
@@ -112,32 +117,54 @@ class Feature(object):
     def __init__(self, name, n_extension):
         self.name = name
         self.n_extension = n_extension
-
+        self.size = 0
+        self.GetSize()
+    def _return_size(self):
+        return self.size
     def _return_name(self):
         return self.name
     def _return_n_extension(self):
         return self.n_extension
-    def _apply_region(self, rgb_img, img_bin):
+    def _apply_region(self, regionp, RGB):
         raise NotImplementedError
-
+    def GetSize(self):
+        raise NotImplementedError
 class PixelSize(Feature):
-    def _apply_region(self, rgb_img, img):
-        return Pixel_size(img)
-
+    def _apply_region(self, regionp, RGB):
+        bin = regionp.image.astype(np.uint8)
+        return Pixel_size(bin)
+    def GetSize(self):
+        self.size = 1
 
 class Save(Feature):
     """Not usable yet, need to figure out a way for the diff name"""
-    def _apply_region(self, rgb_img, img):
-        imsave("test.png" ,img)
-        imsave("test_rgb.png", rgb_img)
+    def _apply_region(self, regionp, RGB):
+        bin = regionp.image.astype(np.uint8)
+        x_m, y_m, x_M, y_M = regionp.bbox
+        img_crop = RGB[x_m:x_M, y_m:y_M]
+        imsave("test_rgb.png" ,img_crop)
+        imsave("test.png", bin)
         pdb.set_trace()
+    def GetSize(self):
+        self.size = 0
 
 class MeanIntensity(Feature):
-    def _apply_region(self, rgb_img, img):
-        return Mean_intensity(rgb_img, img)
+    def _apply_region(self, regionp, RGB):
+        bin = regionp.image.astype(np.uint8)
+        x_m, y_m, x_M, y_M = regionp.bbox
+        img_crop = RGB[x_m:x_M, y_m:y_M]
+        return Mean_intensity(img_crop, bin)
+    def GetSize(self):
+        self.size = 1
+
+class Centroid(Feature):
+    def _apply_region(self, regionp, RGB):
+        return regionp.centroid
+    def GetSize(self):
+        self.size = 2
 
 list_f = [PixelSize("Pixel sum", 0), MeanIntensity("Intensity mean 0", 0), 
-          MeanIntensity("Intensity mean 5", 5)]
+          MeanIntensity("Intensity mean 5", 5), Centroid(["Centroid_x", "Centroid_y"], 0)]
 
 if __name__ == '__main__':
     img = imread("/Users/naylorpeter/prob/CIT_1_40x_raw.png")

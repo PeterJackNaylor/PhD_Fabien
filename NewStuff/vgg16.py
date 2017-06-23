@@ -229,6 +229,7 @@ class VGG16(UNetBatchNorm):
         self.fc6 = self.conv_layer_f(self.pool5_fc, self.fc6_weights, "fc6/", padding="VALID")
         self.fc6_relu = self.relu_layer_f(self.fc6, self.fc6_biases, "fc6/")
         self.fc6_dropout = self.DropOutLayer(self.fc6_relu, "fc6/")
+        
         self.fc7 = self.conv_layer_f(self.fc6_relu, self.fc7_weights, "fc7/")
         self.fc7_relu = self.relu_layer_f(self.fc7, self.fc7_biases, "fc7/")
         self.fc7_dropout = self.DropOutLayer(self.fc7_relu, "fc7/")
