@@ -19,6 +19,8 @@ DATA_FOLDER = "Data"
 DISTRIBUTED_VERSION = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/DistributedVersion.py')
 GETMAX = file('GetMax.py')
 ASSEMBLE = file("Assemble.py")
+ADDING_COLORS = file("AddColors.py")
+COLORING = file("Coloring.py")
 nextflow_cfg = file("nextflow.config")
 
 process ChopPatient {
@@ -68,8 +70,10 @@ process subImage {
     val marge from MARGE2.first()
 
     output:
+    file "Job_${p.split()[6]}/prob/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into PROB_PROCESSED
+    file "Job_${p.split()[6]}/bin/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into BIN_PROCESSED
     file "Job_${p.split()[6]}/tiled/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into IMAGE_PROCESSED, IMAGE_PROCESSED2
-    file "Job_${p.split()[6]}/table/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.npy" into TABLE_PROCESSED
+    file "Job_${p.split()[6]}/table/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.npy" into TABLE_PROCESSED, TABLE_PROCESSED2
     """
 
 
@@ -107,7 +111,7 @@ process GetMax {
     """
     
 }
-/*
+//METRICS.subscribe { println "value: $it" }
 process BringToGether {
     executor 'sge'
     profile = 'cluster'
@@ -119,16 +123,60 @@ process BringToGether {
     maxErrors 5
 
     input:
-    file metrics from METRICS
+    file metrics from METRICS.toList()
     file py from ASSEMBLE
     output:
-    file "METRIC_GENERAL.npy" into METRIC_GEN
+    file "METRIC_GENERAL_*.npy" into METRIC_GEN, METRIC_GEN2
 
     """
     python $py --path .
     """
+}
 
+process MakeColors {
+    executor 'sge'
+    profile = 'cluster'
+    clusterOptions = "-S /bin/bash"
+    publishDir WD_REMOTE, overwrite: false
+    maxForks = 200
+    errorStrategy 'retry' 
+    maxErrors 5
 
-}*/
+    input:
+    file metrics from METRIC_GEN
+    each table from TABLE_PROCESSED2
+    file py from ADDING_COLORS
+    output:
+    file "*_color.npy" into TABLE_COLORED
 
+    """
+    python $py --table $table
+    """   
+}
 
+//TABLE_COLORED.combine(BIN_PROCESSED).
+//test = Channel.from(TABLE_COLORED)
+//test.subscribe { println "value: $it" }
+
+//println(TABLE_COLORED.getClass())
+//TABLE_COLORED.combine(bin).filter { it[1] == it[2]}
+
+// FIND BETTER WAY OF DOING IT
+process AddColors {
+    executor 'sge'
+    profile = 'cluster'
+    clusterOptions = "-S /bin/bash"
+    publishDir WD_REMOTE, overwrite: false
+    maxForks = 200
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    file t_color from TABLE_COLORED
+    file py from COLORING
+//    file bin from BIN_PROCESSED
+    """
+    python $py
+    """
+
+}
