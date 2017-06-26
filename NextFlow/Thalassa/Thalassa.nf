@@ -21,6 +21,7 @@ GETMAX = file('GetMax.py')
 ASSEMBLE = file("Assemble.py")
 ADDING_COLORS = file("AddColors.py")
 COLORING = file("Coloring.py")
+COLORING2 = file("Coloring2.py")
 nextflow_cfg = file("nextflow.config")
 
 process ChopPatient {
@@ -50,7 +51,6 @@ process ChopPatient {
 ALL_CONFIG = Channel.fromPath('/share/data40T_v2/Peter/PatientFolder/Job_*/ParameterDistribution.txt')
                     .splitText()
 
-
 process subImage {
     executor 'sge'
     memory '9 GB'
@@ -73,7 +73,7 @@ process subImage {
     file "Job_${p.split()[6]}/prob/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into PROB_PROCESSED
     file "Job_${p.split()[6]}/bin/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into BIN_PROCESSED
     file "Job_${p.split()[6]}/tiled/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into IMAGE_PROCESSED, IMAGE_PROCESSED2
-    file "Job_${p.split()[6]}/table/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.npy" into TABLE_PROCESSED, TABLE_PROCESSED2
+    file "Job_${p.split()[6]}/table/${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.npy" into TABLE_PROCESSED, TABLE_PROCESSED2, TABLE_PROCESSED3
     """
 
 
@@ -174,9 +174,14 @@ process AddColors {
     input:
     file t_color from TABLE_COLORED
     file py from COLORING
+    file py2 from COLORING2
 //    file bin from BIN_PROCESSED
     """
     python $py
+    python $py2
     """
 
 }
+
+
+
