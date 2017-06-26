@@ -147,11 +147,39 @@ process MakeColors {
     each table from TABLE_PROCESSED2
     file py from ADDING_COLORS
     output:
-    file "*_color.npy" into TABLE_COLORED
+    file "*_color.npy" into TABLE_COLORED, TABLE_COLORED2
 
     """
     python $py --table $table
     """   
+}
+
+RES = 3
+GOING_TO_RES = file("ChangingRes.py")
+
+process MergeTables {
+    executor 'sge'
+    profile = 'cluster'
+    clusterOptions = "-S /bin/bash"
+    publishDir WD_REMOTE, overwrite: false
+    maxForks = 200
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    each table from TABLE_PROCESSED3
+    file py from GOING_TO_RES
+    val res from RES
+    output:
+    file "*_general.npy" into TABLES
+
+    """
+    python $py --table $table --resolution $res
+    """   
+
+
+
+
 }
 
 //TABLE_COLORED.combine(BIN_PROCESSED).
