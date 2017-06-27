@@ -23,8 +23,8 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
     if len(np.unique(bin_image_copy)) != 2:
         if len(np.unique(bin_image_copy)) == 1:
             if 0 in bin_image_copy:
-                print "Return blank matrix."
-                return bin_image_copy
+                print "Return blank matrix. Change this shit"
+                return np.array([[0, 0, 0, 0, 0]])
             else:
                 print "Error, must give a bin image."
     

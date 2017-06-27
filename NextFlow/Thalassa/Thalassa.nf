@@ -1,4 +1,3 @@
-#!/usr/bin/env nextflow
 
 /*
 Everything is written from the perspective of cookies and crisp
@@ -53,12 +52,12 @@ ALL_CONFIG = Channel.fromPath('/share/data40T_v2/Peter/PatientFolder/Job_*/Param
 
 process subImage {
     executor 'sge'
-    memory '9 GB'
+    memory '11 GB'
     profile = 'cluster'
     validExitStatus 0,134
     clusterOptions = "-S /bin/bash"
     publishDir WD_REMOTE, overwrite: false
-    maxForks = 40
+    maxForks = 80
     errorStrategy 'retry' 
     maxErrors 5
 
@@ -86,7 +85,7 @@ process subImage {
 
 
 }
-
+/*
 //TABLE_PROCESSED.subscribe { println "value: $it" }
 FEATURES_TO_VISU = [0, 1, 2]
 process GetMax {
@@ -153,8 +152,8 @@ process MakeColors {
     python $py --table $table
     """   
 }
-
-RES = 3
+*/
+RES = 7
 GOING_TO_RES = file("ChangingRes.py")
 
 process MergeTables {
@@ -167,21 +166,43 @@ process MergeTables {
     maxErrors 5
 
     input:
-    each table from TABLE_PROCESSED3
-    file py from GOING_TO_RES
+    file table from TABLE_PROCESSED3
+    file py from GOING_TO_RES.last()
     val res from RES
     output:
-    file "*_general.npy" into TABLES
+    file "*_general.csv" into TABLES
 
     """
     python $py --table $table --resolution $res
     """   
+}
 
+MergeTable = file("MergeTabsAndPlot.py")
 
+process CollectMergeTables {
+    executor 'local'
+    clusterOptions = "-S /bin/bash"
+    publishDir WD_REMOTE, overwrite: false
+    maxForks = 200
+    errorStrategy 'retry' 
+    maxErrors 5
 
+    input:
+    file _ from TABLES .toList()
+    file py from MergeTable
+    val res from RES
+    output:
+    file "*_WHOLE.csv" into TAB_SLIDE
+
+    """
+    python $py --resolution $res
+    """   
 
 }
 
+
+
+/*
 //TABLE_COLORED.combine(BIN_PROCESSED).
 //test = Channel.from(TABLE_COLORED)
 //test.subscribe { println "value: $it" }
@@ -212,4 +233,4 @@ process AddColors {
 }
 
 
-
+*/

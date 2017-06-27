@@ -165,7 +165,7 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=m
     cn_1 = "FCN_0.01_0.99_0.0005"
     wd_1 = "/share/data40T_v2/Peter/pretrained_models"
     net_1 = GetNet(cn_1, wd_1)
-    prob_image1, bin_image1, thresh = PredLargeImageFromNet(net_1, image, stepSize, windowSize)
+    prob_image1, bin_image1, thresh = PredLargeImageFromNet(net_1, image, stepSize, windowSize, param=7, ClearBorder="RemoveBorderWithDWS")
     #pdb.set_trace()
     segmentation_mask = DynamicWatershedAlias(prob_image1, param)
     table = bin_analyser(image, bin_image1, list_f, marge)

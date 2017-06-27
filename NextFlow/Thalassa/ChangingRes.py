@@ -12,20 +12,20 @@ if __name__ == "__main__":
 
     parser.add_option("--table", dest="table_name",type="string",
                       help="table name")
-    parser.add_option("--res", dest="res", type="int",
+    parser.add_option("--resolution", dest="res", type="int",
                       help="to visualize at res $res")
     (options, args) = parser.parse_args()
 
     slide = op.open_slide('/share/data40T_v2/Peter/Data/Biopsy/579673.tiff')
 
-    table = pd.DataFrame(options.table_name, columns=["sum", "intens 0", "intens 5", "X", "Y"])
+    table = pd.DataFrame(np.load(options.table_name), columns=["sum", "intens 0", "intens 5", "X", "Y"])
     res = options.res
-    pdb.set_trace()
     para = options.table_name.split('.')[0].split('_')
 
     def f(x, y):
     	X, Y = int(x) + int(para[0]), int(y) + int(para[1])
-    	return get_X_Y_from_0(slide, X, Y, res)
+	va, va2 = get_X_Y_from_0(slide, X, Y, res)
+    	return va, va2
 
-    table[["X_0", "Y_0"]] = table.apply(lambda row: f(row["X"], row["Y"]))
+    table["coord"] = table.apply(lambda row: f(row["X"], row["Y"]), axis=1)
     table.to_csv(options.table_name.replace('.npy', "_general.csv"))
