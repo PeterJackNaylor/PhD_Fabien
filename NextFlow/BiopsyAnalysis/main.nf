@@ -8,9 +8,8 @@ PublishPatient = "/share/data40T_v2/Peter/PatientFolder"
 DistributedVersion = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/DistributedVersion.py')
 
 
-
-
 /* parameters */
+MARGE = 100
 
 
 process ChopPatient {
@@ -37,22 +36,20 @@ process ChopPatient {
     """
 }
 
-
 process SubImage {
     executor 'sge'
     memory '11 GB'
     profile = 'cluster'
     validExitStatus 0,134
     clusterOptions = "-S /bin/bash"
-    publishDir WD_REMOTE, overwrite: false
+    publishDir PublishPatient, overwrite: false
     maxForks = 80
     errorStrategy 'retry' 
     maxErrors 5
 
 
     input:
-    val p from ALL_CONFIG
-    file param from PARAM_JOB.first() 
+    val p from PARAM_JOB.each().splitText() 
     val inputt from params.in
     val marge from MARGE2.first()
 
@@ -70,9 +67,10 @@ process SubImage {
     python PredictionSlide.py -x ${p.split()[1]} -y ${p.split()[2]} --size_x ${p.split()[3]} --size_y ${p.split()[4]} --ref_level ${p.split()[5]} --output Job_${p.split()[6]} --slide $inputt${p.split()[6]}.tiff --size 224 --marge $marge
 
     """
-/* this process creates files {slide}_{x}_{y}_{w}_{h}_{r}.tiff */
 }
 
+
+/* this process creates files {slide}_{x}_{y}_{w}_{h}_{r}.tiff */
 /* Creating feature map visualisation */
 
 /* What is needed :
@@ -90,12 +88,11 @@ TIFF_FOLDER = file(params.in)
 RES = 7
 
 
-
 process MergeTablesBySlides {
     executor 'sge'
     profile = 'cluster'
     clusterOptions = "-S /bin/bash"
-    publishDir WD_REMOTE, overwrite: false
+    publishDir PublishPatient, overwrite: false
     maxForks = 200
     errorStrategy 'retry' 
     maxErrors 5
@@ -116,11 +113,11 @@ process MergeTablesBySlides {
     """   
 }
 
-
+/*
 process CollectMergeTables {
     executor 'local'
     clusterOptions = "-S /bin/bash"
-    publishDir WD_REMOTE, overwrite: false
+    publishDir PublishPatient, overwrite: false
     maxForks = 200
     errorStrategy 'retry' 
     maxErrors 5
@@ -137,5 +134,5 @@ process CollectMergeTables {
     """   
 
 }
-
+*/
 /* END: Creating feature map visualisation */
