@@ -45,7 +45,7 @@ process SubImage {
     publishDir PublishPatient, overwrite: false
     maxForks = 80
     errorStrategy 'retry' 
-    maxErrors 5
+    maxErrors 50
 
 
     input:
@@ -87,7 +87,8 @@ ChangingRes = file("ChangingRes.py")
 TIFF_FOLDER = file(params.in)
 RES = 7
 
-
+TABLE_PROCESSED.each() {print it.getText()}
+/*
 process MergeTablesBySlides {
     executor 'sge'
     profile = 'cluster'
@@ -103,7 +104,7 @@ process MergeTablesBySlides {
     val res from RES
     file fold from TIFF_FOLDER
     output:
-    file "Job_${table.split("_")[0]}/tables_res_0/${table.split("_")[0]}_tables_res_0.csv" into Tables_res_0
+    file "Job_${table.getText().split("_")[0]}/tables_res_0/${table.getText().split("_")[0]}_tables_res_0.csv" into Tables_res_0
 
     """
 
@@ -112,7 +113,7 @@ process MergeTablesBySlides {
     python $py --table $table --slide ${fold}/${table.split("_")[0]}.tiff --resolution $res
     """   
 }
-
+*/
 /*
 process CollectMergeTables {
     executor 'local'
