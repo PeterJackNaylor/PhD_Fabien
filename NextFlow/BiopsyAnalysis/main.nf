@@ -8,9 +8,8 @@ PublishPatient = "/share/data40T_v2/Peter/PatientFolder"
 DistributedVersion = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/DistributedVersion.py')
 
 
-
-
 /* parameters */
+MARGE = 100
 
 
 process ChopPatient {
@@ -37,6 +36,10 @@ process ChopPatient {
     """
 }
 
+// Remove this shit
+ALL_CONFIG = Channel.fromPath('/share/data40T_v2/Peter/PatientFolder/Job_*/ParameterDistribution.txt')
+                    .splitText()
+
 
 process SubImage {
     executor 'sge'
@@ -51,7 +54,7 @@ process SubImage {
 
 
     input:
-    val p from ALL_CONFIG
+//    val p from ALL_CONFIG
     file param from PARAM_JOB.first() 
     val inputt from params.in
     val marge from MARGE2.first()
@@ -95,7 +98,7 @@ process MergeTablesBySlides {
     executor 'sge'
     profile = 'cluster'
     clusterOptions = "-S /bin/bash"
-    publishDir WD_REMOTE, overwrite: false
+    publishDir PublishPatient, overwrite: false
     maxForks = 200
     errorStrategy 'retry' 
     maxErrors 5
@@ -120,7 +123,7 @@ process MergeTablesBySlides {
 process CollectMergeTables {
     executor 'local'
     clusterOptions = "-S /bin/bash"
-    publishDir WD_REMOTE, overwrite: false
+    publishDir PublishPatient, overwrite: false
     maxForks = 200
     errorStrategy 'retry' 
     maxErrors 5
