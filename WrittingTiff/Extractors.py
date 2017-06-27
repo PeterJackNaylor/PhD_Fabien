@@ -169,6 +169,14 @@ class Centroid(Feature):
 list_f = [PixelSize("Pixel sum", 0), MeanIntensity("Intensity mean 0", 0), 
           MeanIntensity("Intensity mean 5", 5), Centroid(["Centroid_x", "Centroid_y"], 0)]
 
+list_f_names = []
+for el in list_f:
+    if self.size != 0:
+        list_f_names.append(el.name)
+    else:
+        for i in range(self.size):
+            list_f_names.append(el.name[i])
+
 if __name__ == '__main__':
     img = imread("/Users/naylorpeter/prob/CIT_1_40x_raw.png")
     img_bin = imread("/Users/naylorpeter/prob/bin_img2.png")

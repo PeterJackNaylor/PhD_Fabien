@@ -238,8 +238,9 @@ def options_all():
 def PredImage(options):
     slide = options.slide
     para = [options.x, options.y, options.size_x, options.size_y, options.ref_level]
+    slide_num = options.slide.split('.')[0]
     outfile = os.path.join(options.output, 'tiled',
-                           "{}_{}_{}_{}_{}.tiff".format(options.x, options.y,
+                           "{}_{}_{}_{}_{}_{}.tiff".format(slide_num, options.x, options.y,
                            options.size_x, options.size_y, options.ref_level))
 
     CheckOrCreate(os.path.join(options.output, "tiled"))
