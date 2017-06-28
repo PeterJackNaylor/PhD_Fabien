@@ -48,12 +48,12 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
     x_s, y_s, z_s = image.shape
     dim_result = 2
     
-    if method == "medianne":
+    if method == "median":
         dim_result = ceil(float(windowSize[0]) / stepSize) * ceil(float(windowSize[1]) / stepSize) 
         counter = np.zeros(shape=(x_s, y_s))
 
     result = np.zeros(shape=(x_s, y_s, dim_result))
-    if method == "medianne":
+    if method == "median":
         result -= -1 
     thresh_list = []
 
@@ -87,9 +87,12 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
             
             inter_result, thresh = RemoveBordersByReconstruction(inter_result, removeFromBorder)
             thresh_list += [thresh]
-            if method == "avg":
+            if method == "avg" or method == "median":
                 print "avg not implemented with Reconstruction for clear border, switched to max"
                 method = "max"
+
+        elif ClearBorder == "Classic":
+            inter_bin = np.ones_like(inter_result)
 
         if method == 'avg':
 
@@ -104,7 +107,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
             result[y_b:y_e, x_b:x_e, 1] = inter_result
             result[y_b:y_e, x_b:x_e, 0] = np.max(result[y_b:y_e, x_b:x_e,:], axis=2)
 
-        elif method == "medianne":
+        elif method == "median":
             #RAM intensive a priori
             for el in np.unique(counter):
                 y, x = np.where(counter[y_b:y_e, x_b:x_e] == el)
@@ -121,7 +124,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
     elif method == "max":
         prob_map = result[:, :, 0].copy()
 
-    elif method == "medianne":
+    elif method == "median":
         x, y, z = np.where(result != -1 )
         prob_map = np.median(result[x, y, z], axis=2)
 

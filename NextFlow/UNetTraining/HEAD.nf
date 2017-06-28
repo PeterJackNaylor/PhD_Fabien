@@ -1,3 +1,5 @@
+#!/usr/bin/env nextflow
+
 IMAGE_FOLD = file('/data/users/pnaylor/Bureau/ToAnnotate')
 PY = file('/data/users/pnaylor/Documents/Python/PhD_Fabien/NewStuff/UNetBatchNorm.py')
 TENSORBOARD = file('/data/users/pnaylor/Bureau/tensorboard')
