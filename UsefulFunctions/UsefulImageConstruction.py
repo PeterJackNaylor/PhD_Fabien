@@ -6,7 +6,7 @@ from WrittingTiff.createfold import PredImageFromNet
 from skimage.segmentation import clear_border
 from skimage.morphology import remove_small_objects
 from Deprocessing.Morphology import PostProcess
-
+from math import ceil
 
 
 
@@ -46,8 +46,17 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
                           threshold = 0.5):
     #pdb.set_trace() 
     x_s, y_s, z_s = image.shape
-    result = np.zeros(shape=(x_s, y_s, 2))
+    dim_result = 2
+    
+    if method == "medianne":
+        dim_result = ceil(float(windowSize[0]) / stepSize) * ceil(float(windowSize[1]) / stepSize) 
+        counter = np.zeros(shape=(x_s, y_s))
+
+    result = np.zeros(shape=(x_s, y_s, dim_result))
+    if method == "medianne":
+        result -= -1 
     thresh_list = []
+
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
         prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
         val = removeFromBorder
@@ -60,17 +69,20 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
         inter_result = prob_image1[val:-val, val:-val] if val!= 0 else prob_image1
 
         if ClearBorder == "RemoveBorderObjects":
+
             inter_bin = (inter_result > 0.5 + 0.0).astype(np.uint8)
             inter_bin = clear_border(inter_bin)
             inter_result[inter_bin == 0] = 0
+
         elif ClearBorder == "RemoveBorderWithDWS":
-        # pdb.set_trace()
+
             inter_bin = PostProcess(inter_result, param)
             inter_bin_without = clear_border(inter_bin, bgval = 0)
             inter_bin_without = inter_bin - inter_bin_without
             inter_bin_without[inter_bin_without > 0] = 1  
             inter_result[inter_bin_without == 1] = 0
             inter_bin = 1 - inter_bin_without.copy()
+
         elif ClearBorder == "Reconstruction":
             
             inter_result, thresh = RemoveBordersByReconstruction(inter_result, removeFromBorder)
@@ -80,6 +92,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
                 method = "max"
 
         if method == 'avg':
+
             inter_mean = np.ones_like(inter_result)
             inter_result[inter_bin == 0] = 0
             inter_mean[ inter_bin == 0 ] = 0
@@ -87,8 +100,18 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
             result[y_b:y_e, x_b:x_e, 1] += inter_mean
 
         elif method == "max":
+
             result[y_b:y_e, x_b:x_e, 1] = inter_result
             result[y_b:y_e, x_b:x_e, 0] = np.max(result[y_b:y_e, x_b:x_e,:], axis=2)
+
+        elif method == "medianne":
+            #RAM intensive a priori
+            for el in np.unique(counter):
+                y, x = np.where(counter[y_b:y_e, x_b:x_e] == el)
+                x_img = x + x_b
+                y_img = y + y_b
+                result[x_img, y_img, el] = inter_result[x, y]
+            counter[y_b:y_e, x_b:x_e] += 1
 
     if method == "avg" :
         x, y = np.where(result[:,:,1] == 0)
@@ -97,6 +120,10 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
         
     elif method == "max":
         prob_map = result[:, :, 0].copy()
+
+    elif method == "medianne":
+        x, y, z = np.where(result != -1 )
+        prob_map = np.median(result[x, y, z], axis=2)
 
     if ClearBorder == "Reconstruction":
 
