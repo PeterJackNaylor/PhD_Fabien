@@ -21,7 +21,6 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
 
     slide = op.open_slide(options.slide)
-
     table = pd.DataFrame(np.load(options.table_name), columns=list_f_names)
     res = options.res
     para = options.table_name.split('.')[0].split('_')

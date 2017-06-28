@@ -171,7 +171,7 @@ list_f = [PixelSize("Pixel sum", 0), MeanIntensity("Intensity mean 0", 0),
 
 list_f_names = []
 for el in list_f:
-    if el.size != 0:
+    if el.size == 1:
         list_f_names.append(el.name)
     else:
         for i in range(el.size):

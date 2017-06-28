@@ -1,4 +1,4 @@
-
+#!/usr/bin/env nextflow
 /*  inputs */
 params.in = "/share/data40T_v2/Peter/Data/Biopsy/"
 TIFF_REMOTE = file(params.in + "*")
@@ -71,6 +71,7 @@ process SubImage {
 
 
 /* this process creates files {slide}_{x}_{y}_{w}_{h}_{r}.tiff */
+
 /* Creating feature map visualisation */
 
 /* What is needed :
@@ -87,8 +88,7 @@ ChangingRes = file("ChangingRes.py")
 TIFF_FOLDER = file(params.in)
 RES = 7
 
-TABLE_PROCESSED.each() {print it.getText()}
-/*
+
 process MergeTablesBySlides {
     executor 'sge'
     profile = 'cluster'
@@ -100,20 +100,21 @@ process MergeTablesBySlides {
 
     input:
     file table from TABLE_PROCESSED
-    file py from ChangingRes.last()
+    file py from ChangingRes
     val res from RES
     file fold from TIFF_FOLDER
     output:
-    file "Job_${table.getText().split("_")[0]}/tables_res_0/${table.getText().split("_")[0]}_tables_res_0.csv" into Tables_res_0
+    file "Job_${table.getBaseName().split('_')[0]}/tables_res_0/${table.getBaseName()}_tables_res_0.csv" into Tables_res_0
 
     """
 
-    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.split("_")[0]} Job_${table.split("_")[0]}
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.name.split("_")[0]} Job_${table.name.split("_")[0]}
 
-    python $py --table $table --slide ${fold}/${table.split("_")[0]}.tiff --resolution $res
+    python $py --table $table --slide ${fold}/${table.name.split("_")[0]}.tiff --resolution $res
     """   
 }
-*/
+
+Tables_res_0 .groupBy { String str -> str.split('_')} .toList() .subscribe{ print it}
 /*
 process CollectMergeTables {
     executor 'local'
@@ -124,7 +125,7 @@ process CollectMergeTables {
     maxErrors 5
 
     input:
-    file _ from Tables_res_0 .toList()
+    file _ from Tables_res_0 .groupBy { String str -> str.split('_')} .toList()
     file py from MergeTable
     val res from RES
     output:
