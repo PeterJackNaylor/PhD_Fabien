@@ -72,7 +72,9 @@ process SubImage {
 
 
 /* this process creates files {slide}_{x}_{y}_{w}_{h}_{r}.tiff */
-/* Creating feature map visualisation */
+
+
+/* Creating feature map visualisation heatmap at resolution RES */
 
 /* What is needed :
 - tables (they will have nothing if no cells)
@@ -105,7 +107,7 @@ process MergeTablesBySlides {
     val res from RES
     file fold from TIFF_FOLDER
     output:
-    file "Job_${table.getText().split("_")[0]}/tables_res_0/${table.getText().split("_")[0]}_tables_res_0.csv" into Tables_res_0
+    file "Job_${table.name.split('.')[0]}/tables_res_0/${table.name.split('.')[0]}_tables_res_0.csv" into Tables_res_0
 
     """
 
@@ -132,9 +134,54 @@ process CollectMergeTables {
     file "*_WHOLE.csv" into TAB_SLIDE
 
     """
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.split("_")[0]} Job_${table.split("_")[0]}
     python $py --resolution $res
     """   
 
 }
 */
 /* END: Creating feature map visualisation */
+
+
+
+/* What is needed :
+- tables (they will have nothing if no cells)
+- origin slide to have dimensions
+*/
+
+/* python files */
+
+MergeTable = file("MergeTabsAndPlot.py")
+ChangingRes = file("ChangingRes.py")
+
+/* inputs */
+FEATURES_TO_VISU = [0, 1, 2]
+
+/*
+process GetMax {
+    executor 'sge'
+    profile = 'cluster'
+    validExitStatus 0
+    clusterOptions = "-S /bin/bash"
+    publishDir PublishPatient, overwrite: false
+    maxForks = 200
+//    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    file table from TABLE_PROCESSED 
+    file py from GETMAX
+    each feat from FEATURES_TO_VISU 
+    output:
+    file "*.npy" into METRICS
+
+    """
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.split("_")[0]} Job_${table.split("_")[0]}
+
+    python $py --table $table --feat $feat
+    """
+    
+}
+
+
+
