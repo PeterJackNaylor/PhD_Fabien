@@ -1,6 +1,8 @@
 from optparse import OptionParser
 import caffe
-from WrittingTiff.FrancoisRadvani import pred_f, crop, PostProcess, Contours
+from Deprocessing.Morphology import PostProcess
+from UsefulFunctions.UsefulImageConstruction import Contours
+from WrittingTiff.FrancoisRadvani import pred_f, crop
 from Deprocessing.Transfer import ChangeEnv
 import os
 from WrittingTiff.createfold import GetNet
@@ -37,6 +39,8 @@ if __name__ == "__main__":
     net_1 = GetNet(cn_1, wd_1)
     net_2 = GetNet(cn_2, wd_1)
 
+
+    step_size = 100 
     param_ws = 10
     ClearSmallObjects = False
 
@@ -52,13 +56,13 @@ if __name__ == "__main__":
     image = imread(options.file_name)[:,:,0:3]
     image = crop(image)
 
-    for method in ["avg", "max", "median"]:
+    for method in ['median']: #["avg", "max"]:
         base_img = os.path.join(options.output, base + "_" + method + "_RAW.png")
         base_seg = os.path.join(options.output, base + "_" + method + "_seg.png")
         base_prob = os.path.join(options.output, base + "_" + method + "_prob.png")
         base_bin = os.path.join(options.output, base + "_" + method + "_bin.png")
-        prob, thresh = pred_f(image, net_1, net_2, stepSize=204, windowSize=(224, 224), param=7, border = 1,
-                      borderImage = "RemoveBorderObjects", method = "avg")
+        prob, thresh = pred_f(image, net_1, net_2, stepSize=step_size, windowSize=(224, 224), param=7, border = 1,
+                      borderImage = "Classic", method = method)
         bin_image = PostProcess(prob, param_ws, thresh=thresh)
         if ClearSmallObjects:
             bin_image = remove_small_objects(bin_image, ClearSmallObjects)
@@ -73,13 +77,13 @@ if __name__ == "__main__":
         imsave(base_seg, seg_image)
         imsave(base_prob, prob)
 
-    for borderImage in ["Classic", "RemoveBorderObjects", "RemoveBorderWithDWS", "Reconstruction"]:
+    for borderImage in []:# ["Classic", "RemoveBorderObjects", "RemoveBorderWithDWS", "Reconstruction"]:
         method = borderImage
         base_img = os.path.join(options.output, base + "_" + method + "_RAW.png")
         base_seg = os.path.join(options.output, base + "_" + method + "_seg.png")
         base_prob = os.path.join(options.output, base + "_" + method + "_prob.png")
         base_bin = os.path.join(options.output, base + "_" + method + "_bin.png")
-        prob, thresh = pred_f(image, net_1, net_2, stepSize=204, windowSize=(224, 224), param=7, border = 1,
+        prob, thresh = pred_f(image, net_1, net_2, stepSize=step_size, windowSize=(224, 224), param=7, border = 1,
                       borderImage = borderImage, method = "max")
         bin_image = PostProcess(prob, param_ws, thresh=thresh)
         if ClearSmallObjects:

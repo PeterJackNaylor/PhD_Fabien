@@ -177,7 +177,7 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=m
     x, y = np.where(contours == 1)
     image[x, y] = np.array([0, 0, 0])
 
-    return image, table, bin_image1, prob_image1
+    return image, table, segmentation_mask, prob_image1
 
 
 ##########################

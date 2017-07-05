@@ -7,9 +7,9 @@ from skimage.segmentation import clear_border
 from skimage.morphology import remove_small_objects
 from Deprocessing.Morphology import PostProcess
 from math import ceil
+import pdb
 
-
-
+from scipy.misc import imsave
 
 def Contours(bin_image, contour_size=3):
     # Computes the contours
@@ -49,12 +49,11 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
     dim_result = 2
     
     if method == "median":
-        dim_result = (ceil(float(windowSize[0]) / stepSize) + 1) * (ceil(float(windowSize[1]) / stepSize) + 1)
+        dim_result = int((ceil(float(windowSize[0]) / stepSize) + 1) * (ceil(float(windowSize[1]) / stepSize) + 1)) + 3
         counter = np.zeros(shape=(x_s, y_s))
-
     result = np.zeros(shape=(x_s, y_s, dim_result))
     if method == "median":
-        result -= -1 
+        result -= 1 
     thresh_list = []
 
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
@@ -64,7 +63,6 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
         y_e -= val
         x_b += val
         x_e -= val
-
 
         inter_result = prob_image1[val:-val, val:-val] if val!= 0 else prob_image1
 
@@ -110,10 +108,11 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
         elif method == "median":
             #RAM intensive a priori
             for el in np.unique(counter):
-                y, x = np.where(counter[y_b:y_e, x_b:x_e] == el)
-                x_img = x + x_b
-                y_img = y + y_b
-                result[x_img, y_img, el] = inter_result[x, y]
+                if el != dim_result:
+                    y, x = np.where(counter[y_b:y_e, x_b:x_e] == el)
+                    x_img = x + x_b
+                    y_img = y + y_b
+                    result[y_img, x_img, int(el)] = inter_result[y, x] # should be inversed
             counter[y_b:y_e, x_b:x_e] += 1
 
     if method == "avg" :
@@ -125,9 +124,17 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
         prob_map = result[:, :, 0].copy()
 
     elif method == "median":
-        x, y, z = np.where(result != -1 )
-        prob_map = np.median(result[x, y, z], axis=2)
-
+        prob_map = np.zeros(shape=(x_s, y_s), dtype='float64')
+        done_map = np.zeros(shape=(x_s, y_s))
+        for el in range(dim_result - 1 , -1, -1):
+            x, y = np.where(result[:,:, int(el)] != -1 )
+            tmp_done_map = np.zeros(shape=(x_s, y_s))
+            tmp_done_map[x, y] = 1
+            diff_done_map = tmp_done_map.copy() - done_map.copy()
+            x_add, y_add = np.where(diff_done_map > 0)
+            done_map[x_add, y_add] = 1
+            prob_map[x_add, y_add] = np.median(result[x_add, y_add, 0:(int(el)+1)], axis=1)
+	    imsave("diff_map_{}.png".format(el), diff_done_map)
     if ClearBorder == "Reconstruction":
 
         threshold = threshold - np.mean(thresh_list)
