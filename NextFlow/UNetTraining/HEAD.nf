@@ -5,7 +5,7 @@ PY = file('/data/users/pnaylor/Documents/Python/PhD_Fabien/NewStuff/UNetBatchNor
 TENSORBOARD = file('/data/users/pnaylor/Bureau/tensorboard')
 
 
-LEARNING_RATE = [0.001, 0.0001, 0.0001]
+LEARNING_RATE = [0.001, 0.0001, 0.00001, 0.000001]
 ARCH_FEATURES = [2, 4, 8, 16, 32, 64]
 WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 32
