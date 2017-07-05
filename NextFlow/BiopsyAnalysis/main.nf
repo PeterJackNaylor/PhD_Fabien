@@ -119,7 +119,7 @@ process MergeTablesBySlides {
     """   
 }
 
-Tables_res_0 .groupBy { String str -> str.split('_')} .toList() .subscribe{ print it}
+Tables_res_0 .groupBy { String str -> str.split('_')} .toList() .subscribe{ print it }
 /*
 process CollectMergeTables {
     executor 'local'
