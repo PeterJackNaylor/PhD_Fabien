@@ -44,7 +44,7 @@ process ProcessPatient {
     clusterOptions = "-S /bin/bash"
     memory = '15G'
     publishDir params.out, mode: "copy", overwrite: false
-    maxForks = 2
+    maxForks = 20
     errorStrategy 'retry' 
     maxErrors 5
 

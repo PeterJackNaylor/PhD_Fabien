@@ -1,4 +1,5 @@
 #!/usr/bin/env nextflow
+
 /*  inputs */
 params.in = "/share/data40T_v2/Peter/Data/Biopsy/"
 TIFF_REMOTE = file(params.in + "*")
@@ -13,8 +14,8 @@ MARGE = 100
 
 
 process ChopPatient {
-    executor 'sge'
-    profile = 'cluster'
+//    executor 'sge'
+//    profile = 'cluster'
     validExitStatus 0,134
     clusterOptions = "-S /bin/bash"
     publishDir PublishPatient, overwrite: false
@@ -37,13 +38,13 @@ process ChopPatient {
 }
 
 process SubImage {
-    executor 'sge'
+//    executor 'sge'
     memory '11 GB'
-    profile = 'cluster'
+//    profile = 'cluster'
     validExitStatus 0,134
     clusterOptions = "-S /bin/bash"
     publishDir PublishPatient, overwrite: false
-    maxForks = 80
+//    maxForks = 80
     errorStrategy 'retry' 
     maxErrors 50
 
@@ -57,8 +58,8 @@ process SubImage {
     output:
     file "Job_${p.split()[6]}/prob/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into PROB_PROCESSED
     file "Job_${p.split()[6]}/bin/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into BIN_PROCESSED
-    file "Job_${p.split()[6]}/tiled/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into IMAGE_PROCESSED, IMAGE_PROCESSED2
-    file "Job_${p.split()[6]}/table/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.npy" into TABLE_PROCESSED, TABLE_PROCESSED2
+    file "Job_${p.split()[6]}/tiled/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into IMAGE_PROCESSED
+    file "Job_${p.split()[6]}/table/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.npy" into TABLE_PROCESSED, TABLE_PROCESSED2, TABLE_PROCESSED3
     """
 
 
@@ -92,7 +93,7 @@ ChangingRes = file("ChangingRes.py")
 TIFF_FOLDER = file(params.in)
 RES = 7
 
-
+/*
 process MergeTablesBySlides {
     executor 'sge'
     profile = 'cluster'
@@ -118,9 +119,15 @@ process MergeTablesBySlides {
     python $py --table $table --slide ${fold}/${table.name.split("_")[0]}.tiff --resolution $res
     """   
 }
-
-Tables_res_0 .groupBy { String str -> str.split('_')} .toList() .subscribe{ print it}
+*/
+def getKey( file ) {
+      file.name.split('_')[0] 
+}
 /*
+Tables_res_0     .map { file -> tuple(getKey(file), file) }
+ 		         .groupTuple() 
+     		     .set { TableGroups }
+
 process CollectMergeTables {
     executor 'local'
     clusterOptions = "-S /bin/bash"
@@ -130,22 +137,24 @@ process CollectMergeTables {
     maxErrors 5
 
     input:
-    file _ from Tables_res_0 .groupBy { String str -> str.split('_')} .toList()
+    set key, file(tables) from TableGroups 
     file py from MergeTable
     val res from RES
+    val inputt from params.in
     output:
-    file "*_WHOLE.csv" into TAB_SLIDE
+    file "Job_${key}/${key}_whole_slide.csv" into TAB_SLIDE
 
     """
-    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.split("_")[0]} Job_${table.split("_")[0]}
-    python $py --resolution $res
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key} Job_${key}
+    python $py --resolution $res --slide ${inputt}${key}.tiff
     """   
 
 }
 */
+
 /* END: Creating feature map visualisation */
 
-
+/* BEGIN: Create colors maps at the WSI level */
 
 /* What is needed :
 - tables (they will have nothing if no cells)
@@ -154,37 +163,93 @@ process CollectMergeTables {
 
 /* python files */
 
-MergeTable = file("MergeTabsAndPlot.py")
-ChangingRes = file("ChangingRes.py")
+GETSTATISTICS_4_COLORS = file("GetStatistics4Color.py")
 
 /* inputs */
 FEATURES_TO_VISU = [0, 1, 2]
 
+/* Resume each table */
 /*
-process GetMax {
+process GetStatistics4Color {
     executor 'sge'
     profile = 'cluster'
     validExitStatus 0
     clusterOptions = "-S /bin/bash"
     publishDir PublishPatient, overwrite: false
     maxForks = 200
-//    errorStrategy 'retry' 
+    errorStrategy 'retry' 
     maxErrors 5
 
     input:
-    file table from TABLE_PROCESSED 
-    file py from GETMAX
+    file table from TABLE_PROCESSED2
+    file py from GETSTATISTICS_4_COLORS
     each feat from FEATURES_TO_VISU 
     output:
-    file "*.npy" into METRICS
+    file "Job_${table.getBaseName().split('_')[0]}/StatColors/${table.getBaseName()}_${feat}_color_0.npy" into COLOR_VEC
 
     """
-    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.split("_")[0]} Job_${table.split("_")[0]}
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.name.split("_")[0]} Job_${table.name.split("_")[0]}
 
-    python $py --table $table --feat $feat
+    python $py --table $table --feat $feat --output Job_${table.name.split('_')[0]}/StatColors
     """
-    
 }
+*/
+
+/*
+
+COLOR_VEC     .map { file -> tuple(getKey(file), file) }
+                 .groupTuple() 
+                 .set { COLOR_VEC_BY_PATIENT }
+
+
+MergeStatsByWSI = file("GeneralStatistics4Color.py")
 
 
 
+process BringTogetherStatistics4Color {
+    executor 'sge'
+    profile = 'cluster'
+    validExitStatus 0
+    clusterOptions = "-S /bin/bash"
+    publishDir PublishPatient, overwrite: false
+    maxForks = 200
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    set key, file(vec_color) from COLOR_VEC_BY_PATIENT
+    file py from MergeStatsByWSI
+    output:
+    file "Job_${key}/GeneralStats4Color/GeneralStatistics4color_${key}_*.npy" into GeneralStatsByPatientByFeat
+
+
+    """
+    python $py --path . --output Job_${key}/GeneralStats4Color --key ${key}
+    """
+}
+*/
+/* file input */
+ADDING_COLORS = file("AddingColors.py")
+
+/*
+process MakeColors {
+    executor 'sge'
+    profile = 'cluster'
+    clusterOptions = "-S /bin/bash"
+    publishDir PublishPatient, overwrite: false
+    maxForks = 200
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    file table from TABLE_PROCESSED3
+    file metrics from GeneralStatsByPatientByFeat
+    file py from ADDING_COLORS
+    output:
+    file "Job_${table.getBaseName().split('_')[0]}/StatColors/${table.getBaseName()}_${feat}_color_0.npy" into COLOR_VEC3
+    file "*_color.npy" into TABLE_COLORED, TABLE_COLORED2
+
+    """
+    python $py --table $table --key $Job_${table.name.split('_')[0]} --output Job_${table.name.split('_')[0]}/ColoredTiled
+    """   
+}*/
