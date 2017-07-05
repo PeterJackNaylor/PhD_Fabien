@@ -10,7 +10,7 @@ PYextract = file("second.py")
 
 CHANGEENV = file('ChangeEnv.py')
 params.in = file("/share/data40T_v2/Peter/Francois/New_images_TMA_ICA/*") 
-params.out = file("/share/data40T_v2/Peter/Francois/OutTest")
+params.out = file("/share/data40T_v2/Peter/Francois/OutFixing")
 
 
 
@@ -44,7 +44,7 @@ process ProcessPatient {
     clusterOptions = "-S /bin/bash"
     memory = '15G'
     publishDir params.out, mode: "copy", overwrite: false
-    maxForks = 2
+    maxForks = 20
     errorStrategy 'retry' 
     maxErrors 5
 

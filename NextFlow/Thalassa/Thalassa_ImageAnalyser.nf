@@ -34,6 +34,7 @@ DISTRIBUTED_VERSION = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/Wri
 
 
 process getTheFileAndSplitLines {
+    executor 'local'
     input:
     val line from PARAMETERTEXT.splitText()
 
@@ -58,7 +59,7 @@ process splitLines{
 */
 
 process CutLine {
-    executor 'local'
+    executor 'sge'
     profile = 'cluster'
     validExitStatus 0, 134
     clusterOptions = "-S /bin/bash"

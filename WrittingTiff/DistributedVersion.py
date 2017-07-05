@@ -10,6 +10,7 @@ from UsefulFunctions.RandomUtils import CheckOrCreate, CleanTemp
 import time
 import getpass
 import openslide
+from Extractors import bin_analyser, list_f
 
 def indent(text, amount=4, ch=' '):
     """ Creates an indented string with amount characters of type ch.
@@ -101,7 +102,8 @@ def CreateBash(bash_file, python_file, file_param, options):
     input: bash_file: name of the bash file
            python_file: name of the python file to submit.
            file_param: name of the parameter file.
-           options: dictionnary of option such as output, slide name, size, and options names for the options to the python script
+           options: dictionnary of option such as output,
+           slide name, size, and options names for the options to the python script
            
     """
     f = open(bash_file, "wb")
@@ -144,6 +146,8 @@ def CreateBash(bash_file, python_file, file_param, options):
 ###################
 import caffe
 from createfold import GetNet, PredImageFromNet, DynamicWatershedAlias, dilation, disk, erosion
+from UsefulFunctions.UsefulImageConstruction import sliding_window, PredLargeImageFromNet
+
 import skimage as skm
 from scipy import misc
 import cv2
@@ -156,59 +160,15 @@ param = 7
 marge = 100
 
 
-def sliding_window(image, stepSize, windowSize):
-    # slide a window across the imag
-    for y in xrange(0, image.shape[0], stepSize):
-        for x in xrange(0, image.shape[1], stepSize):
-            # yield the current window
-            res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
-            change = False
-            if res_img.shape[0] != windowSize[1]:
-                y = image.shape[0] - windowSize[1]
-                change = True
-            if res_img.shape[1] != windowSize[0]:
-                x = image.shape[1] - windowSize[0]
-                change = True
-            if change:
-                res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
-            yield (x, y, x + windowSize[0], y + windowSize[1], res_img)
-
-
-def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder = 10):
-    #pdb.set_trace() 
-    x_s, y_s, z_s = image.shape
-    result = np.zeros(shape=(x_s, y_s, 2))
-    for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
-        prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
-        val = removeFromBorder
-        y_b += val
-        y_e -= val
-        x_b += val
-        x_e -= val
-        if val != 0:
-            result[y_b:y_e, x_b:x_e, 0] += prob_image1[val:-val, val:-val]
-            #imsave("Slide/{}_{}_{}_{}.png".format(y_b,y_e,x_b,x_e), prob_image1)
-        else:
-            result[y_b:y_e, x_b:x_e, 0] += prob_image1
-        
-        result[y_b:y_e, x_b:x_e, 1] += 1.
-    x, y = np.where(result[:,:,1] == 0)
-    result[x, y, 1] = 1
-    prob_map = result[:, :, 0] / result[:, :, 1]
-    bin_map = prob_map > 0.5 + 0.0
-    bin_map = bin_map.astype(np.uint8)
-
-    return prob_map, bin_map
-
 def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=marge, list_f=list_f):
     caffe.set_mode_cpu()
     cn_1 = "FCN_0.01_0.99_0.0005"
     wd_1 = "/share/data40T_v2/Peter/pretrained_models"
     net_1 = GetNet(cn_1, wd_1)
-    prob_image1, bin_image1 = PredLargeImageFromNet(net_1, image, stepSize, windowSize)
+    prob_image1, bin_image1, thresh = PredLargeImageFromNet(net_1, image, stepSize, windowSize, param=7, ClearBorder="RemoveBorderWithDWS")
     #pdb.set_trace()
     segmentation_mask = DynamicWatershedAlias(prob_image1, param)
-    table = analyse_bin(bin_image1, marge, list_f)
+    table = bin_analyser(image, bin_image1, list_f, marge)
     # pdb.set_trace()
     segmentation_mask[segmentation_mask > 0] = 1
     contours = dilation(segmentation_mask, disk(2)) - \
@@ -217,26 +177,7 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=m
     x, y = np.where(contours == 1)
     image[x, y] = np.array([0, 0, 0])
 
-
-    return image, table
-
-
-def analyse_bin(bin_image, marge, list_f):
-    bin_image = skm.measure.label(bin_image, background=0)
-    dim = bin_image.shape
-    area_of_interest = np.zeros_like(bin_image)
-    area_of_interest[marge:-marge, marge:-marge] = 1
-    table = np.zeros(shape=(np.max(bin_image) + 1, len(list_f)))
-    for i in range(1, np.max(bin_image) + 1):
-        x, y = np.where(bin_image == i)
-        only_cell = np.zeros_like(bin_image)
-        only_cell[x, y] = 1
-        n_pix = np.sum(only_cell)
-        res = np.sum(cv2.bitwise_and(only_cell, area_of_interest))
-        if float(res) / n_pix > 0.5:
-            for j, f in enumerate(list_f):
-                table[i, j] = f(only_cell)
-    return table
+    return image, table, segmentation_mask, prob_image1
 
 
 ##########################
@@ -297,24 +238,33 @@ def options_all():
 def PredImage(options):
     slide = options.slide
     para = [options.x, options.y, options.size_x, options.size_y, options.ref_level]
+    slide_num = options.slide.split('.')[0].split('/')[-1]
     outfile = os.path.join(options.output, 'tiled',
-                           "{}_{}_{}_{}_{}.tiff".format(options.x, options.y,
+                           "{}_{}_{}_{}_{}_{}.tiff".format(slide_num, options.x, options.y,
                            options.size_x, options.size_y, options.ref_level))
 
     CheckOrCreate(os.path.join(options.output, "tiled"))
+    CheckOrCreate(os.path.join(options.output, "table"))
+    CheckOrCreate(os.path.join(options.output, "bin"))
+    CheckOrCreate(os.path.join(options.output, "prob"))
     print "slide :{}".format(slide)
     print "para : ", para
     print "outfile : {}".format(outfile)
     print "f : ", options.f
     PredOneImage(slide, para, outfile, options.f, options)
 
+
+from tifffile import imsave
+
 def PredOneImage(slide, para, outfile, f, options):
     # pdb.set_trace()
     slide = openslide.open_slide(slide)
     image = np.array(GetImage(slide, para))[:,:,:3]
-    image, table = f(image, marge=options.marge)
+    image, table, bin, prob = f(image, marge=options.marge)
     imsave(outfile, image, resolution=[1.0,1.0])
     np.save(outfile.replace('.tiff', ".npy").replace("tiled", "table"), table)
+    imsave(outfile.replace("tiled", "bin"), bin)
+    imsave(outfile.replace("tiled", "prob"), prob)
 
 def CheckJob(parameter_file, output_folder):
     f = open(parameter_file, "r")

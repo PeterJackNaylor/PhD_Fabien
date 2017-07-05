@@ -31,11 +31,13 @@ class VGG16(UNetBatchNorm):
         N_EPOCHS=10,
         LRSTEP=200,
         DECAY_EMA=0.9999,
-        N_PRINT = 100,
-        N_FEATURES = 16,
+        N_PRINT=100,
+        N_FEATURES=16,
+        WEIGHT_DECAY=0.0005,
         LOG="/tmp/net",
         SEED=42,
-        DEBUG=True):
+        DEBUG=True,
+        LOSS_FUNC=tf.nn.l2_loss):
 
         self.LEARNING_RATE = LEARNING_RATE
         self.K = K
@@ -50,6 +52,12 @@ class VGG16(UNetBatchNorm):
         self.DECAY_EMA = DECAY_EMA
         self.LOG = LOG
         self.SEED = SEED
+        self.N_FEATURES = N_FEATURES
+
+        self.var_to_reg = []
+        self.var_to_sum = []
+        self.N_FEATURES = N_FEATURES
+        self.weight_decay = WEIGHT_DECAY
 
         self.sess = tf.InteractiveSession()
 
@@ -60,8 +68,9 @@ class VGG16(UNetBatchNorm):
         self.init_training_graph()
         self.Saver()
         self.DEBUG = DEBUG
+        self.loss_func = LOSS_FUNC
+
         self.N_EPOCHS = N_EPOCHS
-        self.N_FEATURES = N_FEATURES
 
 
     def conv_layer_f(self, i_layer, w_var, scope_name, strides=[1,1,1,1], padding="SAME"):
@@ -140,7 +149,7 @@ class VGG16(UNetBatchNorm):
         self.logits_weights = self.weight_xavier(1, 64 * n_features, 2, "logits/")
         self.logits_biases = self.biases_const_f(0.1, 2, "logits/")
 
-        self.keep_prob = tf.Variable(0.5, name="dropout_prob")
+        self.keep_prob = tf.placeholder(tf.float32, name="dropout_prob")
 
         print('Model variables initialised')
 
@@ -219,13 +228,15 @@ class VGG16(UNetBatchNorm):
 
         self.fc6 = self.conv_layer_f(self.pool5_fc, self.fc6_weights, "fc6/", padding="VALID")
         self.fc6_relu = self.relu_layer_f(self.fc6, self.fc6_biases, "fc6/")
-
+        self.fc6_dropout = self.DropOutLayer(self.fc6_relu, "fc6/")
+        
         self.fc7 = self.conv_layer_f(self.fc6_relu, self.fc7_weights, "fc7/")
         self.fc7_relu = self.relu_layer_f(self.fc7, self.fc7_biases, "fc7/")
+        self.fc7_dropout = self.DropOutLayer(self.fc7_relu, "fc7/")
 
 
 
-        self.conv_logit = self.conv_layer_f(self.fc7_relu, self.logits_weights, "logits/")
+        self.conv_logit = self.conv_layer_f(self.fc7_dropout, self.logits_weights, "logits/")
         self.relu_logit = self.relu_layer_f(self.conv_logit, self.logits_biases, "logits/")
         self.last = self.relu_logit
 
@@ -304,7 +315,8 @@ class VGG16(UNetBatchNorm):
             Xval, Yval = DG.NextBatch(train=False, bs = self.BATCH_SIZE)
             feed_dict = {self.input_node: Xval,
                          self.train_labels_node: Yval,
-                         self.is_training: False}
+                         self.is_training: False,
+                         self.keep_prob: 1.0}
             l_tmp, acc_tmp, F1_tmp, recall_tmp, precision_tmp, meanacc_tmp = self.sess.run([self.loss, self.accuracy, self.F1, self.recall, self.precision, self.MeanAcc], feed_dict=feed_dict)
             l += l_tmp
             acc += acc_tmp
@@ -331,7 +343,7 @@ class VGG16(UNetBatchNorm):
 
 
 
-    def train(self, DG, saver=True):
+    def train(self, DG, saver=True, DropOutProb=0.5):
 
         epoch = DG.n_train 
 
@@ -339,7 +351,7 @@ class VGG16(UNetBatchNorm):
 
         trainable_var = tf.trainable_variables()
         
-        self.regularize_model(trainable_var)
+        self.regularize_model()
         self.optimization(trainable_var)
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
 
@@ -356,7 +368,8 @@ class VGG16(UNetBatchNorm):
             batch_data, batch_labels = DG.NextBatch(train = True, bs = self.BATCH_SIZE)
             feed_dict = {self.input_node: batch_data,
                          self.train_labels_node: batch_labels,
-                         self.is_training: True}
+                         self.is_training: True,
+                         self.keep_prob: DropOutProb}
 
             # self.optimizer is replaced by self.training_op for the exponential moving decay
             _, l, lr, predictions, s = self.sess.run(
@@ -427,6 +440,8 @@ if __name__ == "__main__":
 
     parser.add_option("--n_features", dest="n_features", type="int",
                       help="number of channels on first layers")
+    parser.add_option("--weight_decay", dest="weight_decay", type="float",
+                      help="weight decay")
 
     (options, args) = parser.parse_args()
 
@@ -434,6 +449,7 @@ if __name__ == "__main__":
 
     
     N_FEATURES = options.n_features
+    WEIGHT_DECAY = options.weight_decay
     N_TRAIN_SAVE = 100
     LEARNING_RATE = options.lr
     SAVE_DIR = options.log + "/" + "{}_{}" .format(N_FEATURES, LEARNING_RATE)
@@ -458,7 +474,7 @@ if __name__ == "__main__":
     size = (HEIGHT, WIDTH)
 
     DG = DataGen(path, transforms, _, size)
-
+#    pdb.set_trace()
 #    train_batch, lbl_batch = DG.NextBatch(train= True, bs = 4)
 
     model = VGG16(LEARNING_RATE=LEARNING_RATE,
@@ -472,5 +488,4 @@ if __name__ == "__main__":
                                        LOG=SAVE_DIR,
                                        N_FEATURES=N_FEATURES,
                                        SEED=42)
-
     model.train(DG)

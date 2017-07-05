@@ -1,6 +1,8 @@
 from optparse import OptionParser
 import caffe
-from WrittingTiff.FrancoisRadvani import pred_f, crop, PostProcess, Contours
+from Deprocessing.Morphology import PostProcess
+from UsefulFunctions.UsefulImageConstruction import Contours
+from WrittingTiff.FrancoisRadvani import pred_f, crop
 from Deprocessing.Transfer import ChangeEnv
 import os
 from WrittingTiff.createfold import GetNet

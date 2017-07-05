@@ -97,6 +97,7 @@ process CreateTrainTestSet {
 
 LEARNING_RATE = [0.001, 0.0001, 0.0001]
 ARCH_FEATURES = [2, 4, 8, 16, 32, 64]
+WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 128
 
 process Training {
@@ -115,14 +116,18 @@ process Training {
     val bs from BS
     each feat from ARCH_FEATURES
     each lr from LEARNING_RATE
+    each wd from WEIGHT_DECAY
     file train_txt from TRAIN_TXT
+
+    output:
+    file "${feat}_${lr}" into RESULTS
 
     beforeScript "source /share/data40T_v2/Peter/CUDA_LOCK/.whichNODE"
     afterScript "source /share/data40T_v2/Peter/CUDA_LOCK/.freeNODE"
 
     script:
     """
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $vgg --epoch 10 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $vgg --epoch 5 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd
 
     """
 }
