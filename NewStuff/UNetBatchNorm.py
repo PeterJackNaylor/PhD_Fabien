@@ -258,7 +258,6 @@ if __name__== "__main__":
     WIDTH = 212
 
     N_TRAIN_SAVE = 100
-    MEAN = np.array([122.67892, 116.66877 ,104.00699])
  
     CROP = 4
 
@@ -267,11 +266,14 @@ if __name__== "__main__":
 
     DG_TRAIN = DataGenRandomT(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True)
+
+    test_patient = ["141549", "162438"]
+    DG_TRAIN.SetPatient(test_patient)
     N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
 
     DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True)
-
+    DG_TEST.SetPatient(test_patient)
     model = UNetBatchNorm(LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=HEIGHT,
