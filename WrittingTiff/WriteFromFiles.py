@@ -27,7 +27,7 @@ for i in range(3, val):
 	tile = Vips.Image.new_from_file(sys.argv[i], 
 			                    access = Vips.Access.SEQUENTIAL_UNBUFFERED)
 	#pdb.set_trace()
-	_x, _y, _size_x, _size_y, ref_level = sys.argv[i].split('/')[-1].split('_')
+	slide_name, _x, _y, _size_x, _size_y, ref_level = sys.argv[i].split('/')[-1].split('_')
 	img = img.insert(tile, int(_x), int(_y))
 
 img.tiffsave(outfile, tile=True, pyramid=True, bigtiff = True)

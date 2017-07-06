@@ -102,7 +102,7 @@ process StichingTiff {
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key} Job_${key}
-    python $py ${inputt}/${key}.tiff ./Job_${key}/WSI/Segmented_${key}.tiff *.tiff
+    python $py ${inputt}${key}.tiff ./Job_${key}/WSI/Segmented_${key}.tiff *.tiff
 
     """
 
