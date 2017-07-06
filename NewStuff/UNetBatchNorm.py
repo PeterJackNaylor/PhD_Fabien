@@ -237,7 +237,10 @@ if __name__== "__main__":
     WEIGHT_DECAY = options.weight_decay
     N_TRAIN_SAVE = 100
     LEARNING_RATE = options.lr
-    SAVE_DIR = options.log + "/" + "{}_{}_{}" .format(N_FEATURES, WEIGHT_DECAY, LEARNING_RATE)
+    "{:f}".format(10**-6).rstrip("0")
+    SAVE_DIR = options.log + "/" + "{0:.12f}".format(N_FEATURES) +
+                                    "_" +"{0:.12f}".format(WEIGHT_DECAY).rstrip("0") +
+                                    "_" + "{0:.12f}".format(LEARNING_RATE).rstrip("0")
     
     MEAN = np.array([122.67892, 116.66877 ,104.00699])
     

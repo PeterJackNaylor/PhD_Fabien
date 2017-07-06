@@ -37,7 +37,7 @@ process Training {
 
     script:
     """
-    python $py --epoch 1000 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd
+    python $py --epoch 250 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd
 
     """
 }

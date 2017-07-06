@@ -7,6 +7,8 @@ import pdb
 import sys
 import openslide
 from gi.repository import Vips
+from os.path import basename
+from UsefulFunctions.RandomUtils import CheckOrCreate
 
 if len(sys.argv) < 4:
     print "usage: %s n image-out image1 image2 ..." % sys.argv[0]
@@ -17,6 +19,9 @@ slide_name = sys.argv[1]
 size_x, size_y = openslide.open_slide(slide_name).dimensions
 
 outfile = sys.argv[2]
+
+CheckOrCreate( outfile[0:-(len(basename(outfile))+1)] )
+
 
 
 img = Vips.Image.black(size_x, size_y)
