@@ -85,7 +85,14 @@ IMAGE_PROCESSED  .map { file -> tuple(getKey(file), file) }
                  .set { SegmentedByPatient }
 
 process StichingTiff {
-
+    memory '11 GB'
+//    profile = 'cluster'
+    validExitStatus 0
+    clusterOptions = "-S /bin/bash"
+    publishDir PublishPatient, overwrite: false
+//    maxForks = 80
+    errorStrategy 'retry' 
+    maxErrors 50
     input:
     set key, file(vec_color) from SegmentedByPatient
     val inputt from params.in
