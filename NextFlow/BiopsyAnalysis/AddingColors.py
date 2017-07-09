@@ -15,6 +15,21 @@ def BlueRedGrad(val, min_val, max_val):
     RGB = np.array([int(alpha * 255), 0, int((1 - alpha) * 255)])
     return RGB
 
+def ClostestLabel(binary, x, y):
+    x = int(x)
+    y = int(y)
+    if binary[x, y] != 0:
+        return binary[x, y]
+    else:
+        found = False
+        dist = 0
+        while not found:
+            dist += 1
+            possible_labels = np.unique(binary[(x-dist):(x+dist), (y-dist):(y+dist)])
+            if len(possible_labels) != 1:
+                found = True
+        return possible_labels[1]
+
 if __name__ == "__main__":
     
 
@@ -29,7 +44,7 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
     METRICS = glob.glob('Job_{}/GeneralStats4Color/GeneralStatistics4color_*.npy'.format(options.key))
-    bin = label(imread("Job_{}/bin/{}.npy".format(options.key, options.table.replace('.npy', '.tiff'))))
+    bin = label(imread("Job_{}/bin/{}".format(options.key, options.table.replace('.npy', '.tiff'))))
     CheckOrCreate(options.output)
     x, y = bin.shape
 
@@ -39,10 +54,12 @@ if __name__ == "__main__":
         metrics = np.load(met)
         feat = int(met.split('_')[-1].split('.')[0])
         table = pd.DataFrame(options.table, columns=list_f_names)
+
         def f(val, x, y):
-            label = bin[x, y]
+            label = ClosestLabel(bin, x, y)
             color_copy[bin == label] = BlueRedGrad(val, metrics[0], metrics[3])
-        table.apply(lambda row: f(row[list_f_names[feat], row["Centroid_x"], row["Centroid_y"]]))
-        out = join(options.output, list_f_names[feat])
+
+        table.apply(lambda row: f(row[list_f_names[feat]], row["Centroid_x"], row["Centroid_y"]), axis=1)
+        out = join(options.output, "feat_" + list_f_names[feat])
         CheckOrCreate(out)
         imsave(join(out, basename(options.table) + ".tiff"), color_copy)

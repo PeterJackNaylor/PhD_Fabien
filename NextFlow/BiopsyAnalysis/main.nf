@@ -265,7 +265,7 @@ process BringTogetherStatistics4Color {
 /* file input */
 ADDING_COLORS = file("AddingColors.py")
 
-/*
+
 process MakeColors {
     executor 'sge'
     profile = 'cluster'
@@ -280,10 +280,16 @@ process MakeColors {
     file metrics from GeneralStatsByPatientByFeat
     file py from ADDING_COLORS
     output:
-    file "Job_${table.getBaseName().split('_')[0]}/StatColors/${table.getBaseName()}_${feat}_color_0.npy" into COLOR_VEC3
-    file "*_color.npy" into TABLE_COLORED, TABLE_COLORED2
+    file "Job_${table.getBaseName().split('_')[0]}/StatColors/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF
 
     """
     python $py --table $table --key $Job_${table.name.split('_')[0]} --output Job_${table.name.split('_')[0]}/ColoredTiled
     """   
-}*/
+}
+
+
+// Here get parent folder to diff between patient and feature
+def getColorKey( file ) {
+
+      file.name.split('_')[0] 
+}

@@ -3,12 +3,27 @@
 IMAGE_FOLD = file('/data/users/pnaylor/Bureau/ToAnnotate')
 PY = file('/data/users/pnaylor/Documents/Python/PhD_Fabien/NewStuff/UNetBatchNorm.py')
 TENSORBOARD = file('/data/users/pnaylor/Bureau/tensorboard')
-
+MEANPY = file('/data/users/pnaylor/Documents/Python/PhD_Fabien/NewStuff/MeanCalculation.py')
 
 LEARNING_RATE = [0.00001, 0.000001, 0.00000001]
 ARCH_FEATURES = [2, 4, 8, 16, 32]
 WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 32
+
+process Mean {
+    executor 'local'
+    clusterOptions = "-S /bin/bash"
+
+    input:
+    file py from MEANPY
+    file toannotate from IMAGE_FOLD
+    output:
+    file "mean_file.npy" into MeanFile
+
+    """
+    python $py --path $toannotate --output .
+    """
+}
 
 process Training {
 
@@ -28,7 +43,7 @@ process Training {
     each feat from ARCH_FEATURES
     each lr from LEARNING_RATE
     each wd from WEIGHT_DECAY    
-
+    file _ from MeanFile
     output:
     file "${feat}_${wd}_${lr}" into RESULTS
 
