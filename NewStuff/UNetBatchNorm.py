@@ -238,9 +238,7 @@ if __name__== "__main__":
     N_TRAIN_SAVE = 100
     LEARNING_RATE = options.lr
     "{:f}".format(10**-6).rstrip("0")
-    SAVE_DIR = options.log + "/" + "{0:.12f}".format(N_FEATURES) +
-                                    "_" +"{0:.12f}".format(WEIGHT_DECAY).rstrip("0") +
-                                    "_" + "{0:.12f}".format(LEARNING_RATE).rstrip("0")
+    SAVE_DIR = options.log + "/" + "{}".format(N_FEATURES) + "_" +"{0:.12f}".format(WEIGHT_DECAY).rstrip("0") + "_" + "{0:.12f}".format(LEARNING_RATE).rstrip("0")
     
     MEAN = np.array([122.67892, 116.66877 ,104.00699])
     
@@ -277,6 +275,7 @@ if __name__== "__main__":
     DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True)
     DG_TEST.SetPatient(test_patient)
+
     model = UNetBatchNorm(LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=HEIGHT,
@@ -287,6 +286,7 @@ if __name__== "__main__":
                                        N_PRINT=N_TRAIN_SAVE,
                                        LOG=SAVE_DIR,
                                        SEED=42,
-                                       WEIGHT_DECAY=WEIGHT_DECAY)
+                                       WEIGHT_DECAY=WEIGHT_DECAY,
+                                       mean_file="mean_file.npy")
 
     model.train(DG_TRAIN, DG_TEST)
