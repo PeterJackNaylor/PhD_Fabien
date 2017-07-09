@@ -128,7 +128,6 @@ ChangingRes = file("ChangingRes.py")
 TIFF_FOLDER = file(params.in)
 RES = 7
 
-/*
 process MergeTablesBySlides {
     executor 'sge'
     profile = 'cluster'
@@ -155,9 +154,7 @@ process MergeTablesBySlides {
     """   
 }
 
-*/
 
-/*
 Tables_res_0     .map { file -> tuple(getKey(file), file) }
  		         .groupTuple() 
      		     .set { TableGroups }
@@ -184,7 +181,6 @@ process CollectMergeTables {
     """   
 
 }
-*/
 
 /* END: Creating feature map visualisation */
 
@@ -203,14 +199,9 @@ GETSTATISTICS_4_COLORS = file("GetStatistics4Color.py")
 FEATURES_TO_VISU = [0, 1, 2]
 
 /* Resume each table */
-/*
 process GetStatistics4Color {
-    executor 'sge'
-    profile = 'cluster'
-    validExitStatus 0
     clusterOptions = "-S /bin/bash"
     publishDir PublishPatient, overwrite: false
-    maxForks = 200
     errorStrategy 'retry' 
     maxErrors 5
 
@@ -227,9 +218,7 @@ process GetStatistics4Color {
     python $py --table $table --feat $feat --output Job_${table.name.split('_')[0]}/StatColors
     """
 }
-*/
 
-/*
 
 COLOR_VEC     .map { file -> tuple(getKey(file), file) }
                  .groupTuple() 
@@ -241,12 +230,8 @@ MergeStatsByWSI = file("GeneralStatistics4Color.py")
 
 
 process BringTogetherStatistics4Color {
-    executor 'sge'
-    profile = 'cluster'
-    validExitStatus 0
     clusterOptions = "-S /bin/bash"
     publishDir PublishPatient, overwrite: false
-    maxForks = 200
     errorStrategy 'retry' 
     maxErrors 5
 
@@ -261,7 +246,6 @@ process BringTogetherStatistics4Color {
     python $py --path . --output Job_${key}/GeneralStats4Color --key ${key}
     """
 }
-*/
 /* file input */
 ADDING_COLORS = file("AddingColors.py")
 

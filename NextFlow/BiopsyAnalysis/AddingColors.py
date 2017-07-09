@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
     METRICS = glob.glob('Job_{}/GeneralStats4Color/GeneralStatistics4color_*.npy'.format(options.key))
-    bin = label(imread("Job_{}/bin/{}.npy".format(options.key, options.table.replace('.npy', '.tiff'))))
+    bin = label(imread("Job_{}/bin/{}".format(options.key, options.table.replace('.npy', '.tiff'))))
     CheckOrCreate(options.output)
     x, y = bin.shape
 
