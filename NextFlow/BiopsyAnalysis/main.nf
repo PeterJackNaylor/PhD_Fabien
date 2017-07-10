@@ -128,7 +128,6 @@ ChangingRes = file("ChangingRes.py")
 TIFF_FOLDER = file(params.in)
 RES = 7
 
-/*
 process MergeTablesBySlides {
     executor 'sge'
     profile = 'cluster'
@@ -155,9 +154,7 @@ process MergeTablesBySlides {
     """   
 }
 
-*/
 
-/*
 Tables_res_0     .map { file -> tuple(getKey(file), file) }
  		         .groupTuple() 
      		     .set { TableGroups }
@@ -184,7 +181,6 @@ process CollectMergeTables {
     """   
 
 }
-*/
 
 /* END: Creating feature map visualisation */
 
@@ -203,14 +199,9 @@ GETSTATISTICS_4_COLORS = file("GetStatistics4Color.py")
 FEATURES_TO_VISU = [0, 1, 2]
 
 /* Resume each table */
-/*
 process GetStatistics4Color {
-    executor 'sge'
-    profile = 'cluster'
-    validExitStatus 0
     clusterOptions = "-S /bin/bash"
     publishDir PublishPatient, overwrite: false
-    maxForks = 200
     errorStrategy 'retry' 
     maxErrors 5
 
@@ -227,9 +218,7 @@ process GetStatistics4Color {
     python $py --table $table --feat $feat --output Job_${table.name.split('_')[0]}/StatColors
     """
 }
-*/
 
-/*
 
 COLOR_VEC     .map { file -> tuple(getKey(file), file) }
                  .groupTuple() 
@@ -241,12 +230,8 @@ MergeStatsByWSI = file("GeneralStatistics4Color.py")
 
 
 process BringTogetherStatistics4Color {
-    executor 'sge'
-    profile = 'cluster'
-    validExitStatus 0
     clusterOptions = "-S /bin/bash"
     publishDir PublishPatient, overwrite: false
-    maxForks = 200
     errorStrategy 'retry' 
     maxErrors 5
 
@@ -261,29 +246,26 @@ process BringTogetherStatistics4Color {
     python $py --path . --output Job_${key}/GeneralStats4Color --key ${key}
     """
 }
-*/
 /* file input */
 ADDING_COLORS = file("AddingColors.py")
 
 
 process MakeColors {
-    executor 'sge'
-    profile = 'cluster'
     clusterOptions = "-S /bin/bash"
     publishDir PublishPatient, overwrite: false
-    maxForks = 200
     errorStrategy 'retry' 
     maxErrors 5
 
     input:
     file table from TABLE_PROCESSED3
-    file metrics from GeneralStatsByPatientByFeat
+    file metrics from GeneralStatsByPatientByFeat .toList()
     file py from ADDING_COLORS
     output:
-    file "Job_${table.getBaseName().split('_')[0]}/StatColors/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF
+    file "Job_${table.getBaseName().split('_')[0]}/ColoredTiled/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF
 
     """
-    python $py --table $table --key $Job_${table.name.split('_')[0]} --output Job_${table.name.split('_')[0]}/ColoredTiled
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.name.split("_")[0]} Job_${table.name.split("_")[0]}
+    python $py --table $table --key ${table.name.split('_')[0]} --output Job_${table.name.split('_')[0]}/ColoredTiled
     """   
 }
 
