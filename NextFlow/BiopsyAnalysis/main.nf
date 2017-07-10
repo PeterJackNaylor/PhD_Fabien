@@ -251,23 +251,21 @@ ADDING_COLORS = file("AddingColors.py")
 
 
 process MakeColors {
-    executor 'sge'
-    profile = 'cluster'
     clusterOptions = "-S /bin/bash"
     publishDir PublishPatient, overwrite: false
-    maxForks = 200
     errorStrategy 'retry' 
     maxErrors 5
 
     input:
     file table from TABLE_PROCESSED3
-    file metrics from GeneralStatsByPatientByFeat
+    file metrics from GeneralStatsByPatientByFeat .toList()
     file py from ADDING_COLORS
     output:
-    file "Job_${table.getBaseName().split('_')[0]}/StatColors/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF
+    file "Job_${table.getBaseName().split('_')[0]}/ColoredTiled/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF
 
     """
-    python $py --table $table --key $Job_${table.name.split('_')[0]} --output Job_${table.name.split('_')[0]}/ColoredTiled
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.name.split("_")[0]} Job_${table.name.split("_")[0]}
+    python $py --table $table --key ${table.name.split('_')[0]} --output Job_${table.name.split('_')[0]}/ColoredTiled
     """   
 }
 
