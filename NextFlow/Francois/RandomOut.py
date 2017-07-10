@@ -11,7 +11,7 @@ import numpy as np
 from skimage.morphology import remove_small_objects
 from UsefulFunctions.RandomUtils import CheckOrCreate
 import pdb
-
+import time
 
 if __name__ == "__main__":
     
@@ -56,13 +56,15 @@ if __name__ == "__main__":
     image = imread(options.file_name)[:,:,0:3]
     image = crop(image)
 
-    for method in ['median']: #["avg", "max"]:
+    for method in ['avg']: #["avg", "max"]:
         base_img = os.path.join(options.output, base + "_" + method + "_RAW.png")
         base_seg = os.path.join(options.output, base + "_" + method + "_seg.png")
         base_prob = os.path.join(options.output, base + "_" + method + "_prob.png")
         base_bin = os.path.join(options.output, base + "_" + method + "_bin.png")
+        diff_time = time.time()
         prob, thresh = pred_f(image, net_1, net_2, stepSize=step_size, windowSize=(224, 224), param=7, border = 1,
                       borderImage = "Classic", method = method)
+        diff_time = diff_time - time.time()
         bin_image = PostProcess(prob, param_ws, thresh=thresh)
         if ClearSmallObjects:
             bin_image = remove_small_objects(bin_image, ClearSmallObjects)
@@ -99,3 +101,5 @@ if __name__ == "__main__":
         imsave(base_seg, seg_image)
         imsave(base_prob, prob)
 
+        print "Average time per: \n "
+        print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600)/ 60, diff_time % 60)
