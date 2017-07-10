@@ -3,11 +3,10 @@ from optparse import OptionParser
 from GetStatistics4Color import list_f, CheckOrCreate
 import glob
 from os.path import join, basename
-from scipy.misc import imread
 from skimage.measure import label
 import pandas as pd
 from WrittingTiff.Extractors import list_f_names, CheckOrCreate
-from tifffile import imsave
+from tifffile import imsave, imread
 
 
 def BlueRedGrad(val, min_val, max_val):
