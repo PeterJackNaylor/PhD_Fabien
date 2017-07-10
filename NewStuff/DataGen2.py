@@ -78,7 +78,8 @@ class DataGen(object):
     def __init__(self, path, crop=1, size=None, transforms=None,
                  split="train", leave_out=1, seed_=None, name="optionnal",
                  img_format="RGB", wgt_param=None, UNet=False, N_JOBS=1, 
-                 perc_trans=1., return_path=False, num="141549"):
+                 perc_trans=1., return_path=False, num="141549", 
+                 mean_file=None):
 
         self.path = path
         self.name = name
@@ -106,6 +107,12 @@ class DataGen(object):
 
         self.UNet = UNet
         self.N_JOBS = N_JOBS
+
+        if mean_file is not None:
+            self.Mean = True
+            self.mean_array = np.load(mean_file)
+        else:
+            self.Mean = False
 
     def ReLoad(self, split):
         self.split = split
@@ -159,6 +166,9 @@ class DataGen(object):
         
         return img_lbl_Mwgt
 
+
+
+
     def KeyPath(self, key):
         if len(key) != 4:
             print "key given: ", key
@@ -203,6 +213,9 @@ class DataGen(object):
         if self.UNet:
             CheckNumberForUnet(img_lbl_Mwgt[0].shape[0])
             img_lbl_Mwgt = self.ReduceDimUNet(*img_lbl_Mwgt)    
+
+        if self.Mean:
+            img_lbl_Mwgt = self.SubtractMean(*img_lbl_Mwgt)
 
         return img_lbl_Mwgt
 
@@ -357,6 +370,17 @@ class DataGen(object):
             res += (kargs[i][n:-n,n:-n],)
         return res
 
+    def SubtractMean(self, *kargs):
+
+        img = kargs[0]
+
+        img = img.astype('float')
+        img -= self.mean_array
+        res = (img, )
+        for i in range(1, len(kargs)):
+            res += (kargs[i], )
+        return res
+        
     def Unet_cut(self, *kargs):
         res = ()
         for i in range(0, len(kargs)):
@@ -619,9 +643,11 @@ if __name__ == "__main__":
     perc_trans = .75
 
     DG = DataGen(path, crop=crop, size=size, transforms=transf,
-                 split="train", leave_out=1, UNet=UNet, N_JOBS=1, perc_trans=perc_trans)
+                 split="train", leave_out=1, UNet=UNet, N_JOBS=1, perc_trans=perc_trans,
+                 mean_file = "mean_file.npy")
     DG_test = DataGen(path, crop=crop, size=size, transforms=transf_test,
-                 split="test", leave_out=1, UNet=UNet, N_JOBS=1)
+                 split="test", leave_out=1, UNet=UNet, N_JOBS=1,
+                 mean_file="mean_file.npy")
     plot_img = True
     timing = False
     if plot_img:
