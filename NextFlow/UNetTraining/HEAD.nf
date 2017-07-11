@@ -31,10 +31,6 @@ process Mean {
 
 process Training {
 
-    executor 'local'
-    profile = 'GPU'
-    validExitStatus 0 
-    queue = "cuda.q"
     clusterOptions = "-S /bin/bash"
     publishDir TENSORBOARD, mode: "copy", overwrite: false
     maxForks = 2
