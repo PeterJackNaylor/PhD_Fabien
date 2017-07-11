@@ -166,8 +166,8 @@ class Centroid(Feature):
     def GetSize(self):
         self.size = 2
 
-list_f = [PixelSize("Pixel sum", 0), MeanIntensity("Intensity mean 0", 0), 
-          MeanIntensity("Intensity mean 5", 5), Centroid(["Centroid_x", "Centroid_y"], 0)]
+list_f = [PixelSize("Pixel_sum", 0), MeanIntensity("Intensity_mean_0", 0), 
+          MeanIntensity("Intensity_mean_5", 5), Centroid(["Centroid_x", "Centroid_y"], 0)]
 
 list_f_names = []
 for el in list_f:

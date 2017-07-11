@@ -29,6 +29,7 @@ val = min(len(sys.argv), 1000000)
 for i in range(3, val):
 	if i % 1000 == 0:
 		print "{} / {}".format(i, len(sys.argv))
+	pdb.set_trace()
 	tile = Vips.Image.new_from_file(sys.argv[i], 
 			                    access = Vips.Access.SEQUENTIAL_UNBUFFERED)
 	#pdb.set_trace()
