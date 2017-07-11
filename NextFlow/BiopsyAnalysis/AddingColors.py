@@ -55,7 +55,7 @@ if __name__ == "__main__":
             out = join(options.out, "feat_" + list_f_names[feat])
             CheckOrCreate(out)
 	    color_copy = np.zeros(shape=(x,y,3), dtype='float')
-	    imsave(join(out, basename(options.table).replace("npy", "tiff")), color_copy) 
+	    imsave(join(out, basename(options.table).replace("npy", "tiff")), color_copy, resolution=[1.0,1.0]) 
     else:
 	for met in METRICS:
             color_copy = np.zeros(shape=(x,y,3), dtype='float')
@@ -70,4 +70,4 @@ if __name__ == "__main__":
             table.apply(lambda row: f(row[list_f_names[feat]], row["Centroid_x"], row["Centroid_y"]), axis=1)
             out = join(options.out, "feat_" + list_f_names[feat])
             CheckOrCreate(out)
-            imsave(join(out, basename(options.table).replace("npy", "tiff")), color_copy)
+            imsave(join(out, basename(options.table).replace("npy", "tiff")), color_copy, resolution=[1.0,1.0])

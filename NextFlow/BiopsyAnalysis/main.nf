@@ -258,10 +258,9 @@ process MakeColors {
 
     input:
     file table from TABLE_PROCESSED3
-    file metrics from GeneralStatsByPatientByFeat .toList()
     file py from ADDING_COLORS
     output:
-    file "Job_${table.getBaseName().split('_')[0]}/ColoredTiled/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF
+    file "Job_${table.getBaseName().split('_')[0]}/ColoredTiled/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.name.split("_")[0]} Job_${table.name.split("_")[0]}
@@ -271,7 +270,33 @@ process MakeColors {
 
 
 // Here get parent folder to diff between patient and feature
-def getColorKey( file ) {
+def getColorKey( file ) {     
+      file.toString().split('feat_')[1].split('/')[0] + "___" + file.toString().split('feat_')[1].split('/')[1].split('_')[0] 
 
-      file.name.split('_')[0] 
+}
+
+COLOR_TIFF       .map { file -> tuple(getColorKey(file), file) }
+                 .groupTuple() 
+                 .set { COLOR_TIFF_GROUPED_BY_PATIENT_FEAT }
+
+// COLOR_TIFF_GROUPED_BY_PATIENT_FEAT .subscribe { println "value: ${it[0]}" }
+process StichingFeatTiff {
+    memory '11 GB'
+    clusterOptions = "-S /bin/bash"
+    publishDir PublishPatient, overwrite: false
+//    maxForks = 80
+    errorStrategy 'retry' 
+    maxErrors 50
+    input:
+    set key, file(tiled_color) from COLOR_TIFF_GROUPED_BY_PATIENT_FEAT
+    val inputt from params.in
+    file py from WrittingTiff
+    output:
+    file "Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff"
+
+    """
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key.split('___')[1]} Job_${key.split('___')[1]}
+    python $py ${inputt}${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff"""
+
+
 }
