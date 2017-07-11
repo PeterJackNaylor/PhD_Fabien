@@ -51,6 +51,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
     if method == "median":
         dim_result = int((ceil(float(windowSize[0]) / stepSize) + 1) * (ceil(float(windowSize[1]) / stepSize) + 1)) + 3
         counter = np.zeros(shape=(x_s, y_s))
+        
     result = np.zeros(shape=(x_s, y_s, dim_result))
     if method == "median":
         result -= 1 

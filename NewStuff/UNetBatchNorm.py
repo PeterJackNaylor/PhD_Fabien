@@ -240,7 +240,6 @@ if __name__== "__main__":
     "{:f}".format(10**-6).rstrip("0")
     SAVE_DIR = options.log + "/" + "{}".format(N_FEATURES) + "_" +"{0:.12f}".format(WEIGHT_DECAY).rstrip("0") + "_" + "{0:.12f}".format(LEARNING_RATE).rstrip("0")
     
-    MEAN = np.array([122.67892, 116.66877 ,104.00699])
     
     HEIGHT = 224 
     WIDTH = 224
