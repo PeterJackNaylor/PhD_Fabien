@@ -2,7 +2,7 @@
 
 IMAGE_FOLD = file('/data/users/pnaylor/Bureau/ToAnnotate')
 PY = file('/data/users/pnaylor/Documents/Python/PhD_Fabien/NewStuff/UNetBatchNorm.py')
-TENSORBOARD = file('/data/users/pnaylor/Bureau/tensorboard')
+TENSORBOARD = file('/data/users/pnaylor/Bureau/tensorboard_withmean')
 MEANPY = file('/data/users/pnaylor/Documents/Python/PhD_Fabien/NewStuff/MeanCalculation.py')
 
 LEARNING_RATE = [0.00001, 0.000001, 0.00000001]
@@ -52,7 +52,7 @@ process Training {
 
     script:
     """
-    python $py --epoch 250 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd
+    python $py --epoch 500 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd
 
     """
 }

@@ -235,7 +235,6 @@ if __name__== "__main__":
     
     N_FEATURES = options.n_features
     WEIGHT_DECAY = options.weight_decay
-    N_TRAIN_SAVE = 100
     
     LEARNING_RATE = options.lr
     if int(str(LEARNING_RATE)[-1]) > 7:
@@ -245,7 +244,6 @@ if __name__== "__main__":
     SAVE_DIR = options.log + "/" + "{}".format(N_FEATURES) + "_" +"{0:.8f}".format(WEIGHT_DECAY).rstrip("0") + "_" + lr_str
 
     
-    MEAN = np.array([122.67892, 116.66877 ,104.00699])
     
     HEIGHT = 224 
     WIDTH = 224
@@ -263,7 +261,7 @@ if __name__== "__main__":
     HEIGHT = 212
     WIDTH = 212
 
-    N_TRAIN_SAVE = 100
+    N_TRAIN_SAVE = 500
  
     CROP = 4
 
@@ -271,14 +269,14 @@ if __name__== "__main__":
     transform_list, transform_list_test = ListTransform()
 
     DG_TRAIN = DataGenRandomT(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
-                       transforms=transform_list, UNet=True)
+                       transforms=transform_list, UNet=True, mean_file="mean_file.npy")
 
     test_patient = ["141549", "162438"]
     DG_TRAIN.SetPatient(test_patient)
     N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
 
     DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
-                       transforms=transform_list_test, UNet=True)
+                       transforms=transform_list_test, UNet=True, mean_file="mean_file.npy")
     DG_TEST.SetPatient(test_patient)
 
     model = UNetBatchNorm(LEARNING_RATE=LEARNING_RATE,
@@ -291,7 +289,6 @@ if __name__== "__main__":
                                        N_PRINT=N_TRAIN_SAVE,
                                        LOG=SAVE_DIR,
                                        SEED=42,
-                                       WEIGHT_DECAY=WEIGHT_DECAY,
-                                       mean_file="mean_file.npy")
+                                       WEIGHT_DECAY=WEIGHT_DECAY)
 
     model.train(DG_TRAIN, DG_TEST)

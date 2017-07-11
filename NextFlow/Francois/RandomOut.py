@@ -101,5 +101,5 @@ if __name__ == "__main__":
         imsave(base_seg, seg_image)
         imsave(base_prob, prob)
 
-        print "Average time per: \n "
-        print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600)/ 60, diff_time % 60)
+    print "Average time per: \n "
+    print '\t%02i:%02i:%02i' % (diff_time / 3600, (diff_time % 3600)/ 60, diff_time % 60)
