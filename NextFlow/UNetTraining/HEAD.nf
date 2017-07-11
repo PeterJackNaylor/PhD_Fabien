@@ -9,7 +9,7 @@ PY = file(params.python_dir + '/NewStuff/UNetBatchNorm.py')
 TENSORBOARD = file(params.image_dir + '/tensorboard_withmean')
 MEANPY = file(params.python_dir + '/NewStuff/MeanCalculation.py')
 
-LEARNING_RATE = [0.00001, 0.000001, 0.00000001]
+LEARNING_RATE = [0.0001, 0.00001, 0.0000001]
 ARCH_FEATURES = [2, 4, 8, 16, 32]
 WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 32
