@@ -2,6 +2,7 @@
 
 params.image_dir = '/data/users/pnaylor/Bureau'
 params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
+params.home = "/data/users/pnaylor"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
 PY = file(params.python_dir + '/NewStuff/UNetBatchNorm.py')
@@ -42,6 +43,7 @@ process Training {
     file path from IMAGE_FOLD
     file py from PY
     val bs from BS
+    val home from params.home
 //    val pat from PATIENT
     each feat from ARCH_FEATURES
     each lr from LEARNING_RATE
@@ -50,8 +52,8 @@ process Training {
     output:
     file "${feat}_${wd}_${lr}" into RESULTS
 
-    beforeScript "source /data/users/pnaylor/CUDA_LOCK/.whichNODE"
-    afterScript "source /data/users/pnaylor/CUDA_LOCK/.freeNODE"
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     script:
     """
