@@ -1,9 +1,12 @@
 #!/usr/bin/env nextflow
 
-IMAGE_FOLD = file('/data/users/pnaylor/Bureau/ToAnnotate')
-PY = file('/data/users/pnaylor/Documents/Python/PhD_Fabien/NewStuff/UNetBatchNorm.py')
-TENSORBOARD = file('/data/users/pnaylor/Bureau/tensorboard_withmean')
-MEANPY = file('/data/users/pnaylor/Documents/Python/PhD_Fabien/NewStuff/MeanCalculation.py')
+params.image_dir = '/data/users/pnaylor/Bureau'
+params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
+
+IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
+PY = file(params.python_dir + '/NewStuff/UNetBatchNorm.py')
+TENSORBOARD = file(params.image_dir + '/tensorboard_withmean')
+MEANPY = file(params.python_dir + '/NewStuff/MeanCalculation.py')
 
 LEARNING_RATE = [0.00001, 0.000001, 0.00000001]
 ARCH_FEATURES = [2, 4, 8, 16, 32]
