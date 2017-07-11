@@ -8,7 +8,7 @@ from skimage.morphology import remove_small_objects
 from Deprocessing.Morphology import PostProcess
 from math import ceil
 import pdb
-
+from skimage.morphology import dilation, disk
 from scipy.misc import imsave
 
 def Contours(bin_image, contour_size=3):
@@ -70,17 +70,23 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
         if ClearBorder == "RemoveBorderObjects":
 
             inter_bin = (inter_result > 0.5 + 0.0).astype(np.uint8)
-            inter_bin = clear_border(inter_bin)
-            inter_result[inter_bin == 0] = 0
+            inter_bin_temp = clear_border(inter_bin)
+            inter_bin[inter_bin > 0] = 1
+            inter_bin_temp[inter_bin_temp > 0] = 1
+            removed_cells = inter_bin - inter_bin_temp
+            removed_cells = dilation(removed_cells, disk(2))
+            inter_result[removed_cells == 1] = 0
+            inter_bin = 1 - removed_cells.copy()
 
         elif ClearBorder == "RemoveBorderWithDWS":
 
             inter_bin = PostProcess(inter_result, param)
             inter_bin_without = clear_border(inter_bin, bgval = 0)
-            inter_bin_without = inter_bin - inter_bin_without
-            inter_bin_without[inter_bin_without > 0] = 1  
-            inter_result[inter_bin_without == 1] = 0
-            inter_bin = 1 - inter_bin_without.copy()
+            removed_cells = inter_bin - inter_bin_without
+            removed_cells[removed_cells > 0] = 1  
+            removed_cells = dilation(removed_cells, disk(2))
+            inter_result[removed_cells == 1] = 0
+            inter_bin = 1 - removed_cells.copy()
 
         elif ClearBorder == "Reconstruction":
             
