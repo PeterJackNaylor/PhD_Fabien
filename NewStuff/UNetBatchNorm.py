@@ -111,8 +111,8 @@ class UNetBatchNorm(UNet):
 
 
 
-        self.logits_weight = self.weight_xavier(1, n_features, 2, "logits/")
-        self.logits_biases = self.biases_const_f(0.1, 2, "logits/")
+        self.logits_weight = self.weight_xavier(1, n_features, self.NUM_LABELS, "logits/")
+        self.logits_biases = self.biases_const_f(0.1, self.NUM_LABELS, "logits/")
 
         self.keep_prob = tf.Variable(0.5, name="dropout_prob")
 
