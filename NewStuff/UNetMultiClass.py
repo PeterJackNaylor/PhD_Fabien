@@ -8,9 +8,46 @@ from sklearn.metrics import confusion_matrix
 from datetime import datetime
 ### for main
 from optparse import OptionParser
-from DataGenClass import DataGen3
+from DataGenClass import DataGenMulti
 from UsefulFunctions.ImageTransf import ListTransform
 import pdb
+
+MULTICLASS_NAME = ["Background", "Cancerous", "Lymphocyte", "Fibroblast",
+                   "Mitosis", "Epithelial", "Endothelial", "Adiposite",
+                   "Ignore", "Necroses"]
+
+def CM_DIV(cm, index, max_lab):
+    list_FP = []
+    list_TN = []
+    list_FN = []
+    for row in range(max_lab):
+        for col in range(max_lab):
+            if row != col:
+                # making sure you are not on the diagonal
+                element = cm[row, col]
+                if row != index and col != index:
+                    list_TN.append(element)
+                elif row == index:
+                    list_FN.append(element)
+                elif col == index:
+                    list_FP.append(element)
+    return cm[index, index] ,list_TN, list_FP, list_FN
+
+def GetCMInfo(cm, index, max_lab):
+
+    TP, list_TN, list_FP, list_FN = CM_DIV(cm, index, max_lab)
+    FP = np.sum(list_FP)
+    FN = np.sum(list_FN)
+    TN = np.sum(list_TN)
+    return TP, TN, FP, FN
+
+def GetCMInfo_TF(cm, index, max_lab):
+
+    TP, list_TN, list_FP, list_FN = CM_DIV(cm, index, max_lab)
+    FP = tf.reduce_sum(list_FP)
+    FN = tf.reduce_sum(list_FN)
+    TN = tf.reduce_sum(list_TN)
+    return TP, TN, FP, FN
 
 def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
     """pretty print for confusion matrixes"""
@@ -39,7 +76,7 @@ def print_dim(text ,tensor):
     print text, tensor.get_shape()
     print
 
-class UNet3Class(UNetBatchNorm):
+class UNetMultiClass(UNetBatchNorm):
 
     def init_training_graph(self):
         with tf.name_scope('Evaluation'):
@@ -67,19 +104,7 @@ class UNet3Class(UNetBatchNorm):
                 total = tf.reduce_sum(self.cm)
                 for i in range(self.NUM_LABELS):
                     name = "Label_{}".format(i)
-                    TP = self.cm[i, i]
-                    if i == 0:
-                        TN = tf.reduce_sum(self.cm[1:, 1:])
-                        FN = tf.reduce_sum(self.cm[1:, 0])
-                        FP = tf.reduce_sum(self.cm[0, 1:])
-                    elif i == 1:
-                        TN = tf.add(tf.add(self.cm[0,0] , self.cm[0,2]), tf.add(self.cm[2,0], self.cm[2,2]))
-                        FN = tf.add(self.cm[0,2], self.cm[1,2])
-                        FN = tf.add(self.cm[0,1], self.cm[2,1])
-                    elif i == 2:
-                        TN = tf.reduce_sum(self.cm[:-1, :-1])
-                        FN = tf.reduce_sum(self.cm[-1, :-1])
-                        FP = tf.reduce_sum(self.cm[:-1, -1])
+                    TP, TN, FP, FN = GetCMInfo_TF(self.cm, i, self.NUM_LABELS)
 
                     precision =  tf.divide(TP, tf.add(TP, FP))
                     recall = tf.divide(TP, tf.add(TP, FN))
@@ -102,7 +127,8 @@ class UNet3Class(UNetBatchNorm):
         tf.global_variables_initializer().run()
 
         print('Computational graph initialised')
-    def Validation(self, DG_TEST, step):
+
+    def Validation(self, DG_TEST, step, lb_name):
         n_test = DG_TEST.length
         n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
 
@@ -128,20 +154,8 @@ class UNet3Class(UNetBatchNorm):
         summary.value.add(tag="Test/Loss", simple_value=l)
         
         for i in range(self.NUM_LABELS):
-            name = "Label_{}".format(i)
-            TP = cm[i, i]
-            if i == 0:
-                TN = cm[1:, 1:].sum()
-                FN = cm[1:, 0].sum()
-                FP = cm[0, 1:].sum()
-            elif i == 1:
-                TN = cm[0,0] + cm[0,2] + cm[2,0] + cm[2,2]
-                FN = cm[0,2] + cm[1,2]
-                FN = cm[0,1] + cm[2,1]
-            elif i == 2:
-                TN = cm[:-1, :-1].sum()
-                FN = cm[-1, :-1].sum()
-                FP = cm[:-1, -1].sum()
+            name = "Label_{}".format(lb_name[i])
+            TP, TN, FP, FN = GetCMInfo(cm, i, self.NUM_LABELS)
             precision =  float(TP) / (TP + FP)
             recall = float(TP) / (TP + FN)
             num = precision * recall
@@ -159,8 +173,7 @@ class UNet3Class(UNetBatchNorm):
         print('  Validation loss: %.1f' % l)
         print('       Accuracy: %1.f%% \n   ' % (acc * 100))
         print('  Confusion matrix: \n')
-        lb = ["Background", "Nuclei", "NucleiBorder"]
-        print_cm(cm, lb)
+        print_cm(cm, lb_name)
         self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
 
 
@@ -168,7 +181,7 @@ class UNet3Class(UNetBatchNorm):
         predictions = np.argmax(predictions, 3)
         labels = labels[:,:,:,0]
 
-        cm = confusion_matrix(labels.flatten(), predictions.flatten(), labels=[0, 1, 2]).astype(np.float)
+        cm = confusion_matrix(labels.flatten(), predictions.flatten(), labels=range(self.NUM_LABELS)).astype(np.float)
         b, x, y = predictions.shape
         total = b * x * y
         acc = cm.diagonal().sum() / total
@@ -178,7 +191,7 @@ class UNet3Class(UNetBatchNorm):
 
 
 
-    def train(self, DGTrain, DGTest, saver=True):
+    def train(self, DGTrain, DGTest, lb_name=MULTICLASS_NAME, saver=True):
         epoch = DGTrain.length
 
         self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
@@ -219,9 +232,8 @@ class UNet3Class(UNetBatchNorm):
                 print('  Learning rate: %.5f \n') % lr
                 print('  Mini-batch loss: %.5f \n       Accuracy: %.1f%% \n ' % 
                       (l, acc))
-                lb = ["Background", "Nuclei", "NucleiBorder"]
-                print_cm(cm, lb)
-                self.Validation(DGTest, step)
+                print_cm(cm, lb_name)
+                self.Validation(DGTest, step,  lb_name)
 
 
 if __name__== "__main__":
@@ -267,26 +279,30 @@ if __name__== "__main__":
 
     transform_list, transform_list_test = ListTransform()
 
-    DG_TRAIN = DataGen3(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
-                       transforms=transform_list, UNet=True, mean_file="mean_file.npy")
+    DG_TRAIN = DataGenMulti(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
+                       transforms=transform_list, UNet=True, num="02", 
+                       mean_file="mean_file.npy")
 
-    test_patient = ["141549", "162438"]
+    test_patient = ["02", "06"]
     DG_TRAIN.SetPatient(test_patient)
     N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
-    DG_TEST  = DataGen3(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
-                       transforms=transform_list_test, UNet=True, mean_file="mean_file.npy")
+    DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+                       transforms=transform_list_test, UNet=True, num="02",
+                       mean_file="mean_file.npy")
     DG_TEST.SetPatient(test_patient)
 
-    model = UNet3Class(LEARNING_RATE=LEARNING_RATE,
+    model = UNetMultiClass(LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=HEIGHT,
-                                       NUM_LABELS=3,
+                                       NUM_LABELS=len(MULTICLASS_NAME),
                                        NUM_CHANNELS=3,
                                        STEPS=N_ITER_MAX,
                                        LRSTEP=LRSTEP,
                                        N_PRINT=N_TRAIN_SAVE,
                                        LOG=SAVE_DIR,
                                        SEED=42,
-                                       WEIGHT_DECAY=WEIGHT_DECAY)
+                                       WEIGHT_DECAY=WEIGHT_DECAY,
+                                       N_FEATURES=N_FEATURES)
 
     model.train(DG_TRAIN, DG_TEST)
+    lb = ["Background", "Nuclei", "NucleiBorder"]

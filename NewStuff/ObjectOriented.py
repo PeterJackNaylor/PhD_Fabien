@@ -27,7 +27,8 @@ class ConvolutionalNeuralNetwork:
         SEED=42,
         DEBUG=True,
         WEIGHT_DECAY=0.00005,
-        LOSS_FUNC=tf.nn.l2_loss):
+        LOSS_FUNC=tf.nn.l2_loss,
+        N_FEATURES=16):
 
         self.LEARNING_RATE = LEARNING_RATE
         self.K = K
@@ -35,6 +36,7 @@ class ConvolutionalNeuralNetwork:
         self.IMAGE_SIZE = IMAGE_SIZE
         self.NUM_LABELS = NUM_LABELS
         self.NUM_CHANNELS = NUM_CHANNELS
+        self.N_FEATURES = N_FEATURES
 #        self.NUM_TEST = NUM_TEST
         self.STEPS = STEPS
         self.N_PRINT = N_PRINT

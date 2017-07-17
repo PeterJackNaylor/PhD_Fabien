@@ -18,8 +18,7 @@ process ChopPatient {
 //    profile = 'cluster'
     validExitStatus 0,134
     clusterOptions = "-S /bin/bash"
-    publishDir PublishPatient, overwrite: false
-
+    publishDir PublishPatient, overwrite: true
     input:
     file PYTHONFILE from DistributedVersion
     file x from TIFF_REMOTE
