@@ -30,7 +30,7 @@ class UNetBatchNorm(UNet):
         self.input_node = self.input_node_f()
 
         self.train_labels_node = self.label_node_f()
-        n_features = 16
+        n_features = self.N_FEATURES
 
         self.conv1_1weights = self.weight_xavier(3, self.NUM_CHANNELS, n_features, "conv1_1/")
         self.conv1_1biases = self.biases_const_f(0.1, n_features, "conv1_1/")
@@ -111,8 +111,8 @@ class UNetBatchNorm(UNet):
 
 
 
-        self.logits_weight = self.weight_xavier(1, n_features, 2, "logits/")
-        self.logits_biases = self.biases_const_f(0.1, 2, "logits/")
+        self.logits_weight = self.weight_xavier(1, n_features, self.NUM_LABELS, "logits/")
+        self.logits_biases = self.biases_const_f(0.1, self.NUM_LABELS, "logits/")
 
         self.keep_prob = tf.Variable(0.5, name="dropout_prob")
 
@@ -289,6 +289,7 @@ if __name__== "__main__":
                                        N_PRINT=N_TRAIN_SAVE,
                                        LOG=SAVE_DIR,
                                        SEED=42,
-                                       WEIGHT_DECAY=WEIGHT_DECAY)
+                                       WEIGHT_DECAY=WEIGHT_DECAY,
+                                       N_FEATURES=N_FEATURES)
 
     model.train(DG_TRAIN, DG_TEST)

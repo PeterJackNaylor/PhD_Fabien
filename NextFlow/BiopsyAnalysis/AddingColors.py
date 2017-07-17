@@ -54,11 +54,11 @@ if __name__ == "__main__":
             feat = int(met.split('_')[-1].split('.')[0])
             out = join(options.out, "feat_" + list_f_names[feat])
             CheckOrCreate(out)
-	    color_copy = np.zeros(shape=(x,y,3), dtype='float')
+	    color_copy = np.zeros(shape=(x,y,3), dtype='uint8')
 	    imsave(join(out, basename(options.table).replace("npy", "tiff")), color_copy, resolution=[1.0,1.0]) 
     else:
 	for met in METRICS:
-            color_copy = np.zeros(shape=(x,y,3), dtype='float')
+            color_copy = np.zeros(shape=(x,y,3), dtype='uint8')
 
             metrics = np.load(met)
             feat = int(met.split('_')[-1].split('.')[0])

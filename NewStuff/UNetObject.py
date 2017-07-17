@@ -51,7 +51,7 @@ class UNet(ConvolutionalNeuralNetwork):
         self.input_node = self.input_node_f()
 
         self.train_labels_node = self.label_node_f()
-        n_features = 16
+        n_features = self.N_FEATURES
 
         self.conv1_1weights = self.weight_xavier(3, self.NUM_CHANNELS, n_features, "conv1_1/")
         self.conv1_1biases = self.biases_const_f(0.1, n_features, "conv1_1/")

@@ -11,6 +11,7 @@ import time
 import getpass
 import openslide
 from Extractors import bin_analyser, list_f
+from skimage import img_as_ubyte
 
 def indent(text, amount=4, ch=' '):
     """ Creates an indented string with amount characters of type ch.
@@ -170,7 +171,9 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=m
     segmentation_mask = DynamicWatershedAlias(prob_image1, param)
     table = bin_analyser(image, bin_image1, list_f, marge)
     # pdb.set_trace()
-    segmentation_mask[segmentation_mask > 0] = 1
+    segmentation_mask[segmentation_mask > 0] = 255
+    segmentation_mask.dtype = np.uint8
+
     contours = dilation(segmentation_mask, disk(2)) - \
         erosion(segmentation_mask, disk(2))
 
@@ -264,7 +267,7 @@ def PredOneImage(slide, para, outfile, f, options):
     imsave(outfile, image, resolution=[1.0,1.0])
     np.save(outfile.replace('.tiff', ".npy").replace("tiled", "table"), table)
     imsave(outfile.replace("tiled", "bin"), bin)
-    imsave(outfile.replace("tiled", "prob"), prob)
+    imsave(outfile.replace("tiled", "prob"), img_as_ubyte(prob))
 
 def CheckJob(parameter_file, output_folder):
     f = open(parameter_file, "r")

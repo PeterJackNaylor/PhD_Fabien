@@ -27,7 +27,8 @@ class ConvolutionalNeuralNetwork:
         SEED=42,
         DEBUG=True,
         WEIGHT_DECAY=0.00005,
-        LOSS_FUNC=tf.nn.l2_loss):
+        LOSS_FUNC=tf.nn.l2_loss,
+        N_FEATURES=16):
 
         self.LEARNING_RATE = LEARNING_RATE
         self.K = K
@@ -35,6 +36,7 @@ class ConvolutionalNeuralNetwork:
         self.IMAGE_SIZE = IMAGE_SIZE
         self.NUM_LABELS = NUM_LABELS
         self.NUM_CHANNELS = NUM_CHANNELS
+        self.N_FEATURES = N_FEATURES
 #        self.NUM_TEST = NUM_TEST
         self.STEPS = STEPS
         self.N_PRINT = N_PRINT
@@ -72,10 +74,9 @@ class ConvolutionalNeuralNetwork:
     def add_to_summary(self, var):
         if var is not None:
             tf.summary.histogram(var.op.name, var)
-	    
+    
     def add_to_regularization(self, var):
         if var is not None:
-	    print var
             self.loss = self.loss + self.weight_decay * self.loss_func(var)
 
 
@@ -175,8 +176,8 @@ class ConvolutionalNeuralNetwork:
         self.conv3_weights = self.weight_xavier(5, 8, 8, "conv3/")
         self.conv3_biases = self.biases_const_f(0.1, 8, "conv3/")
 
-        self.logits_weight = self.weight_xavier(1, 8, 2, "logits/")
-        self.logits_biases = self.biases_const_f(0.1, 2, "logits/")
+        self.logits_weight = self.weight_xavier(1, 8, self.NUM_LABELS, "logits/")
+        self.logits_biases = self.biases_const_f(0.1, self.NUM_LABELS, "logits/")
 
         self.keep_prob = tf.Variable(0.5, name="dropout_prob")
 
@@ -253,7 +254,7 @@ class ConvolutionalNeuralNetwork:
                 
                 Nprecision = tf.divide(self.TN, tf.add(self.TN, self.FN))
                 self.MeanAcc = tf.divide(tf.add(self.precision, Nprecision) ,2)
-
+                tf.summary.scalar('Performance', self.MeanAcc)
             #self.batch = tf.Variable(0, name = "batch_iterator")
 
             self.train_prediction = tf.nn.softmax(logits)
