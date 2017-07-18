@@ -37,4 +37,4 @@ for i in range(3, val):
 	slide_name, _x, _y, _size_x, _size_y, ref_level = sys.argv[i].split('/')[-1].split('_')
 	img = img.insert(tile, int(_x), int(_y))
 
-img.tiffsave(outfile, tile=True, pyramid=True, bigtiff = True)
+img.tiffsave(outfile, compression="deflate", tile=True, pyramid=True, bigtiff = True)
