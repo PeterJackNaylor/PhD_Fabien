@@ -46,8 +46,24 @@ process BinToColor {
     file "./ToAnnotateColor" into ToAnnotateColor
 
     """
-    python XmlParsing.py --a $classifier --c $cellcog_folder --o ./ToAnnotateColor/
+    python XmlParsing.py --a $classifier --c $cellcog_folder --o ./ToAnnotateColor --d ./ToAnnotateDiff
     """
+}
+
+process SlideToColorBin {
+    executor 'local'
+    clusterOptions = "-S /bin/bash"
+
+    input:
+    file toannotate from IMAGE_FOLD
+    file toannotatecolor from ToAnnotateColor
+    output:
+    file "./ToAnnotateColor" into ToAnnotateColor2
+
+    """
+    cp -r $toannotate/Slide_* $toannotatecolor
+    """
+
 }
 
 process Training {
@@ -57,7 +73,7 @@ process Training {
     maxForks = 2
 
     input:
-    file path from ToAnnotateColor
+    file path from ToAnnotateColor2
     file py from PY
     val bs from BS
     val home from params.home
