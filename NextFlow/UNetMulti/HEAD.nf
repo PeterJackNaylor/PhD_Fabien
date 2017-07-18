@@ -64,7 +64,7 @@ process Training {
     maxForks = 2
 
     input:
-    file path from ToAnnotateColor2
+    file path from ToAnnotateColor
     file py from PY
     val bs from BS
     val home from params.home
