@@ -6,6 +6,8 @@
 import pdb
 import sys
 import openslide
+import gi
+gi.require_version('Vips', '8.0')
 from gi.repository import Vips
 from os.path import basename
 from UsefulFunctions.RandomUtils import CheckOrCreate
@@ -29,7 +31,6 @@ val = min(len(sys.argv), 1000000)
 for i in range(3, val):
 	if i % 1000 == 0:
 		print "{} / {}".format(i, len(sys.argv))
-	pdb.set_trace()
 	tile = Vips.Image.new_from_file(sys.argv[i], 
 			                    access = Vips.Access.SEQUENTIAL_UNBUFFERED)
 	#pdb.set_trace()

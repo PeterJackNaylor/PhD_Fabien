@@ -39,15 +39,15 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
     n = len(RegionProp[0])
     p = 0
     for feat in list_feature:
-	p += feat.size
+        p += feat.size
     TABLE = np.zeros(shape=(n,p))
     for i in range(n):
         offset_ALL = 0
         for j, feat in enumerate(list_feature):
             tmp_regionprop = RegionProp[feat._return_n_extension()][i]
-	    off_tmp = feat.size	     
+            off_tmp = feat.size      
             TABLE[i, (j + offset_ALL):(j + offset_ALL + off_tmp)] = feat._apply_region(tmp_regionprop ,RGB_image)
-	    offset_ALL += feat.size - 1
+            offset_ALL += feat.size - 1
 
     if pandas_table:
         names = []
@@ -57,7 +57,6 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
                     names.append(el._return_name()[it])
             else:
                 names.append(el._return_name())
-        feature_name = [el._return_name() for el in list_feature]
         return pd.DataFrame(TABLE, columns=names)
     else:
         return TABLE

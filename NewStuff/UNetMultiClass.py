@@ -304,5 +304,5 @@ if __name__== "__main__":
                                        WEIGHT_DECAY=WEIGHT_DECAY,
                                        N_FEATURES=N_FEATURES)
 
-    model.train(DG_TRAIN, DG_TEST)
+    model.train(DG_TRAIN, DG_TEST, lb_name=MULTICLASS_NAME)
     lb = ["Background", "Nuclei", "NucleiBorder"]

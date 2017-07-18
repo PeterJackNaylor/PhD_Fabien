@@ -7,7 +7,7 @@ from skimage.measure import label
 import pandas as pd
 from WrittingTiff.Extractors import list_f_names
 from tifffile import imsave, imread
-
+import pdb
 
 def BlueRedGrad(val, min_val, max_val):
     alpha = float(val - min_val) / float(max_val - min_val)
@@ -49,20 +49,19 @@ if __name__ == "__main__":
 
     table = pd.DataFrame(np.load(options.table), columns=list_f_names)
     table = table[(table.T != 0).any()]
+    pdb.set_trace()
     if table.shape[0] == 0:
-	for met in METRICS:
+        for met in METRICS:
             feat = int(met.split('_')[-1].split('.')[0])
             out = join(options.out, "feat_" + list_f_names[feat])
             CheckOrCreate(out)
-	    color_copy = np.zeros(shape=(x,y,3), dtype='uint8')
-	    imsave(join(out, basename(options.table).replace("npy", "tiff")), color_copy, resolution=[1.0,1.0]) 
-    else:
-	for met in METRICS:
             color_copy = np.zeros(shape=(x,y,3), dtype='uint8')
-
+            imsave(join(out, basename(options.table).replace("npy", "tiff")), color_copy, resolution=[1.0,1.0]) 
+    else:
+        for met in METRICS:
+            color_copy = np.zeros(shape=(x,y,3), dtype='uint8')
             metrics = np.load(met)
             feat = int(met.split('_')[-1].split('.')[0])
-
             def f(val, x, y):
                 label = ClosestLabel(bin, x, y)
                 color_copy[bin == label] = BlueRedGrad(val, metrics[0], metrics[3])
