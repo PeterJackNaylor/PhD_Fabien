@@ -46,7 +46,6 @@ if __name__ == "__main__":
     bin = label(imread("Job_{}/bin/{}".format(options.key, options.table.replace('.npy', '.tiff'))))
     CheckOrCreate(options.out)
     x, y = bin.shape
-
     table = pd.DataFrame(np.load(options.table), columns=list_f_names)
     table = table[(table.T != 0).any()]
     if table.shape[0] == 0:

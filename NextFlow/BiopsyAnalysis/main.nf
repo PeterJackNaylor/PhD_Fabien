@@ -10,8 +10,8 @@ DistributedVersion = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/Writ
 WrittingTiff = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/WriteFromFiles.py')
 
 /* parameters */
-MARGE = 100
-
+MARGE = 0
+MARGE_BIN = 1
 
 process ChopPatient {
 //    executor 'sge'
@@ -53,7 +53,7 @@ process SubImage {
 
     val p from PARAM_JOB.each().splitText() 
     val inputt from params.in
-    val marge from MARGE2.first()
+    val marge from MARGE_BIN
 
     output:
     file "Job_${p.split()[6]}/prob/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into PROB_PROCESSED
@@ -70,7 +70,6 @@ process SubImage {
 
     """
 }
-
 /* this process creates files {slide}_{x}_{y}_{w}_{h}_{r}.tiff */
 
 
@@ -79,7 +78,6 @@ def getKey( file ) {
       file.name.split('_')[0] 
 }
 /* Regrouping files by patient for tiff stiching */
-
 IMAGE_PROCESSED  .map { file -> tuple(getKey(file), file) }
                  .groupTuple() 
                  .set { SegmentedByPatient }
@@ -110,7 +108,6 @@ process StichingTiff {
 }
 
 
-
 /* Creating feature map visualisation heatmap at resolution RES */
 
 
@@ -127,7 +124,6 @@ ChangingRes = file("ChangingRes.py")
 /* inputs */
 TIFF_FOLDER = file(params.in)
 RES = 7
-
 process MergeTablesBySlides {
     executor 'sge'
     profile = 'cluster'
@@ -181,7 +177,6 @@ process CollectMergeTables {
     """   
 
 }
-
 /* END: Creating feature map visualisation */
 
 /* BEGIN: Create colors maps at the WSI level */
@@ -224,9 +219,7 @@ COLOR_VEC     .map { file -> tuple(getKey(file), file) }
                  .groupTuple() 
                  .set { COLOR_VEC_BY_PATIENT }
 
-
 MergeStatsByWSI = file("GeneralStatistics4Color.py")
-
 
 
 process BringTogetherStatistics4Color {
@@ -249,7 +242,6 @@ process BringTogetherStatistics4Color {
 /* file input */
 ADDING_COLORS = file("AddingColors.py")
 
-
 process MakeColors {
     clusterOptions = "-S /bin/bash"
     publishDir PublishPatient, overwrite: false
@@ -259,6 +251,7 @@ process MakeColors {
     input:
     file table from TABLE_PROCESSED3
     file py from ADDING_COLORS
+    file wait from GeneralStatsByPatientByFeat .toList()
     output:
     file "Job_${table.getBaseName().split('_')[0]}/ColoredTiled/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
 

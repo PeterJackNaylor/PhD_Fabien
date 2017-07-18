@@ -171,8 +171,8 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=m
     segmentation_mask = DynamicWatershedAlias(prob_image1, param)
     table = bin_analyser(image, bin_image1, list_f, marge)
     # pdb.set_trace()
-    segmentation_mask[segmentation_mask > 0] = 255
-    segmentation_mask.dtype = np.uint8
+    segmentation_mask[segmentation_mask > 0] = 1.
+
 
     contours = dilation(segmentation_mask, disk(2)) - \
         erosion(segmentation_mask, disk(2))
@@ -180,7 +180,7 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=m
     x, y = np.where(contours == 1)
     image[x, y] = np.array([0, 0, 0])
 
-    return image, table, segmentation_mask, prob_image1
+    return image, table, img_as_ubyte(segmentation_mask), prob_image1
 
 
 ##########################

@@ -8,8 +8,9 @@ import pdb
 from scipy.misc import imsave
 
 def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=False, do_label=True):
+    pdb.set_trace()
     bin_image_copy = bin_image.copy()
-    if marge is not None:
+    if marge is not None and marge != 0:
         seed = np.zeros_like(bin_image_copy)
         seed[marge:-marge, marge:-marge] = 1
         mask = bin_image_copy.copy()
@@ -48,7 +49,7 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
 	    off_tmp = feat.size	     
             TABLE[i, (j + offset_ALL):(j + offset_ALL + off_tmp)] = feat._apply_region(tmp_regionprop ,RGB_image)
 	    offset_ALL += feat.size - 1
-
+    pdb.set_trace()
     if pandas_table:
         names = []
         for el in list_feature:
@@ -57,7 +58,6 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
                     names.append(el._return_name()[it])
             else:
                 names.append(el._return_name())
-        feature_name = [el._return_name() for el in list_feature]
         return pd.DataFrame(TABLE, columns=names)
     else:
         return TABLE
