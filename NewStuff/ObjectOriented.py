@@ -27,7 +27,8 @@ class ConvolutionalNeuralNetwork:
         SEED=42,
         DEBUG=True,
         WEIGHT_DECAY=0.00005,
-        LOSS_FUNC=tf.nn.l2_loss):
+        LOSS_FUNC=tf.nn.l2_loss,
+        N_FEATURES=16):
 
         self.LEARNING_RATE = LEARNING_RATE
         self.K = K
@@ -35,6 +36,7 @@ class ConvolutionalNeuralNetwork:
         self.IMAGE_SIZE = IMAGE_SIZE
         self.NUM_LABELS = NUM_LABELS
         self.NUM_CHANNELS = NUM_CHANNELS
+        self.N_FEATURES = N_FEATURES
 #        self.NUM_TEST = NUM_TEST
         self.STEPS = STEPS
         self.N_PRINT = N_PRINT
@@ -328,15 +330,11 @@ class ConvolutionalNeuralNetwork:
 
         l, acc, F1, recall, precision, meanacc = 0., 0., 0., 0., 0., 0.
 
-        image_summary_t = tf.summary.image("Test/Input", self.input_node, max_images=1)
-        label_summary_t = tf.summary.image("Test/Label", self.train_labels_node, max_images=1)
-        pred_summary_t = tf.summary.image("Test/Pred", tf.expand_dims(tf.cast(self.predictions, tf.float32), dim=3), max_images=1)
-
         for i in range(n_batch):
             Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
             feed_dict = {self.input_node: Xval,
                          self.train_labels_node: Yval}
-            l_tmp, acc_tmp, F1_tmp, recall_tmp, precision_tmp, meanacc_tmp, inp, lab, pred = self.sess.run([self.loss, self.accuracy, self.F1, self.recall, self.precision, self.MeanAcc, image_summary_t, label_summary_t, pred_summary_t], feed_dict=feed_dict)
+            l_tmp, acc_tmp, F1_tmp, recall_tmp, precision_tmp, meanacc_tmp, pred = self.sess.run([self.loss, self.accuracy, self.F1, self.recall, self.precision, self.MeanAcc, self.predictions], feed_dict=feed_dict)
             l += l_tmp
             acc += acc_tmp
             F1 += F1_tmp
@@ -354,12 +352,6 @@ class ConvolutionalNeuralNetwork:
         summary.value.add(tag="Test/Recall", simple_value=recall)
         summary.value.add(tag="Test/Precision", simple_value=precision)
         summary.value.add(tag="Test/Performance", simple_value=meanacc)
-
-        self.summary_test_writer.add_summary(inp, step)
-        self.summary_test_writer.add_summary(lab, step)
-        self.summary_test_writer.add_summary(pred, step)
-        self.summary_test_writer.add_summary(summary, step)
-
 
         print('  Validation loss: %.1f' % l)
         print('       Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
