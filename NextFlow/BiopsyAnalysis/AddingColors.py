@@ -17,6 +17,7 @@ def BlueRedGrad(val, min_val, max_val):
 def ClosestLabel(binary, x, y):
     x = int(x)
     y = int(y)
+    max_x , max_y = binary.shape[0:2] 
     if binary[x, y] != 0:
         return binary[x, y]
     else:
@@ -24,7 +25,13 @@ def ClosestLabel(binary, x, y):
         dist = 0
         while not found:
             dist += 1
-            possible_labels = np.unique(binary[(x-dist):(x+dist), (y-dist):(y+dist)])
+	    MIN_X = min(max_x - 1, max(0, x-dist))
+	    MAX_X = min(max_x - 1, max(0, x+dist))
+	    
+	    MAX_Y = min(max_y - 1, max(0, y+dist))
+	    MIN_Y = min(max_y - 1, max(0, y-dist))
+	
+            possible_labels = np.unique(binary[MIN_X:MAX_X, MIN_Y:MAX_Y])
             if len(possible_labels) != 1:
                 found = True
         return possible_labels[1]

@@ -23,13 +23,13 @@ def parse_name_xml(string):
     """parsers cellcognitions xml name files"""
     new_string = string.replace('PLSlide', "AZER").replace("___P", "AZER").replace("___T00", "AZER")
     new_string = new_string.split('AZER')
-    return string, new_string[1], new_string[2]
+    return string, "{:02d}".format(int(new_string[1])), new_string[2]
 
 def parse_name_png(string):
     """parsers cellcognitions masks name file"""
     new_string = string.replace("/Slide", "AZER").replace("/Mask_", "AZER").replace('.png', 'AZER')
     new_string = new_string.split('AZER')
-    return string, new_string[1], new_string[2].split('__')[0]
+    return string, "{:02d}".format(int(new_string[1])), new_string[2].split('__')[0]
 
 def load_files(options):
     """loading the main files"""
@@ -39,14 +39,14 @@ def load_files(options):
     for i, item in enumerate(folder):
         data_folder.loc[i] = parse_name_xml(item)
     data_folder = data_folder.set_index(['SlideID', 'CropID'])
-
+    #pdb.set_trace()
     slides_location = os.path.join(options.cellcognition, "masks/Slide*/*.png")
     image = glob.glob(slides_location)
     image_folder = pd.DataFrame(columns=('Path_PNG', 'SlideID', 'CropID'))
     for j, item in enumerate(image):
         image_folder.loc[j] = parse_name_png(item)
     image_folder = image_folder.set_index(['SlideID', 'CropID'])
-
+    #pdb.set_trace()
     result = pd.concat([data_folder, image_folder], axis=1)
     return result
 
