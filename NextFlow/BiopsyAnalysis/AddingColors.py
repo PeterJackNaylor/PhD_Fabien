@@ -9,6 +9,34 @@ from WrittingTiff.Extractors import list_f_names
 from tifffile import imsave, imread
 import pdb
 
+def DivergingPurpleGreen(rank, max_rank):
+    """ Have to write where they go and what they do"""
+    purple_4 = np.array([64,0,75])
+    purple_3 = np.array([118,42,131])
+    purple_2 = np.array([153,112,171])
+    purple_1 = np.array([194,165,207])
+    purple_0 = np.array([231,212,232])
+    white = np.array([247,247,247])
+    green_0 = np.array([217,240,211])
+    green_1 = np.array([166,219,160])
+    green_2 = np.array([90,174,97])
+    green_3 = np.array([27,120,55])
+    green_4 = np.array([0,68,27])
+
+def SequentialPurple(rank, max_rank):
+    white_3 = np.array([247,252,253])
+    white_2 = np.array([224,236,244])
+    white_1 = np.array([191,211,230])
+    white_0 = np.array([158,188,218])
+    middle = np.array([140,150,198])
+    purple_0 = np.array([140,107,177])
+    purple_1 = np.array([136,65,157])
+    purple_2 = np.array([129,15,124])
+    purple_3 = np.array([77,0,75])
+
+
+
+
 def BlueRedGrad(val, min_val, max_val):
     alpha = float(val - min_val) / float(max_val - min_val)
     RGB = np.array([int(alpha * 255), 0, int((1 - alpha) * 255)])

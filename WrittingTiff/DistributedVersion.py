@@ -148,7 +148,7 @@ def CreateBash(bash_file, python_file, file_param, options):
 import caffe
 from createfold import GetNet, PredImageFromNet, DynamicWatershedAlias, dilation, disk, erosion
 from UsefulFunctions.UsefulImageConstruction import sliding_window, PredLargeImageFromNet
-
+from skimage.morphology import remove_small_objects
 import skimage as skm
 from scipy import misc
 import cv2
@@ -181,17 +181,20 @@ def pred_image_from_two_nets(image, net1, net2, stepSize, windowSize,
 
 
 
-def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=None, marge_cut_off=0, list_f=list_f):
+def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, 
+           marge=None, marge_cut_off=0, ClearSmallObjects=20, list_f=list_f):
     caffe.set_mode_cpu()
     cn_1 = "FCN_0.01_0.99_0.0005"
     wd_1 = "/share/data40T_v2/Peter/pretrained_models"
     net_1 = GetNet(cn_1, wd_1)
-    net_2 = "DeconvNet_0.01_0.99_0.0005"
+    cn_2 = "DeconvNet_0.01_0.99_0.0005"
+    net_2 = GetNet(cn_2, wd_1)
     prob_image, bin_image, thresh = pred_image_from_two_nets(image, net_1, net_2, stepSize, windowSize, 
                                                                param=param, marge=marge, method="avg", 
                                                                ClearBorder="Reconstruction")
 
     segmentation_mask = DynamicWatershedAlias(prob_image, param)
+    segmentation_mask = remove_small_objects(segmentation_mask, ClearSmallObjects)
     table = bin_analyser(image, segmentation_mask, list_f, marge_cut_off)
     segmentation_mask[segmentation_mask > 0] = 1.
 

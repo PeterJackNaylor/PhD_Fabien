@@ -35,9 +35,16 @@ if __name__ == "__main__":
     list_table = []
 
     for el in iter:
-        list_table.append(pd.read_csv(el, index_col=0))
+        tmp_table = pd.read_csv(el, index_col=0)
+        tmp_table["Parent"] = el.split('_tables_res_0')[0]
+        list_table.append(tmp_table)
 
     table = pd.concat(list_table)
+    table = table.reset_index(drop=True)
+    without_parent = table.drop('Parent', 1)
+
+    without_parent = without_parent[(without_parent.T != 0).any()]
+    
     table.to_csv("Job_{}/".format(patient) + '{}_whole_slide.csv'.format(patient))
 
     image = GetWholeImage(slide, level = options.res)
@@ -46,6 +53,11 @@ if __name__ == "__main__":
     CheckOrCreate(out)
     for feat in list_f_names:
         if feat not in ["Centroid_x", "Centroid_y", "coord"]:
+
+            without_parent[feat + "_rank"] = without_parent[feat].rank(ascending=True)
+            table = pd.concat([table, without_parent[feat + "_rank"]], axis=1)
+
+
 
             result = np.zeros(shape=(x_S, y_S))
             avg = np.zeros(shape=(x_S, y_S))
@@ -75,3 +87,10 @@ if __name__ == "__main__":
             im2 = plt.imshow(result, cmap=plt.cm.jet, alpha=.3, interpolation='bilinear',
                          extent=extent)
             fig.savefig(combine_name)
+
+
+    for group_name, df in table.groupby(['Parent']):
+        output_new_tab = "./RankedTable"
+        CheckOrCreate(output_new_tab)
+        with open(join(output_new_tab, group_name + ".csv"), 'a') as f:
+            df.to_csv(f)

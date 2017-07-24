@@ -168,6 +168,7 @@ process CollectMergeTables {
     val inputt from params.in
     output:
     file "Job_${key}/${key}_whole_slide.csv" into TAB_SLIDE
+    file "Job_${key}/RankedTable/*.npy" into NEW_TAB mode flatten
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key} Job_${key}
@@ -186,57 +187,57 @@ process CollectMergeTables {
 
 /* python files */
 
-GETSTATISTICS_4_COLORS = file("GetStatistics4Color.py")
+// GETSTATISTICS_4_COLORS = file("GetStatistics4Color.py")
 
 /* inputs */
-FEATURES_TO_VISU = [0, 1, 2]
+// FEATURES_TO_VISU = [0, 1, 2]
 
 /* Resume each table */
-process GetStatistics4Color {
-    clusterOptions = "-S /bin/bash"
-    publishDir PublishPatient, overwrite: false
-    errorStrategy 'retry' 
-    maxErrors 5
+// process GetStatistics4Color {
+//     clusterOptions = "-S /bin/bash"
+//     publishDir PublishPatient, overwrite: false
+//     errorStrategy 'retry' 
+//     maxErrors 5
 
-    input:
-    file table from TABLE_PROCESSED2
-    file py from GETSTATISTICS_4_COLORS
-    each feat from FEATURES_TO_VISU 
-    output:
-    file "Job_${table.getBaseName().split('_')[0]}/StatColors/${table.getBaseName()}_${feat}_color_0.npy" into COLOR_VEC
+//     input:
+//     file table from TABLE_PROCESSED2
+//     file py from GETSTATISTICS_4_COLORS
+//     each feat from FEATURES_TO_VISU 
+//     output:
+//     file "Job_${table.getBaseName().split('_')[0]}/StatColors/${table.getBaseName()}_${feat}_color_0.npy" into COLOR_VEC
 
-    """
-    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.name.split("_")[0]} Job_${table.name.split("_")[0]}
+//     """
+//     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.name.split("_")[0]} Job_${table.name.split("_")[0]}
 
-    python $py --table $table --feat $feat --output Job_${table.name.split('_')[0]}/StatColors
-    """
-}
-
-
-COLOR_VEC     .map { file -> tuple(getKey(file), file) }
-                 .groupTuple() 
-                 .set { COLOR_VEC_BY_PATIENT }
-
-MergeStatsByWSI = file("GeneralStatistics4Color.py")
+//     python $py --table $table --feat $feat --output Job_${table.name.split('_')[0]}/StatColors
+//     """
+// }
 
 
-process BringTogetherStatistics4Color {
-    clusterOptions = "-S /bin/bash"
-    publishDir PublishPatient, overwrite: false
-    errorStrategy 'retry' 
-    maxErrors 5
+// COLOR_VEC     .map { file -> tuple(getKey(file), file) }
+//                  .groupTuple() 
+//                  .set { COLOR_VEC_BY_PATIENT }
 
-    input:
-    set key, file(vec_color) from COLOR_VEC_BY_PATIENT
-    file py from MergeStatsByWSI
-    output:
-    file "Job_${key}/GeneralStats4Color/GeneralStatistics4color_${key}_*.npy" into GeneralStatsByPatientByFeat
+// MergeStatsByWSI = file("GeneralStatistics4Color.py")
 
 
-    """
-    python $py --path . --output Job_${key}/GeneralStats4Color --key ${key}
-    """
-}
+// process BringTogetherStatistics4Color {
+//     clusterOptions = "-S /bin/bash"
+//     publishDir PublishPatient, overwrite: false
+//     errorStrategy 'retry' 
+//     maxErrors 5
+
+//     input:
+//     set key, file(vec_color) from COLOR_VEC_BY_PATIENT
+//     file py from MergeStatsByWSI
+//     output:
+//     file "Job_${key}/GeneralStats4Color/GeneralStatistics4color_${key}_*.npy" into GeneralStatsByPatientByFeat
+
+
+//     """
+//     python $py --path . --output Job_${key}/GeneralStats4Color --key ${key}
+//     """
+// }
 /* file input */
 ADDING_COLORS = file("AddingColors.py")
 
@@ -247,7 +248,7 @@ process MakeColors {
     maxErrors 5
 
     input:
-    file table from TABLE_PROCESSED3
+    file table from NEW_TAB
     file py from ADDING_COLORS
     file wait from GeneralStatsByPatientByFeat .toList()
     output:
