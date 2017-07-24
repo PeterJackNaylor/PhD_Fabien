@@ -29,7 +29,7 @@ def parse_name_png(string):
     """parsers cellcognitions masks name file"""
     new_string = string.replace("/Slide", "AZER").replace("/Mask_", "AZER").replace('.png', 'AZER')
     new_string = new_string.split('AZER')
-    return string, new_string[1], new_string[2].split('__')[0]
+    return string, "{:02d}".format(int(new_string[1])), new_string[2].split('__')[0]
 
 def load_files(options):
     """loading the main files"""

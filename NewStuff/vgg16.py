@@ -277,7 +277,7 @@ class VGG16(UNetBatchNorm):
 
             with tf.name_scope('Recall'):
 
-                self.recall = tf.divide(self.TP, tf.add(self.TP, self.TN))
+                self.recall = tf.divide(self.TP, tf.add(self.TP, self.FN))
                 tf.summary.scalar('Recall', self.recall)
 
             with tf.name_scope('F1'):
