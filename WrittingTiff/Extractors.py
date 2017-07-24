@@ -35,7 +35,7 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
         if val != 0:
             img[val] = GrowRegion(bin_image_copy, val)
             RegionProp[val] = regionprops(img[val])
-
+    
     n = len(RegionProp[0])
     p = 0
     for feat in list_feature:
@@ -132,6 +132,7 @@ class Feature(object):
         raise NotImplementedError
     def GetSize(self):
         raise NotImplementedError
+
 class PixelSize(Feature):
     def _apply_region(self, regionp, RGB):
         bin = regionp.image.astype(np.uint8)

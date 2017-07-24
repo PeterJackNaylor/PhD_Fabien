@@ -155,32 +155,61 @@ import cv2
 from Extractors import *
 
 
-stepSize = 202
+stepSize = 100
 windowSize = (224 , 224)
-param = 7
-marge = 100
+param = 10
 
 
-def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=marge, list_f=list_f):
+def pred_image_from_two_nets(image, net1, net2, stepSize, windowSize,
+                             param=param, marge=1, method="avg", ClearBorder = "Reconstruction"):
+    prob_image1, bin_image1, threshold1 = PredLargeImageFromNet(net1, image, stepSize, windowSize,
+                                                                removeFromBorder=marge,
+                                                                method=method,
+                                                                param=param,
+                                                                ClearBorder=ClearBorder)
+    prob_image2, bin_image2, threshold2 = PredLargeImageFromNet(net2, image, stepSize, windowSize,
+                                                                removeFromBorder=marge,
+                                                                method=method,
+                                                                param=param,
+                                                                ClearBorder=ClearBorder)
+    
+    thresh = ( threshold1 + threshold2 ) / 2.
+    prob = ( prob_image1 + prob_image2 ) / 2.
+    bin_map = prob > thresh + 0.0
+    bin_map = bin_map.astype(np.uint8)
+    return prob, bin, thresh
+
+
+
+def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param, marge=None, marge_cut_off=0, list_f=list_f):
     caffe.set_mode_cpu()
     cn_1 = "FCN_0.01_0.99_0.0005"
     wd_1 = "/share/data40T_v2/Peter/pretrained_models"
     net_1 = GetNet(cn_1, wd_1)
-    prob_image1, bin_image1, thresh = PredLargeImageFromNet(net_1, image, stepSize, windowSize, param=7, ClearBorder="RemoveBorderWithDWS")
-    #pdb.set_trace()
-    segmentation_mask = DynamicWatershedAlias(prob_image1, param)
-    table = bin_analyser(image, bin_image1, list_f, marge)
-    # pdb.set_trace()
+    net_2 = "DeconvNet_0.01_0.99_0.0005"
+    prob_image, bin_image, thresh = pred_image_from_two_nets(image, net_1, net_2, stepSize, windowSize, 
+                                                               param=param, marge=marge, method="avg", 
+                                                               ClearBorder="Reconstruction")
+
+    segmentation_mask = DynamicWatershedAlias(prob_image, param)
+    table = bin_analyser(image, segmentation_mask, list_f, marge_cut_off)
     segmentation_mask[segmentation_mask > 0] = 1.
 
 
     contours = dilation(segmentation_mask, disk(2)) - \
         erosion(segmentation_mask, disk(2))
-
     x, y = np.where(contours == 1)
     image[x, y] = np.array([0, 0, 0])
 
-    return image, table, img_as_ubyte(segmentation_mask), prob_image1
+
+    segmentation_mask = img_as_ubyte(segmentation_mask)
+    segmentation_mask[segmentation_mask > 0] = 255
+    if marge_cut_off != 0:
+        with marge_cut_off as c:
+            image = image[c:-c, c:-c]
+            segmentation_mask = segmentation_mask[c:-c, c:-c]
+            prob_image = prob_image[c:-c, c:-c]
+    return image, table, segmentation_mask, prob_image
 
 
 ##########################
@@ -208,6 +237,8 @@ def options_min():
                       help="Size of prediction images")
     parser.add_option('--marge', dest="marge", type='int', default=0,
                       help="Margin for the reconstruction")
+    parser.add_option('--marge_cut_off', dest="marge_cut_off", type='int', default=0,
+                      help="margin to cut off at the end of the analyse")
     (options, args) = parser.parse_args()
 
     options.param = [options.x, options.y, options.ref_level, options.size_x, options.size_y]
@@ -263,11 +294,11 @@ def PredOneImage(slide, para, outfile, f, options):
     # pdb.set_trace()
     slide = openslide.open_slide(slide)
     image = np.array(GetImage(slide, para))[:,:,:3]
-    image, table, bin, prob = f(image, marge=options.marge)
+    image, table, bin, prob = f(image, marge=options.marge, marge_cut_off=options.marge_cut_off)
     imsave(outfile, image, resolution=[1.0,1.0])
     np.save(outfile.replace('.tiff', ".npy").replace("tiled", "table"), table)
-    imsave(outfile.replace("tiled", "bin"), bin)
-    imsave(outfile.replace("tiled", "prob"), img_as_ubyte(prob))
+    imsave(outfile.replace("tiled", "bin"), bin, resolution=[1.0,1.0])
+    imsave(outfile.replace("tiled", "prob"), img_as_ubyte(prob), resolution=[1.0,1.0])
 
 def CheckJob(parameter_file, output_folder):
     f = open(parameter_file, "r")

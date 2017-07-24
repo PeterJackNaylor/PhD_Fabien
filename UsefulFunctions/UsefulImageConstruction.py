@@ -59,7 +59,9 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
 
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
         prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
-        val = removeFromBorder
+        
+        val = removeFromBorder if ClearBorder == "Reconstruction" else 0
+        
         y_b += val
         y_e -= val
         x_b += val
@@ -93,7 +95,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
             inter_result, thresh = RemoveBordersByReconstruction(inter_result, removeFromBorder)
             thresh_list += [thresh]
             if method == "avg" or method == "median":
-                print "avg not implemented with Reconstruction for clear border, switched to max"
+                print "avg nor median are implemented with Reconstruction for clear border, switched to max"
                 method = "max"
 
         elif ClearBorder == "Classic":

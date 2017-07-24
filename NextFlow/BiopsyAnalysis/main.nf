@@ -10,7 +10,7 @@ DistributedVersion = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/Writ
 WrittingTiff = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/WriteFromFiles.py')
 
 /* parameters */
-MARGE = 0
+WSI_MARGE = 50
 MARGE_BIN = 1
 
 process ChopPatient {
@@ -21,7 +21,7 @@ process ChopPatient {
     file PYTHONFILE from DistributedVersion
     file x from TIFF_REMOTE
     val wd_REMOTE from PublishPatient
-    val marge from MARGE
+    val marge from WSI_MARGE
     output:
     file "Job_${x.getBaseName()}" into JOB_SUBMIT
     file "Job_${x.getBaseName()}/ParameterDistribution.txt" into PARAM_JOB
@@ -50,6 +50,7 @@ process SubImage {
     val p from PARAM_JOB.each().splitText() 
     val inputt from params.in
     val marge from MARGE_BIN
+    val marge_wsi from WSI_MARGE
 
     output:
     file "Job_${p.split()[6]}/prob/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into PROB_PROCESSED
@@ -62,7 +63,7 @@ process SubImage {
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${p.split()[6]}/PredictionSlide.py PredictionSlide.py
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${p.split()[6]} Job_${p.split()[6]}
 
-    python PredictionSlide.py -x ${p.split()[1]} -y ${p.split()[2]} --size_x ${p.split()[3]} --size_y ${p.split()[4]} --ref_level ${p.split()[5]} --output Job_${p.split()[6]} --slide $inputt${p.split()[6]}.tiff --size 224 --marge $marge
+    python PredictionSlide.py -x ${p.split()[1]} -y ${p.split()[2]} --size_x ${p.split()[3]} --size_y ${p.split()[4]} --ref_level ${p.split()[5]} --output Job_${p.split()[6]} --slide $inputt${p.split()[6]}.tiff --size 224 --marge $marge --marge_cut_off $marge_wsi
 
     """
 }
@@ -91,12 +92,13 @@ process StichingTiff {
     set key, file(vec_color) from SegmentedByPatient
     val inputt from params.in
     file py from WrittingTiff
+    val marge_wsi from WSI_MARGE
     output:
     file "Job_${key}/WSI/Segmented_${key}.tiff"
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key} Job_${key}
-    python $py ${inputt}${key}.tiff ./Job_${key}/WSI/Segmented_${key}.tiff *.tiff
+    python $py $marge_wsi ${inputt}${key}.tiff ./Job_${key}/WSI/Segmented_${key}.tiff *.tiff 
 
     """
 
@@ -280,12 +282,13 @@ process StichingFeatTiff {
     set key, file(tiled_color) from COLOR_TIFF_GROUPED_BY_PATIENT_FEAT
     val inputt from params.in
     file py from WrittingTiff
+    val marge_wsi from WSI_MARGE
     output:
     file "Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff"
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key.split('___')[1]} Job_${key.split('___')[1]}
-    python $py ${inputt}${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff"""
+    python $py $margin ${inputt}${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff"""
 
 
 }
