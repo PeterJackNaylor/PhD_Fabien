@@ -14,11 +14,9 @@ MARGE = 0
 MARGE_BIN = 1
 
 process ChopPatient {
-//    executor 'sge'
-//    profile = 'cluster'
     validExitStatus 0,134
     clusterOptions = "-S /bin/bash"
-    publishDir PublishPatient, overwrite: true
+    publishDir PublishPatient, overwrite: false
     input:
     file PYTHONFILE from DistributedVersion
     file x from TIFF_REMOTE
@@ -27,7 +25,6 @@ process ChopPatient {
     output:
     file "Job_${x.getBaseName()}" into JOB_SUBMIT
     file "Job_${x.getBaseName()}/ParameterDistribution.txt" into PARAM_JOB
-    val "$marge" into MARGE2
     """
     METHOD=grid_etienne
  

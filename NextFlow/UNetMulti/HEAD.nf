@@ -50,7 +50,7 @@ process BinToColor {
     file "./ToAnnotateColor" into ToAnnotateColor
 
     """
-    python $py --a $classifier --c $cellcog_folder --o ./ToAnnotateColor/
+    python $py --a $classifier --c $cellcog_folder --o ./ToAnnotateColor/ --d ./Diff/
     python $py2 -i $toannotate --o_c $cellcog_folder --o_b ./ToAnnotateBinary/
     cp -r ./ToAnnotateBinary/Slide_* ./ToAnnotateColor/
     """
