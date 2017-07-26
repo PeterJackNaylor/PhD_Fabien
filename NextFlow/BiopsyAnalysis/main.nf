@@ -168,7 +168,7 @@ process CollectMergeTables {
     val inputt from params.in
     output:
     file "Job_${key}/${key}_whole_slide.csv" into TAB_SLIDE
-    file "Job_${key}/RankedTable/*.npy" into NEW_TAB mode flatten
+    file "Job_${key}/RankedTable/*.csv" into NEW_TAB mode flatten
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key} Job_${key}
@@ -250,7 +250,7 @@ process MakeColors {
     input:
     file table from NEW_TAB
     file py from ADDING_COLORS
-    file wait from GeneralStatsByPatientByFeat .toList()
+//    file wait from GeneralStatsByPatientByFeat .toList()
     output:
     file "Job_${table.getBaseName().split('_')[0]}/ColoredTiled/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
 

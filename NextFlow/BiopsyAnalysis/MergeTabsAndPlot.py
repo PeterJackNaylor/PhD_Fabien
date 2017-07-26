@@ -42,10 +42,10 @@ if __name__ == "__main__":
     table = pd.concat(list_table)
     table = table.reset_index(drop=True)
     without_parent = table.drop('Parent', 1)
-
+    without_parent = without_parent.drop('coord', 1)
     without_parent = without_parent[(without_parent.T != 0).any()]
-    
-    table.to_csv("Job_{}/".format(patient) + '{}_whole_slide.csv'.format(patient))
+    table2 = table.ix[without_parent.index] 
+    table2.to_csv("Job_{}/".format(patient) + '{}_whole_slide.csv'.format(patient))
 
     image = GetWholeImage(slide, level = options.res)
     x_S, y_S = image.size
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         if feat not in ["Centroid_x", "Centroid_y", "coord"]:
 
             without_parent[feat + "_rank"] = without_parent[feat].rank(ascending=True)
-            table = pd.concat([table, without_parent[feat + "_rank"]], axis=1)
+            table2 = pd.concat([table2, without_parent[feat + "_rank"]], axis=1)
 
 
 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
                 result[int(indX), int(indY)] += val
                 avg[int(indX), int(indY)] += 1
 
-            table.apply(lambda row: f(row[feat], row["coord"]), axis=1)
+            table2.apply(lambda row: f(row[feat], row["coord"]), axis=1)
 
             avg[avg == 0] += 1
             result = result / avg 
@@ -88,9 +88,8 @@ if __name__ == "__main__":
                          extent=extent)
             fig.savefig(combine_name)
 
-
+    output_new_tab = "Job_{}/RankedTable".format(patient)
+    CheckOrCreate(output_new_tab)
     for group_name, df in table.groupby(['Parent']):
-        output_new_tab = "./RankedTable"
-        CheckOrCreate(output_new_tab)
         with open(join(output_new_tab, group_name + ".csv"), 'a') as f:
             df.to_csv(f)
