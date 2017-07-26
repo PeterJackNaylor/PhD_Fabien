@@ -125,10 +125,13 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
     METRICS = glob.glob('Job_{}/GeneralStats4Color/GeneralStatistics4color_*.npy'.format(options.key))
-    bin = label(imread("Job_{}/bin/{}".format(options.key, options.table.replace('.npy', '.tiff'))))
+    bin = label(imread("Job_{}/bin/{}".format(options.key, options.table.replace('.csv', '.tiff'))))
     CheckOrCreate(options.out)
     x, y = bin.shape
     table = pd.read_csv(options.table, header=0)
+    pdb.set_trace()
+    table = table.drop('coord', 1)
+    table = table.drop('Parent', 1)
     table = table[(table.T != 0).any()]
     if table.shape[0] == 0:
         for met in METRICS:
