@@ -92,10 +92,5 @@ if __name__ == "__main__":
     output_new_tab = "Job_{}/RankedTable".format(patient)
     CheckOrCreate(output_new_tab)
     for group_name, df in table.groupby(['Parent']):
-<<<<<<< HEAD
-        output_new_tab = "Job_{}/".format(patient) + "/RankedTable"
-        CheckOrCreate(output_new_tab)
-=======
->>>>>>> b451b9257173d162ff0d7cd536d925c1ef7d721b
         with open(join(output_new_tab, group_name + ".csv"), 'a') as f:
             df.to_csv(f)
