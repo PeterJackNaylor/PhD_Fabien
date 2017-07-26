@@ -168,7 +168,7 @@ process CollectMergeTables {
     val inputt from params.in
     output:
     file "Job_${key}/${key}_whole_slide.csv" into TAB_SLIDE
-    file "Job_${key}/RankedTable/*.npy" into NEW_TAB mode flatten
+    file "Job_${key}/RankedTable/*.csv" into NEW_TAB mode flatten
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key} Job_${key}

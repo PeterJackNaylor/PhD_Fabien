@@ -3,7 +3,7 @@
 from DataGen2 import DataGen
 import glob
 import itertools
-from random import shuffle, sample
+from random import shuffle, sample, seed
 import numpy as np
 
 

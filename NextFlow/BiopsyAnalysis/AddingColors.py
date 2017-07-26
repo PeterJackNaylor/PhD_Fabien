@@ -22,6 +22,31 @@ def DivergingPurpleGreen(rank, max_rank):
     green_2 = np.array([90,174,97])
     green_3 = np.array([27,120,55])
     green_4 = np.array([0,68,27])
+    a = (float(rank) / float(max_rank)) * 100
+    if a < 9:
+        return green_4
+    elif a < 18:
+        return green_3
+    elif a < 27:
+        return green_2
+    elif a < 36:
+        return green_1
+    elif a < 45:
+        return green_0
+    elif a < 54:
+        return white
+    elif a < 63:
+        return purple_0
+    elif a < 72:
+        return purple_1
+    elif a < 81:
+        return purple_2
+    elif a < 90:
+        return purple_3
+    elif a < 101:
+        return purple_4
+    else:
+        print "Problem in color scheme"
 
 def SequentialPurple(rank, max_rank):
     white_3 = np.array([247,252,253])
@@ -33,6 +58,28 @@ def SequentialPurple(rank, max_rank):
     purple_1 = np.array([136,65,157])
     purple_2 = np.array([129,15,124])
     purple_3 = np.array([77,0,75])
+
+    a = (float(rank) / float(max_rank)) * 100
+    if a < 11:
+        return white_3
+    elif a < 22:
+        return white_2
+    elif a < 33:
+        return white_1
+    elif a < 44:
+        return white_0
+    elif a < 55:
+        return middle
+    elif a < 66:
+        return purple_0
+    elif a < 77:
+        return purple_1
+    elif a < 88:
+        return purple_2
+    elif a < 101:
+        return purple_3
+    else:
+        print "Problem in color scheme"
 
 
 
@@ -81,7 +128,7 @@ if __name__ == "__main__":
     bin = label(imread("Job_{}/bin/{}".format(options.key, options.table.replace('.npy', '.tiff'))))
     CheckOrCreate(options.out)
     x, y = bin.shape
-    table = pd.DataFrame(np.load(options.table), columns=list_f_names)
+    table = pd.read_csv(options.table, header=0)
     table = table[(table.T != 0).any()]
     if table.shape[0] == 0:
         for met in METRICS:

@@ -42,9 +42,10 @@ if __name__ == "__main__":
     table = pd.concat(list_table)
     table = table.reset_index(drop=True)
     without_parent = table.drop('Parent', 1)
+    without_parent = without_parent.drop('coord', 1)
 
     without_parent = without_parent[(without_parent.T != 0).any()]
-    
+    table = table.ix[without_parent.index]
     table.to_csv("Job_{}/".format(patient) + '{}_whole_slide.csv'.format(patient))
 
     image = GetWholeImage(slide, level = options.res)
@@ -90,7 +91,7 @@ if __name__ == "__main__":
 
 
     for group_name, df in table.groupby(['Parent']):
-        output_new_tab = "./RankedTable"
+        output_new_tab = "Job_{}/".format(patient) + "/RankedTable"
         CheckOrCreate(output_new_tab)
         with open(join(output_new_tab, group_name + ".csv"), 'a') as f:
             df.to_csv(f)

@@ -208,10 +208,10 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param,
     segmentation_mask = img_as_ubyte(segmentation_mask)
     segmentation_mask[segmentation_mask > 0] = 255
     if marge_cut_off != 0:
-        with marge_cut_off as c:
-            image = image[c:-c, c:-c]
-            segmentation_mask = segmentation_mask[c:-c, c:-c]
-            prob_image = prob_image[c:-c, c:-c]
+        c = marge_cut_off
+        image = image[c:-c, c:-c]
+        segmentation_mask = segmentation_mask[c:-c, c:-c]
+        prob_image = prob_image[c:-c, c:-c]
     return image, table, segmentation_mask, prob_image
 
 
