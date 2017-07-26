@@ -93,6 +93,8 @@ def ClosestLabel(binary, x, y):
     x = int(x)
     y = int(y)
     max_x , max_y = binary.shape[0:2] 
+    x = max(0, min(max_x - 1, x))
+    y = max(0, min(max_y - 1, y))
     if binary[x, y] != 0:
         return binary[x, y]
     else:
@@ -109,8 +111,10 @@ def ClosestLabel(binary, x, y):
             possible_labels = np.unique(binary[MIN_X:MAX_X, MIN_Y:MAX_Y])
             if len(possible_labels) != 1:
                 found = True
-        return possible_labels[1]
-
+	try:
+            return possible_labels[1]
+	except:
+	    pdb.set_trace()
 if __name__ == "__main__":
     
 
@@ -122,34 +126,33 @@ if __name__ == "__main__":
                       help="out path")
     parser.add_option("--key", dest="key",type="string",
                       help="patient id")
-
+    parser.add_option("--marge_cut_off", dest="marge", type="int",
+		      help="how much to reduce indexing")
     (options, args) = parser.parse_args()
-    METRICS = glob.glob('Job_{}/GeneralStats4Color/GeneralStatistics4color_*.npy'.format(options.key))
     bin = label(imread("Job_{}/bin/{}".format(options.key, options.table.replace('.csv', '.tiff'))))
+    max_rank = pd.read_csv('Job_{}/{}_whole_slide.csv'.format(options.key, options.key)).shape[0]
     CheckOrCreate(options.out)
     x, y = bin.shape
-    table = pd.read_csv(options.table, header=0)
-    pdb.set_trace()
+    table = pd.read_csv(options.table, header=0, index_col=0, sep=';')
     table = table.drop('coord', 1)
     table = table.drop('Parent', 1)
-    table = table[(table.T != 0).any()]
+    table = table[table.notnull().all(axis=1)]
     if table.shape[0] == 0:
-        for met in METRICS:
-            feat = int(met.split('_')[-1].split('.')[0])
-            out = join(options.out, "feat_" + list_f_names[feat])
+        for feat in [el for el in table.columns if "_rank" in el]:
+            out = join(options.out, "feat_" + feat.split('_rank')[0])
             CheckOrCreate(out)
             color_copy = np.zeros(shape=(x,y,3), dtype='uint8')
-            imsave(join(out, basename(options.table).replace("npy", "tiff")), color_copy, resolution=[1.0,1.0]) 
+            imsave(join(out, basename(options.table).replace("csv", "tiff")), color_copy, resolution=[1.0,1.0]) 
     else:
-        for met in METRICS:
+        for feat in [el for el in table.columns if "_rank" in el]:
             color_copy = np.zeros(shape=(x,y,3), dtype='uint8')
-            metrics = np.load(met)
-            feat = int(met.split('_')[-1].split('.')[0])
             def f(val, x, y):
+		x -= options.marge + 2
+		y -= options.marge + 2
                 label = ClosestLabel(bin, x, y)
-                color_copy[bin == label] = BlueRedGrad(val, metrics[0], metrics[3])
+                color_copy[bin == label] = DivergingPurpleGreen(val, max_rank)
 
-            table.apply(lambda row: f(row[list_f_names[feat]], row["Centroid_x"], row["Centroid_y"]), axis=1)
-            out = join(options.out, "feat_" + list_f_names[feat])
+            table.apply(lambda row: f(row[feat], row["Centroid_x"], row["Centroid_y"]), axis=1)
+            out = join(options.out, "feat_" + feat.split('_rank')[0])
             CheckOrCreate(out)
-            imsave(join(out, basename(options.table).replace("npy", "tiff")), color_copy, resolution=[1.0,1.0])
+            imsave(join(out, basename(options.table).replace("csv", "tiff")), color_copy, resolution=[1.0,1.0])

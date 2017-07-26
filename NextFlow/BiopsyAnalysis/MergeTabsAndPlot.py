@@ -35,10 +35,9 @@ if __name__ == "__main__":
     list_table = []
 
     for el in iter:
-        tmp_table = pd.read_csv(el, index_col=0)
+        tmp_table = pd.read_csv(el, index_col=0, header=0)
         tmp_table["Parent"] = el.split('_tables_res_0')[0]
         list_table.append(tmp_table)
-
     table = pd.concat(list_table)
     table = table.reset_index(drop=True)
     without_parent = table.drop('Parent', 1)
@@ -52,9 +51,10 @@ if __name__ == "__main__":
     x_S, y_S = image.size
     out = "Job_{}/feature_map/".format(patient)
     CheckOrCreate(out)
+    names = []
     for feat in list_f_names:
         if feat not in ["Centroid_x", "Centroid_y", "coord"]:
-
+            names.append(feat + "_rank")
             without_parent[feat + "_rank"] = without_parent[feat].rank(ascending=True)
             table2 = pd.concat([table2, without_parent[feat + "_rank"]], axis=1)
 
@@ -91,6 +91,8 @@ if __name__ == "__main__":
 
     output_new_tab = "Job_{}/RankedTable".format(patient)
     CheckOrCreate(output_new_tab)
-    for group_name, df in table.groupby(['Parent']):
+    ranks = table2[names]
+    result = pd.concat([table, ranks], axis=1, join_axes=[table.index])
+    for group_name, df in result.groupby(['Parent']):
         with open(join(output_new_tab, group_name + ".csv"), 'a') as f:
-            df.to_csv(f)
+            df.to_csv(f, sep=';')

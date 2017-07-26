@@ -250,13 +250,14 @@ process MakeColors {
     input:
     file table from NEW_TAB
     file py from ADDING_COLORS
+    val marge_wsi from WSI_MARGE
 //    file wait from GeneralStatsByPatientByFeat .toList()
     output:
     file "Job_${table.getBaseName().split('_')[0]}/ColoredTiled/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.name.split("_")[0]} Job_${table.name.split("_")[0]}
-    python $py --table $table --key ${table.name.split('_')[0]} --output Job_${table.name.split('_')[0]}/ColoredTiled
+    python $py --table $table --key ${table.name.split('_')[0]} --output Job_${table.name.split('_')[0]}/ColoredTiled --marge_cut_off $marge_wsi
     """   
 }
 
