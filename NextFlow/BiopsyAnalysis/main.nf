@@ -250,7 +250,7 @@ process MakeColors {
     input:
     file table from NEW_TAB
     file py from ADDING_COLORS
-    file wait from GeneralStatsByPatientByFeat .toList()
+//    file wait from GeneralStatsByPatientByFeat .toList()
     output:
     file "Job_${table.getBaseName().split('_')[0]}/ColoredTiled/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
 

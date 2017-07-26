@@ -155,7 +155,7 @@ import cv2
 from Extractors import *
 
 
-stepSize = 100
+stepSize = 150
 windowSize = (224 , 224)
 param = 10
 
@@ -208,10 +208,10 @@ def pred_f(image, stepSize=stepSize, windowSize=windowSize, param=param,
     segmentation_mask = img_as_ubyte(segmentation_mask)
     segmentation_mask[segmentation_mask > 0] = 255
     if marge_cut_off != 0:
-        c = marge_cut_off
-        image = image[c:-c, c:-c]
-        segmentation_mask = segmentation_mask[c:-c, c:-c]
-        prob_image = prob_image[c:-c, c:-c]
+         c = marge_cut_off
+         image = image[c:-c, c:-c]
+         segmentation_mask = segmentation_mask[c:-c, c:-c]
+         prob_image = prob_image[c:-c, c:-c]
     return image, table, segmentation_mask, prob_image
 
 
