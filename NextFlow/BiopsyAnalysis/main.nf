@@ -122,7 +122,7 @@ ChangingRes = file("ChangingRes.py")
 /* inputs */
 TIFF_FOLDER = file(params.in)
 RES = 7
-process MergeTablesBySlides {
+/*process MergeTablesBySlides {
     executor 'sge'
     profile = 'cluster'
     clusterOptions = "-S /bin/bash"
@@ -146,10 +146,10 @@ process MergeTablesBySlides {
 
     python $py --table $table --slide ${fold}/${table.name.split("_")[0]}.tiff --resolution $res
     """   
-}
+}*/
 
 
-Tables_res_0     .map { file -> tuple(getKey(file), file) }
+TABLE_PROCESSED  .map { file -> tuple(getKey(file), file) }
  		         .groupTuple() 
      		     .set { TableGroups }
 
