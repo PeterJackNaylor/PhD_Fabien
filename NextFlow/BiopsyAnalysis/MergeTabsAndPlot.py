@@ -54,11 +54,39 @@ if __name__ == "__main__":
 
 
     table = table.apply(Coordinates, axis=1)
+    ### killing doubles that overlap with two tiff
+    group = table.groupby('coord_res_0')['Parent'].unique()
+    index_to_iter = group[group.apply(lambda x: len(x)>1)]
+
+    def CentroidInImage(x, y, parent):
+        para = parent.split('_')
+        width = int(para[4]) - 2 * options.marge
+        height = int(para[3]) - 2 * options.marge
+        x, y = int(x) - options.marge, int(y) - options.marge
+
+        if x < 0 or x > width or y < 0 or y > height:
+            return max(width, height)
+        else:
+            distance_to_border = [x - 0, y - 0, width - x, height - y]
+            return min(distance_to_border)
+
+
+
+    n_cols = len(df.columns[:-3])
+
+    for el in index_to_iter:
+        df = table[table["coord_res_0"] == el]
+        df["distance_to_border"] = df.apply(lambda row: CentroidInImage(row['Centroid_x'], row['Centroid_y'], row['Parent']) ,axis=1)
+        keep_index = df['distance_to_border'].idxmin()
+        other_index = [el for el in df.index if el != keep_index]
+        for other_el in other_index:
+            table.iloc([other_el], df.columns[:-3]) = [0.] * n_cols
     pdb.set_trace()
     without_parent = table.drop('Parent', 1)
     without_parent = without_parent.drop('coord_res_{}'.format(options.res), 1)
     without_parent = without_parent.drop('coord_res_0', 1)
     without_parent = without_parent[(without_parent.T != 0).any()]
+
 
 
 
