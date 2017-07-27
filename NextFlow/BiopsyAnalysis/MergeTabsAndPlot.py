@@ -43,23 +43,36 @@ if __name__ == "__main__":
 
 
 
-    def Coordinates(r):
-        para = r["Parent"].split('_')
-        x, y = int(r["Centroid_x"]), int(r["Centroid_y"])
+    def Coordinates_0(x, y, parent):
+        para = parent.split('_')
+        x, y = int(x), int(y)
         X, Y = int(x) + int(para[1]), int(y) + int(para[2]) 
+        return X, Y
+
+
+    def Coordinates_res(x, y, parent):
+        para = parent.split('_')
+        X, Y = int(x) + int(para[1]), int(y) + int(para[2]) 
+        va, va2 = get_X_Y_from_0(slide, X, Y, options.res)
+        return (va, va2)
+
+
+    def InBox(x, y, parent):
+        para = parent.split('_')
         width = int(para[4])
         height = int(para[3])
-        va, va2 = get_X_Y_from_0(slide, X, Y, options.res)
-        r["coord_res_{}".format(options.res)] = (va, va2)
-        r["coord_res_0"] = (X,Y) 
         if (x < options.marge) or (x > width - options.marge) or (y < options.marge) or (y > height - options.marge):
-            r["InBox"] = 0
+            return 0
         else:
-            r["InBox"] = 1
-        return r
-
+            return 1
     pdb.set_trace()
-    table = table.apply(Coordinates, axis=1)
+
+    table["coord_res_{}".format(options.res)] = table.apply(lambda r: Coordinates_res(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
+    table["coord_res_0"] = table.apply(lambda r: Coordinates_0(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
+    table["InBox"] = table.apply(lambda r: InBox(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
+
+
+
     table = table[table["InBox"]]
     table = table.drop("InBox", axis=1)
     ### killing doubles that overlap with two tiff
