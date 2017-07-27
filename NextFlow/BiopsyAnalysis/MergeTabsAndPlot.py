@@ -71,9 +71,8 @@ if __name__ == "__main__":
     table["coord_res_0"] = table.apply(lambda r: Coordinates_0(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
     table["InBox"] = table.apply(lambda r: InBox(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
 
-
-
-    table = table[table["InBox"]]
+    col_name = table.columns[:-4]
+    table.ix[table['InBox']==0, col_name] = [0] * len(table.columns[:-4])
     table = table.drop("InBox", axis=1)
     ### killing doubles that overlap with two tiff
     group = table.groupby('coord_res_0')['Parent'].unique()
@@ -106,6 +105,7 @@ if __name__ == "__main__":
     without_parent = table.drop('Parent', 1)
     without_parent = without_parent.drop('coord_res_{}'.format(options.res), 1)
     without_parent = without_parent.drop('coord_res_0', 1)
+    without_parent = without_parent.drop('distance_to_border', 1)
     without_parent = without_parent[(without_parent.T != 0).any()]
 
 
