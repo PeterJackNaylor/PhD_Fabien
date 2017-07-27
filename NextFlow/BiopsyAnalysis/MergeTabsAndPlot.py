@@ -53,9 +53,9 @@ if __name__ == "__main__":
         r["coord_res_{}".format(options.res)] = (va, va2)
         r["coord_res_0"] = (X,Y) 
         if (x < options.marge) or (x > width - options.marge) or (y < options.marge) or (y > height - options.marge):
-            r["InBox"] = False
+            r["InBox"] = 0
         else:
-            r["InBox"] = True
+            r["InBox"] = 1
         return r
 
     pdb.set_trace()
