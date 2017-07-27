@@ -21,8 +21,6 @@ from UsefulFunctions.UsefulOpenSlide import get_X_Y_from_0
 
 if __name__ == "__main__":
 
-    list_f_names.append("coord")
-
     parser = OptionParser()
     parser.add_option("--resolution", dest="res",type="int",
                       help="res")
