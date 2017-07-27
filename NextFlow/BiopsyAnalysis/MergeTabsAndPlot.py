@@ -14,7 +14,7 @@ from os.path import basename, join
 from WrittingTiff.Extractors import list_f_names
 import pdb
 from UsefulFunctions.RandomUtils import CheckOrCreate
-
+from UsefulFunctions.UsefulOpenSlide import get_X_Y_from_0
 
 ## removing lines with 0
 
@@ -28,22 +28,43 @@ if __name__ == "__main__":
                       help="res")
     parser.add_option("--slide", dest="slide",type="string",
                       help="slide name")
+    parser.add_option("--marge_cut_off", dest="marge", type="int",
+                       help="int for the value to cut off on the sides of the tiff")
     (options, args) = parser.parse_args()
     patient = basename(options.slide).split('.')[0]
     slide = op.open_slide(options.slide)
-    iter = glob.glob("*_tables_res_0.csv")
+    iter = glob.glob("*.npy")
     list_table = []
 
     for el in iter:
-        tmp_table = pd.read_csv(el, index_col=0, header=0)
-        tmp_table["Parent"] = el.split('_tables_res_0')[0]
+        tmp_table = pd.DataFrame(np.load(el), columns=list_f_names)
+        tmp_table["Parent"] = el.split('.')[0]
         list_table.append(tmp_table)
     table = pd.concat(list_table)
     table = table.reset_index(drop=True)
-    without_parent = table.drop('Parent', 1)
-    without_parent = without_parent.drop('coord', 1)
 
+
+
+    def Coordinates(r):
+        para = r["Parent"].split('_')
+        x, y = int(r["Centroid_x"]), int(r["Centroid_y"])
+        X, Y = int(x) + int(para[1]) - options.marge, int(y) + int(para[2]) - options.marge
+        va, va2 = get_X_Y_from_0(slide, X, Y, options.res)
+        r["coord_res_{}".format(options.res)] = (va, va2)
+        r["coord_res_0"] = (X,Y) 
+        return r
+
+
+    table = table.apply(Coordinates, axis=1)
+    pdb.set_trace()
+    without_parent = table.drop('Parent', 1)
+    without_parent = without_parent.drop('coord_res_{}'.format(options.res), 1)
+    without_parent = without_parent.drop('coord_res_0', 1)
     without_parent = without_parent[(without_parent.T != 0).any()]
+
+
+
+
     table2 = table.ix[without_parent.index] 
     table2.to_csv("Job_{}/".format(patient) + '{}_whole_slide.csv'.format(patient))
 
@@ -53,7 +74,7 @@ if __name__ == "__main__":
     CheckOrCreate(out)
     names = []
     for feat in list_f_names:
-        if feat not in ["Centroid_x", "Centroid_y", "coord"]:
+        if feat not in ["Centroid_x", "Centroid_y", "coord_res_{}".format(options.res), "coord_res_0"]:
             names.append(feat + "_rank")
             without_parent[feat + "_rank"] = without_parent[feat].rank(ascending=True)
             table2 = pd.concat([table2, without_parent[feat + "_rank"]], axis=1)
