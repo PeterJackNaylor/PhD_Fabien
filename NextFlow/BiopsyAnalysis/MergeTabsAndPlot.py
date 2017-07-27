@@ -46,14 +46,22 @@ if __name__ == "__main__":
     def Coordinates(r):
         para = r["Parent"].split('_')
         x, y = int(r["Centroid_x"]), int(r["Centroid_y"])
-        X, Y = int(x) + int(para[1]) - options.marge, int(y) + int(para[2]) - options.marge
+        X, Y = int(x) + int(para[1]), int(y) + int(para[2]) 
+        width = int(para[4])
+        height = int(para[3])
         va, va2 = get_X_Y_from_0(slide, X, Y, options.res)
         r["coord_res_{}".format(options.res)] = (va, va2)
         r["coord_res_0"] = (X,Y) 
+        if (x < options.marge) or (x > width - options.marge) or (y < options.marge) or (y > height - options.marge):
+            r["InBox"] = False
+        else:
+            r["InBox"] = True
         return r
 
-
+    pdb.set_trace()
     table = table.apply(Coordinates, axis=1)
+    table = table[table["InBox"]]
+    table = table.drop("InBox", axis=1)
     ### killing doubles that overlap with two tiff
     group = table.groupby('coord_res_0')['Parent'].unique()
     index_to_iter = group[group.apply(lambda x: len(x)>1)]
@@ -72,7 +80,7 @@ if __name__ == "__main__":
 
 
 
-    n_cols = len(df.columns[:-3])
+    n_cols = len(table.columns[:-3])
 
     for el in index_to_iter:
         df = table[table["coord_res_0"] == el]
