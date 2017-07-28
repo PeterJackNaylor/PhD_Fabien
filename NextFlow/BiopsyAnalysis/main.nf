@@ -166,13 +166,14 @@ process CollectMergeTables {
     file py from MergeTable
     val res from RES
     val inputt from params.in
+    val marge_wsi from WSI_MARGE
     output:
     file "Job_${key}/${key}_whole_slide.csv" into TAB_SLIDE
     file "Job_${key}/RankedTable/*.csv" into NEW_TAB mode flatten
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key} Job_${key}
-    python $py --resolution $res --slide ${inputt}${key}.tiff
+    python $py --resolution $res --slide ${inputt}${key}.tiff --marge_cut_off $marge_wsi
     """   
 
 }
