@@ -11,7 +11,7 @@ import numpy as np
 import math
 
 
-class DataReaderTest(ConvolutionalNeuralNetwork):
+class DataReader(ConvolutionalNeuralNetwork):
     def __init__(
         self,
         TF_RECORDS,
@@ -34,7 +34,8 @@ class DataReaderTest(ConvolutionalNeuralNetwork):
         N_FEATURES=16,
         N_EPOCH=1,
         N_THREADS=1,
-        MEAN_FILE=None):
+        MEAN_FILE=None,
+        DROPOUT=0.5):
 
         self.LEARNING_RATE = LEARNING_RATE
         self.K = K
@@ -52,6 +53,7 @@ class DataReaderTest(ConvolutionalNeuralNetwork):
         self.SEED = SEED
         self.N_EPOCH = N_EPOCH
         self.N_THREADS = N_THREADS
+        self.DROPOUT = DROPOUT
         if MEAN_FILE is not None:
             MEAN_ARRAY = tf.constant(np.load(MEAN_FILE), dtype=tf.float32) # (3)
             self.MEAN_ARRAY = tf.reshape(MEAN_ARRAY, [1, 1, 3])
@@ -138,6 +140,7 @@ class DataReaderTest(ConvolutionalNeuralNetwork):
             summary.value.add(tag="TestMan/Recall", simple_value=recall)
             summary.value.add(tag="TestMan/Precision", simple_value=precision)
             summary.value.add(tag="TestMan/Performance", simple_value=meanacc)
+            self.summary_test_writer.add_summary(summary, step) 
             self.summary_test_writer.add_summary(s, step) 
             print('  Validation loss: %.1f' % l)
             print('       Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
@@ -192,7 +195,6 @@ class DataReaderTest(ConvolutionalNeuralNetwork):
 
 if __name__ == '__main__':
 
-    CREATE_TF = False
     TRAIN_TF = True
     CUDA_NODE = 0
 
@@ -225,7 +227,7 @@ if __name__ == '__main__':
 
     DG = DataGenRandomT(PATH, split=SPLIT, crop=CROP, size=SIZE,
                         transforms=TRANSFORM_LIST, UNet=UNET,
-                        mean_file=MEAN_FILE, seed_=SEED)
+                        mean_file=None, seed_=SEED)
     DG.SetPatient(TEST_PATIENT)
 
     DG_TEST = DataGenRandomT(PATH, split="test", crop=CROP, size=SIZE,
@@ -234,12 +236,8 @@ if __name__ == '__main__':
     DG_TEST.SetPatient(TEST_PATIENT)
     N_ITER_MAX = N_EPOCH * DG.length // BATCH_SIZE
 
-    if CREATE_TF:
-        CreateTFRecord(OUTNAME, PATH, SPLIT, CROP, SIZE,
-                       TRANSFORM_LIST, UNET, None, 
-                       SEED, TEST_PATIENT, N_EPOCH)
     if TRAIN_TF:
-        model = DataReaderTest(OUTNAME,LEARNING_RATE=LEARNING_RATE,
+        model = DataReader(OUTNAME,LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=SIZE,
                                        NUM_LABELS=2,

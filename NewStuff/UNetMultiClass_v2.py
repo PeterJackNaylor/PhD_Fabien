@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ### for objects
-from UNetBatchNorm import UNetBatchNorm
+from UNetBatchNorm_v2 import UNetBatchNorm
 import tensorflow as tf
 import math
 import numpy as np
@@ -129,57 +129,62 @@ class UNetMultiClass(UNetBatchNorm):
         print('Computational graph initialised')
 
     def Validation(self, DG_TEST, step, lb_name):
-        n_test = DG_TEST.length
-        n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
+        if DG_TEST is None:
+            print "no validation"
+        else:
+                
+            n_test = DG_TEST.length
+            n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
 
 
-        l, acc = 0., 0.
-        cm = np.zeros((self.NUM_LABELS, self.NUM_LABELS))
+            l, acc = 0., 0.
+            cm = np.zeros((self.NUM_LABELS, self.NUM_LABELS))
 
 
-        for i in range(n_batch):
-            Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
-            feed_dict = {self.input_node: Xval,
-                         self.train_labels_node: Yval,
-                         self.is_training: False}
-            l_tmp, acc_tmp, cm_tmp = self.sess.run([self.loss, self.accuracy, self.cm], feed_dict=feed_dict)
-            l += l_tmp
-            acc += acc_tmp
-            cm += cm_tmp
+            for i in range(n_batch):
+                Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
+                feed_dict = {self.input_node: Xval,
+                             self.train_labels_node: Yval,
+                             self.is_training: False}
+                l_tmp, acc_tmp, cm_tmp, s = self.sess.run([self.loss, self.accuracy, self.cm, self.merged_summary], feed_dict=feed_dict)
+                l += l_tmp
+                acc += acc_tmp
+                cm += cm_tmp
 
-        l, acc = np.array([l, acc]) / n_batch
+            l, acc = np.array([l, acc]) / n_batch
 
-        summary = tf.Summary()
-        summary.value.add(tag="Test/Accuracy", simple_value=acc)
-        summary.value.add(tag="Test/Loss", simple_value=l)
-        
-        for i in range(self.NUM_LABELS):
-            name = "Label_{}".format(lb_name[i])
-            TP, TN, FP, FN = GetCMInfo(cm, i, self.NUM_LABELS)
-            precision =  float(TP) / (TP + FP)
-            recall = float(TP) / (TP + FN)
-            num = precision * recall
-            dem = precision + recall
-            F1 = 2 * (num / dem)
-            Nprecision = float(TN) / (TN + FN)
-            MeanAcc = (precision + Nprecision) / 2
-            summary.value.add(tag="Test/" + name + "_F1", simple_value=F1)
-            summary.value.add(tag="Test/" + name + "_Recall", simple_value=recall)
-            summary.value.add(tag="Test/" + name + "_Precision", simple_value=precision)
-            summary.value.add(tag="Test/" + name + "_Performance", simple_value=MeanAcc)
+            summary = tf.Summary()
+            summary.value.add(tag="Test/Accuracy", simple_value=acc)
+            summary.value.add(tag="Test/Loss", simple_value=l)
+            
+            for i in range(self.NUM_LABELS):
+                name = "Label_{}".format(lb_name[i])
+                TP, TN, FP, FN = GetCMInfo(cm, i, self.NUM_LABELS)
+                precision =  float(TP) / (TP + FP)
+                recall = float(TP) / (TP + FN)
+                num = precision * recall
+                dem = precision + recall
+                F1 = 2 * (num / dem)
+                Nprecision = float(TN) / (TN + FN)
+                MeanAcc = (precision + Nprecision) / 2
+                summary.value.add(tag="Test/" + name + "_F1", simple_value=F1)
+                summary.value.add(tag="Test/" + name + "_Recall", simple_value=recall)
+                summary.value.add(tag="Test/" + name + "_Precision", simple_value=precision)
+                summary.value.add(tag="Test/" + name + "_Performance", simple_value=MeanAcc)
 
 
-        self.summary_test_writer.add_summary(summary, step)
+            self.summary_test_writer.add_summary(summary, step)
+            self.summary_test_writer.add_summary(s, step)
 
-        print('  Validation loss: %.1f' % l)
-        print('       Accuracy: %1.f%% \n   ' % (acc * 100))
-        print('  Confusion matrix: \n')
-        print_cm(cm, lb_name)
-        confusion = tf.Variable(cm, name='confusion' )
-        confusion_image = tf.reshape( tf.cast( confusion, tf.float32),
-                                  [1, self.NUM_LABELS, self.NUM_LABELS, 1])
-        tf.summary.image('confusion', confusion_image)
-        self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
+            print('  Validation loss: %.1f' % l)
+            print('       Accuracy: %1.f%% \n   ' % (acc * 100))
+            print('  Confusion matrix: \n')
+            print_cm(cm, lb_name)
+            confusion = tf.Variable(cm, name='confusion' )
+            confusion_image = tf.reshape( tf.cast( confusion, tf.float32),
+                                      [1, self.NUM_LABELS, self.NUM_LABELS, 1])
+            tf.summary.image('confusion', confusion_image)
+            self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
 
 
 
@@ -197,8 +202,8 @@ class UNetMultiClass(UNetBatchNorm):
 
 
 
-    def train(self, DGTrain, DGTest, lb_name=MULTICLASS_NAME, saver=True):
-        epoch = DGTrain.length
+    def train(self, DGTest=None, lb_name=MULTICLASS_NAME, saver=True):
+        epoch = self.STEPS * self.BATCH_SIZE // self.N_EPOCH
 
         self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
 
@@ -208,26 +213,25 @@ class UNetMultiClass(UNetBatchNorm):
         self.optimization(trainable_var)
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
 
-        tf.global_variables_initializer().run()
-
         self.summary_test_writer = tf.summary.FileWriter(self.LOG + '/test',
                                             graph=self.sess.graph)
 
         self.summary_writer = tf.summary.FileWriter(self.LOG + '/train', graph=self.sess.graph)
-        merged_summary = tf.summary.merge_all()
+        self.merged_summary = tf.summary.merge_all()
         steps = self.STEPS
 
-        for step in range(steps):
-            batch_data, batch_labels = DGTrain.Batch(0, self.BATCH_SIZE)
-            feed_dict = {self.input_node: batch_data,
-                         self.train_labels_node: batch_labels,
-                         self.is_training: True}
+        init_op = tf.group(tf.global_variables_initializer(),
+                   tf.local_variables_initializer())
+        self.sess.run(init_op)
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(coord=coord)
 
+        for step in range(steps):
             # self.optimizer is replaced by self.training_op for the exponential moving decay
-            _, l, lr, predictions, s = self.sess.run(
+            _, l, lr, predictions, batch_labels, s = self.sess.run(
                         [self.training_op, self.loss, self.learning_rate,
-                         self.train_prediction, merged_summary],
-                        feed_dict=feed_dict)
+                         self.train_prediction, self.train_labels_node,
+                         self.merged_summary])
 
             if step % self.N_PRINT == 0:
                 i = datetime.now()
@@ -240,38 +244,67 @@ class UNetMultiClass(UNetBatchNorm):
                       (l, acc))
                 print_cm(cm, lb_name)
                 self.Validation(DGTest, step,  lb_name)
+        coord.request_stop()
+        coord.join(threads)
 
 
 if __name__== "__main__":
 
     parser = OptionParser()
+
+    parser.add_option("--tf_record", dest="TFRecord", type="string",
+                      help="Where to find the TFrecord file")
+
     parser.add_option("--path", dest="path", type="string",
                       help="Where to collect the patches")
+
     parser.add_option("--log", dest="log",
                       help="log dir")
+
     parser.add_option("--learning_rate", dest="lr", type="float",
                       help="learning_rate")
+
     parser.add_option("--batch_size", dest="bs", type="int",
                       help="batch size")
+
     parser.add_option("--epoch", dest="epoch", type="int",
                       help="number of epochs")
+
     parser.add_option("--n_features", dest="n_features", type="int",
                       help="number of channels on first layers")
+
     parser.add_option("--weight_decay", dest="weight_decay", type="float",
                       help="weight decay value")
+
+    parser.add_option("--dropout", dest="dropout", type="float",
+                      default=0.5, help="dropout value to apply to the FC layers.")
+
+    parser.add_option("--mean_file", dest="mean_file", type="str",
+                      help="where to find the mean file to substract to the original image.")
+
+    parser.add_option('--n_threads', dest="THREADS", type=int, default=100,
+                      help="number of threads to use for the preprocessing.")
+
     (options, args) = parser.parse_args()
 
+    TFRecord = options.TFRecord
     N_FEATURES = options.n_features
     WEIGHT_DECAY = options.weight_decay
+    DROPOUT = options.dropout
+    MEAN_FILE = options.mean_file 
+    N_THREADS = options.THREADS
+
     LEARNING_RATE = options.lr
     BATCH_SIZE = options.bs
     LRSTEP = "10epoch"
+
     SUMMARY = True
     S = SUMMARY
     N_EPOCH = options.epoch
     PATH = options.path
     HEIGHT = 212
     WIDTH = 212
+    SIZE = (HEIGHT, WIDTH)
     N_TRAIN_SAVE = 2
     CROP = 4
     #pdb.set_trace()
@@ -287,7 +320,7 @@ if __name__== "__main__":
 
     DG_TRAIN = DataGenMulti(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True, num="02", 
-                       mean_file="mean_file.npy")
+                       mean_file=None)
 
     test_patient = ["02", "06"]
     DG_TRAIN.SetPatient(test_patient)
@@ -297,9 +330,9 @@ if __name__== "__main__":
                        mean_file="mean_file.npy")
     DG_TEST.SetPatient(test_patient)
 
-    model = UNetMultiClass(LEARNING_RATE=LEARNING_RATE,
+    model = UNetMultiClass(TFRecord,   LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
-                                       IMAGE_SIZE=HEIGHT,
+                                       IMAGE_SIZE=SIZE,
                                        NUM_LABELS=len(MULTICLASS_NAME),
                                        NUM_CHANNELS=3,
                                        STEPS=N_ITER_MAX,
@@ -308,7 +341,11 @@ if __name__== "__main__":
                                        LOG=SAVE_DIR,
                                        SEED=42,
                                        WEIGHT_DECAY=WEIGHT_DECAY,
-                                       N_FEATURES=N_FEATURES)
+                                       N_FEATURES=N_FEATURES,
+                                       N_EPOCH=N_EPOCH,
+                                       N_THREADS=N_THREADS,
+                                       MEAN_FILE=MEAN_FILE,
+                                       DROPOUT=DROPOUT)
 
-    model.train(DG_TRAIN, DG_TEST, lb_name=MULTICLASS_NAME)
+    model.train(DG_TEST, lb_name=MULTICLASS_NAME)
     lb = ["Background", "Nuclei", "NucleiBorder"]

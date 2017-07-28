@@ -194,7 +194,7 @@ def options_parser():
     parser.add_option('--size', dest="size", type="int",
                       help='first dimension for size')
     parser.add_option('--seed', dest="seed", type="int", default=42,
-                      help='Seed to use')  
+                      help='Seed to use, still not really implemented')  
     parser.add_option('--epoch', dest="epoch", type ="int",
                        help="Number of epochs to perform")  
     (options, args) = parser.parse_args()

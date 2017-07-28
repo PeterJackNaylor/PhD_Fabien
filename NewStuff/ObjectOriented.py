@@ -352,6 +352,7 @@ class ConvolutionalNeuralNetwork:
         summary.value.add(tag="Test/Recall", simple_value=recall)
         summary.value.add(tag="Test/Precision", simple_value=precision)
         summary.value.add(tag="Test/Performance", simple_value=meanacc)
+        self.summary_test_writer.add_summary(summary, step) 
 
         print('  Validation loss: %.1f' % l)
         print('       Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
