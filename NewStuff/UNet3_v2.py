@@ -95,7 +95,7 @@ if __name__== "__main__":
 
     model = UNetMultiClass(TFRecord,   LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
-                                       IMAGE_SIZE=HEIGHT,
+                                       IMAGE_SIZE=SIZE,
                                        NUM_LABELS=3,
                                        NUM_CHANNELS=3,
                                        STEPS=N_ITER_MAX,
