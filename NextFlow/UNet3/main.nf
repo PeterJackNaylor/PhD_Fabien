@@ -16,7 +16,6 @@ WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 32
 
 params.epoch = 1
-EPOCHS = val(1)
 
 
 
@@ -25,7 +24,7 @@ process CreateTFRecords {
 
 	input:
 	file py from TFRECORDS
-	val epoch from EPOCHS
+	val epoch from params.epoch
     file path from IMAGE_FOLD
 
     output:
@@ -69,7 +68,7 @@ process Training {
     each wd from WEIGHT_DECAY    
     file _ from MeanFile
     file __ from DATAQUEUE
-    file epoch from EPOCHS
+    file epoch from params.epoch
     output:
     file "${feat}_${wd}_${lr}" into RESULTS
 
