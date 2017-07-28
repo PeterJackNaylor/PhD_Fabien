@@ -68,7 +68,7 @@ process Training {
     each wd from WEIGHT_DECAY    
     file _ from MeanFile
     file __ from DATAQUEUE
-    file epoch from params.epoch
+    val epoch from params.epoch
     output:
     file "${feat}_${wd}_${lr}" into RESULTS
 
