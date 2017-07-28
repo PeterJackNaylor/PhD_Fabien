@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-
+// nextflow main.nf -profile GPU_thal --epoch 1 --image_dir /share/data40T_v2/Peter/Data --python_dir /share/data40T_v2/Peter/PythonScripts/PhD_Fabien --home /share/data40T_v2/Peter -resume
 params.image_dir = '/data/users/pnaylor/Bureau'
 params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
 params.home = "/data/users/pnaylor"
@@ -15,7 +15,8 @@ ARCH_FEATURES = [2, 4, 8, 16, 32]
 WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 32
 
-EPOCHS = 1
+params.epoch = 1
+EPOCHS = val(1)
 
 
 
