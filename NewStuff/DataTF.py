@@ -10,113 +10,6 @@ import skimage.io as io
 import numpy as np
 import math
 
-def _bytes_feature(value):
-    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
-
-def _int64_feature(value):
-    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
-
-
-def CreateTFRecord(OUTNAME, PATH, SPLIT, CROP, SIZE,
-                   TRANSFORM_LIST, UNET, MEAN_FILE, 
-                   SEED, TEST_PATIENT, N_EPOCH):
-    '''Not for UNet'''
-
-    tfrecords_filename = OUTNAME
-    writer = tf.python_io.TFRecordWriter(tfrecords_filename)
-
-    
-
-    DG = DataGenRandomT(PATH, split=SPLIT, crop=CROP, size=SIZE,
-                        transforms=TRANSFORM_LIST, UNet=UNET,
-                        mean_file=MEAN_FILE, seed_=SEED)
-    DG.SetPatient(TEST_PATIENT)
-    N_ITER_MAX = N_EPOCH * DG.length
-
-
-    original_images = []
-    key = DG.RandomKey(False)
-    print N_ITER_MAX
-    for _ in range(N_ITER_MAX):
-        key = DG.NextKeyRandList(0)
-        img, annotation = DG[key]
-#        img = img.astype(np.uint8)
-        annotation = annotation.astype(np.uint8)
-        height = img.shape[0]
-        width = img.shape[1]
-    
-        original_images.append((img, annotation))
-        
-        img_raw = img.tostring()
-        annotation_raw = annotation.tostring()
-        
-        example = tf.train.Example(features=tf.train.Features(feature={
-            'height': _int64_feature(height),
-            'width': _int64_feature(width),
-            'image_raw': _bytes_feature(img_raw),
-            'mask_raw': _bytes_feature(annotation_raw)}))
-        
-        writer.write(example.SerializeToString())
-
-
-    writer.close()
-
-def read_and_decode(filename_queue, IMAGE_HEIGHT, IMAGE_WIDTH,
-                    BATCH_SIZE, N_THREADS):
-    
-    reader = tf.TFRecordReader()
-
-    _, serialized_example = reader.read(filename_queue)
-
-    features = tf.parse_single_example(
-      serialized_example,
-      # Defaults are not specified since both keys are required.
-      features={
-        'height': tf.FixedLenFeature([], tf.int64),
-        'width': tf.FixedLenFeature([], tf.int64),
-        'image_raw': tf.FixedLenFeature([], tf.string),
-        'mask_raw': tf.FixedLenFeature([], tf.string)
-        })
-
-    # Convert from a scalar string tensor (whose single string has
-    # length mnist.IMAGE_PIXELS) to a uint8 tensor with shape
-    # [mnist.IMAGE_PIXELS].
-    image = tf.decode_raw(features['image_raw'], tf.uint8)
-    annotation = tf.decode_raw(features['mask_raw'], tf.uint8)
-    
-    height = tf.cast(features['height'], tf.int32)
-    width = tf.cast(features['width'], tf.int32)
-    
-    image_shape = tf.stack([height, width, 3])
-    annotation_shape = tf.stack([height, width, 1])
-    
-    image = tf.reshape(image, image_shape)
-    annotation = tf.reshape(annotation, annotation_shape)
-    
-    image_size_const = tf.constant((IMAGE_HEIGHT, IMAGE_WIDTH, 3), dtype=tf.int32)
-    annotation_size_const = tf.constant((IMAGE_HEIGHT, IMAGE_WIDTH, 1), dtype=tf.int32)
-    
-    # Random transformations can be put here: right before you crop images
-    # to predefined size. To get more information look at the stackoverflow
-    # question linked above.
-    image_f = tf.cast(image, tf.float32)
-    annotation_f = tf.cast(annotation, tf.float32)
-    
-    resized_image = tf.image.resize_image_with_crop_or_pad(image=image_f,
-                                           target_height=IMAGE_HEIGHT,
-                                           target_width=IMAGE_WIDTH)
-    
-    resized_annotation = tf.image.resize_image_with_crop_or_pad(image=annotation_f,
-                                           target_height=IMAGE_HEIGHT,
-                                           target_width=IMAGE_WIDTH)
-    images, annotations = tf.train.shuffle_batch( [resized_image, resized_annotation],
-                                                 batch_size=BATCH_SIZE,
-                                                 capacity=10 + 3 * BATCH_SIZE,
-                                                 num_threads=N_THREADS,
-                                                 min_after_dequeue=10)
-    
-    return images, annotations
-
 
 class DataReaderTest(ConvolutionalNeuralNetwork):
     def __init__(
@@ -238,7 +131,6 @@ class DataReaderTest(ConvolutionalNeuralNetwork):
 
             l, acc, F1, recall, precision, meanacc = np.array([l, acc, F1, recall, precision, meanacc]) / n_batch
 
-
             summary = tf.Summary()
             summary.value.add(tag="TestMan/Accuracy", simple_value=acc)
             summary.value.add(tag="TestMan/Loss", simple_value=l)
@@ -347,7 +239,7 @@ if __name__ == '__main__':
                        TRANSFORM_LIST, UNET, None, 
                        SEED, TEST_PATIENT, N_EPOCH)
     if TRAIN_TF:
-        model = DataReaderTest(OUTNAME,    LEARNING_RATE=LEARNING_RATE,
+        model = DataReaderTest(OUTNAME,LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=SIZE,
                                        NUM_LABELS=2,

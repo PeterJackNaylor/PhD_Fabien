@@ -99,7 +99,7 @@ class UNetMultiClass(UNetBatchNorm):
             with tf.name_scope('ClassPrediction'):
                 flat_LabelInt = tf.reshape(LabelInt, [-1])
                 flat_predictions = tf.reshape(self.predictions, [-1])
-                self.cm = tf.confusion_matrix(flat_LabelInt, flat_predictions)
+                self.cm = tf.confusion_matrix(flat_LabelInt, flat_predictions, self.NUM_LABELS)
                 flatten_confusion_matrix = tf.reshape(self.cm, [-1])
                 total = tf.reduce_sum(self.cm)
                 for i in range(self.NUM_LABELS):
