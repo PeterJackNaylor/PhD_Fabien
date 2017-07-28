@@ -1,4 +1,4 @@
-
+import pdb
 import tensorflow as tf
 from DataGenRandomT import DataGenRandomT
 from optparse import OptionParser
@@ -189,18 +189,20 @@ def options_parser():
                       help="Where to find the annotations")
     parser.add_option('--crop', dest="crop", type="int",
                       help="Number of crops to divide one image in")
-    parser.add_option('--UNet', dest="UNet", type="bool",
-                      help="If image and annotations will have different shapes")
+    # parser.add_option('--UNet', dest="UNet", type="bool",
+    #                   help="If image and annotations will have different shapes")
     parser.add_option('--size', dest="size", type="int",
                       help='first dimension for size')
     parser.add_option('--seed', dest="seed", type="int", default=42,
                       help='Seed to use, still not really implemented')  
     parser.add_option('--epoch', dest="epoch", type ="int",
                        help="Number of epochs to perform")  
+    parser.add_option('--UNet', dest='UNet', action='store_true')
+    parser.add_option('--no-UNet', dest='UNet', action='store_false')
+    parser.set_defaults(feature=True)
+
     (options, args) = parser.parse_args()
-
     options.SIZE = (options.size, options.size)
-
     return options
 
 if __name__ == '__main__':
