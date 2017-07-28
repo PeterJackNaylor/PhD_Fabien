@@ -134,7 +134,7 @@ if __name__ == "__main__":
     CheckOrCreate(options.out)
     x, y = bin.shape
     table = pd.read_csv(options.table, header=0, index_col=0, sep=';')
-    table = table.drop('coord', 1)
+    table = table.drop('coord_res_0', 1)
     table = table.drop('Parent', 1)
     table = table[table.notnull().all(axis=1)]
     if table.shape[0] == 0:

@@ -12,7 +12,6 @@ import pandas as pd
 from scipy.misc import imsave
 from os.path import basename, join
 from WrittingTiff.Extractors import list_f_names
-import pdb
 from UsefulFunctions.RandomUtils import CheckOrCreate
 from UsefulFunctions.UsefulOpenSlide import get_X_Y_from_0
 
@@ -65,7 +64,6 @@ if __name__ == "__main__":
             return 0
         else:
             return 1
-    pdb.set_trace()
 
     table["coord_res_{}".format(options.res)] = table.apply(lambda r: Coordinates_res(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
     table["coord_res_0"] = table.apply(lambda r: Coordinates_0(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
@@ -104,7 +102,6 @@ if __name__ == "__main__":
     without_parent = table.drop('Parent', 1)
     without_parent = without_parent.drop('coord_res_{}'.format(options.res), 1)
     without_parent = without_parent.drop('coord_res_0', 1)
-    without_parent = without_parent.drop('distance_to_border', 1)
     without_parent = without_parent[(without_parent.T != 0).any()]
 
 
@@ -130,11 +127,11 @@ if __name__ == "__main__":
             result = np.zeros(shape=(x_S, y_S))
             avg = np.zeros(shape=(x_S, y_S))
             def f(val,coord):
-                indX, indY = coord[1:-1].split(", ")
+                indX, indY = coord
                 result[int(indX), int(indY)] += val
                 avg[int(indX), int(indY)] += 1
 
-            table2.apply(lambda row: f(row[feat], row["coord"]), axis=1)
+            table2.apply(lambda row: f(row[feat], row["coord_res_{}".format(options.res)]), axis=1)
 
             avg[avg == 0] += 1
             result = result / avg 
@@ -160,6 +157,7 @@ if __name__ == "__main__":
     CheckOrCreate(output_new_tab)
     ranks = table2[names]
     result = pd.concat([table, ranks], axis=1, join_axes=[table.index])
+    result = result.drop("coord_res_{}".format(options.res), axis=1)
     for group_name, df in result.groupby(['Parent']):
-        with open(join(output_new_tab, group_name + ".csv"), 'a') as f:
+        with open(join(output_new_tab, group_name + ".csv"), 'w+') as f:
             df.to_csv(f, sep=';')

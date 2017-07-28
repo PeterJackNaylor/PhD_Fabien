@@ -291,7 +291,7 @@ process StichingFeatTiff {
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key.split('___')[1]} Job_${key.split('___')[1]}
-    python $py $margin ${inputt}${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff"""
+    python $py $marge_wsi ${inputt}${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff"""
 
 
 }
