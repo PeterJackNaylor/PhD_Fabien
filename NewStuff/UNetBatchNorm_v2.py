@@ -25,7 +25,7 @@ class UNetBatchNorm(UNet):
 
         #### had to add is_training, self.reuse
 
-        self.is_training = tf.placeholder_with_default([True], shape=[1])
+        self.is_training = tf.placeholder_with_default(True, shape=[])
         ####
 
         self.input_node = self.input_node_f()
