@@ -70,7 +70,7 @@ if __name__== "__main__":
     HEIGHT = 212
     WIDTH = 212
     SIZE = (HEIGHT, WIDTH)
-    N_TRAIN_SAVE = 2
+    N_TRAIN_SAVE = 100
     CROP = 4
     #pdb.set_trace()
     if int(str(LEARNING_RATE)[-1]) > 7:

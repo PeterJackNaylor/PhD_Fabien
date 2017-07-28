@@ -1,6 +1,7 @@
 import pdb
 import tensorflow as tf
 from DataGenRandomT import DataGenRandomT
+from DataGenClass import DataGen3, DataGenMulti
 from optparse import OptionParser
 from UsefulFunctions.ImageTransf import ListTransform
 import numpy as np
@@ -14,17 +15,23 @@ def _int64_feature(value):
 
 def CreateTFRecord(OUTNAME, PATH, CROP, SIZE,
                    TRANSFORM_LIST, UNET, MEAN_FILE, 
-                   SEED, TEST_PATIENT, N_EPOCH):
+                   SEED, TEST_PATIENT, N_EPOCH, TYPE = "Normal"):
     '''Not for UNet'''
 
     tfrecords_filename = OUTNAME
     writer = tf.python_io.TFRecordWriter(tfrecords_filename)
 
     
-
-    DG = DataGenRandomT(PATH, split="train", crop=CROP, size=SIZE,
+    if TYPE == "Normal":
+        DG = DataGenRandomT(PATH, split="train", crop=CROP, size=SIZE,
                         transforms=TRANSFORM_LIST, UNet=UNET,
                         mean_file=MEAN_FILE, seed_=SEED)
+
+    elif TYPE == "3class":
+        DG = DataGen3(PATH, split="train", crop = CROP, size=SIZE, 
+                       transforms=TRANSFORM_LIST, UNet=UNET, 
+                       mean_file=MEAN_FILE, seed_=SEED)
+
     DG.SetPatient(TEST_PATIENT)
     N_ITER_MAX = N_EPOCH * DG.length
 
@@ -197,6 +204,8 @@ def options_parser():
                       help='Seed to use, still not really implemented')  
     parser.add_option('--epoch', dest="epoch", type ="int",
                        help="Number of epochs to perform")  
+    parser.add_option('--type', dest="type", type ="str",
+                       help="Type for the datagen")  
     parser.add_option('--UNet', dest='UNet', action='store_true')
     parser.add_option('--no-UNet', dest='UNet', action='store_false')
     parser.set_defaults(feature=True)
@@ -220,6 +229,7 @@ if __name__ == '__main__':
     SEED = options.seed
     TEST_PATIENT = ["141549", "162438"]
     N_EPOCH = options.epoch
+    TYPE = options.type
     
 
     CreateTFRecord(OUTNAME, PATH, CROP, SIZE,
