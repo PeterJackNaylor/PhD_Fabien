@@ -49,13 +49,6 @@ if __name__ == "__main__":
         return X, Y
 
 
-    def Coordinates_res(x, y, parent):
-        para = parent.split('_')
-        X, Y = int(x) + int(para[1]), int(y) + int(para[2]) 
-        va, va2 = get_X_Y_from_0(slide, X, Y, options.res)
-        return (va, va2)
-
-
     def InBox(x, y, parent):
         para = parent.split('_')
         width = int(para[4])
@@ -65,7 +58,6 @@ if __name__ == "__main__":
         else:
             return 1
 
-    table["coord_res_{}".format(options.res)] = table.apply(lambda r: Coordinates_res(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
     table["coord_res_0"] = table.apply(lambda r: Coordinates_0(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
     table["InBox"] = table.apply(lambda r: InBox(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
 
@@ -100,7 +92,6 @@ if __name__ == "__main__":
         for other_el in other_index:
             table.iloc[other_el][table.columns[:-3]] = [0.] * n_cols
     without_parent = table.drop('Parent', 1)
-    without_parent = without_parent.drop('coord_res_{}'.format(options.res), 1)
     without_parent = without_parent.drop('coord_res_0', 1)
     without_parent = without_parent[(without_parent.T != 0).any()]
 
@@ -111,8 +102,8 @@ if __name__ == "__main__":
     table2 = table.ix[without_parent.index] 
     table2.to_csv("Job_{}/".format(patient) + '{}_whole_slide.csv'.format(patient))
 
-    image = GetWholeImage(slide, level = options.res)
-    x_S, y_S = image.size
+    
+
     out = "Job_{}/feature_map/".format(patient)
     CheckOrCreate(out)
     names = []
@@ -126,7 +117,7 @@ if __name__ == "__main__":
 
             result = np.zeros(shape=(x_S, y_S))
             avg = np.zeros(shape=(x_S, y_S))
-            def f(val,coord):
+            def f(val, coord):
                 indX, indY = coord
                 result[int(indX), int(indY)] += val
                 avg[int(indX), int(indY)] += 1
