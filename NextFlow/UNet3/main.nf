@@ -6,12 +6,12 @@ params.home = "/data/users/pnaylor"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
 PY = file(params.python_dir + '/NewStuff/UNet3_v2.py')
-TENSORBOARD = file(params.image_dir + '/new_queue_3')
+TENSORBOARD = file(params.image_dir + '/UNet3')
 MEANPY = file(params.python_dir + '/NewStuff/MeanCalculation.py')
 TFRECORDS = file(params.python_dir + '/NewStuff/CreateTFRecords.py')
 
 LEARNING_RATE = [0.01, 0.001, 0.0001]
-ARCH_FEATURES = [2, 4, 8, 16, 32]
+ARCH_FEATURES = [2, 4, 8, 16]
 WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 32
 
@@ -20,18 +20,19 @@ params.epoch = 1
 
 
 process CreateTFRecords {
-	clusterOptions = "-S /bin/bash"
-
-	input:
-	file py from TFRECORDS
-	val epoch from params.epoch
+    clusterOptions = "-S /bin/bash -l h_vmem=60G"
+    queue = "all.q"
+    executor = 'sge'
+    memory = '60G'
+    input:
+    file py from TFRECORDS
+    val epoch from params.epoch
     file path from IMAGE_FOLD
 
     output:
     file "UNetRecords.tfrecords" into DATAQUEUE
-
-
     """
+    PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
     /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output UNetRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type 3class
     """
 }

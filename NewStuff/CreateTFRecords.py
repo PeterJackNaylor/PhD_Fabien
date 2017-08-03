@@ -234,4 +234,5 @@ if __name__ == '__main__':
 
     CreateTFRecord(OUTNAME, PATH, CROP, SIZE,
                    TRANSFORM_LIST, UNET, None, 
-                   SEED, TEST_PATIENT, N_EPOCH)
+                   SEED, TEST_PATIENT, N_EPOCH,
+                   TYPE=TYPE)

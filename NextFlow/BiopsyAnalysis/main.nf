@@ -180,7 +180,7 @@ process CollectMergeTables {
 
 /* END: Creating feature map visualisation */
 
-DistributionsPlot = file("DistributionsPlot.py")
+DistributionPlot = file("DistributionPlot.py")
 
 process FeatureDistribution {
     clusterOptions = "-S /bin/bash"
@@ -190,9 +190,9 @@ process FeatureDistribution {
 
     input:
     file wholeTab from TAB_SLIDE
-    file py from DistributionsPlot
+    file py from DistributionPlot
     output:
-    file "Job_${wholeTab.getBaseName().split('_')[0]}/Distribution/*.png" into histogramme
+    file "Job_${wholeTab.getBaseName().split('_')[0]}/Distribution/*.svg" into histogramme
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${wholeTab.name.split("_")[0]} Job_${wholeTab.name.split("_")[0]}
     python $py --table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/Distribution
