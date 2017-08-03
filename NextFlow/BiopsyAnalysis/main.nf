@@ -121,7 +121,7 @@ ChangingRes = file("ChangingRes.py")
 
 /* inputs */
 TIFF_FOLDER = file(params.in)
-RES = 7
+RES = 5
 /*process MergeTablesBySlides {
     executor 'sge'
     profile = 'cluster'
@@ -177,7 +177,31 @@ process CollectMergeTables {
     """   
 
 }
+
 /* END: Creating feature map visualisation */
+
+DistributionsPlot = file("DistributionsPlot.py")
+
+process FeatureDistribution {
+    clusterOptions = "-S /bin/bash"
+    publishDir PublishPatient, overwrite: false
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    file wholeTab from TAB_SLIDE
+    file py from DistributionsPlot
+    output:
+    file "Job_${wholeTab.getBaseName().split('_')[0]}/Distribution/*.png" into histogramme
+    """
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${wholeTab.name.split("_")[0]} Job_${wholeTab.name.split("_")[0]}
+    python $py --table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/Distribution
+    """
+
+
+}
+
+
 
 /* BEGIN: Create colors maps at the WSI level */
 

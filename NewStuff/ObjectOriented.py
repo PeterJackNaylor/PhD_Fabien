@@ -14,7 +14,7 @@ class ConvolutionalNeuralNetwork:
         self,
         LEARNING_RATE=0.01,
         K=0.96,
-        BATCH_SIZE=10,
+        BATCH_SIZE=1,
         IMAGE_SIZE=28,
         NUM_LABELS=10,
         NUM_CHANNELS=1,
@@ -210,11 +210,11 @@ class ConvolutionalNeuralNetwork:
     def init_training_graph(self):
 
         with tf.name_scope('Evaluation'):
-            logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
-            self.predictions = tf.argmax(logits, axis=3)
+            self.logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
+            self.predictions = tf.argmax(self.logits, axis=3)
             
             with tf.name_scope('Loss'):
-                self.loss = tf.reduce_mean((tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,
+                self.loss = tf.reduce_mean((tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits,
                                                                           labels=tf.squeeze(tf.cast(self.train_labels_node, tf.int32), squeeze_dims=[3]),
                                                                           name="entropy")))
                 tf.summary.scalar("entropy", self.loss)
@@ -257,9 +257,9 @@ class ConvolutionalNeuralNetwork:
                 tf.summary.scalar('Performance', self.MeanAcc)
             #self.batch = tf.Variable(0, name = "batch_iterator")
 
-            self.train_prediction = tf.nn.softmax(logits)
+            self.train_prediction = tf.nn.softmax(self.logits)
 
-            self.test_prediction = tf.nn.softmax(logits)
+            self.test_prediction = tf.nn.softmax(self.logits)
 
         tf.global_variables_initializer().run()
 

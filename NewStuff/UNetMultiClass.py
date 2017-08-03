@@ -80,11 +80,11 @@ class UNetMultiClass(UNetBatchNorm):
 
     def init_training_graph(self):
         with tf.name_scope('Evaluation'):
-            logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
-            self.predictions = tf.argmax(logits, axis=3)
+            self.logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
+            self.predictions = tf.argmax(self.logits, axis=3)
             
             with tf.name_scope('Loss'):
-                self.loss = tf.reduce_mean((tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,
+                self.loss = tf.reduce_mean((tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits,
                                                                           labels=tf.squeeze(tf.cast(self.train_labels_node, tf.int32), squeeze_dims=[3]),
                                                                           name="entropy")))
                 tf.summary.scalar("entropy", self.loss)

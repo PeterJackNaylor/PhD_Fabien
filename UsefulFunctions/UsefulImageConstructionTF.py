@@ -2,7 +2,6 @@
 from scipy.ndimage.morphology import morphological_gradient
 from skimage.morphology import reconstruction
 import numpy as np
-from WrittingTiff.createfold import PredImageFromNet
 from skimage.segmentation import clear_border
 from skimage.morphology import remove_small_objects
 from Deprocessing.Morphology import PostProcess
@@ -10,6 +9,8 @@ from math import ceil
 import pdb
 from skimage.morphology import dilation, disk
 from scipy.misc import imsave
+from NewStuff.PredTF import PredImageFromNetTF
+
 
 def Contours(bin_image, contour_size=3):
     # Computes the contours
@@ -17,10 +18,14 @@ def Contours(bin_image, contour_size=3):
     return grad
 
 
-def sliding_window(image, stepSize, windowSize):
+def sliding_window(image, stepSize, windowSize, UNet = False):
+    d_y, d_x = image.shape[:2]
     # slide a window across the imag
-    for y in xrange(0, image.shape[0], stepSize):
-        for x in xrange(0, image.shape[1], stepSize):
+    if UNet:
+        d_y -= 184
+        d_x -= 184 
+    for y in xrange(0, d_y, stepSize):
+        for x in xrange(0, d_x, stepSize):
             # yield the current window
             res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
             change = False
@@ -40,15 +45,16 @@ def RemoveBordersByReconstruction(Img, BorderSize = 1):
     ToRemove = reconstruction(g, Img, 'dilation')
     return Img - ToRemove, np.mean(ToRemove)
 
-
-def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=10, 
+def PredLargeImageFromNet(model, load_meta, image, stepSize, windowSize, removeFromBorder=10, 
                           method="avg", param=7, ClearBorder="RemoveBorderObjects",
-                          threshold = 0.5):
+                          threshold = 0.5, UNet = False, MEAN_FILE=None):
 
     #pdb.set_trace() 
     x_s, y_s, z_s = image.shape
     dim_result = 2
-    
+    if UNet:
+        x_s -= 184
+        y_s -= 184
     if method == "median":
         dim_result = int((ceil(float(windowSize[0]) / stepSize) + 1) * (ceil(float(windowSize[1]) / stepSize) + 1)) + 3
         counter = np.zeros(shape=(x_s, y_s))
@@ -58,11 +64,13 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
         result -= 1 
     thresh_list = []
 
-    for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
-
-        prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
+    for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize, UNet=UNet):
+        prob_image1, bin_image1 = PredImageFromNetTF(model, load_meta, window, MEAN_FILE=MEAN_FILE)
         val = removeFromBorder if ClearBorder == "Reconstruction" else 0
-        
+        if UNet:
+            y_e -= 184
+            x_e -= 184
+
         y_b += val
         y_e -= val
         x_b += val
