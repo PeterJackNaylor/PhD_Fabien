@@ -78,7 +78,7 @@ def getKey( file ) {
 IMAGE_PROCESSED  .map { file -> tuple(getKey(file), file) }
                  .groupTuple() 
                  .set { SegmentedByPatient }
-
+/*
 process StichingTiff {
     memory '11 GB'
 //    profile = 'cluster'
@@ -104,7 +104,7 @@ process StichingTiff {
 
 
 }
-
+*/
 
 /* Creating feature map visualisation heatmap at resolution RES */
 
@@ -214,10 +214,10 @@ process HeatMaps {
     val inputt from params.in
     val res from RES
     output:
-    file "Job_${wholeTab.getBaseName().split('_')[0]}/HeatMaps/*.png" into histogramme
+    file "Job_${wholeTab.getBaseName().split('_')[0]}/HeatMaps/*.png" into heatmaps
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${wholeTab.name.split("_")[0]} Job_${wholeTab.name.split("_")[0]}
-    python $py --res $res--table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/HeatMaps --slide ${inputt}${wholeTab.name.split("_")[0]}.tiff
+    python $py --table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/HeatMaps --slide ${inputt}${wholeTab.name.split("_")[0]}.tiff
     """
 
 
