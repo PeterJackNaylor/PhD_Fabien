@@ -55,12 +55,11 @@ def AJI(G, S):
             return 0
         else:
             only_prediction = np.zeros_like(S)
-            only_prediction[ S == j ] = 1
+            only_prediction[ S == indice ] = 1
             return only_prediction.sum()
-    pdb.set_trace()
     U_sum = map(h, range(1, S.max() + 1))
     U += np.sum(U_sum)
-
+    pdb.set_trace()
     return float(C) / float(U)  
 
 

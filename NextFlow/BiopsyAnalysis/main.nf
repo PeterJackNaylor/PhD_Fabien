@@ -164,11 +164,10 @@ process CollectMergeTables {
     input:
     set key, file(tables) from TableGroups 
     file py from MergeTable
-    val res from RES
     val inputt from params.in
     val marge_wsi from WSI_MARGE
     output:
-    file "Job_${key}/${key}_whole_slide.csv" into TAB_SLIDE
+    file "Job_${key}/${key}_whole_slide.csv" into TAB_SLIDE, TAB_SLIDE2
     file "Job_${key}/RankedTable/*.csv" into NEW_TAB mode flatten
 
     """
@@ -201,6 +200,28 @@ process FeatureDistribution {
 
 }
 
+FeatureHeatMaps = file("FeatureHeatMaps.py")
+
+process HeatMaps {
+    clusterOptions = "-S /bin/bash"
+    publishDir PublishPatient, overwrite: false
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    file wholeTab from TAB_SLIDE2
+    file py from FeatureHeatMaps
+    val inputt from params.in
+    val res from RES
+    output:
+    file "Job_${wholeTab.getBaseName().split('_')[0]}/HeatMaps/*.png" into histogramme
+    """
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${wholeTab.name.split("_")[0]} Job_${wholeTab.name.split("_")[0]}
+    python $py --res $res--table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/HeatMaps --slide ${inputt}${wholeTab.name.split("_")[0]}.tiff
+    """
+
+
+}
 
 
 /* BEGIN: Create colors maps at the WSI level */
