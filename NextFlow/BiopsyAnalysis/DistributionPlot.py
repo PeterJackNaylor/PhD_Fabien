@@ -34,5 +34,5 @@ if __name__ == "__main__":
             f, axes = plt.subplots(1, 1, figsize=(7, 7), sharex=True)
             sns.despine(left=True)
             sns.distplot(whole_slide[el], color="m", ax=axes)
-            outname = join(options.out, el + ".svg")
-            f.savefig(outname, format='svg')
+            outname = join(options.out, el + ".png")
+            f.savefig(outname)

@@ -192,7 +192,7 @@ process FeatureDistribution {
     file wholeTab from TAB_SLIDE
     file py from DistributionPlot
     output:
-    file "Job_${wholeTab.getBaseName().split('_')[0]}/Distribution/*.svg" into histogramme
+    file "Job_${wholeTab.getBaseName().split('_')[0]}/Distribution/*.png" into histogramme
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${wholeTab.name.split("_")[0]} Job_${wholeTab.name.split("_")[0]}
     python $py --table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/Distribution
