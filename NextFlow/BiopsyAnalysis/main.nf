@@ -172,7 +172,7 @@ process CollectMergeTables {
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key} Job_${key}
-    python $py --resolution $res --slide ${inputt}${key}.tiff --marge_cut_off $marge_wsi
+    python $py --slide ${inputt}${key}.tiff --marge_cut_off $marge_wsi
     """   
 
 }

@@ -1,4 +1,5 @@
 import numpy as np
+import pdb
 import pandas as pd
 from optparse import OptionParser
 from os.path import join
@@ -37,10 +38,10 @@ if __name__ == "__main__":
     slide = op.open_slide(options.slide)
     image = GetWholeImage(slide, level = options.res)
     x_S, y_S = image.size   
-
+    pdb.set_trace()
     def h(coord):
         x0, y0 = [int(el) for el in coord[1:-1].split(', ')]
-        va, va2 = get_X_Y_from_0(options.slide, x0, y0, options.res)
+        va, va2 = get_X_Y_from_0(slide, x0, y0, options.res)
         return va, va2
     feat_res = "coord_res_{}".format(options.res)
     table[feat_res] = table.apply(lambda r: h(r['coord_res_0']), axis=1)
