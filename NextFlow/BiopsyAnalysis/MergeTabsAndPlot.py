@@ -43,7 +43,7 @@ if __name__ == "__main__":
     def Coordinates_0(x, y, parent):
         para = parent.split('_')
         x, y = int(x), int(y)
-        X, Y = int(x) + int(para[1]), int(y) + int(para[2]) 
+        X, Y = int(x) + int(para[2]), int(y) + int(para[1]) 
         return X, Y
 
 

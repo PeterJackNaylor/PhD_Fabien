@@ -69,11 +69,11 @@ if __name__ == "__main__":
             combine_name = join(options.out, "{}.png").format(el)
             rgb_name =  join(options.out, "RGB_{}.png").format(options.res)
 
-            imsave(rgb_name, np.array(image).transpose(1,0,2))
+            imsave(rgb_name, np.array(image))
             imsave(heat_name, result)
 
             fig = plt.figure(frameon=False)
-            im1 = plt.imshow(np.array(image).transpose(1,0,2), extent=extent)
+            im1 = plt.imshow(np.array(image), extent=extent)
             im2 = plt.imshow(result, cmap=plt.cm.jet, alpha=.3, interpolation='bilinear',
                          extent=extent)
             fig.savefig(combine_name)
