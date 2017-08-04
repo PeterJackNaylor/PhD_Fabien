@@ -121,7 +121,6 @@ ChangingRes = file("ChangingRes.py")
 
 /* inputs */
 TIFF_FOLDER = file(params.in)
-RES = 5
 /*process MergeTablesBySlides {
     executor 'sge'
     profile = 'cluster'
@@ -194,13 +193,15 @@ process FeatureDistribution {
     file "Job_${wholeTab.getBaseName().split('_')[0]}/Distribution/*.png" into histogramme
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${wholeTab.name.split("_")[0]} Job_${wholeTab.name.split("_")[0]}
-    python $py --table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/Distribution
+    python $py --table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/Distribution 
     """
 
 
 }
 
 FeatureHeatMaps = file("FeatureHeatMaps.py")
+SMOOTH = 5
+RES = 5
 
 process HeatMaps {
     clusterOptions = "-S /bin/bash"
@@ -213,11 +214,12 @@ process HeatMaps {
     file py from FeatureHeatMaps
     val inputt from params.in
     val res from RES
+    val smooth from SMOOTH
     output:
     file "Job_${wholeTab.getBaseName().split('_')[0]}/HeatMaps/*.png" into heatmaps
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${wholeTab.name.split("_")[0]} Job_${wholeTab.name.split("_")[0]}
-    python $py --table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/HeatMaps --slide ${inputt}${wholeTab.name.split("_")[0]}.tiff
+    python $py --table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/HeatMaps --slide ${inputt}${wholeTab.name.split("_")[0]}.tiff --res $res --smooth $smooth
     """
 
 
