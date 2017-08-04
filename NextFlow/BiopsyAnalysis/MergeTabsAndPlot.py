@@ -106,7 +106,7 @@ if __name__ == "__main__":
     CheckOrCreate(out)
     names = []
     for feat in list_f_names:
-        if feat not in ["Centroid_x", "Centroid_y", "coord_res_{}".format(options.res), "coord_res_0"]:
+        if feat not in ["Centroid_x", "Centroid_y", "coord_res_0"]:
             names.append(feat + "_rank")
             without_parent[feat + "_rank"] = without_parent[feat].rank(ascending=True)
             table2 = pd.concat([table2, without_parent[feat + "_rank"]], axis=1)
@@ -115,7 +115,6 @@ if __name__ == "__main__":
     CheckOrCreate(output_new_tab)
     ranks = table2[names]
     result = pd.concat([table, ranks], axis=1, join_axes=[table.index])
-    result = result.drop("coord_res_{}".format(options.res), axis=1)
     for group_name, df in result.groupby(['Parent']):
         with open(join(output_new_tab, group_name + ".csv"), 'w+') as f:
             df.to_csv(f, sep=';')
