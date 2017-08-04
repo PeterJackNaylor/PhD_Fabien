@@ -120,9 +120,9 @@ class UNetMultiClass(UNetBatchNorm):
                     tf.summary.scalar(name + '_Performance', MeanAcc)
 
 
-            self.train_prediction = tf.nn.softmax(logits)
+            self.train_prediction = tf.nn.softmax(self.logits)
 
-            self.test_prediction = tf.nn.softmax(logits)
+            self.test_prediction = tf.nn.softmax(self.logits)
 
         tf.global_variables_initializer().run()
 

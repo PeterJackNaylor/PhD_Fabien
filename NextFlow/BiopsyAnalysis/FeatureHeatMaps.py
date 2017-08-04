@@ -51,7 +51,7 @@ if __name__ == "__main__":
     CheckOrCreate(options.out)
     slide = op.open_slide(options.slide)
     image = GetWholeImage(slide, level = options.res)
-    y_S, x_S = image.size   
+    x_S, y_S = image.size   
     #pdb.set_trace()
     def h(coord):
         x0, y0 = [int(el) for el in coord[1:-1].split(', ')]
@@ -77,14 +77,11 @@ if __name__ == "__main__":
 
             combine_name = join(options.out, "{}.png").format(el)
 
-            imsave(rgb_name, )
-            imsave(heat_name, result)
             hm = gaussian(result, options.smooth)
-            fig = plt.figure(frameon=False)
-            fig.imshow(np.array(image))
-            fig.imshow(hm, cmap=mycmap)
-            
-            im1 = plt.imshow(np.array(image), extent=extent)
-            im2 = plt.imshow(result, cmap=plt.cm.jet, alpha=.3, interpolation='bilinear',
-                         extent=extent)
-            fig.savefig(combine_name)
+
+            plt.imshow(np.array(image))
+            plt.imshow(hm, cmap=mycmap)
+            plt.colorbar()
+	    plt.axis('off') 
+            plt.savefig(combine_name, bbox_inches='tight')
+            plt.clf()
