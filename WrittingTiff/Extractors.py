@@ -9,6 +9,11 @@ from scipy.misc import imsave
 
 def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=False, do_label=True):
     bin_image_copy = bin_image.copy()
+
+    p = 0
+    for feat in list_feature:
+        p += feat.size
+
     if marge is not None and marge != 0:
         seed = np.zeros_like(bin_image_copy)
         seed[marge:-marge, marge:-marge] = 1
@@ -24,7 +29,7 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
         if len(np.unique(bin_image_copy)) == 1:
             if 0 in bin_image_copy:
                 print "Return blank matrix. Change this shit"
-                return np.array([[0, 0, 0, 0, 0]])
+                return np.array([[0] * p])
             else:
                 print "Error, must give a bin image."
     
@@ -37,9 +42,7 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
             RegionProp[val] = regionprops(img[val])
     
     n = len(RegionProp[0])
-    p = 0
-    for feat in list_feature:
-        p += feat.size
+
     TABLE = np.zeros(shape=(n,p))
     for i in range(n):
         offset_ALL = 0

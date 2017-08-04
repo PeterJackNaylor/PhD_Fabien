@@ -52,7 +52,6 @@ if __name__ == "__main__":
     slide = op.open_slide(options.slide)
     image = GetWholeImage(slide, level = options.res)
     x_S, y_S = image.size   
-    #pdb.set_trace()
     def h(coord):
         x0, y0 = [int(el) for el in coord[1:-1].split(', ')]
         va, va2 = get_X_Y_from_0(slide, x0, y0, options.res)
@@ -82,6 +81,6 @@ if __name__ == "__main__":
             plt.imshow(np.array(image))
             plt.imshow(hm, cmap=mycmap)
             plt.colorbar()
-	    plt.axis('off') 
+            plt.axis('off') 
             plt.savefig(combine_name, bbox_inches='tight')
             plt.clf()
