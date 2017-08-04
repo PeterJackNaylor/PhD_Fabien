@@ -37,8 +37,8 @@ if __name__ == "__main__":
     CheckOrCreate(options.out)
     slide = op.open_slide(options.slide)
     image = GetWholeImage(slide, level = options.res)
-    x_S, y_S = image.size   
-    pdb.set_trace()
+    y_S, x_S = image.size   
+    #pdb.set_trace()
     def h(coord):
         x0, y0 = [int(el) for el in coord[1:-1].split(', ')]
         va, va2 = get_X_Y_from_0(slide, x0, y0, options.res)
