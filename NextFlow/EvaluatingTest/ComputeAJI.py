@@ -9,7 +9,7 @@ def Options():
 
     parser = OptionParser()
 
-    parser.add_option('--fold', dest="folder", type="str",
+    parser.add_option('--fold', dest="fold", type="str",
                       help="folder to analyse")
     (options, args) = parser.parse_args()
     return options
