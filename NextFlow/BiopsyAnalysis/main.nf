@@ -196,6 +196,7 @@ process HeatMaps {
     val smooth from SMOOTH
     output:
     file "Job_${wholeTab.getBaseName().split('_')[0]}/HeatMaps/*.png" into heatmaps
+    beforeScript "source ~/.bashrc"
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${wholeTab.name.split("_")[0]} Job_${wholeTab.name.split("_")[0]}
     python $py --table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/HeatMaps --slide ${inputt}${wholeTab.name.split("_")[0]}.tiff --res $res --smooth $smooth
