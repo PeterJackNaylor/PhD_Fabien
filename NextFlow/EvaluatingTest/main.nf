@@ -73,7 +73,7 @@ process UNetBN_2 {
     val param from PARAM
     each fold from UNET2_EXP
     output:
-    file "${image.getBaseName()}_*-_" into AnalyseFolder
+    file "${image.getBaseName()}_*-_*" into AnalyseFolder
 
     """
     PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
@@ -112,45 +112,73 @@ process PrepareImages {
         imsave(gt, anno)
     """
 }
-
+wd_datagen = params.home + "/Francois"
  
 TOANNOTATE = params.image_dir + "/ToAnnotate"
 PREDICTING_CAFFE = file("PredictingCaffe.py")
 CHANGEENV = file(params.python_dir + '/NextFlow/Francois/ChangeEnv.py')
 PARAM = 8
 STEPSIZE = 150
+NET1="DeconvNet_0.01_0.99_0.0005"
+NET2="FCN_0.01_0.99_0.005"
+
+process ChangeEnv {
+
+    executor 'sge'
+    profile = 'cluster'
+
+    validExitStatus 0, 134
+    clusterOptions = "-S /bin/bash"
+
+    input:
+    val env from TOANNOTATE
+    val wd from wd_datagen
+    file py from CHANGEENV
+
+    output:
+    val wd into WD
+    beforeScript 'export PYTHONPATH=/cbio/donnees/pnaylor/PythonPKG/caffe_peter2_cpu/python:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/FCN_Segmentation:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/UsefulFunctions:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/Nets:/share/data40T/pnaylor/Cam16/scripts/challengecam/cluster:/share/data40T/pnaylor/Cam16/scripts/challengecam/PythonPatch:/share/data40T/pnaylor/Cam16/scripts/challengecam/RandomForest_Peter:/share/apps/user_apps/smil_0.8.1/lib/Smil/'
+
+    """
+    python $py --env $env --wd $wd
+    """
+
+}
+
 process Ensemble {
     clusterOptions = "-S /bin/bash"
-    
+    validExitStatus 0,134 
     input:
     file py from PREDICTING_CAFFE .last()
     file image from SLIDE
     file anno from GT
     val param from PARAM
     val stepsize from STEPSIZE
-    file net1 from NET1
-    file net2 from NET2
+    val net1 from NET1
+    val net2 from NET2
     val wd from WD .first()
     file env from TOANNOTATE
     output:
-    file into AnalyseFolderCaffe
+    file "*_model" into AnalyseFolderCaffe mode flatten
 
     beforeScript 'export PYTHONPATH=/cbio/donnees/pnaylor/PythonPKG/caffe_peter2_cpu/python:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/FCN_Segmentation:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/UsefulFunctions:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/Nets:/share/data40T/pnaylor/Cam16/scripts/challengecam/cluster:/share/data40T/pnaylor/Cam16/scripts/challengecam/PythonPatch:/share/data40T/pnaylor/Cam16/scripts/challengecam/RandomForest_Peter:/share/apps/user_apps/smil_0.8.1/lib/Smil/'
 
     """
-    python $py --output . --env $env --wd $wd $--image $image --anno $anno --param $param --stepSize $stepsize --net_1 $net1 --net_2 $net2
+    python $py --output . --env $env --wd $wd --image $image --anno $anno --param $param --stepSize $stepsize --net_1 $net1 --net_2 $net2
     """
 }
 
 AJI = file("ComputeAJI.py")
+AnalyseFolder.concat(AnalyseFolderCaffe)
+	     .set{ WaitingForAJImodels }
 
 process ComputeAJI {
     clusterOptions = "-S /bin/bash"
     input:
     file py from AJI
-    file fold from AnalyseFolder
+    file fold from WaitingForAJImodels
     output:
-    file fold into AnalyseFolder2
+    file $fold into AnalysedAJI
 
     """
     python $py --fold $fold 
