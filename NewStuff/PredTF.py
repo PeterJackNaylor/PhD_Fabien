@@ -49,8 +49,11 @@ def PredImageFromNetTF(model, load_meta, window, MEAN_FILE="mean_file.npy"):
     exp_var = names_to_vars["logits/bn/moments/Squeeze_1/ExponentialMovingAverage"]
     names_to_vars["logits/bn/moments/moments_1/variance/ExponentialMovingAverage"] = exp_var
     del names_to_vars["logits/bn/moments/Squeeze_1/ExponentialMovingAverage"]
-
-    saver = tf.train.Saver(var_list=names_to_vars)
+    try:
+        saver = tf.train.Saver(var_list=names_to_vars)
+    except:
+        print "saver failed, retrying..."
+        saver = tf.train.Saver()
     if MEAN_FILE is not None:
         window = window - np.load(MEAN_FILE)
     if hasattr(model, "is_training"):

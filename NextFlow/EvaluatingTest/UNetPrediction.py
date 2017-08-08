@@ -64,7 +64,7 @@ if __name__ == '__main__':
     img = imread(options.i)
     anno = imread(options.a)
 
-    x, y, c = img.shape
+    x, y, c = (212, 212, 3)
 
     stepSize = x
     windowSize = (x + 184, y + 184)
