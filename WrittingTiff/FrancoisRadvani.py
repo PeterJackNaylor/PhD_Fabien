@@ -23,22 +23,32 @@ param = 5
 
 
 def pred_f(image, net1, net2, stepSize=stepSize, windowSize=windowSize,
-           param=param, border=1, method="avg", borderImage = "Reconstruction"):
+           param=param, border=1, method="avg", borderImage = "Reconstruction",
+           return_all = False):
     prob_image1, bin_image1, threshold1 = PredLargeImageFromNet(net1, image, stepSize, windowSize,
                                                                 removeFromBorder=border,
                                                                 method=method,
                                                                 param=param,
                                                                 ClearBorder= borderImage)
-    prob_image2, bin_image2, threshold2 = PredLargeImageFromNet(net2, image, stepSize, windowSize,
-                                                                removeFromBorder=border,
-                                                                method=method,
-                                                                param=param,
-                                                                ClearBorder= borderImage)
-    
-    thresh = ( threshold1 + threshold2 ) / 2.
-    prob = ( prob_image1 + prob_image2 ) / 2.
-    return prob, thresh
 
+
+    if net2 is not None:
+
+        prob_image2, bin_image2, threshold2 = PredLargeImageFromNet(net2, image, stepSize, windowSize,
+                                                                    removeFromBorder=border,
+                                                                    method=method,
+                                                                    param=param,
+                                                                    ClearBorder= borderImage)
+        thresh = ( threshold1 + threshold2 ) / 2.
+        prob = ( prob_image1 + prob_image2 ) / 2.
+    else:
+        thresh = threshold1 
+        prob = prob_image1 
+    if not return_all:
+        return prob, thresh
+    else:
+        return {"model1":(prob_image1, threshold1), "model2":(prob_image2, threshold2),
+                "ensemble":(prob, thresh)}
 
 
 def PredOneImage(path, outfile, c, f, net1, net2, ClearSmallObjects=None):

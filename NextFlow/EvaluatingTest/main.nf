@@ -30,7 +30,7 @@ process Mean {
 }
 
 
-process PrepareImages {
+process PrepareImagesUNet {
     clusterOptions = "-S /bin/bash"
     input:
     file input from DataNeeraj
@@ -58,7 +58,7 @@ process PrepareImages {
         imsave(gt, anno)
     """
 }
- 
+
 UNET2_EXP = [EXP + "/Classic/32_0.00005_0.0001", EXP + "/NO_EL_HSV_HE/32_0.00005_0.0001"]
 PARAM = 10
 UNETPREDICTION = file('UNetPrediction.py')
@@ -83,6 +83,64 @@ process UNetBN_2 {
 
 }
 
+
+process PrepareImages {
+    clusterOptions = "-S /bin/bash"
+    input:
+    file input from DataNeeraj
+    val organs from ORGANS
+
+    output:
+    file "Slide___*.png" into SLIDE mode flatten
+    file "GT___*.png" into GT mode flatten
+    """
+    #!/usr/bin/env python
+
+    from UsefulFunctions.ImageTransf import ListTransform
+    from NewStuff.DataGenClass import DataGenMulti
+    from scipy.misc import imsave
+    _, transform_list_test = ListTransform()
+    DG = DataGenMulti("$input", split='test', crop = 1, size=(1000, 1000),
+                      transforms=transform_list_test, UNet=False, num="$organs")
+    key = 0
+    for _ in range(DG.length):
+        key = DG.NextKeyRandList(key)
+        img, anno = DG[key]
+        name = "Slide___{}_{}.png".format("$organs", _)
+        gt = "GT___{}_{}.png".format("$organs", _)
+        imsave(name, img)
+        imsave(gt, anno)
+    """
+}
+
+ 
+TOANNOTATE = params.image_dir + "/ToAnnotate"
+PREDICTING_CAFFE = file("PredictingCaffe.py")
+CHANGEENV = file(params.python_dir + '/NextFlow/Francois/ChangeEnv.py')
+PARAM = 8
+STEPSIZE = 150
+process Ensemble {
+    clusterOptions = "-S /bin/bash"
+    
+    input:
+    file py from PREDICTING_CAFFE .last()
+    file image from SLIDE
+    file anno from GT
+    val param from PARAM
+    val stepsize from STEPSIZE
+    file net1 from NET1
+    file net2 from NET2
+    val wd from WD .first()
+    file env from TOANNOTATE
+    output:
+    file into AnalyseFolderCaffe
+
+    beforeScript 'export PYTHONPATH=/cbio/donnees/pnaylor/PythonPKG/caffe_peter2_cpu/python:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/FCN_Segmentation:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/UsefulFunctions:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/Nets:/share/data40T/pnaylor/Cam16/scripts/challengecam/cluster:/share/data40T/pnaylor/Cam16/scripts/challengecam/PythonPatch:/share/data40T/pnaylor/Cam16/scripts/challengecam/RandomForest_Peter:/share/apps/user_apps/smil_0.8.1/lib/Smil/'
+
+    """
+    python $py --output . --env $env --wd $wd $--image $image --anno $anno --param $param --stepSize $stepsize --net_1 $net1 --net_2 $net2
+    """
+}
 
 AJI = file("ComputeAJI.py")
 
