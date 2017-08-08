@@ -72,8 +72,8 @@ process UNetBN_2 {
     file mean_file from MeanFile .first()
     val param from PARAM
     each fold from UNET2_EXP
-    //output:
-    //file "${image.getBaseName().split('___')[1].split('.')[0]}" into AnalyseFolder
+    output:
+    file "${image.getBaseName()}_*-_" into AnalyseFolder
 
     """
     PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
@@ -91,11 +91,11 @@ process ComputeAJI {
     input:
     file py from AJI
     file fold from AnalyseFolder
-    //output:
+    output:
     file fold into AnalyseFolder2
 
     """
-    python $py --fold $$fold 
+    python $py --fold $fold 
     """
 
    

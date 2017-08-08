@@ -48,9 +48,6 @@ def find_latest(folder):
 
 
 
-META = "/Users/naylorpeter/Desktop/Experiences/UNet/32_0.00005_0.0001/model.ckpt-2500.meta"
-
-
 
 if __name__ == '__main__':
     options = Options()
@@ -63,6 +60,7 @@ if __name__ == '__main__':
     stepSize = x
     windowSize = (x + 184, y + 184)
     META = find_latest(options.folder)
+
     n_features = int(basename(options.folder).split('_')[0])
 
     model = UNetBatchNorm("f",
@@ -96,7 +94,7 @@ if __name__ == '__main__':
     contour_rgb = img[92:-92, 92:-92].copy()
     contour_rgb[CellCont > 0] = np.array([0, 0, 0])
 
-    output = basename(options.i).split('.')[0]
+    output = basename(options.i).split('.')[0] + "_*-_" + options.folder.split('/')[-2]
     CheckOrCreate(output)
 
     imsave(join(output, "Input.png"), img[92:-92, 92:-92])
