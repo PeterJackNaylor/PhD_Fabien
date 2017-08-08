@@ -118,7 +118,9 @@ class UNetMultiClass(UNetBatchNorm):
                     tf.summary.scalar(name + '_Recall', recall)
                     tf.summary.scalar(name + '_F1', F1)
                     tf.summary.scalar(name + '_Performance', MeanAcc)
-
+                confusion_image = tf.reshape( tf.cast( self.cm, tf.float32),
+                                            [1, self.NUM_LABELS, self.NUM_LABELS, 1])
+                tf.summary.image('confusion', confusion_image)
 
             self.train_prediction = tf.nn.softmax(self.logits)
 
