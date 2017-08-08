@@ -66,10 +66,10 @@ UNETPREDICTION = file('UNetPrediction.py')
 process UNetBN_2 {
     clusterOptions = "-S /bin/bash"
     input:
-    file py from UNETPREDICTION
+    file py from UNETPREDICTION .last()
     file image from SLIDE_UNET
     file anno from GT_UNET
-    file mean_file from MeanFile
+    file mean_file from MeanFile .first()
     val param from PARAM
     each fold from UNET2_EXP
     //output:
