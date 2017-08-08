@@ -30,7 +30,7 @@ if __name__ == "__main__":
                       help="Where the annotated images are")
     parser.add_option('--wd', dest="wd", 
                       help="working directory")
-    parser.add_option('--para', dest="param", type='int',  
+    parser.add_option('--param', dest="param", type='int',  
                       help="parameter for the post-process")
     parser.add_option('--stepSize', dest="stepSize", type='int', 
                       help="stepSize for the slidding window")
@@ -45,9 +45,9 @@ if __name__ == "__main__":
 
     wd = options.wd 
 
-    net_1 = GetNet(options.cn_1, wd)
+    net_1 = GetNet(options.net_1, wd)
     
-    net_2 = GetNet(options.cn_2, wd) if options.net_2 is not None else None
+    net_2 = GetNet(options.net_2, wd) if options.net_2 is not None else None
 
 
     ClearSmallObjects = 50
@@ -61,17 +61,18 @@ if __name__ == "__main__":
     
     for model in dic.keys():
         prob, thresh = dic[model]
-        if model == "Model1":
-            model = options.cn_1
-        elif model == "Model2":
-            model = options.cn_2
+        if model == "model1":
+            model = options.net_1
+        elif model == "model2":
+            model = options.net_2
 
-        output_mod = join(output, model)
+        output_mod = join(output, model + "_model")
         CheckOrCreate(output_mod)
-        base_img = join(output_mod, "_image.png")
-        base_seg = join(output_mod, "_segmented.png")
-        base_prob = join(output_mod, "probability.png")
-        base_bin = join(output_mod, "binary.png")
+        base_img = join(output_mod, "Input.png")
+	base_label = join(output_mod, "Label.png")
+        base_seg = join(output_mod, "Segmented.png")
+        base_prob = join(output_mod, "Prob.png")
+        base_bin = join(output_mod, "Bin.png")
 
 
         bin_image = PostProcess(prob, options.param, thresh=thresh)
@@ -83,12 +84,13 @@ if __name__ == "__main__":
         seg_image = image.copy()
         seg_image[x_,y_,:] = np.array([0,0,0])
 
+        bin_image[bin_image > 0] = 255	
+	imsave(base_label, anno)
         imsave(base_img, image)
         imsave(base_bin, bin_image)
         imsave(base_seg, seg_image)
         imsave(base_prob, prob)
-
-        pdb.set_trace()
+	print np.unique(anno, return_counts=True), np.unique(bin_image, return_counts=True)
         cm = confusion_matrix(anno.flatten(), bin_image.flatten(), labels=[0, 255]).astype(np.float)
         TP = cm[1, 1]
         TN = cm[0, 0]
@@ -101,7 +103,7 @@ if __name__ == "__main__":
 
 
 
-        file_name = join(output, model, "Characteristics.txt")
+        file_name = join(output, model + "_model", "Characteristics.txt")
         f = open(file_name, 'w')
         f.write('TP: # {} #\n'.format(TP))
         f.write('TN: # {} #\n'.format(TN))
