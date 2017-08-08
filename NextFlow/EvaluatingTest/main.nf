@@ -92,7 +92,7 @@ process ComputeAJI {
     file py from AJI
     file fold from AnalyseFolder
     //output:
-    //file "${image.getBaseName().split('___')[1].split('.')[0]}" into AnalyseFolder
+    file fold into AnalyseFolder2
 
     """
     python $py --fold $$fold 
