@@ -61,9 +61,9 @@ if __name__ == "__main__":
     
     for model in dic.keys():
         prob, thresh = dic[model]
-        if model == "Model1":
+        if model == "model1":
             model = options.cn_1
-        elif model == "Model2":
+        elif model == "model2":
             model = options.cn_2
 
         output_mod = join(output, model)
