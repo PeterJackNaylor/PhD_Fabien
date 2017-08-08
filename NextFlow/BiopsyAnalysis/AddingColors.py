@@ -1,6 +1,7 @@
 import numpy as np
 from optparse import OptionParser
-from GetStatistics4Color import list_f, CheckOrCreate
+from WrittingTiff.Extractors import list_f_names
+from UsefulFunctions.RandomUtils import CheckOrCreate
 import glob
 from os.path import join, basename
 from skimage.measure import label

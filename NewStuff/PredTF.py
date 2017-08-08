@@ -67,7 +67,12 @@ def PredImageFromNetTF(model, load_meta, window, MEAN_FILE="mean_file.npy"):
     with tf.Session() as sess:
         if ckpt and ckpt.model_checkpoint_path:
             print("Model restored...")
-            saver.restore(sess, ckpt.model_checkpoint_path)
+	    try:
+                saver = tf.train.Saver(var_list=names_to_vars)
+	        saver.restore(sess, ckpt.model_checkpoint_path)
+            except:
+		saver = tf.train.Saver()
+                saver.restore(sess, ckpt.model_checkpoint_path)
         else:
             print "Mayde"
         # Restore variables from disk.

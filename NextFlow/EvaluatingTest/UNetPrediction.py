@@ -4,12 +4,13 @@ from scipy.misc import imread, imsave
 from os.path import join, basename
 import numpy as np
 from UsefulFunctions.UsefulImageConstructionTF import PredLargeImageFromNet, Contours
-from UNetBatchNorm_v2 import UNetBatchNorm
+from NewStuff.UNetBatchNorm_v2 import UNetBatchNorm
 from skimage import img_as_ubyte
 from sklearn.metrics import confusion_matrix
 from Deprocessing.Morphology import PostProcess
 from UsefulFunctions.RandomUtils import CheckOrCreate
 from glob import glob
+import pdb
 
 
 CUDA_NODE = 0
@@ -39,7 +40,7 @@ def Options():
 
 
 def parse_meta_file(string):
-    return int(string.split('ckpt-')[1].split('.'))
+    return int(string.split('ckpt-')[1].split('.')[0])
 
 def find_latest(folder):
     all_meta = glob(join(folder, "*.meta"))
@@ -68,8 +69,8 @@ if __name__ == '__main__':
 
     stepSize = x
     windowSize = (x + 184, y + 184)
-    META = find_latest(options.f)
-    n_features = int(basename(options.f).split('_')[0])
+    META = find_latest(options.folder)
+    n_features = int(basename(options.folder).split('_')[0])
 
     model = UNetBatchNorm("f",
                           BATCH_SIZE=1, 
@@ -102,10 +103,10 @@ if __name__ == '__main__':
     contour_rgb = img[92:-92, 92:-92].copy()
     contour_rgb[CellCont > 0] = np.array([0, 0, 0])
 
-    output = basename(options.i)
+    output = basename(options.i).split('.')[0]
     CheckOrCreate(output)
 
-    imsave(join(output, "Input.png"), img)
+    imsave(join(output, "Input.png"), img[92:-92, 92:-92])
     imsave(join(output, "Segmented.png"), contour_rgb)
     imsave(join(output, "Prob.png"),img_as_ubyte(prob_map))
     imsave(join(output, "Bin.png"), bin_map)
