@@ -96,7 +96,7 @@ if __name__ == '__main__':
     contour_rgb = img[92:-92, 92:-92].copy()
     contour_rgb[CellCont > 0] = np.array([0, 0, 0])
 
-    output = basename(options.i).split('.')[0]
+    output = basename(options.i).split('.')[0] + "_*-_" + options.folder.split('/')[-2]
     CheckOrCreate(output)
 
     imsave(join(output, "Input.png"), img[92:-92, 92:-92])
