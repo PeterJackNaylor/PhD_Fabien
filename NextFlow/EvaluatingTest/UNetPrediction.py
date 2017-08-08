@@ -13,13 +13,6 @@ from glob import glob
 import pdb
 
 
-CUDA_NODE = 0
-HEIGHT = 212 
-WIDTH = 212
-CROP = 4
-PATH = '/Users/naylorpeter/Documents/Histopathologie/NeerajKumar/ForDatagen'
-BATCH_SIZE = 1
-S = True
 
 def Options():
 
@@ -107,6 +100,7 @@ if __name__ == '__main__':
     CheckOrCreate(output)
 
     imsave(join(output, "Input.png"), img[92:-92, 92:-92])
+    imsave(join(output, "Label.png"), anno)
     imsave(join(output, "Segmented.png"), contour_rgb)
     imsave(join(output, "Prob.png"),img_as_ubyte(prob_map))
     imsave(join(output, "Bin.png"), bin_map)

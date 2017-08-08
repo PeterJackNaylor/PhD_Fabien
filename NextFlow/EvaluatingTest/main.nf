@@ -82,3 +82,25 @@ process UNetBN_2 {
 
 
 }
+
+
+AJI = file("ComputeAJI.py")
+
+process ComputeAJI {
+    clusterOptions = "-S /bin/bash"
+    input:
+    file py from AJI
+    file fold from AnalyseFolder
+    //output:
+    //file "${image.getBaseName().split('___')[1].split('.')[0]}" into AnalyseFolder
+
+    """
+    python $py --fold $$fold 
+    """
+
+   
+
+
+
+
+}
