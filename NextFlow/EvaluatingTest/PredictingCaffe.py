@@ -66,7 +66,7 @@ if __name__ == "__main__":
         elif model == "model2":
             model = options.net_2
 
-        output_mod = join(output, model + "_model")
+        output_mod = join(output, basename(options.image).split('.')[0] + "_*-_" + model)
         CheckOrCreate(output_mod)
         base_img = join(output_mod, "Input.png")
         base_label = join(output_mod, "Label.png")

@@ -169,8 +169,7 @@ process Ensemble {
     val wd from WD .first()
     file env from TOANNOTATE
     output:
-    file "*_model" into AnalyseFolderCaffe mode flatten
-
+    file "${image.getBaseName()}_*-_*" into AnalyseFolderCaffe mode flatten
     beforeScript 'export PYTHONPATH=/cbio/donnees/pnaylor/PythonPKG/caffe_peter2_cpu/python:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/FCN_Segmentation:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/UsefulFunctions:/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/Nets:/share/data40T/pnaylor/Cam16/scripts/challengecam/cluster:/share/data40T/pnaylor/Cam16/scripts/challengecam/PythonPatch:/share/data40T/pnaylor/Cam16/scripts/challengecam/RandomForest_Peter:/share/apps/user_apps/smil_0.8.1/lib/Smil/'
 
     """
@@ -194,10 +193,51 @@ process ComputeAJI {
     """
     python $py --fold $fold 
     """
-
-   
-
-
-
-
 }
+
+
+AGREGATE = file("Agregate.py")
+
+process RegroupResults {
+    clusterOptions = "-S /bin/bash"
+    publishDir ".", overwrite: True
+
+    input:
+    file fold from AnalysedAJI .toList()
+    file py from AGREGATE
+    output:
+    file "results.csv" into RES
+
+
+    """
+    #!/usr/bin/env python
+    from glob import glob
+    import pandas as pd 
+    from os.path import join
+    from UsefulFunctions.RandomUtils import textparser
+    folders = glob('Slide___*')
+    result = pd.DataFrame(columns=["Image", "Model", "TP", "TN", "FN", "FP", "Precision", "Recall", "F1", "ACC", "AJI"])
+
+    def name_parse(string):
+        string = basename(string)
+        img_model = string.split('___')[1]
+        return img_model.split('_*-_')
+
+    for k, f in enumerate(folders):
+        img, model = name_parse(f)
+        dic = textparser(f)
+        dic["Image"] = img
+        dic["Model"] = model
+        result.loc[k] = pd.Series(dic)
+
+    result = result.set_index(["Model", "Image"]) 
+    result.to_csv("results.csv")
+    """
+}
+
+
+
+
+
+
+
