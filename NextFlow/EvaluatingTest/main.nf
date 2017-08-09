@@ -64,7 +64,7 @@ process PrepareImagesUNet {
     """
 }
 
-UNET2_EXP = [EXP + "/classic/32_0.00005_0.0001", EXP + "/no_hsv_hv_elast/32_0.00005_0.0001", EXP + "/no_elast/32_0.0005_0.0001", EXP + "/no_he/32_0.00005_0.001", EXP + "/no_hsv/32_0.00005_0.001", EXP + "/no_hsv_he/32_0.00005_0.001", EXP + "/nothing/32_0.00005_0.001"]
+UNET2_EXP = [EXP + "/classic/32_0.00005_0.0001", EXP + "/no_hsv_he_elast/32_0.00005_0.001", EXP + "/no_elast/32_0.0005_0.0001", EXP + "/no_he/32_0.00005_0.001", EXP + "/no_hsv/32_0.00005_0.001", EXP + "/no_hsv_he/32_0.00005_0.001", EXP + "/nothing/32_0.00005_0.001"]
 PARAM = 10
 UNETPREDICTION = file('UNetPrediction.py')
 
@@ -184,11 +184,12 @@ AnalyseFolder.concat(AnalyseFolderCaffe)
 
 process ComputeAJI {
     clusterOptions = "-S /bin/bash"
+    queue "all.q"
     input:
     file py from AJI
     file fold from WaitingForAJImodels
     output:
-    file $fold into AnalysedAJI
+    file fold into AnalysedAJI
 
     """
     python $py --fold $fold 
