@@ -16,7 +16,9 @@ ORGANS = ["Breast", "Bladder"]
 
 
 process Mean {
+
     clusterOptions = "-S /bin/bash"
+    queue 'all.q'    
 
     input:
     file py from MEANPY
@@ -31,7 +33,10 @@ process Mean {
 
 
 process PrepareImagesUNet {
+
     clusterOptions = "-S /bin/bash"
+    queue 'all.q'
+
     input:
     file input from DataNeeraj
     val organs from ORGANS
@@ -64,7 +69,10 @@ PARAM = 10
 UNETPREDICTION = file('UNetPrediction.py')
 
 process UNetBN_2 {
+
+    queue "all.q"
     clusterOptions = "-S /bin/bash"
+
     input:
     file py from UNETPREDICTION .last()
     file image from SLIDE_UNET
@@ -86,6 +94,7 @@ process UNetBN_2 {
 
 process PrepareImages {
     clusterOptions = "-S /bin/bash"
+    queue 'all.q'
     input:
     file input from DataNeeraj
     val organs from ORGANS
@@ -124,11 +133,9 @@ NET2="FCN_0.01_0.99_0.005"
 
 process ChangeEnv {
 
-    executor 'sge'
-    profile = 'cluster'
-
     validExitStatus 0, 134
     clusterOptions = "-S /bin/bash"
+    queue 'all.q'
 
     input:
     val env from TOANNOTATE
@@ -146,8 +153,11 @@ process ChangeEnv {
 }
 
 process Ensemble {
+
+    queue 'all.q'
     clusterOptions = "-S /bin/bash"
     validExitStatus 0,134 
+
     input:
     file py from PREDICTING_CAFFE .last()
     file image from SLIDE

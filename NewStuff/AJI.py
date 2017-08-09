@@ -27,7 +27,7 @@ def AssociatedCell(G_i, S):
         return NUM / DEN
     res = map(g, range(1, S.max() + 1))
 
-    return np.array(res).argmax() + 1
+    return np.array(res).argmax()
 
 def AJI(G, S):
     G = label(G, background=0)
@@ -45,7 +45,6 @@ def AJI(G, S):
         j = AssociatedCell(only_ground_truth, S)
         only_prediction = np.zeros_like(S)
         only_prediction[ S == j ] = 1
-
         C += Intersection(only_prediction, only_ground_truth).sum()
         U += Union(only_prediction, only_ground_truth).sum()
         USED[j] = 1
