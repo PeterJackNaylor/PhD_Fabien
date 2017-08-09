@@ -59,7 +59,6 @@ def AJI(G, S):
             return only_prediction.sum()
     U_sum = map(h, range(1, S.max() + 1))
     U += np.sum(U_sum)
-    pdb.set_trace()
     return float(C) / float(U)  
 
 
