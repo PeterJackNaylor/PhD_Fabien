@@ -64,7 +64,7 @@ process PrepareImagesUNet {
     """
 }
 
-UNET2_EXP = [EXP + "/Classic/32_0.00005_0.0001", EXP + "/NO_EL_HSV_HE/32_0.00005_0.0001"]
+UNET2_EXP = [EXP + "/classic/32_0.00005_0.0001", EXP + "/no_hsv_hv_elast/32_0.00005_0.0001", EXP + "/no_elast/32_0.0005_0.0001", EXP + "/no_he/32_0.00005_0.001", EXP + "/no_hsv/32_0.00005_0.001", EXP + "/no_hsv_he/32_0.00005_0.001", EXP + "/nothing/32_0.00005_0.001"]
 PARAM = 10
 UNETPREDICTION = file('UNetPrediction.py')
 
