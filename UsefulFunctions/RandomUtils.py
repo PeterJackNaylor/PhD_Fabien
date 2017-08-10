@@ -41,3 +41,13 @@ def ComputeHist(blob_gt, blob_pred, perblob = False):
 def CleanTemp(folder):
     if CheckExistants(folder):
         shutil.rmtree(folder)
+
+def textparser(file):
+    with open(file) as f:
+        content = f.readlines()
+    res = {}
+    for el in content:
+        key, val = el.split(':')
+        val = val[3:-4]
+        res[key] = float(val)
+    return res
