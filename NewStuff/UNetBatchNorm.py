@@ -266,11 +266,14 @@ if __name__== "__main__":
     CROP = 4
 
 
-    transform_list, transform_list_test = ListTransform()
+    transform_list, transform_list_test = ListTransform(n_rot=360,
+                                                        n_elastic=50,
+                                                        n_he=0,
+                                                        n_hsv=0)
 
+    pdb.set_trace()
     DG_TRAIN = DataGenRandomT(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True, mean_file="mean_file.npy")
-
     test_patient = ["141549", "162438"]
     DG_TRAIN.SetPatient(test_patient)
     N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE

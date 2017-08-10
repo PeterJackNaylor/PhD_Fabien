@@ -9,7 +9,7 @@ from scipy.misc import imsave
 
 def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=False, do_label=True):
     bin_image_copy = bin_image.copy()
-    if marge is not None:
+    if marge is not None and marge != 0:
         seed = np.zeros_like(bin_image_copy)
         seed[marge:-marge, marge:-marge] = 1
         mask = bin_image_copy.copy()
@@ -35,19 +35,20 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
         if val != 0:
             img[val] = GrowRegion(bin_image_copy, val)
             RegionProp[val] = regionprops(img[val])
-
+    
     n = len(RegionProp[0])
     p = 0
     for feat in list_feature:
-	p += feat.size
+        p += feat.size
     TABLE = np.zeros(shape=(n,p))
     for i in range(n):
         offset_ALL = 0
         for j, feat in enumerate(list_feature):
             tmp_regionprop = RegionProp[feat._return_n_extension()][i]
-	    off_tmp = feat.size	     
+            off_tmp = feat.size      
             TABLE[i, (j + offset_ALL):(j + offset_ALL + off_tmp)] = feat._apply_region(tmp_regionprop ,RGB_image)
-	    offset_ALL += feat.size - 1
+
+            offset_ALL += feat.size - 1
 
     if pandas_table:
         names = []
@@ -57,7 +58,6 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
                     names.append(el._return_name()[it])
             else:
                 names.append(el._return_name())
-        feature_name = [el._return_name() for el in list_feature]
         return pd.DataFrame(TABLE, columns=names)
     else:
         return TABLE
@@ -132,6 +132,7 @@ class Feature(object):
         raise NotImplementedError
     def GetSize(self):
         raise NotImplementedError
+
 class PixelSize(Feature):
     def _apply_region(self, regionp, RGB):
         bin = regionp.image.astype(np.uint8)

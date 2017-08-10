@@ -6,12 +6,12 @@ params.home = "/data/users/pnaylor"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
 PY = file(params.python_dir + '/NewStuff/UNetBatchNorm.py')
-TENSORBOARD = file(params.image_dir + '/tensorboard_withmean')
+TENSORBOARD = file(params.image_dir + '/nothing')
 MEANPY = file(params.python_dir + '/NewStuff/MeanCalculation.py')
 
-LEARNING_RATE = [0.0001, 0.00001]
-ARCH_FEATURES = [2, 4, 8, 16, 32]
-WEIGHT_DECAY = [0.00005]
+LEARNING_RATE = [0.001, 0.0001, 0.00001]
+ARCH_FEATURES = [32]
+WEIGHT_DECAY = [0.00005, 0.0005]
 BS = 32
 
 process Mean {
@@ -53,7 +53,7 @@ process Training {
 
     script:
     """
-    python $py --epoch 500 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd
+    python $py --epoch 200 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd
 
     """
 }

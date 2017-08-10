@@ -1,7 +1,7 @@
 import pdb
 import tensorflow as tf
 import numpy as np
-from DataGen2 import DataGen
+from DataGenRandomT import DataGenRandomT
 from UsefulFunctions.ImageTransf import ListTransform
 import os
 from scipy.misc import imsave
@@ -184,9 +184,9 @@ class ConvolutionalNeuralNetwork:
         print('Model variables initialised')
 
     def WritteSummaryImages(self):
-        tf.summary.image("Input", self.input_node, max_outputs=1)
-        tf.summary.image("Label", self.train_labels_node, max_outputs=1)
-        tf.summary.image("Pred", tf.expand_dims(tf.cast(self.predictions, tf.float32), dim=3), max_outputs=1)
+        tf.summary.image("Input", self.input_node, max_outputs=4)
+        tf.summary.image("Label", self.train_labels_node, max_outputs=4)
+        tf.summary.image("Pred", tf.expand_dims(tf.cast(self.predictions, tf.float32), dim=3), max_outputs=4)
 
     def init_model_architecture(self):
 
@@ -389,6 +389,7 @@ class ConvolutionalNeuralNetwork:
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
 
         tf.global_variables_initializer().run()
+        tf.local_variables_initializer().run()
 
         self.summary_test_writer = tf.summary.FileWriter(self.LOG + '/test',
                                             graph=self.sess.graph)
@@ -427,15 +428,16 @@ class ConvolutionalNeuralNetwork:
                 self.Validation(DGTest, step)
 
 
+
 if __name__== "__main__":
 
     CUDA_NODE = 0
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(CUDA_NODE)
 
-    SAVE_DIR = "/tmp/object/short"
+    SAVE_DIR = "/tmp/object/CheckNoQueuess"
     N_ITER_MAX = 2000
-    N_TRAIN_SAVE = 100
+    N_TRAIN_SAVE = 42
     N_TEST_SAVE = 100
     LEARNING_RATE = 0.001
     MEAN = np.array([122.67892, 116.66877 ,104.00699])
@@ -446,20 +448,24 @@ if __name__== "__main__":
     PATH = '/home/pnaylor/Documents/Data/ToAnnotate'
     PATH = "/data/users/pnaylor/Bureau/ToAnnotate"
     PATH = "/Users/naylorpeter/Documents/Histopathologie/ToAnnotate/ToAnnotate"
-
+    N_EPOCH = 1
     BATCH_SIZE = 2
-    LRSTEP = 200
+    LRSTEP = "10epoch"
     SUMMARY = True
     S = SUMMARY
+    TEST_PATIENT = ["141549", "162438"]
 
 
     transform_list, transform_list_test = ListTransform()
-    DG_TRAIN = DataGen(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
+    DG_TRAIN = DataGenRandomT(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=False)
+    DG_TRAIN.SetPatient(TEST_PATIENT)
 
-    DG_TEST  = DataGen(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+    DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=False)
+    DG_TEST.SetPatient(TEST_PATIENT)
 
+    N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
     model = ConvolutionalNeuralNetwork(LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=HEIGHT,

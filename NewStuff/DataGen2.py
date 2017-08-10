@@ -3,7 +3,8 @@
 import FIMM_histo.deconvolution as deconv
 import glob
 import numpy as np
-from random import shuffle, randint, seed, sample
+from random import shuffle, randint, sample, seed
+import random
 import os
 from scipy import misc
 import nibabel as ni
