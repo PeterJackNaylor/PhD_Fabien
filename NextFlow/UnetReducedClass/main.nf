@@ -15,6 +15,7 @@ BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')
 SlideName = file(params.python_dir + '/PrepareData/EverythingExceptColor.py')
 CELLCOG_classif = file(params.cellcogn + '/classifier_January2017')
 CELLCOG_folder = file(params.cellcogn + '/Fabien')
+TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords.py')
 
 LEARNING_RATE = [0.0001, 0.00001, 0.0000001]
 ARCH_FEATURES = [2, 4, 8, 16, 32]
@@ -81,35 +82,6 @@ process Training {
     maxForks = 2
 
     input:
-    file path from ToAnnotateColor
-    file py from PY
-    val bs from BS
-    val home from params.home
-//    val pat from PATIENT
-    each feat from ARCH_FEATURES
-    each lr from LEARNING_RATE
-    each wd from WEIGHT_DECAY    
-    file _ from MeanFile
-    output:
-    file "${feat}_${wd}_${lr}" into RESULTS
-
-    beforeScript "source $home/CUDA_LOCK/.whichNODE"
-    afterScript "source $home/CUDA_LOCK/.freeNODE"
-
-    script:
-    """
-    python $py --epoch 500 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd
-
-    """
-}
-
-process Training {
-
-    clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARD, mode: "copy", overwrite: false
-    maxForks = 2
-
-    input:
     file path from IMAGE_FOLD
     file py from PY
     val bs from BS
@@ -129,7 +101,7 @@ process Training {
 
     script:
     """
-    python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
+    python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --num_labels 6
 
     """
 }

@@ -287,6 +287,8 @@ if __name__== "__main__":
     parser.add_option('--n_threads', dest="THREADS", type=int, default=100,
                       help="number of threads to use for the preprocessing.")
 
+    parser.add_option('--num_labels', dest="labels", type=int, default=len(MULTICLASS_NAME),
+                      help="number of labels.")
     (options, args) = parser.parse_args()
 
     TFRecord = options.TFRecord
@@ -335,7 +337,7 @@ if __name__== "__main__":
     model = UNetMultiClass(TFRecord,   LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=SIZE,
-                                       NUM_LABELS=len(MULTICLASS_NAME),
+                                       NUM_LABELS=self.labels,
                                        NUM_CHANNELS=3,
                                        STEPS=N_ITER_MAX,
                                        LRSTEP=LRSTEP,
