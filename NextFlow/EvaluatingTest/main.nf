@@ -195,7 +195,6 @@ process ComputeAJI {
 }
 
 
-AGREGATE = file("Agregate.py")
 
 process RegroupResults {
     clusterOptions = "-S /bin/bash"
@@ -203,28 +202,29 @@ process RegroupResults {
 
     input:
     file fold from AnalysedAJI .toList()
-    file py from AGREGATE
     output:
     file "results.csv" into RES
 
 
     """
     #!/usr/bin/env python
+
     from glob import glob
     import pandas as pd 
     from os.path import join
     from UsefulFunctions.RandomUtils import textparser
+
     folders = glob('Slide___*')
     result = pd.DataFrame(columns=["Image", "Model", "TP", "TN", "FN", "FP", "Precision", "Recall", "F1", "ACC", "AJI"])
 
     def name_parse(string):
-        string = basename(string)
+        string = string.split('/')[-2]
         img_model = string.split('___')[1]
         return img_model.split('_*-_')
 
     for k, f in enumerate(folders):
-        img, model = name_parse(f)
-        dic = textparser(f)
+        img, model = name_parse(join(f, "Characteristics.txt"))
+        dic = textparser(join(f, "Characteristics.txt"))
         dic["Image"] = img
         dic["Model"] = model
         result.loc[k] = pd.Series(dic)
@@ -233,7 +233,6 @@ process RegroupResults {
     result.to_csv("results.csv")
     """
 }
-
 
 
 
