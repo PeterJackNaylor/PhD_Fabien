@@ -5,10 +5,10 @@ params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
 params.home = "/data/users/pnaylor"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
-PY = file(params.python_dir + '/NewStuff/UNet3_v2.py')
+PY = file(params.python_dir + '/Nets/UNet3_v2.py')
 TENSORBOARD = file(params.image_dir + '/UNet3')
-MEANPY = file(params.python_dir + '/NewStuff/MeanCalculation.py')
-TFRECORDS = file(params.python_dir + '/NewStuff/CreateTFRecords.py')
+MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
+TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords.py')
 
 LEARNING_RATE = [0.01, 0.001, 0.0001]
 ARCH_FEATURES = [2, 4, 8, 16]

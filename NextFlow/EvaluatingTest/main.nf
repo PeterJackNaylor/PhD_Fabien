@@ -6,7 +6,7 @@ params.home = "/data/users/pnaylor"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
 TENSORBOARD = file(params.image_dir + '/UNet3')
-MEANPY = file(params.python_dir + '/NewStuff/MeanCalculation.py')
+MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 
 EXP = params.home + '/TF_EXP'
 
@@ -48,7 +48,7 @@ process PrepareImagesUNet {
     #!/usr/bin/env python
 
     from UsefulFunctions.ImageTransf import ListTransform
-    from NewStuff.DataGenClass import DataGenMulti
+    from Data.DataGenClass import DataGenMulti
     from scipy.misc import imsave
     _, transform_list_test = ListTransform()
     DG = DataGenMulti("$input", split='test', crop = 1, size=(1000, 1000),
@@ -106,7 +106,7 @@ process PrepareImages {
     #!/usr/bin/env python
 
     from UsefulFunctions.ImageTransf import ListTransform
-    from NewStuff.DataGenClass import DataGenMulti
+    from Data.DataGenClass import DataGenMulti
     from scipy.misc import imsave
     _, transform_list_test = ListTransform()
     DG = DataGenMulti("$input", split='test', crop = 1, size=(1000, 1000),

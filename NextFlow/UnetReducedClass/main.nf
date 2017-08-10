@@ -8,7 +8,7 @@ params.home = "/data/users/pnaylor"
 params.cellcogn = "data/users/pnaylor/Bureau/CellCognition"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
-PY = file(params.python_dir + '/Data/UNetMultiClass.py')
+PY = file(params.python_dir + '/Data/UNetMultiClass_v2.py')
 TENSORBOARD = file(params.image_dir + '/tensorboard_multiclass')
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')
@@ -56,6 +56,23 @@ process BinToColor {
     """
 }
 
+process CreateTFRecords {
+    clusterOptions = "-S /bin/bash -l h_vmem=60G"
+    queue = "all.q"
+    memory = '60G'
+    input:
+    file py from TFRECORDS
+    val epoch from params.epoch
+    file path from ToAnnotateColor
+
+    output:
+    file "UNetRecords.tfrecords" into DATAQUEUE
+    """
+
+    python $py --output UNetRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type ReducedClass
+    """
+}
+
 
 process Training {
 
@@ -85,3 +102,37 @@ process Training {
 
     """
 }
+
+process Training {
+
+    clusterOptions = "-S /bin/bash"
+    publishDir TENSORBOARD, mode: "copy", overwrite: false
+    maxForks = 2
+
+    input:
+    file path from IMAGE_FOLD
+    file py from PY
+    val bs from BS
+    val home from params.home
+//    val pat from PATIENT
+    each feat from ARCH_FEATURES
+    each lr from LEARNING_RATE
+    each wd from WEIGHT_DECAY    
+    file _ from MeanFile
+    file __ from DATAQUEUE
+    val epoch from params.epoch
+    output:
+    file "${feat}_${wd}_${lr}" into RESULTS
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
+
+    """
+}
+
+
+
