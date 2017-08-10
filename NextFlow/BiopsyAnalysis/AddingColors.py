@@ -1,6 +1,7 @@
 import numpy as np
 from optparse import OptionParser
-from GetStatistics4Color import list_f, CheckOrCreate
+from WrittingTiff.Extractors import list_f_names
+from UsefulFunctions.RandomUtils import CheckOrCreate
 import glob
 from os.path import join, basename
 from skimage.measure import label
@@ -134,7 +135,7 @@ if __name__ == "__main__":
     CheckOrCreate(options.out)
     x, y = bin.shape
     table = pd.read_csv(options.table, header=0, index_col=0, sep=';')
-    table = table.drop('coord', 1)
+    table = table.drop('coord_res_0', 1)
     table = table.drop('Parent', 1)
     table = table[table.notnull().all(axis=1)]
     if table.shape[0] == 0:

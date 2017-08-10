@@ -106,7 +106,7 @@ process StichingTiff {
 }
 
 
-/* Creating feature map visualisation heatmap at resolution RES */
+
 
 
 /* What is needed :
@@ -117,37 +117,9 @@ process StichingTiff {
 /* python files */
 
 MergeTable = file("MergeTabsAndPlot.py")
-ChangingRes = file("ChangingRes.py")
 
 /* inputs */
 TIFF_FOLDER = file(params.in)
-RES = 7
-/*process MergeTablesBySlides {
-    executor 'sge'
-    profile = 'cluster'
-    clusterOptions = "-S /bin/bash"
-    publishDir PublishPatient, overwrite: false
-    maxForks = 200
-    errorStrategy 'retry' 
-    maxErrors 5
-
-    input:
-    file table from TABLE_PROCESSED
-    file py from ChangingRes
-    val res from RES
-    file fold from TIFF_FOLDER
-    output:
-
-    file "Job_${table.getBaseName().split('_')[0]}/tables_res_0/${table.getBaseName()}_tables_res_0.csv" into Tables_res_0
-
-    """
-
-    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.name.split("_")[0]} Job_${table.name.split("_")[0]}
-
-    python $py --table $table --slide ${fold}/${table.name.split("_")[0]}.tiff --resolution $res
-    """   
-}*/
-
 
 TABLE_PROCESSED  .map { file -> tuple(getKey(file), file) }
  		         .groupTuple() 
@@ -164,80 +136,79 @@ process CollectMergeTables {
     input:
     set key, file(tables) from TableGroups 
     file py from MergeTable
-    val res from RES
     val inputt from params.in
+    val marge_wsi from WSI_MARGE
     output:
-    file "Job_${key}/${key}_whole_slide.csv" into TAB_SLIDE
+    file "Job_${key}/${key}_whole_slide.csv" into TAB_SLIDE, TAB_SLIDE2
     file "Job_${key}/RankedTable/*.csv" into NEW_TAB mode flatten
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key} Job_${key}
-    python $py --resolution $res --slide ${inputt}${key}.tiff
+    python $py --slide ${inputt}${key}.tiff --marge_cut_off $marge_wsi
     """   
 
 }
+
+
+
+/* BEGIN: Creating distribution visualisation of features at the patient level */
+
+DistributionPlot = file("DistributionPlot.py")
+
+process FeatureDistribution {
+    clusterOptions = "-S /bin/bash"
+    publishDir PublishPatient, overwrite: false
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    file wholeTab from TAB_SLIDE
+    file py from DistributionPlot
+    output:
+    file "Job_${wholeTab.getBaseName().split('_')[0]}/Distribution/*.png" into histogramme
+    """
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${wholeTab.name.split("_")[0]} Job_${wholeTab.name.split("_")[0]}
+    python $py --table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/Distribution 
+    """
+
+
+}
+
+/* END: Creating distribution visualisation of features at the patient level */
+
+/* BEGIN Creating feature map visualisation heatmap at resolution RES */
+
+FeatureHeatMaps = file("FeatureHeatMaps.py")
+SMOOTH = 5
+RES = 5
+
+process HeatMaps {
+    clusterOptions = "-S /bin/bash"
+    publishDir PublishPatient, overwrite: false
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    file wholeTab from TAB_SLIDE2
+    file py from FeatureHeatMaps
+    val inputt from params.in
+    val res from RES
+    val smooth from SMOOTH
+    output:
+    file "Job_${wholeTab.getBaseName().split('_')[0]}/HeatMaps/*.png" into heatmaps
+    beforeScript "source ~/.bashrc"
+    """
+    ln -s /share/data40T_v2/Peter/PatientFolder/Job_${wholeTab.name.split("_")[0]} Job_${wholeTab.name.split("_")[0]}
+    python $py --table $wholeTab --output Job_${wholeTab.name.split("_")[0]}/HeatMaps --slide ${inputt}${wholeTab.name.split("_")[0]}.tiff --res $res --smooth $smooth
+    """
+
+
+}
+
 /* END: Creating feature map visualisation */
 
 /* BEGIN: Create colors maps at the WSI level */
 
-/* What is needed :
-- tables (they will have nothing if no cells)
-- origin slide to have dimensions
-*/
-
-/* python files */
-
-// GETSTATISTICS_4_COLORS = file("GetStatistics4Color.py")
-
-/* inputs */
-// FEATURES_TO_VISU = [0, 1, 2]
-
-/* Resume each table */
-// process GetStatistics4Color {
-//     clusterOptions = "-S /bin/bash"
-//     publishDir PublishPatient, overwrite: false
-//     errorStrategy 'retry' 
-//     maxErrors 5
-
-//     input:
-//     file table from TABLE_PROCESSED2
-//     file py from GETSTATISTICS_4_COLORS
-//     each feat from FEATURES_TO_VISU 
-//     output:
-//     file "Job_${table.getBaseName().split('_')[0]}/StatColors/${table.getBaseName()}_${feat}_color_0.npy" into COLOR_VEC
-
-//     """
-//     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${table.name.split("_")[0]} Job_${table.name.split("_")[0]}
-
-//     python $py --table $table --feat $feat --output Job_${table.name.split('_')[0]}/StatColors
-//     """
-// }
-
-
-// COLOR_VEC     .map { file -> tuple(getKey(file), file) }
-//                  .groupTuple() 
-//                  .set { COLOR_VEC_BY_PATIENT }
-
-// MergeStatsByWSI = file("GeneralStatistics4Color.py")
-
-
-// process BringTogetherStatistics4Color {
-//     clusterOptions = "-S /bin/bash"
-//     publishDir PublishPatient, overwrite: false
-//     errorStrategy 'retry' 
-//     maxErrors 5
-
-//     input:
-//     set key, file(vec_color) from COLOR_VEC_BY_PATIENT
-//     file py from MergeStatsByWSI
-//     output:
-//     file "Job_${key}/GeneralStats4Color/GeneralStatistics4color_${key}_*.npy" into GeneralStatsByPatientByFeat
-
-
-//     """
-//     python $py --path . --output Job_${key}/GeneralStats4Color --key ${key}
-//     """
-// }
 /* file input */
 ADDING_COLORS = file("AddingColors.py")
 
@@ -251,7 +222,6 @@ process MakeColors {
     file table from NEW_TAB
     file py from ADDING_COLORS
     val marge_wsi from WSI_MARGE
-//    file wait from GeneralStatsByPatientByFeat .toList()
     output:
     file "Job_${table.getBaseName().split('_')[0]}/ColoredTiled/feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
 
@@ -272,7 +242,6 @@ COLOR_TIFF       .map { file -> tuple(getColorKey(file), file) }
                  .groupTuple() 
                  .set { COLOR_TIFF_GROUPED_BY_PATIENT_FEAT }
 
-// COLOR_TIFF_GROUPED_BY_PATIENT_FEAT .subscribe { println "value: ${it[0]}" }
 process StichingFeatTiff {
     memory '11 GB'
     clusterOptions = "-S /bin/bash"
@@ -290,7 +259,7 @@ process StichingFeatTiff {
 
     """
     ln -s /share/data40T_v2/Peter/PatientFolder/Job_${key.split('___')[1]} Job_${key.split('___')[1]}
-    python $py $margin ${inputt}${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff"""
-
-
+    python $py $marge_wsi ${inputt}${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff
+    """
 }
+/* END: Create colors maps at the WSI level */

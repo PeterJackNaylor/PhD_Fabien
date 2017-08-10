@@ -82,8 +82,8 @@ def Best_Finder_rec(slide, level, x_0, y_0, size_x, size_y, ref_level, list_roi,
 
             x_0 = max(x_0 - width_xp, 0)
             y_0 = max(y_0 - height_xp, 0)
-            size_x = min(x_0 + size_x + width_xp, max_width) - x_0
-            size_y = min(y_0 + size_y + height_xp, max_height) - y_0
+            size_x = min(x_0 + size_x + 2 * width_xp, max_width) - x_0
+            size_y = min(y_0 + size_y + 2 * height_xp, max_height) - y_0
 
             para = [x_0, y_0, size_x, size_y, level]
             val = White_score(slide, para, options)
