@@ -200,7 +200,7 @@ AGREGATE = file("Agregate.py")
 
 process RegroupResults {
     clusterOptions = "-S /bin/bash"
-    publishDir ".", overwrite: True
+    publishDir ".", overwrite: true
 
     input:
     file fold from AnalysedAJI .toList()

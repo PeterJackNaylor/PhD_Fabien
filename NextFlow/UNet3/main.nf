@@ -22,7 +22,6 @@ params.epoch = 1
 process CreateTFRecords {
     clusterOptions = "-S /bin/bash -l h_vmem=60G"
     queue = "all.q"
-    executor = 'sge'
     memory = '60G'
     input:
     file py from TFRECORDS
