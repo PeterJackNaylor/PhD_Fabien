@@ -5,10 +5,10 @@
 params.image_dir = '/data/users/pnaylor/Bureau'
 params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
 params.home = "/data/users/pnaylor"
-params.cellcogn = "data/users/pnaylor/Bureau/CellCognition"
+params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
-PY = file(params.python_dir + '/Data/UNetMultiClass_v2.py')
+PY = file(params.python_dir + '/Nets/UNetMultiClass_v2.py')
 TENSORBOARD = file(params.image_dir + '/tensorboard_multiclass')
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')
@@ -21,6 +21,7 @@ LEARNING_RATE = [0.0001, 0.00001, 0.0000001]
 ARCH_FEATURES = [2, 4, 8, 16, 32]
 WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 32
+params.epoch = 1 
 
 process Mean {
     executor 'local'
