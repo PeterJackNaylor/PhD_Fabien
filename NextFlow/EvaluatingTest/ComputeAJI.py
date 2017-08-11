@@ -2,7 +2,7 @@ from optparse import OptionParser
 from scipy.misc import imread
 from os.path import join
 import pdb
-from NewStuff.AJI import AJI
+from Prediction.AJI import AJI
 
 
 def Options():
