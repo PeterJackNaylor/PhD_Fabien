@@ -17,10 +17,11 @@ CELLCOG_classif = file(params.cellcogn + '/classifier_January2017')
 CELLCOG_folder = file(params.cellcogn + '/Fabien')
 TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords.py')
 
-LEARNING_RATE = [0.0001, 0.00001]
-ARCH_FEATURES = [2, 4, 8, 16]
-WEIGHT_DECAY = [0.0005, 0.00005]
-BS = 32
+LEARNING_RATE = [0.01, 0.001, 0.0001]
+ARCH_FEATURES = [16, 32, 64]
+WEIGHT_DECAY = [0.005, 0.0005, 0.00005]
+BS = 16
+params.epoch = 1 
 
 process Mean {
     executor 'local'
@@ -74,11 +75,28 @@ process CreateTFRecords {
     """
 }
 
+process CreateTFRecords2 {
+    clusterOptions = "-S /bin/bash -l h_vmem=60G"
+    queue = "all.q"
+    memory = '60G'
+    input:
+    file py from TFRECORDS
+    val epoch from params.epoch
+    file path from ToAnnotateColor2
+
+    output:
+    file "UNetRecords.tfrecords" into DATAQUEUE2
+    """
+
+    python $py --output UNetRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type ReducedClass
+    """
+}
+
 
 process Training {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARD, mode: "copy", overwrite: false
+//   publishDir TENSORBOARD, mode: "copy", overwrite: false
     maxForks = 2
 
     input:
@@ -94,7 +112,7 @@ process Training {
     file __ from DATAQUEUE
     val epoch from params.epoch
     output:
-    file "${feat}_${wd}_${lr}" into RESULTS
+    file "${feat}_${wd}_${lr}" into RESULTS 
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
@@ -106,5 +124,34 @@ process Training {
     """
 }
 
+
+process Training2 {
+
+    clusterOptions = "-S /bin/bash"
+    publishDir TENSORBOARD, mode: "copy", overwrite: false
+    maxForks = 2
+
+    input:
+    file path from IMAGE_FOLD
+    file py from PY
+    file res from RESULTS
+    val bs from BS
+    val home from params.home
+//    val pat from PATIENT
+    file _ from MeanFile
+    file __ from DATAQUEUE2
+    val epoch from params.epoch
+    output:
+    file res into RESULTS2
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    python $py --tf_record $__ --path $path  --log . --learning_rate ${res.split("_")[3]} --batch_size $bs --epoch $epoch --n_features ${res.split("_")[1]} --weight_decay ${res.split("_")[2]} --mean_file $_ --n_threads 100 --num_labels 6
+
+    """
+}
 
 

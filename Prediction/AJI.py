@@ -5,7 +5,6 @@ import time
 from progressbar import ProgressBar
 pbar = ProgressBar()
 
-
 def Intersection(A, B):
     C = A + B
     C[C != 2] = 0
@@ -26,8 +25,9 @@ def AssociatedCell(G_i, S):
         DEN = float(Union(G_i, S_indice).sum())
         return NUM / DEN
     res = map(g, range(1, S.max() + 1))
+    indice = np.array(res).argmax() + 1
 
-    return np.array(res).argmax()
+    return indice
 
 def AJI(G, S):
     G = label(G, background=0)
@@ -38,7 +38,6 @@ def AJI(G, S):
     USED = np.zeros(S.max())
 
     for i in pbar(range(1, G.max() + 1)):
-
         only_ground_truth = np.zeros_like(G)
         only_ground_truth[ G == i ] = 1
 
@@ -47,7 +46,7 @@ def AJI(G, S):
         only_prediction[ S == j ] = 1
         C += Intersection(only_prediction, only_ground_truth).sum()
         U += Union(only_prediction, only_ground_truth).sum()
-        USED[j] = 1
+        USED[j - 1] = 1
 
     def h(indice):
         if USED[indice - 1] == 1:
@@ -55,7 +54,7 @@ def AJI(G, S):
         else:
             only_prediction = np.zeros_like(S)
             only_prediction[ S == indice ] = 1
-            return only_prediction.sum()
+        return only_prediction.sum()
     U_sum = map(h, range(1, S.max() + 1))
     U += np.sum(U_sum)
     return float(C) / float(U)  
