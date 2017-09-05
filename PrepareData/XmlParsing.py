@@ -46,7 +46,6 @@ def load_files(options):
     for j, item in enumerate(image):
         image_folder.loc[j] = parse_name_png(item)
     image_folder = image_folder.set_index(['SlideID', 'CropID'])
-    #pdb.set_trace()
     result = pd.concat([data_folder, image_folder], axis=1)
     return result
 

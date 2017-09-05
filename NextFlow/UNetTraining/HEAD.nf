@@ -5,15 +5,9 @@ params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
 params.home = "/data/users/pnaylor"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
-<<<<<<< HEAD
-PY = file(params.python_dir + '/NewStuff/UNetBatchNorm.py')
-TENSORBOARD = file(params.image_dir + '/nothing')
-MEANPY = file(params.python_dir + '/NewStuff/MeanCalculation.py')
-=======
 PY = file(params.python_dir + '/Data/UNetBatchNorm_v2.py')
 TENSORBOARD = file(params.image_dir + '/tensorboard_withmean')
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
->>>>>>> bca80c5438e9cd9caf8a8360f5594a0fed50387b
 
 LEARNING_RATE = [0.001, 0.0001, 0.00001]
 ARCH_FEATURES = [32]
