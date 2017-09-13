@@ -58,7 +58,8 @@ process CreateBWTestRecords {
     """
 }
 
-CHECKPOINT_VGG = file("")
+FCN32TRAIN = file("FCN32Train.py")
+CHECKPOINT_VGG = file(params.home + "/Documents/Python/pretrained/vgg_16.ckpt")
 LEARNING_RATE = [0.001, 0.0001, 0.00001]
 NPRINT = 100
 ITER32 = 1800
@@ -70,7 +71,7 @@ process FCN32 {
     maxForks = 2
 
     input:
-    file py from 
+    file py from FCN32TRAIN
 
     file cp from CHECKPOINT_VGG
     file tfr from TrainRECORDBIN
@@ -92,11 +93,12 @@ process FCN32 {
     """
 }
 
+FCNTEST = file('FCNTest.py')
 ITERTEST = 24
 
 process FCN32_testing {
     input:
-    file py from 
+    file py from FCNTEST
     file cp from CHECKPOINT_32
     file tfr from TestRECORDBIN
     val iter from ITERTEST
