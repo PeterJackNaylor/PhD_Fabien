@@ -9,9 +9,9 @@ PY = file(params.python_dir + '/Data/UNetBatchNorm_v2.py')
 TENSORBOARD = file(params.image_dir + '/tensorboard_withmean')
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 
-LEARNING_RATE = [0.01, 0.001]
-ARCH_FEATURES = [2, 4, 8, 16, 32]
-WEIGHT_DECAY = [0.0005, 0.00005]
+LEARNING_RATE = [0.001, 0.0001, 0.00001]
+ARCH_FEATURES = [32]
+WEIGHT_DECAY = [0.00005, 0.0005]
 BS = 32
 
 process Mean {
@@ -53,7 +53,7 @@ process Training {
 
     script:
     """
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --epoch 200 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd
+    python $py --epoch 200 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd
 
     """
 }

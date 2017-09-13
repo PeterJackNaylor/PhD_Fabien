@@ -272,7 +272,7 @@ if __name__== "__main__":
     PATH = options.path
     HEIGHT = 212
     WIDTH = 212
-    N_TRAIN_SAVE = 2
+    N_TRAIN_SAVE = 500
     CROP = 4
     #pdb.set_trace()
     if int(str(LEARNING_RATE)[-1]) > 7:

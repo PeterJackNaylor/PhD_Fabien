@@ -9,7 +9,7 @@ params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
 PY = file(params.python_dir + '/Nets/UNetMultiClass_v2.py')
-TENSORBOARD = file(params.image_dir + '/tensorboard_multiclass')
+TENSORBOARD = file(params.image_dir + '/tensorboard_reduceclass')
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')
 SlideName = file(params.python_dir + '/PrepareData/EverythingExceptColor.py')
@@ -100,7 +100,7 @@ process Training {
     maxForks = 2
 
     input:
-    file path from IMAGE_FOLD
+    file path from ToAnnotateColor2
     file py from PY
     val bs from BS
     val home from params.home
@@ -119,7 +119,7 @@ process Training {
 
     script:
     """
-    python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --num_labels 6
+    python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
 
     """
 }

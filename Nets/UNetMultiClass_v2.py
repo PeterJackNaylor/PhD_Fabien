@@ -8,14 +8,15 @@ from sklearn.metrics import confusion_matrix
 from datetime import datetime
 ### for main
 from optparse import OptionParser
-from Data.DataGenClass import DataGenMulti
+from Data.DataGenClass import DataGen3reduce
 from UsefulFunctions.ImageTransf import ListTransform
 import pdb
 
-MULTICLASS_NAME = ["Background", "Cancerous", "Lymphocyte", "Fibroblast",
-                   "Mitosis", "Epithelial", "Endothelial", "Adiposite",
+MULTICLASS_NAME = ["Background", "Adiposite", "Cancerous", "Lymphocyte", "Fibroblast",
+                   "Mitosis", "Epithelial", "Endothelial",
                    "Ignore", "Necroses"]
-
+MULTICLASS_NAME = ["Background", "Adiposite", "Cancerous", "Lymphocyte", "Fibroblast",
+                   "Ignore"]
 def CM_DIV(cm, index, max_lab):
     list_FP = []
     list_TN = []
@@ -322,16 +323,16 @@ if __name__== "__main__":
 
     transform_list, transform_list_test = ListTransform()
 
-    DG_TRAIN = DataGenMulti(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
+    DG_TRAIN = DataGen3reduce(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True, num="02", 
                        mean_file=None)
 
     test_patient = ["02", "06"]
     DG_TRAIN.SetPatient(test_patient)
     N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
-    DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+    DG_TEST  = DataGen3reduce(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True, num="02",
-                       mean_file="mean_file.npy")
+                       mean_file=MEAN_FILE)
     DG_TEST.SetPatient(test_patient)
 
     model = UNetMultiClass(TFRecord,   LEARNING_RATE=LEARNING_RATE,
@@ -350,6 +351,6 @@ if __name__== "__main__":
                                        N_THREADS=N_THREADS,
                                        MEAN_FILE=MEAN_FILE,
                                        DROPOUT=DROPOUT)
-
+    
     model.train(DG_TEST, lb_name=MULTICLASS_NAME)
     lb = ["Background", "Nuclei", "NucleiBorder"]

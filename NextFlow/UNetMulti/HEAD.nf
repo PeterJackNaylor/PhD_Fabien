@@ -5,7 +5,7 @@
 params.image_dir = '/data/users/pnaylor/Bureau'
 params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
 params.home = "/data/users/pnaylor"
-params.cellcogn = "data/users/pnaylor/Bureau/CellCognition"
+params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
 PY = file(params.python_dir + '/Data/UNetMultiClass.py')
@@ -16,8 +16,8 @@ SlideName = file(params.python_dir + '/PrepareData/EverythingExceptColor.py')
 CELLCOG_classif = file(params.cellcogn + '/classifier_January2017')
 CELLCOG_folder = file(params.cellcogn + '/Fabien')
 
-LEARNING_RATE = [0.0001, 0.00001, 0.0000001]
-ARCH_FEATURES = [2, 4, 8, 16, 32]
+LEARNING_RATE = [0.001, 0.0001, 0.00001, 0.000001]
+ARCH_FEATURES = [16]
 WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 32
 
