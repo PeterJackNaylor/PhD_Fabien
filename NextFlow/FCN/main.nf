@@ -59,7 +59,7 @@ process CreateBWTestRecords {
 }
 
 FCN32TRAIN = file("FCN32Train.py")
-CHECKPOINT_VGG = file(params.home + "/Documents/Python/pretrained/vgg_16.ckpt")
+CHECKPOINT_VGG = file(params.image_dir + "/pretrained/vgg_16.ckpt")
 LEARNING_RATE = [0.001, 0.0001, 0.00001]
 NPRINT = 100
 ITER32 = 1800
@@ -115,7 +115,7 @@ process FCN32_testing {
 process RegroupFCN32_results {
 
     input:
-    file RES32 .toList()
+    file _ from RES32 .toList()
     output:
     file "bestmodel/*.cpkt"
     """
