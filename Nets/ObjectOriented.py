@@ -304,7 +304,7 @@ class ConvolutionalNeuralNetwork:
     def LearningRateSchedule(self, lr, k, epoch):
         with tf.name_scope('LearningRateSchedule'):
             self.global_step = tf.Variable(0., trainable=False)
-
+            tf.add_to_collection('global_step', self.global_step)
             if self.LRSTEP == "epoch/2":
 
                 decay_step = float(epoch) / (2 * self.BATCH_SIZE)

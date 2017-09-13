@@ -19,8 +19,8 @@ TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords.py')
 
 LEARNING_RATE = [0.01, 0.001, 0.0001]
 ARCH_FEATURES = [16, 32, 64]
-WEIGHT_DECAY = [0.005, 0.0005, 0.00005]
-BS = 16
+WEIGHT_DECAY = [0.0005, 0.00005]
+BS = 10
 params.epoch = 1 
 
 process Mean {
@@ -31,7 +31,7 @@ process Mean {
     file py from MEANPY
     file toannotate from IMAGE_FOLD
     output:
-    file "mean_file.npy" into MeanFile
+    file "mean_file.npy" into MeanFile, MeanFile2
 
     """
     python $py --path $toannotate --output .
@@ -100,7 +100,7 @@ process Training {
     maxForks = 2
 
     input:
-    file path from ToAnnotateColor2
+    file path from ToAnnotateColor
     file py from PY
     val bs from BS
     val home from params.home
@@ -132,13 +132,13 @@ process Training2 {
     maxForks = 2
 
     input:
-    file path from IMAGE_FOLD
+    file path from ToAnnotateColor2
     file py from PY
     file res from RESULTS
     val bs from BS
     val home from params.home
 //    val pat from PATIENT
-    file _ from MeanFile
+    file _ from MeanFile2
     file __ from DATAQUEUE2
     val epoch from params.epoch
     output:
@@ -149,7 +149,7 @@ process Training2 {
 
     script:
     """
-    python $py --tf_record $__ --path $path  --log . --learning_rate ${res.split("_")[3]} --batch_size $bs --epoch $epoch --n_features ${res.split("_")[1]} --weight_decay ${res.split("_")[2]} --mean_file $_ --n_threads 100 --num_labels 6
+    python $py --tf_record $__ --path $path  --log . --learning_rate ${res.name.split('_')[2]} --batch_size $bs --epoch $epoch --n_features ${res.name.split('_')[0]} --weight_decay ${res.name.split('_')[1]} --mean_file $_ --n_threads 100 --num_labels 6
 
     """
 }

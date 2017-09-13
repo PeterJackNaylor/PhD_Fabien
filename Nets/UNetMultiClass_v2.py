@@ -187,7 +187,7 @@ class UNetMultiClass(UNetBatchNorm):
             confusion_image = tf.reshape( tf.cast( confusion, tf.float32),
                                       [1, self.NUM_LABELS, self.NUM_LABELS, 1])
             tf.summary.image('confusion', confusion_image)
-            self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
+            self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", global_step=self.global_step)
 
 
 
@@ -207,14 +207,19 @@ class UNetMultiClass(UNetBatchNorm):
 
     def train(self, DGTest=None, lb_name=MULTICLASS_NAME, saver=True):
         epoch = self.STEPS * self.BATCH_SIZE // self.N_EPOCH
-
-        self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
-
+        self.Saver()	
         trainable_var = tf.trainable_variables()
-        
-        self.regularize_model()
+        self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
         self.optimization(trainable_var)
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
+        init_op = tf.group(tf.global_variables_initializer(),
+                   tf.local_variables_initializer())
+        self.sess.run(init_op)
+        self.regularize_model()
+
+        self.Saver()
+        
+        
 
         self.summary_test_writer = tf.summary.FileWriter(self.LOG + '/test',
                                             graph=self.sess.graph)
@@ -223,13 +228,12 @@ class UNetMultiClass(UNetBatchNorm):
         self.merged_summary = tf.summary.merge_all()
         steps = self.STEPS
 
-        init_op = tf.group(tf.global_variables_initializer(),
-                   tf.local_variables_initializer())
-        self.sess.run(init_op)
+        print "self.global step", int(self.global_step.eval())
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
-
-        for step in range(steps):
+	begin = int(self.global_step.eval())
+        print "begin", begin
+        for step in range(begin, steps + begin):
             # self.optimizer is replaced by self.training_op for the exponential moving decay
             _, l, lr, predictions, batch_labels, s = self.sess.run(
                         [self.training_op, self.loss, self.learning_rate,
@@ -301,7 +305,7 @@ if __name__== "__main__":
 
     LEARNING_RATE = options.lr
     BATCH_SIZE = options.bs
-    LRSTEP = "10epoch"
+    LRSTEP = "50epoch"
 
     SUMMARY = True
     S = SUMMARY
@@ -310,7 +314,7 @@ if __name__== "__main__":
     HEIGHT = 212
     WIDTH = 212
     SIZE = (HEIGHT, WIDTH)
-    N_TRAIN_SAVE = 2
+    N_TRAIN_SAVE = 100
     CROP = 4
     #pdb.set_trace()
     if int(str(LEARNING_RATE)[-1]) > 7:
