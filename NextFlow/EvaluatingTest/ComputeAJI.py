@@ -2,7 +2,7 @@ from optparse import OptionParser
 from scipy.misc import imread
 from os.path import join
 import pdb
-from Prediction.AJI import AJI
+from Prediction.AJI import AJI_fast
 
 
 def Options():
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     anno = imread(anno_path)
     PP = imread(PP_path)
 
-    score = AJI(anno, PP)
+    score = AJI_fast(anno, PP)
 
     f = open(file_name, 'a')
     f.write('AJI: # {} #\n'.format(score))
