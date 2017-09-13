@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     parser.add_option("--checkpoint", dest="checkpoint", type="str",
                       help="Checkpoint to restore from")
-    parser.add_option("--checksavedir", dest="checksave", type="str",
+    parser.add_option("--checksavedir", dest="checksavedir", type="str",
                       help="Directory of checkpoint to save to")
     parser.add_option("--tf_records", dest="tf_records", type="str",
                       help="tf_records to read from")
@@ -45,8 +45,6 @@ if __name__ == '__main__':
                       help="iter")
 
     (options, args) = parser.parse_args()
-    sys.path.append("/Users/naylorpeter/Documents/Python/packages/models/slim/")
-    sys.path.append("/Users/naylorpeter/Documents/Python/packages/tf-image-segmentation/")
 
     checkpoint_path = options.checkpoint
     checksave = options.checksavedir + "/model__{}__fcn32s.ckpt".format(options.lr)
@@ -61,7 +59,7 @@ if __name__ == '__main__':
     number_of_classes = options.labels
     
     #pascal_voc_lut = pascal_segmentation_lut()
-    class_labels = range(number_of_classes - 1)
+    class_labels = range(number_of_classes)
     class_labels.append(255)
 
 
@@ -180,12 +178,12 @@ if __name__ == '__main__':
             cross_entropy, F1, summary_string, _ = sess.run([ cross_entropy_sum, fmeasure,
                                                           merged_summary_op,
                                                           train_step ])
-            print('\n Timestamp: {:%Y-%m-%d %H:%M:%S} :\n'.format(datetime.datetime.now()))
-            print("Current loss: " + str(cross_entropy))
-            print("Current F1: " + str(F1))
-            summary_string_writer.add_summary(summary_string, i)
             
             if i % options.n_print == 0:
+                print('\n Timestamp: {:%Y-%m-%d %H:%M:%S} :\n'.format(datetime.datetime.now()))
+                print("Current loss: " + str(cross_entropy))
+                print("Current F1: " + str(F1))
+                summary_string_writer.add_summary(summary_string, i)
                 save_path = saver.save(sess, checksave)
                 print("Model saved in file: %s" % save_path)
                 

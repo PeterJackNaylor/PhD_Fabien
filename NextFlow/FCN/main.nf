@@ -54,12 +54,12 @@ process CreateBWTestRecords {
     """
     ##PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
     alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
-    python $py --output TrainBin.tfrecords --path $path --crop 4 --no-UNet --size $i_s --seed 42 --epoch $epoch --type Normal --test
+    python $py --output TestBin.tfrecords --path $path --crop 4 --no-UNet --size $i_s --seed 42 --epoch $epoch --type Normal --test
     """
 }
 
 FCN32TRAIN = file("FCN32Train.py")
-CHECKPOINT_VGG = file(params.home + "/Documents/Python/pretrained/vgg_16.ckpt")
+CHECKPOINT_VGG = file(params.image_dir + "/pretrained/vgg_16.ckpt")
 LEARNING_RATE = [0.001, 0.0001, 0.00001]
 NPRINT = 100
 ITER32 = 1800
@@ -72,7 +72,7 @@ process FCN32 {
 
     input:
     file py from FCN32TRAIN
-
+    val home from params.home
     file cp from CHECKPOINT_VGG
     file tfr from TrainRECORDBIN
     val i_s from IMAGE_SIZE
@@ -115,7 +115,7 @@ process FCN32_testing {
 process RegroupFCN32_results {
 
     input:
-    file RES32 .toList()
+    file _ from RES32 .toList()
     output:
     file "bestmodel/*.cpkt"
     """
@@ -148,7 +148,7 @@ process BinToColor {
     cp -r ./ToAnnotateBinary/Slide_* ./ToAnnotateColor/
     """
 }
-
+/*
 process CreateMultiRecords {
     clusterOptions = "-S /bin/bash -l h_vmem=60G"
     queue = "all.q"
@@ -167,4 +167,4 @@ process CreateMultiRecords {
 }
 
 
-
+*/
