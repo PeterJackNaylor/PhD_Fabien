@@ -15,7 +15,8 @@ def _int64_feature(value):
 
 def CreateTFRecord(OUTNAME, PATH, CROP, SIZE,
                    TRANSFORM_LIST, UNET, MEAN_FILE, 
-                   SEED, TEST_PATIENT, N_EPOCH, TYPE = "Normal"):
+                   SEED, TEST_PATIENT, N_EPOCH, TYPE = "Normal",
+                   SPLIT="train"):
     '''Not for UNet'''
 
     tfrecords_filename = OUTNAME
@@ -23,16 +24,16 @@ def CreateTFRecord(OUTNAME, PATH, CROP, SIZE,
 
     
     if TYPE == "Normal":
-        DG = DataGenRandomT(PATH, split="train", crop=CROP, size=SIZE,
+        DG = DataGenRandomT(PATH, split=SPLIT, crop=CROP, size=SIZE,
                         transforms=TRANSFORM_LIST, UNet=UNET,
                         mean_file=MEAN_FILE, seed_=SEED)
 
     elif TYPE == "3class":
-        DG = DataGen3(PATH, split="train", crop = CROP, size=SIZE, 
+        DG = DataGen3(PATH, split=SPLIT, crop = CROP, size=SIZE, 
                        transforms=TRANSFORM_LIST, UNet=UNET, 
                        mean_file=MEAN_FILE, seed_=SEED)
     elif TYPE == "ReducedClass":
-        DG = DataGen3reduce(PATH, split="train", crop = CROP, size=SIZE, 
+        DG = DataGen3reduce(PATH, split=SPLIT, crop = CROP, size=SIZE, 
                        transforms=TRANSFORM_LIST, UNet=UNET, 
                        mean_file=MEAN_FILE, seed_=SEED)
 
@@ -212,6 +213,9 @@ def options_parser():
                        help="Type for the datagen")  
     parser.add_option('--UNet', dest='UNet', action='store_true')
     parser.add_option('--no-UNet', dest='UNet', action='store_false')
+
+    parser.add_option('--train', dest='split', action='store_true')
+    parser.add_option('--test', dest='split', action='store_false')
     parser.set_defaults(feature=True)
 
     (options, args) = parser.parse_args()
@@ -226,8 +230,8 @@ if __name__ == '__main__':
     PATH = options.path
     CROP = options.crop
     SIZE = options.SIZE
-
-    transform_list, transform_list_test = ListTransform()
+    SPLIT = "train" if options.split else "test"
+    transform_list, transform_list_test = ListTransform() 
     TRANSFORM_LIST = transform_list
     UNET = options.UNet
     SEED = options.seed
@@ -239,4 +243,4 @@ if __name__ == '__main__':
     CreateTFRecord(OUTNAME, PATH, CROP, SIZE,
                    TRANSFORM_LIST, UNET, None, 
                    SEED, TEST_PATIENT, N_EPOCH,
-                   TYPE=TYPE)
+                   TYPE=TYPE, SPLIT=SPLIT)

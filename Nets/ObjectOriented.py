@@ -356,7 +356,7 @@ class ConvolutionalNeuralNetwork:
 
         print('  Validation loss: %.1f' % l)
         print('       Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
-        self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
+        self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", global_step=self.global_step)
 
     def Saver(self):
         print("Setting up Saver...")
