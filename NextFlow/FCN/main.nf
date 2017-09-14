@@ -60,9 +60,10 @@ process CreateBWTestRecords {
 
 FCN32TRAIN = file("FCN32Train.py")
 CHECKPOINT_VGG = file(params.image_dir + "/pretrained/vgg_16.ckpt")
-LEARNING_RATE = [0.001, 0.0001, 0.00001]
+LEARNING_RATE = [0.001, 0.0001, 0.00001, 0.000001]
+
 NPRINT = 100
-ITER32 = 1800
+ITER32 = 200
 
 process FCN32 {
 
@@ -80,8 +81,8 @@ process FCN32 {
     val np from NPRINT
     val iter from ITER32
     output:
-    file "log__fcn__*" into RESULTS 
-    file "model__*__fcn32s.ckpt" into CHECKPOINT_32
+    file "log__fcn32__*" into RESULTS 
+    file "model__*__fcn32s.ckpt.*" into CHECKPOINT_32
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
@@ -102,12 +103,17 @@ process FCN32_testing {
     file cp from CHECKPOINT_32
     file tfr from TestRECORDBIN
     val iter from ITERTEST
+    val home from params.home
     output:
-    file "*csv" into RES32
+    file "*.csv" into RES32
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
     """
     ###PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
     alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
-    python $py --checkpoint $cp --tf_records $tfr --labels 2 --iter $iter
+    python $py --checkpoint ${cp.first().name.split('.data')[0]} --tf_records $tfr --labels 2 --iter $iter
     """
 
 }
@@ -119,7 +125,19 @@ process RegroupFCN32_results {
     output:
     file "bestmodel/*.cpkt"
     """
-    echo 'hello'
+    import os 
+    os.mkdir('bestmodel')
+    import pandas as pd
+    import pdb
+    from glob import glob
+    CSV = glob('*.csv')
+    df_list = []
+    for f in CSV:
+        df = pd.read_csv(f)
+        df.index = f.split('.')[0].split('_')[1]
+        df_list.append(df)
+    table = pd.concat(df_list)
+    pdb.set_trace()
     """
 
 }

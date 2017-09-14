@@ -38,11 +38,9 @@ if __name__ == '__main__':
 
 
     restoremodel = options.checkpoint
-
+    lr = restoremodel.split('__')[1]
     slim = tf.contrib.slim
 
-
-    pascal_voc_lut = pascal_segmentation_lut()
 
     tfrecord_filename = options.tf_records
 
@@ -105,7 +103,7 @@ if __name__ == '__main__':
             y_pred = pred_np.flatten()
             ACC += accuracy_score(y_true, y_pred)
             AUC += auc(y_true, y_pred)
-            AJI += AJI_fast(annotation_np, pred_np)
+            AJI += AJI_fast(annotation_np[:,:,0], pred_np[0,:,:,0])
             F1 += f1_score(y_true, y_pred)
             PRECISION += precision_score(y_true, y_pred)
             RECALL += recall_score(y_true, y_pred)
@@ -129,6 +127,5 @@ if __name__ == '__main__':
                     'PRECISION':[PRECISION,], 'RECALL':[RECALL,], 
                     "IU":[res,], "AJI":[AJI,]}
         df_results = pd.DataFrame(results)
-        
         df_results.to_csv('fcn32__{}.csv'.format(lr))
 
