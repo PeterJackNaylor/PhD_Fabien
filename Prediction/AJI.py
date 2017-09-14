@@ -70,7 +70,8 @@ pbar2 = ProgressBar()
 def AJI_fast(G, S):
     G = label(G, background=0)
     S = label(S, background=0)
-
+    if S.sum() == 0:
+        return 0.
     C = 0
     U = 0 
     USED = np.zeros(S.max())

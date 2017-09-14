@@ -1,3 +1,4 @@
+
 import tensorflow as tf
 import numpy as np
 import skimage.io as io
@@ -8,7 +9,6 @@ import pdb
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
 from tf_image_segmentation.models.fcn_32s import FCN_32s, extract_vgg_16_mapping_without_fc8
 
-from tf_image_segmentation.utils.pascal_voc import pascal_segmentation_lut
 
 from tf_image_segmentation.utils.training import get_valid_logits_and_labels
 
@@ -16,7 +16,6 @@ from tf_image_segmentation.utils.augmentation import (distort_randomly_image_col
                                                       flip_randomly_left_right_image_with_annotation,
                                                       scale_randomly_image_with_annotation_with_fixed_size_output)
 from optparse import OptionParser
-
 if __name__ == '__main__':
     
 
@@ -64,7 +63,7 @@ if __name__ == '__main__':
 
 
     filename_queue = tf.train.string_input_producer(
-        [tfrecord_filename], num_epochs=1)
+        [tfrecord_filename], num_epochs=2)
 
     image, annotation = read_tfrecord_and_decode_into_image_annotation_pair_tensors(filename_queue)
 
