@@ -93,7 +93,7 @@ process FCN32 {
     """
 }
 
-FCNTEST = file('FCNTest.py')
+FCNTEST = file('FCN32Test.py')
 ITERTEST = 24
 
 process FCN32_testing {
