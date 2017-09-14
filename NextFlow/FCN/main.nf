@@ -81,7 +81,7 @@ process FCN32 {
     val np from NPRINT
     val iter from ITER32
     output:
-    file "log__fcn32__*" into RESULTS 
+    file "log__fcn32__*" into RESULTS_32  
     file "model__*__fcn32s.ckpt.*" into CHECKPOINT_32
     file "model__*__fcn32s.ckpt.*" into CHECKPOINT_32_1 mode flatten
     
@@ -94,6 +94,8 @@ process FCN32 {
     python $py --checkpoint $cp --checksavedir . --tf_records $tfr --log . --image_size $i_s --labels 2 --lr $lr --n_print $np --iter $iter
     """
 }
+
+// maybe publish RESULTS_32
 
 FCNTEST = file('FCN32Test.py')
 ITERTEST = 24
@@ -151,6 +153,43 @@ process RegroupFCN32_results {
     """
 
 }
+
+FCN16TRAIN = file("FCN16Train.py")
+ITER16 = 200
+LEARNING_RATE = [0.0001, 0.00001, 0.000001, 0.0000001]
+
+process FCN16 {
+
+    clusterOptions = "-S /bin/bash"
+//   publishDir TENSORBOARD, mode: "copy", overwrite: false
+    maxForks = 2
+
+    input:
+    file py from FCN16TRAIN
+    val home from params.home
+    file cp from STARTING_16
+    file tfr from TrainRECORDBIN
+    val i_s from IMAGE_SIZE
+    each lr from LEARNING_RATE
+    val np from NPRINT
+    val iter from ITER16
+    output:
+    file "log__fcn16__*" into RESULTS_16
+    file "model__*__fcn16s.ckpt.*" into CHECKPOINT_16
+    file "model__*__fcn16s.ckpt.*" into CHECKPOINT_16_1 mode flatten
+    
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
+    python $py --checkpoint $cp --checksavedir . --tf_records $tfr --log . --image_size $i_s --labels 2 --lr $lr --n_print $np --iter $iter
+    """
+}
+
+
+
 
 BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')
 SlideName = file(params.python_dir + '/PrepareData/EverythingExceptColor.py')

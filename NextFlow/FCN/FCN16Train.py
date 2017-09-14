@@ -53,6 +53,7 @@ if __name__ == '__main__':
 
     tfrecord_filename = options.tf_records
     log_folder = options.log + "/log__fcn16__{}".format(options.lr)
+    checksave = options.checksavedir + "/model__{}__fcn16s.ckpt".format(options.lr)
 
 
     slim = tf.contrib.slim
@@ -66,7 +67,7 @@ if __name__ == '__main__':
     class_labels.append(255)
 
 
-    fcn_32s_checkpoint_path = options.checkpoint
+    fcn_32s_checkpoint_path = options.checkpoint 
 
     filename_queue = tf.train.string_input_producer(
         [tfrecord_filename], num_epochs=1)
