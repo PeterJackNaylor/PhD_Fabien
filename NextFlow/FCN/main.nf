@@ -83,7 +83,8 @@ process FCN32 {
     output:
     file "log__fcn32__*" into RESULTS 
     file "model__*__fcn32s.ckpt.*" into CHECKPOINT_32
-
+    file "model__*__fcn32s.ckpt.*" into CHECKPOINT_32_1 mode flatten
+    
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
@@ -122,10 +123,13 @@ process RegroupFCN32_results {
 
     input:
     file _ from RES32 .toList()
+    file __ from CHECKPOINT_32_1 .toList()
     output:
-    file "bestmodel/*.cpkt"
+    file "bestmodel" into STARTING_16
+    file "FCN32_results.csv" into RES32_table
     """
-    import os 
+    #!/usr/bin/env python
+    import os
     os.mkdir('bestmodel')
     import pandas as pd
     import pdb
@@ -133,11 +137,17 @@ process RegroupFCN32_results {
     CSV = glob('*.csv')
     df_list = []
     for f in CSV:
-        df = pd.read_csv(f)
-        df.index = f.split('.')[0].split('_')[1]
+        df = pd.read_csv(f, index_col=0)
+        df.index = [f[0:-4].split('__')[1]]
         df_list.append(df)
     table = pd.concat(df_list)
-    pdb.set_trace()
+
+    best_index = table['F1'].argmax()
+    table.to_csv('FCN32_results.csv')
+    
+    TOMOVE = glob("model__{}__fcn32s.ckpt*".format(best_index))
+    for file in TOMOVE:
+        os.rename(file, os.path.join("bestmodel", file))
     """
 
 }
