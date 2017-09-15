@@ -348,7 +348,7 @@ process RegroupFCN8_results {
         os.rename(file, os.path.join("bestmodel", file))
     """
 }
-
+/*
 process BinToColor {
     executor 'local'
     clusterOptions = "-S /bin/bash"
@@ -465,7 +465,6 @@ process RegroupFCN8Multi_results {
     output:
     file "bestmodel" into BEST_MULTI_MODEL
     file "FCN8Multi_results.csv" into RES8Multi_table
-//    file "log__fcn8Multi__*" into PUBLISH8Multi
 
     """
     #!/usr/bin/env python
@@ -490,3 +489,4 @@ process RegroupFCN8Multi_results {
         os.rename(file, os.path.join("bestmodel", file))
     """
 }
+*/
