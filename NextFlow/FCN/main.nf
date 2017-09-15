@@ -60,7 +60,7 @@ process CreateBWTestRecords {
 
 FCN32TRAIN = file("FCN32Train.py")
 CHECKPOINT_VGG = file(params.image_dir + "/pretrained/vgg_16.ckpt")
-LEARNING_RATE = [0.001, 0.0001, 0.00001, 0.000001]
+LEARNING_RATE_32 = [0.001, 0.0001, 0.00001, 0.000001]
 
 NPRINT = 100
 ITER32 = 200
@@ -77,7 +77,7 @@ process FCN32 {
     file cp from CHECKPOINT_VGG
     file tfr from TrainRECORDBIN
     val i_s from IMAGE_SIZE
-    each lr from LEARNING_RATE
+    each lr from LEARNING_RATE_32
     val np from NPRINT
     val iter from ITER32
     output:
@@ -97,12 +97,12 @@ process FCN32 {
 
 // maybe publish RESULTS_32
 
-FCNTEST = file('FCN32Test.py')
+FCN32TEST = file('FCN32Test.py')
 ITERTEST = 24
 
 process FCN32_testing {
     input:
-    file py from FCNTEST
+    file py from FCN32TEST
     file cp from CHECKPOINT_32
     file tfr from TestRECORDBIN
     val iter from ITERTEST
@@ -156,7 +156,7 @@ process RegroupFCN32_results {
 
 FCN16TRAIN = file("FCN16Train.py")
 ITER16 = 200
-LEARNING_RATE = [0.0001, 0.00001, 0.000001, 0.0000001]
+LEARNING_RATE_16 = [0.0001, 0.00001, 0.000001, 0.0000001]
 
 process FCN16 {
 
@@ -170,7 +170,7 @@ process FCN16 {
     file cp from STARTING_16
     file tfr from TrainRECORDBIN
     val i_s from IMAGE_SIZE
-    each lr from LEARNING_RATE
+    each lr from LEARNING_RATE_16
     val np from NPRINT
     val iter from ITER16
     output:
@@ -188,7 +188,152 @@ process FCN16 {
     """
 }
 
+FCN16TEST = file('FCN16Test.py')
 
+process FCN16_testing {
+    input:
+    file py from FCN16TEST
+    file cp from CHECKPOINT_16
+    file tfr from TestRECORDBIN
+    val iter from ITERTEST
+    val home from params.home
+    output:
+    file "*.csv" into RES16
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    """
+    ###PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
+    alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
+    python $py --checkpoint ${cp.first().name.split('.data')[0]} --tf_records $tfr --labels 2 --iter $iter
+    """
+
+}
+
+process RegroupFCN16_results {
+
+    input:
+    file _ from RES16 .toList()
+    file __ from CHECKPOINT_16_1 .toList()
+    output:
+    file "bestmodel" into STARTING_8
+    file "FCN16_results.csv" into RES16_table
+    """
+    #!/usr/bin/env python
+    import os
+    os.mkdir('bestmodel')
+    import pandas as pd
+    import pdb
+    from glob import glob
+    CSV = glob('*.csv')
+    df_list = []
+    for f in CSV:
+        df = pd.read_csv(f, index_col=0)
+        df.index = [f[0:-4].split('__')[1]]
+        df_list.append(df)
+    table = pd.concat(df_list)
+
+    best_index = table['F1'].argmax()
+    table.to_csv('FCN16_results.csv')
+    
+    TOMOVE = glob("model__{}__fcn16s.ckpt*".format(best_index))
+    for file in TOMOVE:
+        os.rename(file, os.path.join("bestmodel", file))
+    """
+
+}
+
+
+FCN8TRAIN = file("FCN16Train.py")
+ITER8 = 200
+LEARNING_RATE_8 = [0.00001, 0.000001, 0.0000001, 0.00000001]
+
+process FCN8 {
+
+    clusterOptions = "-S /bin/bash"
+//   publishDir TENSORBOARD, mode: "copy", overwrite: false
+    maxForks = 2
+
+    input:
+    file py from FCN8TRAIN
+    val home from params.home
+    file cp from STARTING_8
+    file tfr from TrainRECORDBIN
+    val i_s from IMAGE_SIZE
+    each lr from LEARNING_RATE_8
+    val np from NPRINT
+    val iter from ITER8
+    output:
+    file "log__fcn8__*" into RESULTS_8
+    file "model__*__fcn8s.ckpt.*" into CHECKPOINT_8
+    file "model__*__fcn8s.ckpt.*" into CHECKPOINT_8_1 mode flatten
+    
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
+    python $py --checkpoint $cp --checksavedir . --tf_records $tfr --log . --image_size $i_s --labels 2 --lr $lr --n_print $np --iter $iter
+    """
+}
+
+FCN8TEST = file('FCN8Test.py')
+
+process FCN8_testing {
+    input:
+    file py from FCN8TEST
+    file cp from CHECKPOINT_8
+    file tfr from TestRECORDBIN
+    val iter from ITERTEST
+    val home from params.home
+    output:
+    file "*.csv" into RES8
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    """
+    ###PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
+    alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
+    python $py --checkpoint ${cp.first().name.split('.data')[0]} --tf_records $tfr --labels 2 --iter $iter
+    """
+
+}
+
+process RegroupFCN8_results {
+
+    input:
+    file _ from RES8 .toList()
+    file __ from CHECKPOINT_8_1 .toList()
+    output:
+    file "bestmodel" into STARTING_MULTI
+    file "FCN8_results.csv" into RES8_table
+    """
+    #!/usr/bin/env python
+    import os
+    os.mkdir('bestmodel')
+    import pandas as pd
+    import pdb
+    from glob import glob
+    CSV = glob('*.csv')
+    df_list = []
+    for f in CSV:
+        df = pd.read_csv(f, index_col=0)
+        df.index = [f[0:-4].split('__')[1]]
+        df_list.append(df)
+    table = pd.concat(df_list)
+
+    best_index = table['F1'].argmax()
+    table.to_csv('FCN8_results.csv')
+    
+    TOMOVE = glob("model__{}__fcn8s.ckpt*".format(best_index))
+    for file in TOMOVE:
+        os.rename(file, os.path.join("bestmodel", file))
+    """
+
+}
 
 
 BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')

@@ -15,7 +15,7 @@ from sklearn.metrics import accuracy_score, auc, f1_score, precision_score, reca
 from Prediction.AJI import AJI_fast
 from optparse import OptionParser
 import pandas as pd
-from tf_image_segmentation.models.fcn_16s import FCN_16s
+from tf_image_segmentation.models.fcn_8s import FCN_8s
 
 
 
@@ -60,10 +60,10 @@ if __name__ == '__main__':
     annotation_batch_tensor = tf.expand_dims(annotation, axis=0)
     # Be careful: after adaptation, network returns final labels
     # and not logits
-    FCN_16s = adapt_network_for_any_size_input(FCN_16s, 32)
+    FCN_8s = adapt_network_for_any_size_input(FCN_8s, 32)
 
 
-    pred, fcn_32s_variables_mapping = FCN_16s(image_batch_tensor=image_batch_tensor,
+    pred, fcn_16s_variables_mapping = FCN_8s(image_batch_tensor=image_batch_tensor,
                                               number_of_classes=number_of_classes,
                                               is_training=False)
 
@@ -129,4 +129,4 @@ if __name__ == '__main__':
                     'PRECISION':[PRECISION,], 'RECALL':[RECALL,], 
                     "IU":[res,], "AJI":[AJI,]}
         df_results = pd.DataFrame(results)
-        df_results.to_csv('fcn16__{}.csv'.format(lr))
+        df_results.to_csv('fcn8__{}.csv'.format(lr))
