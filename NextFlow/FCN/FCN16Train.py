@@ -1,10 +1,10 @@
-
+from glob import glob
 import tensorflow as tf
 import numpy as np
 import skimage.io as io
 import os, sys
 from PIL import Image
-
+import datetime
 
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
 from tf_image_segmentation.models.fcn_16s import FCN_16s
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     class_labels.append(255)
 
 
-    fcn_32s_checkpoint_path = options.checkpoint 
+    fcn_32s_checkpoint_path = glob(options.checkpoint + "/*.data*")[0].split(".data")[0] 
 
     filename_queue = tf.train.string_input_producer(
         [tfrecord_filename], num_epochs=1)

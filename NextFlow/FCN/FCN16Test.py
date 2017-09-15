@@ -105,6 +105,7 @@ if __name__ == '__main__':
             y_pred = pred_np.flatten()
             ACC += accuracy_score(y_true, y_pred)
             AUC += auc(y_true, y_pred)
+            #pdb.set_trace()
             AJI += AJI_fast(annotation_np[:,:,0], pred_np[0,:,:,0])
             F1 += f1_score(y_true, y_pred)
             PRECISION += precision_score(y_true, y_pred)

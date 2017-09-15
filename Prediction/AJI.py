@@ -81,13 +81,12 @@ def AJI_fast(G, S):
     G_max = np.max(G_flat)
     S_max = np.max(S_flat)
     m_labels = max(G_max, S_max) + 1
-    #pdb.set_trace()
     cm = confusion_matrix(G_flat, S_flat, labels=range(m_labels)).astype(np.float)
     LIGNE_J = np.zeros(S_max)
     for j in range(1, S_max + 1):
         LIGNE_J[j - 1] = cm[:, j].sum()
 
-    for i in pbar2(range(1, G_max + 1)):
+    for i in range(1, G_max + 1):
         LIGNE_I_sum = cm[i, :].sum()
         def h(indice):
             LIGNE_J_sum = LIGNE_J[indice - 1]

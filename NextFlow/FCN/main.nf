@@ -245,7 +245,7 @@ process RegroupFCN16_results {
 }
 
 
-FCN8TRAIN = file("FCN16Train.py")
+FCN8TRAIN = file("FCN8Train.py")
 ITER8 = 200
 LEARNING_RATE_8 = [0.00001, 0.000001, 0.0000001, 0.00000001]
 
