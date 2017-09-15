@@ -121,6 +121,7 @@ if __name__ == '__main__':
         
         res = sess.run(miou)
         ACC = ACC / options.iter
+        AJI = AJI / options.iter
         AUC = AUC / options.iter
         F1 = F1 / options.iter
         PRECISION = PRECISION / options.iter

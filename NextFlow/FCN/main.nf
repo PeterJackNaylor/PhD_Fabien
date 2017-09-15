@@ -146,6 +146,7 @@ process RegroupFCN32_results {
     output:
     file "bestmodel" into STARTING_16
     file "FCN32_results.csv" into RES32_table
+
 //    file "log__fcn32__*" into PUBLISH32
     """
     #!/usr/bin/env python
