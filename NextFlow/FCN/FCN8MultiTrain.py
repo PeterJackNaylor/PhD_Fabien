@@ -52,8 +52,8 @@ if __name__ == '__main__':
     slim = tf.contrib.slim
 
     tfrecord_filename = options.tf_records
-    log_folder = options.log + "/log__fcn8__{}".format(options.lr)
-    checksave = options.checksavedir + "/model__{}__fcn8s.ckpt".format(options.lr)
+    log_folder = options.log + "/log__fcn8Multi__{}".format(options.lr)
+    checksave = options.checksavedir + "/model__{}__fcn8Multis.ckpt".format(options.lr)
 
 
     slim = tf.contrib.slim

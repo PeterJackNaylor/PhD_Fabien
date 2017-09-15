@@ -34,9 +34,17 @@ def sliding_window(image, stepSize, windowSize):
                 res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
             yield (x, y, x + windowSize[0], y + windowSize[1], res_img)
 
-def RemoveBordersByReconstruction(Img, BorderSize = 1):
+def RemoveBordersByReconstruction(Img, BorderSize = 1, left=False, right=False, top=False, bottom=False):
     g = Img.copy()
     g[BorderSize:-BorderSize, BorderSize:-BorderSize] = 0
+    if left:
+        g[:, 0] = 0
+    if right:
+        g[:,-1] = 0
+    if top:
+        g[0,:] = 0
+    if bottom:
+        g[-1,:] = 0
     ToRemove = reconstruction(g, Img, 'dilation')
     return Img - ToRemove, np.mean(ToRemove)
 
@@ -86,6 +94,16 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
     thresh_list = []
 
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
+        left, right, bottom, right = False, False, False, False
+        if x_b == 0:
+            left = True
+        if x_e == x_s:
+            right = True
+        if y_b == 0:
+            top = True
+        if y_e == y_s:
+            bottom = True
+
 
         prob_image1, bin_image1 = PredImageFromNet(net_1, window, with_depross=True)
         val = removeFromBorder if ClearBorder == "Reconstruction" else 0
@@ -100,7 +118,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
         if ClearBorder == "RemoveBorderObjects":
 
             inter_bin = (inter_result > 0.5 + 0.0).astype(np.uint8)
-            inter_bin_temp = PJ_clear_border(inter_bin)
+            inter_bin_temp = PJ_clear_border(inter_bin, left, right, top, bottom)
             inter_bin[inter_bin > 0] = 1
             inter_bin_temp[inter_bin_temp > 0] = 1
             removed_cells = inter_bin - inter_bin_temp
@@ -111,7 +129,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
         elif ClearBorder == "RemoveBorderWithDWS":
 
             inter_bin = PostProcess(inter_result, param)
-            inter_bin_without = PJ_clear_border(inter_bin)
+            inter_bin_without = PJ_clear_border(inter_bin, left, right, top, bottom)
             removed_cells = inter_bin - inter_bin_without
             removed_cells[removed_cells > 0] = 1  
             removed_cells = dilation(removed_cells, disk(2))
@@ -120,7 +138,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
 
         elif ClearBorder == "Reconstruction":
             
-            inter_result, thresh = RemoveBordersByReconstruction(inter_result, removeFromBorder)
+            inter_result, thresh = RemoveBordersByReconstruction(inter_result, removeFromBorder, left, right, top, bottom)
             thresh_list += [thresh]
             if method == "avg" or method == "median":
                 print "avg nor median are implemented with Reconstruction for clear border, switched to max"
