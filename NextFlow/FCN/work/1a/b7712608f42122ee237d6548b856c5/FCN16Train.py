@@ -1,0 +1,1 @@
+/data/users/pnaylor/Documents/Python/PhD_Fabien/NextFlow/FCN/FCN16Train.py
