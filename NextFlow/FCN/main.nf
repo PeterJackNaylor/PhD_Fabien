@@ -6,19 +6,36 @@ params.image_dir = '/data/users/pnaylor/Bureau'
 params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
 params.home = "/data/users/pnaylor"
 params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
+params.epoch = 30
 
-
-PY = file(params.python_dir + '/Nets/UNetMultiClass_v2.py')
-
-
-TENSORBOARD_BIN = file(params.image_dir + '/tensorboard_fcn_bin')
+TENSORBOARD_BIN_32 = file(params.image_dir + '/tensorboard_fcn_bin_32')
+TENSORBOARD_BIN_16 = file(params.image_dir + '/tensorboard_fcn_bin_16')
+TENSORBOARD_BIN_8 = file(params.image_dir + '/tensorboard_fcn_bin_8')
 TENSORBOARD_MULTI = file(params.image_dir + '/tensorboard_fcn_multi')
-
+RESULTS_DIR = file(params.image_dir + '/results')
 
 TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords.py')
-params.epoch = 10
+FCN32TRAIN = file("FCN32Train.py")
+FCN32TEST = file('FCN32Test.py')
+FCN16TRAIN = file("FCN16Train.py")
+FCN16TEST = file('FCN16Test.py')
+FCN8TRAIN = file("FCN8Train.py")
+FCN8TEST = file('FCN8Test.py')
+
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
+CHECKPOINT_VGG = file(params.image_dir + "/pretrained/vgg_16.ckpt")
 IMAGE_SIZE = 224
+
+NPRINT = 100
+ITERTEST = 24
+
+ITER32 = 5400
+ITER16 = 5400
+ITER8 = 5400
+
+LEARNING_RATE_32 = [0.001, 0.0001, 0.00001, 0.000001]
+LEARNING_RATE_16 = [0.0001, 0.00001, 0.000001, 0.0000001]
+LEARNING_RATE_8 = [0.00001, 0.000001, 0.0000001, 0.00000001]
 
 process CreateBWRecords {
     clusterOptions = "-S /bin/bash -l h_vmem=60G"
@@ -58,13 +75,6 @@ process CreateBWTestRecords {
     """
 }
 
-FCN32TRAIN = file("FCN32Train.py")
-CHECKPOINT_VGG = file(params.image_dir + "/pretrained/vgg_16.ckpt")
-LEARNING_RATE_32 = [0.001, 0.0001, 0.00001, 0.000001]
-
-NPRINT = 100
-ITER32 = 200
-
 process FCN32 {
 
     clusterOptions = "-S /bin/bash"
@@ -81,7 +91,7 @@ process FCN32 {
     val np from NPRINT
     val iter from ITER32
     output:
-    file "log__fcn32__*" into RESULTS_32  
+    file "log__fcn32__*" into RESULTS_32
     file "model__*__fcn32s.ckpt.*" into CHECKPOINT_32
     file "model__*__fcn32s.ckpt.*" into CHECKPOINT_32_1 mode flatten
     
@@ -94,11 +104,6 @@ process FCN32 {
     python $py --checkpoint $cp --checksavedir . --tf_records $tfr --log . --image_size $i_s --labels 2 --lr $lr --n_print $np --iter $iter
     """
 }
-
-// maybe publish RESULTS_32
-
-FCN32TEST = file('FCN32Test.py')
-ITERTEST = 24
 
 process FCN32_testing {
     input:
@@ -123,12 +128,16 @@ process FCN32_testing {
 
 process RegroupFCN32_results {
 
+    publishDir TENSORBOARD_BIN_32, mode: "copy", overwrite: false
+
     input:
     file _ from RES32 .toList()
     file __ from CHECKPOINT_32_1 .toList()
+    file ___ from RESULTS_32 .toList()
     output:
     file "bestmodel" into STARTING_16
     file "FCN32_results.csv" into RES32_table
+    file "log__fcn32__*" into PUBLISH32
     """
     #!/usr/bin/env python
     import os
@@ -154,14 +163,9 @@ process RegroupFCN32_results {
 
 }
 
-FCN16TRAIN = file("FCN16Train.py")
-ITER16 = 200
-LEARNING_RATE_16 = [0.0001, 0.00001, 0.000001, 0.0000001]
-
 process FCN16 {
 
     clusterOptions = "-S /bin/bash"
-//   publishDir TENSORBOARD, mode: "copy", overwrite: false
     maxForks = 2
 
     input:
@@ -188,8 +192,6 @@ process FCN16 {
     """
 }
 
-FCN16TEST = file('FCN16Test.py')
-
 process FCN16_testing {
     input:
     file py from FCN16TEST
@@ -208,17 +210,22 @@ process FCN16_testing {
     alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
     python $py --checkpoint ${cp.first().name.split('.data')[0]} --tf_records $tfr --labels 2 --iter $iter
     """
-
 }
 
 process RegroupFCN16_results {
 
+    publishDir TENSORBOARD_BIN_16, mode: "copy", overwrite: false
+
     input:
     file _ from RES16 .toList()
     file __ from CHECKPOINT_16_1 .toList()
+    file ___ from RESULTS_16 .toList()
+
     output:
     file "bestmodel" into STARTING_8
     file "FCN16_results.csv" into RES16_table
+    file "log__fcn16__*" into PUBLISH16
+
     """
     #!/usr/bin/env python
     import os
@@ -241,13 +248,7 @@ process RegroupFCN16_results {
     for file in TOMOVE:
         os.rename(file, os.path.join("bestmodel", file))
     """
-
 }
-
-
-FCN8TRAIN = file("FCN8Train.py")
-ITER8 = 200
-LEARNING_RATE_8 = [0.00001, 0.000001, 0.0000001, 0.00000001]
 
 process FCN8 {
 
@@ -279,8 +280,6 @@ process FCN8 {
     """
 }
 
-FCN8TEST = file('FCN8Test.py')
-
 process FCN8_testing {
     input:
     file py from FCN8TEST
@@ -299,17 +298,23 @@ process FCN8_testing {
     alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
     python $py --checkpoint ${cp.first().name.split('.data')[0]} --tf_records $tfr --labels 2 --iter $iter
     """
-
 }
 
 process RegroupFCN8_results {
 
+    publishDir TENSORBOARD_BIN_8, mode: "copy", overwrite: false
+
+
     input:
     file _ from RES8 .toList()
     file __ from CHECKPOINT_8_1 .toList()
+    file ___ from RESULTS_8 .toList()
+
     output:
     file "bestmodel" into STARTING_MULTI
     file "FCN8_results.csv" into RES8_table
+    file "log__fcn8__*" into PUBLISH8
+
     """
     #!/usr/bin/env python
     import os
@@ -332,7 +337,6 @@ process RegroupFCN8_results {
     for file in TOMOVE:
         os.rename(file, os.path.join("bestmodel", file))
     """
-
 }
 
 
