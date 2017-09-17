@@ -5,7 +5,7 @@ import numpy as np
 from UsefulFunctions.ImageTransf import ListTransform
 from Data.DataGenRandomT import DataGenRandomT
 import pdb
-from CreateTFRecords import read_and_decode
+from Data.CreateTFRecords import read_and_decode
 
 def print_dim(text ,tensor):
     print text, tensor.get_shape()

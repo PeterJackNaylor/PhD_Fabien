@@ -1,7 +1,7 @@
 from ObjectOriented import ConvolutionalNeuralNetwork
 
 
-from DataGenRandomT import DataGenRandomT
+from Data.DataGenRandomT import DataGenRandomT
 from UsefulFunctions.ImageTransf import ListTransform
 import os
 import tensorflow as tf

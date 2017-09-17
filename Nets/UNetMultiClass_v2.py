@@ -8,14 +8,15 @@ from sklearn.metrics import confusion_matrix
 from datetime import datetime
 ### for main
 from optparse import OptionParser
-from Data.DataGenClass import DataGenMulti
+from Data.DataGenClass import DataGen3reduce
 from UsefulFunctions.ImageTransf import ListTransform
 import pdb
 
-MULTICLASS_NAME = ["Background", "Cancerous", "Lymphocyte", "Fibroblast",
-                   "Mitosis", "Epithelial", "Endothelial", "Adiposite",
+MULTICLASS_NAME = ["Background", "Adiposite", "Cancerous", "Lymphocyte", "Fibroblast",
+                   "Mitosis", "Epithelial", "Endothelial",
                    "Ignore", "Necroses"]
-
+MULTICLASS_NAME = ["Background", "Adiposite", "Cancerous", "Lymphocyte", "Fibroblast",
+                   "Ignore"]
 def CM_DIV(cm, index, max_lab):
     list_FP = []
     list_TN = []
@@ -186,7 +187,7 @@ class UNetMultiClass(UNetBatchNorm):
             confusion_image = tf.reshape( tf.cast( confusion, tf.float32),
                                       [1, self.NUM_LABELS, self.NUM_LABELS, 1])
             tf.summary.image('confusion', confusion_image)
-            self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
+            self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", global_step=self.global_step)
 
 
 
@@ -206,14 +207,19 @@ class UNetMultiClass(UNetBatchNorm):
 
     def train(self, DGTest=None, lb_name=MULTICLASS_NAME, saver=True):
         epoch = self.STEPS * self.BATCH_SIZE // self.N_EPOCH
-
-        self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
-
+        self.Saver()	
         trainable_var = tf.trainable_variables()
-        
-        self.regularize_model()
+        self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
         self.optimization(trainable_var)
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
+        init_op = tf.group(tf.global_variables_initializer(),
+                   tf.local_variables_initializer())
+        self.sess.run(init_op)
+        self.regularize_model()
+
+        self.Saver()
+        
+        
 
         self.summary_test_writer = tf.summary.FileWriter(self.LOG + '/test',
                                             graph=self.sess.graph)
@@ -222,13 +228,12 @@ class UNetMultiClass(UNetBatchNorm):
         self.merged_summary = tf.summary.merge_all()
         steps = self.STEPS
 
-        init_op = tf.group(tf.global_variables_initializer(),
-                   tf.local_variables_initializer())
-        self.sess.run(init_op)
+        print "self.global step", int(self.global_step.eval())
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
-
-        for step in range(steps):
+	begin = int(self.global_step.eval())
+        print "begin", begin
+        for step in range(begin, steps + begin):
             # self.optimizer is replaced by self.training_op for the exponential moving decay
             _, l, lr, predictions, batch_labels, s = self.sess.run(
                         [self.training_op, self.loss, self.learning_rate,
@@ -300,7 +305,7 @@ if __name__== "__main__":
 
     LEARNING_RATE = options.lr
     BATCH_SIZE = options.bs
-    LRSTEP = "10epoch"
+    LRSTEP = "50epoch"
 
     SUMMARY = True
     S = SUMMARY
@@ -309,7 +314,7 @@ if __name__== "__main__":
     HEIGHT = 212
     WIDTH = 212
     SIZE = (HEIGHT, WIDTH)
-    N_TRAIN_SAVE = 2
+    N_TRAIN_SAVE = 100
     CROP = 4
     #pdb.set_trace()
     if int(str(LEARNING_RATE)[-1]) > 7:
@@ -322,16 +327,16 @@ if __name__== "__main__":
 
     transform_list, transform_list_test = ListTransform()
 
-    DG_TRAIN = DataGenMulti(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
+    DG_TRAIN = DataGen3reduce(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True, num="02", 
                        mean_file=None)
 
     test_patient = ["02", "06"]
     DG_TRAIN.SetPatient(test_patient)
     N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
-    DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+    DG_TEST  = DataGen3reduce(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True, num="02",
-                       mean_file="mean_file.npy")
+                       mean_file=MEAN_FILE)
     DG_TEST.SetPatient(test_patient)
 
     model = UNetMultiClass(TFRecord,   LEARNING_RATE=LEARNING_RATE,
@@ -350,6 +355,6 @@ if __name__== "__main__":
                                        N_THREADS=N_THREADS,
                                        MEAN_FILE=MEAN_FILE,
                                        DROPOUT=DROPOUT)
-
+    
     model.train(DG_TEST, lb_name=MULTICLASS_NAME)
     lb = ["Background", "Nuclei", "NucleiBorder"]
