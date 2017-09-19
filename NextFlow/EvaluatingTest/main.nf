@@ -1,5 +1,7 @@
 #!/usr/bin/env nextflow
 
+// nextflow main.nf -profile mines --image_dir /share/data40T_v2/Peter/Data --python_dir /share/data40T_v2/Peter/PythonScripts/PhD_Fabien --home /share/data40T_v2/Peter -resume
+
 params.image_dir = '/data/users/pnaylor/Bureau'
 params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
 params.home = "/data/users/pnaylor"
@@ -51,7 +53,7 @@ process PrepareImagesUNet {
     from Data.DataGenClass import DataGenMulti
     from scipy.misc import imsave
     _, transform_list_test = ListTransform()
-    DG = DataGenMulti("$input", split='test', crop = 1, size=(1000, 1000),
+    DG = DataGenMulti("$input", split='test', crop = 1, size=(1000, 1000),seed=42,
                       transforms=transform_list_test, UNet=True, num="$organs")
     key = 0
     for _ in range(DG.length):
@@ -109,7 +111,7 @@ process PrepareImages {
     from Data.DataGenClass import DataGenMulti
     from scipy.misc import imsave
     _, transform_list_test = ListTransform()
-    DG = DataGenMulti("$input", split='test', crop = 1, size=(1000, 1000),
+    DG = DataGenMulti("$input", split='test', crop = 1, size=(1000, 1000), seed=42,
                       transforms=transform_list_test, UNet=False, num="$organs")
     key = 0
     for _ in range(DG.length):
@@ -235,7 +237,24 @@ process RegroupResults {
     """
 }
 
+BARCHARTS = file("BarCharts.py")
 
+process PlotBarCharts {
+
+    input:
+    file csv_file from RES
+    file py from BARCHARTS
+    output:
+    file "BarPlotResult.svg"
+    
+
+    """
+    python $py
+    """
+
+
+
+}
 
 
 
