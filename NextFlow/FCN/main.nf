@@ -6,7 +6,7 @@ params.image_dir = '/data/users/pnaylor/Bureau'
 params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
 params.home = "/data/users/pnaylor"
 params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
-params.epoch = 30
+params.epoch = 50
 
 TENSORBOARD_BIN_32 = file(params.image_dir + '/tensorboard_fcn_bin_32')
 TENSORBOARD_BIN_16 = file(params.image_dir + '/tensorboard_fcn_bin_16')
