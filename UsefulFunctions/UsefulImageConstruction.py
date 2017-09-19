@@ -19,8 +19,8 @@ def Contours(bin_image, contour_size=3):
 
 def sliding_window(image, stepSize, windowSize):
     # slide a window across the imag
-    for y in xrange(0, image.shape[0], stepSize):
-        for x in xrange(0, image.shape[1], stepSize):
+    for y in xrange(0, image.shape[0] - stepSize, stepSize):
+        for x in xrange(0, image.shape[1] - stepSize, stepSize):
             # yield the current window
             res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
             change = False
@@ -49,32 +49,32 @@ def RemoveBordersByReconstruction(Img, BorderSize = 1, left=False, right=False, 
     return Img - ToRemove, np.mean(ToRemove)
 
 def PJ_clear_border(bin_img, left, right, top, bottom):
-
+    bin = bin_img.copy()
     if left:
-        left_side = bin_img[:, 0].copy()
-        bin_img[:, 0] = 0
+        left_side = bin[:, 0].copy()
+        bin[:, 0] = 0
     if right:
-        right_side = bin_img[:, -1].copy()
+        right_side = bin[:, -1].copy()
         bin_img[:, -1] = 0
     if top:
-        top_side = bin_img[0, :].copy()
+        top_side = bin[0, :].copy()
         bin_img[0, :] = 0
     if bottom:
-        bottom_side = bin_img[-1, :].copy()
+        bottom_side = bin[-1, :].copy()
         bin_img[-1, :] = 0
 
-    bin_img = clear_border(bin_img, bgval = 0)
+    bin = clear_border(bin, bgval = 0)
 
     if left:
-        bin_img[:, 0] = left_side
+        bin[:, 0] = left_side
     if right:
-        bin_img[:, -1] = right_side
+        bin[:, -1] = right_side
     if top:
-        bin_img[0, :] = top_side
+        bin[0, :] = top_side
     if bottom:
-        bin_img[-1, :] = bottom_side
+        bin[-1, :] = bottom_side
 
-    return bin_img
+    return bin
 
 def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=10, 
                           method="avg", param=7, ClearBorder="RemoveBorderObjects",
@@ -94,7 +94,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
     thresh_list = []
 
     for x_b, y_b, x_e, y_e, window in sliding_window(image, stepSize, windowSize):
-        left, right, bottom, right = False, False, False, False
+        left, right, bottom, top = False, False, False, False
         if x_b == 0:
             left = True
         if x_e == x_s:

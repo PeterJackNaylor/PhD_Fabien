@@ -142,7 +142,6 @@ def GetNet(cn, wd):
         folder = root_directory + "FCN8/temp_files/"
         weight = folder + "weights." + "FCN8_141549" + ".caffemodel"
         deploy = root_directory + "FCN8/test.prototxt"
-
     net = caffe.Net(deploy, weight, caffe.TRAIN)
     return net
 

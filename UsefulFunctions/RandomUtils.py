@@ -51,3 +51,4 @@ def textparser(file):
         val = val[3:-4]
         res[key] = float(val)
     return res
+    

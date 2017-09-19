@@ -87,7 +87,7 @@ process CreateBWTestRecords {
 process FCN32 {
 
     clusterOptions = "-S /bin/bash"
-//   publishDir TENSORBOARD, mode: "copy", overwrite: false
+    publishDir TENSORBOARD_BIN_32, overwrite: false, pattern: "log__*"
     maxForks = 2
 
     input:
@@ -176,6 +176,7 @@ process RegroupFCN32_results {
 process FCN16 {
 
     clusterOptions = "-S /bin/bash"
+    publishDir TENSORBOARD_BIN_16, overwrite: false, pattern: "log__*"
     maxForks = 2
 
     input:
@@ -263,7 +264,7 @@ process RegroupFCN16_results {
 process FCN8 {
 
     clusterOptions = "-S /bin/bash"
-//   publishDir TENSORBOARD, mode: "copy", overwrite: false
+    publishDir TENSORBOARD_BIN_8, overwrite: false, pattern: "log__*"
     maxForks = 2
 
     input:
