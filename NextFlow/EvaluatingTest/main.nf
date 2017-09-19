@@ -186,6 +186,7 @@ AnalyseFolder.concat(AnalyseFolderCaffe)
 process ComputeAJI {
     clusterOptions = "-S /bin/bash"
     queue "all.q"
+    publishDir "./Results", overwrite: true
     input:
     file py from AJI
     file fold from WaitingForAJImodels
@@ -201,13 +202,12 @@ process ComputeAJI {
 
 process RegroupResults {
     clusterOptions = "-S /bin/bash"
-    publishDir ".", overwrite: true
+    publishDir "./Results", overwrite: true
 
     input:
     file fold from AnalysedAJI .toList()
     output:
     file "results.csv" into RES
-
 
     """
     #!/usr/bin/env python

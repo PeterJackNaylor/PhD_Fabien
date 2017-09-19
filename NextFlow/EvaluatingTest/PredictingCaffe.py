@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
 
 
-        file_name = join(output, model + "_model", "Characteristics.txt")
+        file_name = join(output_mod, "Characteristics.txt")
         f = open(file_name, 'w')
         f.write('TP: # {} #\n'.format(TP))
         f.write('TN: # {} #\n'.format(TN))
