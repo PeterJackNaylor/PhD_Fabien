@@ -6,7 +6,7 @@ params.image_dir = '/data/users/pnaylor/Bureau'
 params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
 params.home = "/data/users/pnaylor"
 params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
-params.epoch = 30
+params.epoch = 50
 
 TENSORBOARD_BIN_32 = file(params.image_dir + '/tensorboard_fcn_bin_32')
 TENSORBOARD_BIN_16 = file(params.image_dir + '/tensorboard_fcn_bin_16')
@@ -44,7 +44,7 @@ ITER8MULTI = 5400
 LEARNING_RATE_32 = [0.001, 0.0001, 0.00001, 0.000001]
 LEARNING_RATE_16 = [0.0001, 0.00001, 0.000001, 0.0000001]
 LEARNING_RATE_8 = [0.00001, 0.000001, 0.0000001, 0.00000001]
-LEARNING_RATE_8 = [0.00001, 0.000001, 0.0000001, 0.00000001]
+LEARNING_RATE_8MULTI = [0.00001, 0.000001, 0.0000001, 0.00000001]
 
 process CreateBWRecords {
     clusterOptions = "-S /bin/bash -l h_vmem=60G"
