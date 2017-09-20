@@ -349,7 +349,7 @@ process RegroupFCN8_results {
         os.rename(file, os.path.join("bestmodel", file))
     """
 }
-/*
+
 process BinToColor {
     executor 'local'
     clusterOptions = "-S /bin/bash"
@@ -403,7 +403,7 @@ process CreateMultiRecordsTest {
     python $py --output MultiFCNTest.tfrecords --path $path --crop 4 --no-UNet --size 224 --seed 42 --epoch 1 --type ReducedClass --test
     """
 }
-
+/*
 process FCN8_Multi {
 
     clusterOptions = "-S /bin/bash"
