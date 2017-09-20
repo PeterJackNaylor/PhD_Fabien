@@ -240,6 +240,7 @@ process RegroupResults {
 BARCHARTS = file("BarCharts.py")
 
 process PlotBarCharts {
+    clusterOptions = "-S /bin/bash"
 
     input:
     file csv_file from RES

@@ -26,6 +26,7 @@ FCN8MULTITEST = file('FCN8MultiTest.py')
 
 BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')
 SlideName = file(params.python_dir + '/PrepareData/EverythingExceptColor.py')
+GivingBackIdea = file("GivingBackID.py")
 CELLCOG_classif = file(params.cellcogn + '/classifier_January2017')
 CELLCOG_folder = file(params.cellcogn + '/Fabien')
 
@@ -357,6 +358,7 @@ process BinToColor {
     input:
     file py from BinToColorPy
     file py2 from SlideName
+    file py3 from GivingBackIdea
     file toannotate from IMAGE_FOLD
     file classifier from CELLCOG_classif
     file cellcog_folder from CELLCOG_folder
@@ -367,6 +369,7 @@ process BinToColor {
     python $py --a $classifier --c $cellcog_folder --o ./ToAnnotateColor/ --d ./Diff/
     python $py2 -i $toannotate --o_c $cellcog_folder --o_b ./ToAnnotateBinary/
     cp -r ./ToAnnotateBinary/Slide_* ./ToAnnotateColor/
+    python $py3
     """
 }
 
