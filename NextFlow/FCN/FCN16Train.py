@@ -145,7 +145,7 @@ if __name__ == '__main__':
                                      staircase=True)
 
     with tf.variable_scope("adam_vars"):
-        train_step = tf.train.AdamOptimizer(learning_rate=options.lr).minimize(cross_entropy_sum)
+        train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cross_entropy_sum)
 
 
     #adam_optimizer_variables = slim.get_variables_to_restore(include=['adam_vars'])
