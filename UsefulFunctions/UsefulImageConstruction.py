@@ -19,8 +19,8 @@ def Contours(bin_image, contour_size=3):
 
 def sliding_window(image, stepSize, windowSize):
     # slide a window across the imag
-    for y in xrange(0, image.shape[0] - stepSize, stepSize):
-        for x in xrange(0, image.shape[1] - stepSize, stepSize):
+    for y in xrange(0, image.shape[0] - windowSize[0] + stepSize, stepSize):
+        for x in xrange(0, image.shape[1] - windowSize[1] + stepSize, stepSize):
             # yield the current window
             res_img = image[y:y + windowSize[1], x:x + windowSize[0]]
             change = False

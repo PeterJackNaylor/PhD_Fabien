@@ -53,7 +53,7 @@ process PrepareImagesUNet {
     from Data.DataGenClass import DataGenMulti
     from scipy.misc import imsave
     _, transform_list_test = ListTransform()
-    DG = DataGenMulti("$input", split='test', crop = 1, size=(1000, 1000),seed=42,
+    DG = DataGenMulti("$input", split='test', crop = 1, size=(1000, 1000),seed_=42,
                       transforms=transform_list_test, UNet=True, num="$organs")
     key = 0
     for _ in range(DG.length):
@@ -111,7 +111,7 @@ process PrepareImages {
     from Data.DataGenClass import DataGenMulti
     from scipy.misc import imsave
     _, transform_list_test = ListTransform()
-    DG = DataGenMulti("$input", split='test', crop = 1, size=(1000, 1000), seed=42,
+    DG = DataGenMulti("$input", split='test', crop = 1, size=(1000, 1000), seed_=42,
                       transforms=transform_list_test, UNet=False, num="$organs")
     key = 0
     for _ in range(DG.length):
@@ -240,12 +240,13 @@ process RegroupResults {
 BARCHARTS = file("BarCharts.py")
 
 process PlotBarCharts {
-
+    clusterOptions = "-S /bin/bash"
+    publishDir "./Results", overwrite: true
     input:
     file csv_file from RES
     file py from BARCHARTS
     output:
-    file "BarPlotResult.svg"
+    file "BarPlotResult.png"
     
 
     """

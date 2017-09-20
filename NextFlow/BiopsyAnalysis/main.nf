@@ -35,10 +35,10 @@ process ChopPatient {
 
 process SubImage {
 //    executor 'sge'
-    memory '11 GB'
+    memory '16 GB'
 //    profile = 'cluster'
     validExitStatus 0,134
-    clusterOptions = "-S /bin/bash"
+    clusterOptions = "-S /bin/bash -q all.q"
     publishDir PublishPatient, overwrite: false
 //    maxForks = 80
     errorStrategy 'retry' 

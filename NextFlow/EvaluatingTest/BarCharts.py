@@ -21,7 +21,7 @@ table.loc[table["Model"] == "nothing", "Model"] = "UNet without any augmentation
 
 
 grouped = table.groupby(['Model'])
-fig, ax = plt.subplots(nrows=5, sharey=True)
+fig, ax = plt.subplots(nrows=5, sharey=True, figsize=(30., 10.0))
 colors = ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c",
           "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"]
 
@@ -63,5 +63,5 @@ for j in range(5):
 
 ax[2].legend(handles=Patches, bbox_to_anchor=(0.98, 1.3), loc=2, borderaxespad=0.)
 
-set_matplotlib_formats('pdf', 'svg')
-fig.savefig("BarPlotResult.svg", )
+#set_matplotlib_formats('pdf', 'svg')
+fig.savefig("BarPlotResult.png")
