@@ -4,10 +4,10 @@ import os
 
 
 def ChangeDirrectory(foldername, old_id, new_id):
-    for subfile in glob(foldername + "/*.png"):
-        os.rename(subfile, subfile.replace(old_id, new_id))
     os.rename(foldername, foldername.replace(old_id, new_id))
-
+    files_to_change = glob(foldername.replace(old_id, new_id) + "/*.png")
+    for subfile in files_to_change:
+        os.rename(subfile, subfile.replace("/" + old_id + "_", "/" + new_id + "_")) 
 
 Mapping = {}
 Mapping["141549"] = "02"
