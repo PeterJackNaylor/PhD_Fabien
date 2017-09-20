@@ -60,8 +60,12 @@ for j in range(5):
     ax[j].axhline(y=0.50,xmin=0,xmax=3,c="black",ls="-.",linewidth=0.5,zorder=0)
     ax[j].axhline(y=0.25,xmin=0,xmax=3,c="gray",ls="--",linewidth=0.5,zorder=0)
 
+box = ax[4].get_position()
+ax[4].set_position([box.x0, box.y0 + box.height * 0.1,
+                 box.width, box.height * 0.9])
+ax[4].legend(handles=Patches, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+          fancybox=True, shadow=True, ncol=5)
 
-ax[2].legend(handles=Patches, bbox_to_anchor=(0.98, 1.3), loc=2, borderaxespad=0.)
 
 #set_matplotlib_formats('pdf', 'svg')
 fig.savefig("BarPlotResult.png")

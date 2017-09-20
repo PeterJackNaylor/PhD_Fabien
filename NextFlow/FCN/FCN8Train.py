@@ -70,7 +70,7 @@ if __name__ == '__main__':
     fcn_16s_checkpoint_path = glob(options.checkpoint + "/*.data*")[0].split(".data")[0] 
 
     filename_queue = tf.train.string_input_producer(
-        [tfrecord_filename], num_epochs=1)
+        [tfrecord_filename], num_epochs=2)
 
     image, annotation = read_tfrecord_and_decode_into_image_annotation_pair_tensors(filename_queue)
 

@@ -70,7 +70,7 @@ if __name__ == '__main__':
     fcn_32s_checkpoint_path = glob(options.checkpoint + "/*.data*")[0].split(".data")[0] 
 
     filename_queue = tf.train.string_input_producer(
-        [tfrecord_filename], num_epochs=1)
+        [tfrecord_filename], num_epochs=2)
 
     image, annotation = read_tfrecord_and_decode_into_image_annotation_pair_tensors(filename_queue)
 
@@ -134,9 +134,18 @@ if __name__ == '__main__':
 
     probabilities = tf.nn.softmax(upsampled_logits_batch)
 
+    with tf.name_scope('LearningRate'):
+        decay_step = options.iter / 2
+        global_step = tf.Variable(0, trainable=False)
+        learning_rate = tf.train.exponential_decay(
+                                     options.lr,
+                                     global_step,
+                                     decay_step,
+                                     0.96,
+                                     staircase=True)
 
     with tf.variable_scope("adam_vars"):
-        train_step = tf.train.AdamOptimizer(learning_rate=options.lr).minimize(cross_entropy_sum)
+        train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cross_entropy_sum)
 
 
     #adam_optimizer_variables = slim.get_variables_to_restore(include=['adam_vars'])
@@ -181,8 +190,8 @@ if __name__ == '__main__':
         # Let's read off 3 batches just for example
         for i in xrange(0, options.iter):
             cross_entropy, F1, summary_string, _ = sess.run([ cross_entropy_sum, fmeasure,
-                                                          merged_summary_op,
-                                                          train_step ])
+                                                              merged_summary_op,
+                                                              train_step ])
             
             if i % options.n_print == 0:
                 print('\n Timestamp: {:%Y-%m-%d %H:%M:%S} :\n'.format(datetime.datetime.now()))
