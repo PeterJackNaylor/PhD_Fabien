@@ -13,7 +13,7 @@ LAMBDA = [5, 6, 7, 8, 9, 10, 11, 12, 13]
 CLEARBORDER = ["RemoveBorderObjects", "RemoveBorderWithDWS", "Reconstruction", "Classic"]
 CLEARBORDER2 = ["RemoveBorderObjects", "RemoveBorderWithDWS", "Classic"]
 METHOD = ["avg", "median"]
-CHANGEENV = file(params.python_dir + '/Nextflow/Francois/ChangeEnv.py')
+CHANGEENV = file(params.python_dir + '/NextFlow/Francois/ChangeEnv.py')
 
 process ChangeEnv {
 
