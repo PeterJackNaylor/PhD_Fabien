@@ -1,0 +1,81 @@
+
+
+params.python_dir = '/share/data40T_v2/Peter/PythonScripts/PhD_Fabien'
+params.toannotate = "/share/data40T_v2/Peter/Data/ToAnnotate"
+params.net = '/share/data40T_v2/Peter/pretrained_models'
+params.epoch = 50
+
+Process = file('ApplyPostProcess.py')
+IMAGE = file('')
+GT = file('')
+STEPSIZE = [50, 75, 100, 125, 150, 175, 200, 224]
+LAMBDA = [5, 6, 7, 8, 9, 10, 11, 12, 13]
+CLEARBORDER = ["RemoveBorderObjects", "RemoveBorderWithDWS", "Reconstruction", "Classic"]
+CLEARBORDER2 = ["RemoveBorderObjects", "RemoveBorderWithDWS", "Classic"]
+METHOD = ["avg", "median"]
+CHANGEENV = file(params.python_dir + '/Nextflow/Francois/ChangeEnv.py')
+
+process ChangeEnv {
+
+    executor 'sge'
+    validExitStatus 0, 134
+    clusterOptions = "-S /bin/bash"
+
+    input:
+    val env from params.toannotate
+    val wd from params.net
+    file py from CHANGEENV
+
+    output:
+    val wd into WD, WD2
+    """
+    python $py --env $env --wd $wd
+    """
+
+}
+
+process Best_Stiching {
+
+    executor 'sge'
+    validExitStatus 0, 134
+    clusterOptions = "-S /bin/bash"
+
+    input:
+    file py from Process
+    file image from IMAGE
+    file gt from GT
+    each stepSize from STEPSIZE 
+    each clearborder from CLEARBORDER
+    each lambda from LAMBDA
+    output:
+    "${method}__${stepSize}__max_${lambda}.csv"
+
+    """
+    python $py --wd $wd --image $image --gt $gt --stepsize $stepSize --method max --clearborder $clearborder --lambda $lambda --output ${method}__${stepSize}__max__${lambda}.csv
+    """
+}
+
+process Best_Stiching_others {
+
+    executor 'sge'
+    validExitStatus 0, 134
+    clusterOptions = "-S /bin/bash"
+
+    input:
+    file py from Process
+    file image from IMAGE
+    file gt from GT
+    each stepSize from STEPSIZE 
+    each clearborder from CLEARBORDER2
+    file method from METHOD
+    each lambda from LAMBDA
+    output:
+    "${method}__${stepSize}__${clearborder}__${lambda}.csv"
+
+    """
+    python $py --wd $wd --image $image --gt $gt --stepsize $stepSize --method $method --clearborder $clearborder --lambda $lambda --output ${method}__${stepSize}__${clearborder}__${lambda}.csv
+    """
+}
+
+
+

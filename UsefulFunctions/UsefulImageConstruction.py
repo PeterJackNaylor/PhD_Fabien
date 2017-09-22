@@ -189,7 +189,7 @@ def PredLargeImageFromNet(net_1, image, stepSize, windowSize, removeFromBorder=1
             x_add, y_add = np.where(diff_done_map > 0)
             done_map[x_add, y_add] = 1
             prob_map[x_add, y_add] = np.median(result[x_add, y_add, 0:(int(el)+1)], axis=1)
-	    imsave("diff_map_{}.png".format(el), diff_done_map)
+	    #imsave("diff_map_{}.png".format(el), diff_done_map)
     if ClearBorder == "Reconstruction":
 
         threshold = threshold - np.mean(thresh_list)

@@ -19,8 +19,5 @@ if __name__ == "__main__":
 
     cn_1 = "FCN_0.01_0.99_0.005"
     wd_1 = options.wd #"/share/data40T_v2/Peter/pretrained_models"
-    cn_2 = "DeconvNet_0.01_0.99_0.0005"
-    wd_2 = wd_1
 
     ChangeEnv(options.env, os.path.join(wd_1, cn_1))
-    ChangeEnv(options.env, os.path.join(wd_1, cn_2))
