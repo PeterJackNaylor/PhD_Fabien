@@ -63,7 +63,7 @@ process CreateTFRecords {
     """
     PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
     alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
-    pyglib $py --output DistanceTrainRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type DistanceMap --train
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output DistanceTrainRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type DistanceMap --train
     """
 }
 
@@ -82,7 +82,7 @@ process CreateTestTFRecords {
     """
     PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
     alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
-    pyglib $py --output DistanceTestRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type DistanceMap --test
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output DistanceTestRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type DistanceMap --test
     """
 }
 
@@ -114,7 +114,7 @@ process Training {
 
     script:
     """
-    python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
 
     """
 }
