@@ -34,12 +34,11 @@ BinToDistanceFile = file('BinToDistance.py')
 
 process BinToDistance {
     queue = "all.q"
-    memory = '60G'
     input:
     file py from BinToDistanceFile
     file toannotate from IMAGE_FOLD
     output:
-    file 'ToAnnotateDistance' into DISTANCE_FOLD
+    file 'ToAnnotateDistance' into DISTANCE_FOLD, DISTANCE_FOLD2, DISTANCE_FOLD3
 
     """
     python $py $toannotate
@@ -74,7 +73,7 @@ process CreateTestTFRecords {
     input:
     file py from TFRECORDS
     val epoch from params.epoch
-    file path from DISTANCE_FOLD
+    file path from DISTANCE_FOLD2
 
     output:
     file "DistanceTestRecords.tfrecords" into DATAQUEUE_TEST
@@ -95,7 +94,7 @@ process Training {
     maxForks = 2
 
     input:
-    file path from DISTANCE_FOLD
+    file path from DISTANCE_FOLD3
     file py from PY
     val bs from BS
     val home from params.home
