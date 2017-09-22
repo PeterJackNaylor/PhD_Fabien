@@ -63,6 +63,7 @@ if __name__ == '__main__':
            'stepsize':[options.stepsize,],
            'AJI':[score,],
            'lambda':[options.lambda_,],
-           'time':[time_to_convert,]}
+           'time':[time_to_convert,],
+           'n_img':[count,]}
     df = pd.DataFrame(dic)
     df.to_csv(options.output, index=False)
