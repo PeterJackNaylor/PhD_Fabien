@@ -49,7 +49,7 @@ process Best_Stiching {
     each lambda from LAMBDA
     val wd from WD
     output:
-    file '${clearborder}__${stepSize}__max_${lambda}.csv' into result
+    file '${clearborder}__${stepSize}__max__${lambda}.csv' into result
 
     """
     python $py --wd $wd --image $image --gt $gt --stepsize $stepSize --method max --clearborder ${clearborder} --lambda $lambda --output ${clearborder}__${stepSize}__max__${lambda}.csv
