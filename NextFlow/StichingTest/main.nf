@@ -47,6 +47,7 @@ process Best_Stiching {
     each stepSize from STEPSIZE 
     each clearborder from CLEARBORDER
     each lambda from LAMBDA
+    val wd from WD
     output:
     file '${clearborder}__${stepSize}__max_${lambda}.csv' into result
 
@@ -69,6 +70,7 @@ process Best_Stiching_others {
     each clearborder from CLEARBORDER2
     file method from METHOD
     each lambda from LAMBDA
+    val wd from WD2
     output:
     file "${clearborder}__${stepSize}__${method}__${lambda}.csv" into result2
 
