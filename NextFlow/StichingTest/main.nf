@@ -3,9 +3,8 @@
 params.python_dir = '/share/data40T_v2/Peter/PythonScripts/PhD_Fabien'
 params.toannotate = "/share/data40T_v2/Peter/Data/ToAnnotate"
 params.net = '/share/data40T_v2/Peter/pretrained_models'
-params.epoch = 50
 
-Process = file('ApplyPostProcess.py')
+PROCESS = file('ApplyPostProcess.py')
 IMAGE = file('')
 GT = file('')
 STEPSIZE = [50, 75, 100, 125, 150, 175, 200, 224]
@@ -41,7 +40,7 @@ process Best_Stiching {
     clusterOptions = "-S /bin/bash"
 
     input:
-    file py from Process
+    file py from PROCESS
     file image from IMAGE
     file gt from GT
     each stepSize from STEPSIZE 
