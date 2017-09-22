@@ -1,4 +1,4 @@
-
+#!/usr/bin/env nextflow
 
 params.python_dir = '/share/data40T_v2/Peter/PythonScripts/PhD_Fabien'
 params.toannotate = "/share/data40T_v2/Peter/Data/ToAnnotate"
