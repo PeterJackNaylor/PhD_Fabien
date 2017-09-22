@@ -36,6 +36,10 @@ def CreateTFRecord(OUTNAME, PATH, CROP, SIZE,
         DG = DataGen3reduce(PATH, split=SPLIT, crop = CROP, size=SIZE, 
                        transforms=TRANSFORM_LIST, UNet=UNET, 
                        mean_file=MEAN_FILE, seed_=SEED)
+    elif TYPE == "JUST_READ":
+        DG = DataGenMulti(PATH, split=SPLIT, crop = CROP, size=SIZE, 
+                       transforms=TRANSFORM_LIST, UNet=UNET, 
+                       mean_file=MEAN_FILE, seed_=SEED)
 
     DG.SetPatient(TEST_PATIENT)
     N_ITER_MAX = N_EPOCH * DG.length

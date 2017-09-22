@@ -1,25 +1,93 @@
-# -*- coding: utf-8 -*-
-from optparse import OptionParser
-from UNetObject_v2 import UNet
+from UNetBatchNorm_v2 import UNetBatchNorm
 import tensorflow as tf
 import numpy as np
-from datetime import datetime
-import os
-from Data.DataGenRandomT import DataGenRandomT
-from UsefulFunctions.ImageTransf import ListTransform
 import math
-import pdb
+from sklearn.metrics import mean_squared_error
+import datetime
 
-class UNetBatchNorm(UNet):
+class UNetDistance(UNetBatchNorm):
+    def __init__(
+        self,
+        TF_RECORDS,
+        LEARNING_RATE=0.01,
+        K=0.96,
+        BATCH_SIZE=10,
+        IMAGE_SIZE=28,
+        NUM_CHANNELS=1,
+        NUM_TEST=10000,
+        STEPS=2000,
+        LRSTEP=200,
+        DECAY_EMA=0.9999,
+        N_PRINT = 100,
+        LOG="/tmp/net",
+        SEED=42,
+        DEBUG=True,
+        WEIGHT_DECAY=0.00005,
+        LOSS_FUNC=tf.nn.l2_loss,
+        N_FEATURES=16,
+        N_EPOCH=1,
+        N_THREADS=1,
+        MEAN_FILE=None,
+        DROPOUT=0.5):
 
-    def conv_layer_f(self, i_layer, w_var, scope_name, strides=[1,1,1,1], padding="VALID"):
-        with tf.name_scope(scope_name):
-            conv = tf.nn.conv2d(i_layer, w_var, strides=strides, padding=padding)
-            n_out = w_var.shape[3].value
-            BN = self.BatchNorm(conv, n_out, self.is_training)
-            #BN = conv
-            return BN
+        self.LEARNING_RATE = LEARNING_RATE
+        self.K = K
+        self.BATCH_SIZE = BATCH_SIZE
+        self.IMAGE_SIZE = IMAGE_SIZE
+        self.NUM_CHANNELS = NUM_CHANNELS
+        self.N_FEATURES = N_FEATURES
+#        self.NUM_TEST = NUM_TEST
+        self.STEPS = STEPS
+        self.N_PRINT = N_PRINT
+        self.LRSTEP = LRSTEP
+        self.DECAY_EMA = DECAY_EMA
+        self.LOG = LOG
+        self.SEED = SEED
+        self.N_EPOCH = N_EPOCH
+        self.N_THREADS = N_THREADS
+        self.DROPOUT = DROPOUT
+        if MEAN_FILE is not None:
+            MEAN_ARRAY = tf.constant(np.load(MEAN_FILE), dtype=tf.float32) # (3)
+            self.MEAN_ARRAY = tf.reshape(MEAN_ARRAY, [1, 1, 3])
+            self.SUB_MEAN = True
+        else:
+            self.SUB_MEAN = False
 
+        self.sess = tf.InteractiveSession()
+
+        self.sess.as_default()
+        
+        self.var_to_reg = []
+        self.var_to_sum = []
+        self.TF_RECORDS = TF_RECORDS
+        self.init_queue(TF_RECORDS)
+
+        self.init_vars()
+        self.init_model_architecture()
+        self.init_training_graph()
+        self.Saver()
+        self.DEBUG = DEBUG
+        self.loss_func = LOSS_FUNC
+        self.weight_decay = WEIGHT_DECAY
+
+    def init_training_graph(self):
+
+        with tf.name_scope('Evaluation'):
+            self.logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
+            self.predictions = tf.argmax(self.logits, axis=3)
+            
+            with tf.name_scope('Loss'):
+
+                self.loss = tf.reduce_mean(tf.losses.mean_squared_error(self.logits, self.train_labels_node))
+                tf.summary.scalar("mean squared error", self.loss)
+
+            self.train_prediction = self.logits
+
+            self.test_prediction = self.logits
+
+        tf.global_variables_initializer().run()
+
+        print('Computational graph initialised')
 
     def init_vars(self):
 
@@ -112,13 +180,16 @@ class UNetBatchNorm(UNet):
 
 
 
-        self.logits_weight = self.weight_xavier(1, n_features, self.NUM_LABELS, "logits/")
-        self.logits_biases = self.biases_const_f(0.1, self.NUM_LABELS, "logits/")
+        self.logits_weight = self.weight_xavier(1, n_features, 1, "logits/")
+        self.logits_biases = self.biases_const_f(0.1, 1, "logits/")
 
         self.keep_prob = tf.Variable(self.DROPOUT, name="dropout_prob")
 
-        print('Model variables initialised')
+    def error_rate(self, predictions, labels, iter):
 
+        error = mean_squared_error(labels, predictions)
+
+        return error 
 
     def Validation(self, DG_TEST, step):
         if DG_TEST is None:
@@ -127,43 +198,29 @@ class UNetBatchNorm(UNet):
             n_test = DG_TEST.length
             n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
 
-            l, acc, F1, recall, precision, meanacc = 0., 0., 0., 0., 0., 0.
+            l = 0.
 
             for i in range(n_batch):
                 Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
                 feed_dict = {self.input_node: Xval,
                              self.train_labels_node: Yval,
                              self.is_training: False}
-                l_tmp, acc_tmp, F1_tmp, recall_tmp, precision_tmp, meanacc_tmp, s = self.sess.run([self.loss, 
-                                                                                            self.accuracy, self.F1,
-                                                                                            self.recall, self.precision,
-                                                                                            self.MeanAcc,
-                                                                                            self.merged_summary], feed_dict=feed_dict)
+                l_tmp, pred, s = self.sess.run([self.loss, 
+                                                self.predictions,
+                                                self.merged_summary],
+                                                feed_dict=feed_dict)
                 l += l_tmp
-                acc += acc_tmp
-                F1 += F1_tmp
-                recall += recall_tmp
-                precision += precision_tmp
-                meanacc += meanacc_tmp
 
-            l, acc, F1, recall, precision, meanacc = np.array([l, acc, F1, recall, precision, meanacc]) / n_batch
+            l = l / n_batch
 
             summary = tf.Summary()
-            summary.value.add(tag="TestMan/Accuracy", simple_value=acc)
             summary.value.add(tag="TestMan/Loss", simple_value=l)
-            summary.value.add(tag="TestMan/F1", simple_value=F1)
-            summary.value.add(tag="TestMan/Recall", simple_value=recall)
-            summary.value.add(tag="TestMan/Precision", simple_value=precision)
-            summary.value.add(tag="TestMan/Performance", simple_value=meanacc)
             self.summary_test_writer.add_summary(summary, step) 
-
             self.summary_test_writer.add_summary(s, step) 
             print('  Validation loss: %.1f' % l)
-            print('       Accuracy: %1.f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % (acc * 100, meanacc * 100, recall * 100, precision * 100, F1 * 100))
             self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
-        
 
-    def train(self, DG_TEST):
+    def train(self, DGTest):
 
         epoch = self.STEPS * self.BATCH_SIZE // self.N_EPOCH
 
@@ -202,12 +259,10 @@ class UNetBatchNorm(UNet):
                 error, acc, acc1, recall, prec, f1 = self.error_rate(predictions, batch_labels, step)
                 print('  Step %d of %d' % (step, steps))
                 print('  Learning rate: %.5f \n') % lr
-                print('  Mini-batch loss: %.5f \n       Accuracy: %.1f%% \n       acc1: %.1f%% \n       recall: %1.f%% \n       prec: %1.f%% \n       f1 : %1.f%% \n' % 
-                     (l, acc, acc1, recall, prec, f1))
-                self.Validation(DG_TEST, step)
+                print('  Mini-batch error: %.5f \n ') % l
+                self.Validation(DGTest, step)
         coord.request_stop()
         coord.join(threads)
-
 
 if __name__== "__main__":
 
@@ -250,7 +305,6 @@ if __name__== "__main__":
 
     (options, args) = parser.parse_args()
 
-#    os.environ["CUDA_VISIBLE_DEVICES"] = options.gpu
 
     TFRecord = options.TFRecord
     N_FEATURES = options.n_features
@@ -263,7 +317,7 @@ if __name__== "__main__":
 
     LEARNING_RATE = options.lr
     if int(str(LEARNING_RATE)[-1]) > 7:
-	lr_str = "1E-{}".format(str(LEARNING_RATE)[-1])
+    lr_str = "1E-{}".format(str(LEARNING_RATE)[-1])
     else:
         lr_str = "{0:.8f}".format(LEARNING_RATE).rstrip("0")
     SAVE_DIR = options.log + "/" + "{}".format(N_FEATURES) + "_" +"{0:.8f}".format(WEIGHT_DECAY).rstrip("0") + "_" + lr_str
@@ -305,10 +359,9 @@ if __name__== "__main__":
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
     DG_TEST.SetPatient(test_patient)
 
-    model = UNetBatchNorm(TFRecord,    LEARNING_RATE=LEARNING_RATE,
+    model = UNetDistance(TFRecord,    LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=SIZE,
-                                       NUM_LABELS=2,
                                        NUM_CHANNELS=3,
                                        STEPS=N_ITER_MAX,
                                        LRSTEP=LRSTEP,

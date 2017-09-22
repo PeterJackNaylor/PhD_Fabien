@@ -63,9 +63,9 @@ for j in range(5):
 box = ax[4].get_position()
 ax[4].set_position([box.x0, box.y0 + box.height * 0.1,
                  box.width, box.height * 0.9])
-ax[4].legend(handles=Patches, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+ax[4].legend(handles=Patches, loc='upper center', bbox_to_anchor=(0.5, -0.2),
           fancybox=True, shadow=True, ncol=5)
 
 
 #set_matplotlib_formats('pdf', 'svg')
-fig.savefig("BarPlotResult.png")
+fig.savefig("BarPlotResult.png",bbox_inches='tight')
