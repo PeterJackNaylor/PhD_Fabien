@@ -2,7 +2,7 @@
 
 params.python_dir = '/share/data40T_v2/Peter/PythonScripts/PhD_Fabien'
 params.toannotate = "/share/data40T_v2/Peter/Data/ToAnnotate"
-params.net = '/share/data40T_v2/Peter/pretrained_models'
+params.net = '/share/data40T_v2/Peter/Francois'
 params.neeraj = "/share/data40T_v2/Peter/Data/NeerajKumar/ForDatagen"
 PROCESS = file('ApplyPostProcess.py')
 DataNeeraj = file(params.neeraj + "/*.png")
