@@ -42,8 +42,8 @@ process Best_Stiching {
 
     input:
     file py from PROCESS
-    file image from IMAGE
-    file gt from GT
+    val image from IMAGE
+    val gt from GT
     each stepSize from STEPSIZE 
     each clearborder from CLEARBORDER
     each lambda from LAMBDA
