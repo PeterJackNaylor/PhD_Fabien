@@ -48,10 +48,10 @@ process Best_Stiching {
     each clearborder from CLEARBORDER
     each lambda from LAMBDA
     output:
-    "${clearborder}__${stepSize}__max_${lambda}.csv"
+    file '${clearborder}__${stepSize}__max_${lambda}.csv' into result
 
     """
-    python $py --wd $wd --image $image --gt $gt --stepsize $stepSize --method max --clearborder $clearborder --lambda $lambda --output ${clearborder}__${stepSize}__max__${lambda}.csv
+    python $py --wd $wd --image $image --gt $gt --stepsize $stepSize --method max --clearborder ${clearborder} --lambda $lambda --output ${clearborder}__${stepSize}__max__${lambda}.csv
     """
 }
 
@@ -70,7 +70,7 @@ process Best_Stiching_others {
     file method from METHOD
     each lambda from LAMBDA
     output:
-    "${clearborder}__${stepSize}__${method}__${lambda}.csv"
+    file "${clearborder}__${stepSize}__${method}__${lambda}.csv" into result2
 
     """
     python $py --wd $wd --image $image --gt $gt --stepsize $stepSize --method $method --clearborder $clearborder --lambda $lambda --output ${clearborder}__${stepSize}__${method}__${lambda}.csv
