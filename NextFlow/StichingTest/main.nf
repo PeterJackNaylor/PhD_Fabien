@@ -3,10 +3,11 @@
 params.python_dir = '/share/data40T_v2/Peter/PythonScripts/PhD_Fabien'
 params.toannotate = "/share/data40T_v2/Peter/Data/ToAnnotate"
 params.net = '/share/data40T_v2/Peter/pretrained_models'
-
+params.neeraj = "/share/data40T_v2/Peter/Data/NeerajKumar/ForDatagen"
 PROCESS = file('ApplyPostProcess.py')
-IMAGE = file('')
-GT = file('')
+DataNeeraj = file(params.neeraj + "/*.png")
+IMAGE = file(params.neeraj + "/Slide_Breast/*.png")
+GT = file(params.neeraj + "/GT_Breast/*.png")
 STEPSIZE = [50, 75, 100, 125, 150, 175, 200, 224]
 LAMBDA = [5, 6, 7, 8, 9, 10, 11, 12, 13]
 CLEARBORDER = ["RemoveBorderObjects", "RemoveBorderWithDWS", "Reconstruction", "Classic"]
