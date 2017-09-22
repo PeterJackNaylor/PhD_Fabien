@@ -41,7 +41,7 @@ if __name__ == '__main__':
     wd_1 = options.wd #"/share/data40T_v2/Peter/pretrained_models"
     net_1 = GetNet(cn_1, wd_1)
 
-    image = imread(options.image)
+    image = imread(options.img)
     GT = imread(options.gt)
     start = time.time()
     prob, bin_map, thresh = PredLargeImageFromNet(net_1, image, options.stepsize, 
