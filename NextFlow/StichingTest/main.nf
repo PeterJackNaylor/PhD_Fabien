@@ -79,5 +79,32 @@ process Best_Stiching_others {
     """
 }
 
+process RegroupResults {
 
+    clusterOptions = "-S /bin/bash"
+    publishDir "./Results", overwrite: true
+
+    input:
+    file fold from result .toList()
+    file fold2 from result2 .toList()
+    output:
+    file "results.csv" into RES
+
+    """
+    #!/usr/bin/env python
+    import os
+    import pandas as pd
+    import pdb
+    from glob import glob
+    CSV = glob('*.csv')
+    df_list = []
+    for f in CSV:
+        df = pd.read_csv(f, index_col=0)
+        df_list.append(df)
+    table = pd.concat(df_list)
+    table.to_csv('results.csv')
+
+    """
+
+}
 
