@@ -49,7 +49,7 @@ process Best_Stiching {
     each lambda from LAMBDA
     val wd from WD
     output:
-    file '${clearborder}__${stepSize}__max__${lambda}.csv' into result
+    file "${clearborder}__${stepSize}__max__${lambda}.csv" into result
 
     """
     python $py --wd $wd --image $image --gt $gt --stepsize $stepSize --method max --clearborder ${clearborder} --lambda $lambda --output ${clearborder}__${stepSize}__max__${lambda}.csv
@@ -63,12 +63,12 @@ process Best_Stiching_others {
     clusterOptions = "-S /bin/bash"
 
     input:
-    file py from Process
-    file image from IMAGE
-    file gt from GT
+    file py from PROCESS
+    val image from IMAGE
+    val gt from GT
     each stepSize from STEPSIZE 
     each clearborder from CLEARBORDER2
-    file method from METHOD
+    val method from METHOD
     each lambda from LAMBDA
     val wd from WD2
     output:
