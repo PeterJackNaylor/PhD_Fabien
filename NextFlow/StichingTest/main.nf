@@ -68,7 +68,7 @@ process Best_Stiching_others {
     file gt from GT
     each stepSize from STEPSIZE 
     each clearborder from CLEARBORDER2
-    file method from METHOD
+    each method from METHOD
     each lambda from LAMBDA
     val wd from WD2
     output:
