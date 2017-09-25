@@ -187,7 +187,7 @@ class UNetDistance(UNetBatchNorm):
 
     def error_rate(self, predictions, labels, iter):
 
-        error = mean_squared_error(labels, predictions)
+        error = mean_squared_error(labels.flatten(), predictions)
 
         return error 
 
@@ -341,7 +341,7 @@ if __name__== "__main__":
     WIDTH = 212
     SIZE = (HEIGHT, WIDTH)
 
-    N_TRAIN_SAVE = 500
+    N_TRAIN_SAVE = 100
  
     CROP = 4
 
