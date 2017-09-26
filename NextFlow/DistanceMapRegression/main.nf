@@ -34,12 +34,11 @@ BinToDistanceFile = file('BinToDistance.py')
 
 process BinToDistance {
     queue = "all.q"
-    memory = '60G'
     input:
     file py from BinToDistanceFile
     file toannotate from IMAGE_FOLD
     output:
-    file 'ToAnnotateDistance' into DISTANCE_FOLD
+    file 'ToAnnotateDistance' into DISTANCE_FOLD, DISTANCE_FOLD2, DISTANCE_FOLD3
 
     """
     python $py $toannotate
@@ -50,7 +49,7 @@ TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords.py')
 
 process CreateTFRecords {
     clusterOptions = "-S /bin/bash -l h_vmem=60G"
-    queue = "all.q"
+//    queue = "all.q"
     memory = '60G'
     input:
     file py from TFRECORDS
@@ -63,18 +62,18 @@ process CreateTFRecords {
     """
     PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
     alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output DistanceTrainRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type DistanceMap --train
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output DistanceTrainRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type JUST_READ --train
     """
 }
 
 process CreateTestTFRecords {
     clusterOptions = "-S /bin/bash -l h_vmem=60G"
-    queue = "all.q"
+//    queue = "all.q"
     memory = '60G'
     input:
     file py from TFRECORDS
     val epoch from params.epoch
-    file path from DISTANCE_FOLD
+    file path from DISTANCE_FOLD2
 
     output:
     file "DistanceTestRecords.tfrecords" into DATAQUEUE_TEST
@@ -82,7 +81,7 @@ process CreateTestTFRecords {
     """
     PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
     alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output DistanceTestRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type DistanceMap --test
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output DistanceTestRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type JUST_READ --test
     """
 }
 
@@ -95,7 +94,7 @@ process Training {
     maxForks = 2
 
     input:
-    file path from DISTANCE_FOLD
+    file path from DISTANCE_FOLD3
     file py from PY
     val bs from BS
     val home from params.home

@@ -3,7 +3,10 @@ import tensorflow as tf
 import numpy as np
 import math
 from sklearn.metrics import mean_squared_error
-import datetime
+from datetime import datetime
+from optparse import OptionParser
+from UsefulFunctions.ImageTransf import ListTransform
+from Data.DataGenClass import DataGen3, DataGenMulti, DataGen3reduce
 
 class UNetDistance(UNetBatchNorm):
     def __init__(
@@ -187,7 +190,7 @@ class UNetDistance(UNetBatchNorm):
 
     def error_rate(self, predictions, labels, iter):
 
-        error = mean_squared_error(labels.flatten(), predictions)
+        error = mean_squared_error(labels.flatten(), predictions.flatten())
 
         return error 
 
@@ -256,7 +259,7 @@ class UNetDistance(UNetBatchNorm):
                 i = datetime.now()
                 print i.strftime('%Y/%m/%d %H:%M:%S: \n ')
                 self.summary_writer.add_summary(s, step)                
-                error, acc, acc1, recall, prec, f1 = self.error_rate(predictions, batch_labels, step)
+                error = self.error_rate(predictions, batch_labels, step)
                 print('  Step %d of %d' % (step, steps))
                 print('  Learning rate: %.5f \n') % lr
                 print('  Mini-batch error: %.5f \n ') % l
@@ -317,7 +320,7 @@ if __name__== "__main__":
 
     LEARNING_RATE = options.lr
     if int(str(LEARNING_RATE)[-1]) > 7:
-    lr_str = "1E-{}".format(str(LEARNING_RATE)[-1])
+        lr_str = "1E-{}".format(str(LEARNING_RATE)[-1])
     else:
         lr_str = "{0:.8f}".format(LEARNING_RATE).rstrip("0")
     SAVE_DIR = options.log + "/" + "{}".format(N_FEATURES) + "_" +"{0:.8f}".format(WEIGHT_DECAY).rstrip("0") + "_" + lr_str
@@ -348,14 +351,14 @@ if __name__== "__main__":
 
     transform_list, transform_list_test = ListTransform()
 
-    DG_TRAIN = DataGenRandomT(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
+    DG_TRAIN = DataGenMulti(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True, mean_file=None)
 
     test_patient = ["141549", "162438"]
     DG_TRAIN.SetPatient(test_patient)
     N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
 
-    DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+    DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
     DG_TEST.SetPatient(test_patient)
 
