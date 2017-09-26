@@ -28,7 +28,6 @@ def AssociatedCell(G_i, S):
         return NUM / DEN
     res = map(g, range(1, S.max() + 1))
     indice = np.array(res).argmax() + 1
-
     return indice
 
 def AJI(G, S):
@@ -45,7 +44,6 @@ def AJI(G, S):
     for i in pbar(range(1, G.max() + 1)):
         only_ground_truth = np.zeros_like(G)
         only_ground_truth[ G == i ] = 1
-
         j = AssociatedCell(only_ground_truth, S)
         only_prediction = np.zeros_like(S)
         only_prediction[ S == j ] = 1

@@ -108,3 +108,21 @@ process RegroupResults {
 
 }
 
+
+BARCHARTS = file("StichBarCharts.py")
+
+process PlotResults {
+
+    clusterOptions = "-S /bin/bash"
+    publishDir "./Results", overwrite: true
+
+    input:
+    file res from RES
+    file py from BARCHARTS
+    output:
+    file "BarPlotResultStiching.png"
+    
+    """
+    python $py
+    """
+}
