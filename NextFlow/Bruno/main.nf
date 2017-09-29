@@ -2,11 +2,12 @@
 DATA = file('scatteringlengthsimoninew.dat')
 GPELAB = file('GPELab')
 MATLAB_FILE = file('GroundStateWithLHYTermSingleComponent_SolitonDroplet.m')
-
-SIZE = 10
+COLLECT_MAT = file('Regroup.m')
+MATLAB_NAME = 'GroundStateWithLHYTermSingleComponent_SolitonDroplet'
+SIZE = 32
 
 process Compute_J {
-
+    publishDir "results_j", overwrite: false
     input:
     file data from DATA
     file gpelab from GPELAB
@@ -18,8 +19,21 @@ process Compute_J {
     file "PhaseDiagram_BVec_*.mat" into BVec
 
     """
-    matlab -nodisplay -nosplash -nodesktop -r '${matlab_file.split('.')[0]} $col;exit;'
+    matlab -nodisplay -nosplash -nodesktop -r '${matlab_file} $col;exit;'
     """
 
 }
 
+process Regroup {
+    publishDir "final_results", overwrite: false
+    input:
+    file _ from NMAX .collect()
+    file matlab_file from COLLECT_MAT
+    output:
+    file "FinalMat.mat"
+    """
+    matlab -nodisplay -nosplash -nodesktop -r '${matlab_file.split('.')[0]};exit;'
+    """
+
+
+}
