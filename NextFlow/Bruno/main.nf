@@ -7,7 +7,8 @@ MATLAB_NAME = 'GroundStateWithLHYTermSingleComponent_SolitonDroplet'
 SIZE = 32
 
 process Compute_J {
-    publishDir "results_j", overwrite: false
+    publishDir "results_1", overwrite: false, pattern: "PhaseDiagram_*_1.mat"
+
     input:
     file data from DATA
     file gpelab from GPELAB
@@ -29,8 +30,6 @@ process Regroup {
     input:
     file _ from NMAX .collect()
     file matlab_file from COLLECT_MAT
-    file __ from Nat .collect()
-    file ___ from BVec .collect()
     output:
     file "FinalMat.mat"
     """

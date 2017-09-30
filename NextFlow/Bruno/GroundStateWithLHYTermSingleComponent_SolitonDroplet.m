@@ -11,10 +11,10 @@ clear all
 GPE_folder = 'GPELab'
 addpath(genpath(GPE_folder))
 DATFILE = 'scatteringlengthsimoninew.dat'   %'Y:\Theory\Cleaned Matlab script\Cleaned Matlab script\scatteringlengthsimoninew.dat'
-SAVELOCATION = 'Phi_Up_N_'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\Phi_Up_N_'
-SAVEMAT = horzcat('PhaseDiagram_nmax_', num2str(j), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
-SAVEMAT_Nat = horzcat('PhaseDiagram_Nat_', num2str(j), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
-SAVEMAT_BVec = horzcat('PhaseDiagram_BVec_', num2str(j), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+SAVELOCATION = '/data/users/pnaylor/Bruno/Result/Phi_Up_N_'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\Phi_Up_N_'
+SAVEMAT = '/data/users/pnaylor/Bruno/Result/PhaseDiagram_nmax.mat'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+SAVEMAT_Nat = '/data/users/pnaylor/Bruno/Result/PhaseDiagram_Nat.mat'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+SAVEMAT_BVec = '/data/users/pnaylor/Bruno/Result/PhaseDiagram_BVec.mat'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
 %-----------------------------------------------------------
 % Setting the data
 %-----------------------------------------------------------
@@ -49,7 +49,7 @@ pi=3.14159;
 %%% Problem parameters
 
 % define N grid
-Npoint=10;
+Npoint=41;
 Nmax=6500;
 Nmin=800;
 DN=(Nmax-Nmin)/(Npoint-1);
@@ -65,7 +65,7 @@ Bmax=56.525;
 DB=(Bmax-Bmin)/(Bpoint-1);
 Bgrid=[Bmin:DB:Bmax];
 
-BPointDiagram=10;
+BPointDiagram=32;
 BminLoop=55.25;
 BMaxLoop=56.0;
 BStep=0.025;
