@@ -1,8 +1,6 @@
-function s=GroundStateWithLHYTermSingleComponent_SolitonDroplet(j)
+function s=GroundStateWithLHYTermSingleComponent_SolitonDroplet(ji)
 
-close all
-clear all
-
+disp(ji)
 %%% This file is an example of how to use GPELab (FFT version)
 
 %% GROUND STATE COMPUTATION WITH A LHY Term
@@ -12,9 +10,9 @@ GPE_folder = 'GPELab'
 addpath(genpath(GPE_folder))
 DATFILE = 'scatteringlengthsimoninew.dat'   %'Y:\Theory\Cleaned Matlab script\Cleaned Matlab script\scatteringlengthsimoninew.dat'
 SAVELOCATION = 'Phi_Up_N_'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\Phi_Up_N_'
-SAVEMAT = horzcat('PhaseDiagram_nmax_', num2str(j), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
-SAVEMAT_Nat = horzcat('PhaseDiagram_Nat_', num2str(j), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
-SAVEMAT_BVec = horzcat('PhaseDiagram_BVec_', num2str(j), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+SAVEMAT = horzcat('PhaseDiagram_nmax_', num2str(ji), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+SAVEMAT_Nat = horzcat('PhaseDiagram_Nat_', num2str(ji), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+SAVEMAT_BVec = horzcat('PhaseDiagram_BVec_', num2str(ji), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
 %-----------------------------------------------------------
 % Setting the data
 %-----------------------------------------------------------
@@ -49,7 +47,7 @@ pi=3.14159;
 %%% Problem parameters
 
 % define N grid
-Npoint=10;
+Npoint=41;
 Nmax=6500;
 Nmin=800;
 DN=(Nmax-Nmin)/(Npoint-1);
@@ -65,7 +63,7 @@ Bmax=56.525;
 DB=(Bmax-Bmin)/(Bpoint-1);
 Bgrid=[Bmin:DB:Bmax];
 
-BPointDiagram=10;
+BPointDiagram=32;
 BminLoop=55.25;
 BMaxLoop=56.0;
 BStep=0.025;
@@ -91,7 +89,7 @@ trapFrequencyAxial=5; % in Hz (you have to put a non-zero frequency)
 
 
 % B=56.1;   
-B=BminLoop+(j-1)*BStep;
+B=BminLoop+(str2num(ji)-1)*BStep;
 [tt I]=min((B-Bgrid).^2);
 a1=abb(I);
 a2=acc(I),
@@ -241,7 +239,7 @@ title(num2str(fitX.c1))
 end
 %% calulate moments
 [meshX,meshY,meshZ] = meshgrid(X,Y,Z);
-nmax(j,i)=2*Alpha*n0*max(max(max(abs(Phi{1}).^2)))
+nmax(str2num(ji),i)=2*Alpha*n0*max(max(max(abs(Phi{1}).^2)))
 COM(i).x=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
 COM(i).y=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
 COM(i).z=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
