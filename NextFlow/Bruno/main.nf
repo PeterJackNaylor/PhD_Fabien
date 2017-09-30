@@ -29,6 +29,8 @@ process Regroup {
     input:
     file _ from NMAX .collect()
     file matlab_file from COLLECT_MAT
+    file __ from Nat .collect()
+    file ___ from BVec .collect()
     output:
     file "FinalMat.mat"
     """
