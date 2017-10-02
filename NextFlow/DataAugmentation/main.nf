@@ -9,12 +9,8 @@ params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
 PY = file(params.python_dir + '/Nets/UNetMultiClass_v2.py')
-TENSORBOARD = file(params.image_dir + '/tensorboard_reduceclass')
+TENSORBOARD = file(params.image_dir + '/tensorboard_DA')
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
-BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')
-SlideName = file(params.python_dir + '/PrepareData/EverythingExceptColor.py')
-CELLCOG_classif = file(params.cellcogn + '/classifier_January2017')
-CELLCOG_folder = file(params.cellcogn + '/Fabien')
 TFRECORDS = file('CreateTFRecords_DA.py')
 
 LEARNING_RATE = [0.0001]
@@ -49,9 +45,9 @@ process CreateTFRecords_he {
     queue = "all.q"
     memory = '60G'
     input:
-    file py from IMAGE_FOLD
+    file py from TFRECORDS
     val epoch from params.epoch
-    file path from ToAnnotateColor
+    file path from IMAGE_FOLD
     each he1 from HE
     each he2 from HE
 
@@ -68,9 +64,9 @@ process CreateTFRecords_hsv {
     queue = "all.q"
     memory = '60G'
     input:
-    file py from IMAGE_FOLD
+    file py from TFRECORDS
     val epoch from params.epoch
-    file path from ToAnnotateColor
+    file path from IMAGE_FOLD
     each hsv1 from HSV
     each hsv2 from HSV
 
@@ -87,9 +83,9 @@ process CreateTFRecords_elast {
     queue = "all.q"
     memory = '60G'
     input:
-    file py from IMAGE_FOLD
+    file py from TFRECORDS
     val epoch from params.epoch
-    file path from ToAnnotateColor
+    file path from IMAGE_FOLD
     each elast1 from ELAST1
     each elast2 from ELAST2
     each elast3 from ELAST3
@@ -111,7 +107,7 @@ process Training {
     maxForks = 2
 
     input:
-    file path from ToAnnotateColor
+    file path from IMAGE_FOLD
     file py from PY
     val bs from BS
     val home from params.home
