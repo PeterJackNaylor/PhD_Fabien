@@ -88,7 +88,7 @@ acc = spline(BSimoni,accSimoni,Bgrid)*a0;
 trapFrequencyRadial=109; %in Hz
 trapFrequencyAxial=5; % in Hz (you have to put a non-zero frequency)
 
-
+Phi_before = 0.
 
 parfor j=begining:ending
 % B=56.1;   
@@ -162,7 +162,8 @@ Phi_0 = InitialData_Var3d(Method, Geometry3D, Physics3D, InitialData_Choice);
 %Phi_U=load(horzcat('D:\GPEWavefunctions\Phi_initial.mat'));
 %Phi_0=Phi_U.Phi_0;  
 else     
-Phi_U=load(horzcat(SAVELOCATION, num2str(Nat(i+1)),'B_',num2str(B),'G.mat'));
+% Phi_U=load(horzcat(SAVELOCATION, num2str(Nat(i+1)),'B_',num2str(B),'G.mat'));
+Phi_U = Phi_before
 Phi_0=Phi_U.Phi;  
 end
 %% Phi_U=load('C:\Users\pcheiney\Desktop\PhiDroplet');
@@ -178,43 +179,10 @@ Print = Print_Var2d(Printing,Evo,Draw);
 %-----------------------------------------------------------
 
 [Phi, Outputs] = GPELab3d(Phi_0,Method,Geometry3D,Physics3D,Outputs,[],Print);
-%Phisave(i)=Phi;
 
-%%%save(horzcat('D:\GPEWavefunctions\Phi_Up_N_',num2str(Nat(i)),'B_',num2str(B),'G.mat'),'Phi');
-
-save(horzcat(SAVELOCATION, num2str(Nat(i)),'B_',num2str(B),'G.mat'),'Phi');
-%save(horzcat('Y:\Theory\Cleaned Matlab script\Cleaned Matlab script\Test\GPEWavefunctions\Phi_Up_N_',num2str(Nat),'B_',num2str(B),'G.mat'),'Phi');
-
-%% Ploting ouptut
-
-%%grid in um
-% X=[0:Nx-1]/(Nx-1)*(xmax-xmin)+xmin;X=X*aHO;
-% Y=[0:Ny-1]/(Ny-1)*(ymax-ymin)+ymin;Y=Y*aHO;
-% Z=[0:Nz-1]/(Nz-1)*(zmax-zmin)+zmin;Z=Z*aHO;
-%%ThomasFermi profile
-
-% nTFmax=n0*0.5*(15/4/pi)^(2/5)*beta^(-3/5)*(gamma_x*gamma_y*gamma_z)^(2/5)
-% nTFX=max(0,nTFmax-0.5*n0*gamma_x^2/beta*(X/aHO).^2);
-% nTFY=max(0,nTFmax-0.5*n0*gamma_y^2/beta*(Y/aHO).^2);
-% nTFZ=max(0,nTFmax-0.5*n0*gamma_z^2/beta*(Z/aHO).^2);
-
-% dx=(xmax-xmin)/(Nx-1);
-% dy=(ymax-ymin)/(Ny-1);
-% dz=(zmax-zmin)/(Nz-1);
-
-%% calulate moments
-% [meshX,meshY,meshZ] = meshgrid(X,Y,Z);
+Phi_before = Phi
 temp_nmax_j(i) =  2*Alpha*n0*max(max(max(abs(Phi{1}).^2)))
-% temp_com(i).x=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
-% temp_com(i).y=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
-% temp_com(i).z=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
-
-% temp_variance(i).x=sum(sum(sum((meshX-temp_com(i).x).^2.*abs(Phi{1}).^2)));
-% temp_variance(i).y=sum(sum(sum((meshY-temp_com(i).y).^2.*abs(Phi{1}).^2)));
-% temp_variance(i).z=sum(sum(sum((meshZ-temp_com(i).z).^2.*abs(Phi{1}).^2)));
 end
-% COM = temp_com
-% variance = temp_variance
 nmax(j,:) = temp_nmax_j
 end
 
