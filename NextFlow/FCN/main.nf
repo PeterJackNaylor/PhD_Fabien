@@ -406,7 +406,7 @@ process CreateMultiRecordsTest {
     python $py --output MultiFCNTest.tfrecords --path $path --crop 4 --no-UNet --size 224 --seed 42 --epoch 1 --type ReducedClass --test
     """
 }
-/*
+
 process FCN8_Multi {
 
     clusterOptions = "-S /bin/bash"
@@ -493,4 +493,3 @@ process RegroupFCN8Multi_results {
         os.rename(file, os.path.join("bestmodel", file))
     """
 }
-*/
