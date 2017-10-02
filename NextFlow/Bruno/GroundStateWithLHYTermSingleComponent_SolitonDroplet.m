@@ -2,20 +2,19 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
 
     disp(begining)
     disp(ending)
-    begining = str2num(begining)
-    ending = str2num(ending)
+    begining = str2num(begining);
+    ending = str2num(ending);
     %%% This file is an example of how to use GPELab (FFT version)
 
     %% GROUND STATE COMPUTATION WITH A LHY Term
 
     % Setting the path
-    GPE_folder = 'GPELab'
-    addpath(genpath(GPE_folder))
-    DATFILE = 'scatteringlengthsimoninew.dat'   %'Y:\Theory\Cleaned Matlab script\Cleaned Matlab script\scatteringlengthsimoninew.dat'
-    SAVELOCATION = 'Phi_Up_N_'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\Phi_Up_N_'
-    SAVEMAT = horzcat('PhaseDiagram_nmax_', num2str(begining), '_', num2str(ending), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
-    SAVEMAT_Nat = horzcat('PhaseDiagram_Nat.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
-    SAVEMAT_BVec = horzcat('PhaseDiagram_BVec.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+    GPE_folder = 'GPELab';
+    addpath(genpath(GPE_folder));
+    DATFILE = 'scatteringlengthsimoninew.dat';   %'Y:\Theory\Cleaned Matlab script\Cleaned Matlab script\scatteringlengthsimoninew.dat'
+    SAVEMAT = horzcat('PhaseDiagram_nmax_', num2str(begining), '_', num2str(ending), '.mat');    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+    SAVEMAT_Nat = horzcat('PhaseDiagram_Nat.mat');    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+    SAVEMAT_BVec = horzcat('PhaseDiagram_BVec.mat');    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
     %-----------------------------------------------------------
     % Setting the data
     %-----------------------------------------------------------
@@ -24,10 +23,8 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
     Computation = 'Ground';
     Ncomponents = 1;
     Type = 'BESP';
-    Deltat = 1e-4;
     Stop_time = [];
     Stop_crit = {'MaxNorm',1e-4};
-    Method = Method_Var3d(Computation, Ncomponents, Type, Deltat, Stop_time, Stop_crit);
     xmin = -1.5;
     xmax = 1.5;
     ymin = -0.5;
@@ -50,7 +47,7 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
     %%% Problem parameters
 
     % define N grid
-    Npoint = 41;
+    Npoint = 10;
     Nmax = 6500;
     Nmin = 800;
     DN = (Nmax - Nmin) / (Npoint - 1);
@@ -85,18 +82,19 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
 
     trapFrequencyRadial = 109; %in Hz
     trapFrequencyAxial = 5; % in Hz (you have to put a non-zero frequency)
-
+    
+    
 
     parfor j = begining:ending
         % B=56.1;   
         B = BminLoop + (j - 1) * DBLoop;
-        [tt I] = min((B - Bgrid).^2);
+        [~, I] = min((B - Bgrid).^2);
         a1 = abb(I);
         a2 = acc(I),
         a12 = abc(I);
-
+        
         temp_nmax_j = zeros(Npoint)
-
+        AllPhi = cell(1, Npoint + 1)
         for i = Npoint:-1:1
 
             N = Nat(i);   % Total number of atoms
@@ -113,7 +111,6 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
             %trap
             omegam = 2 * pi * trapFrequencyAxial;
             aHO = sqrt(hbar / m / 2 / pi / trapFrequencyAxial);
-            aHORadial = sqrt(hbar / m / 2 / pi / trapFrequencyRadial);
 
             gamma_x = 1;
             gamma_y = trapFrequencyRadial / trapFrequencyAxial;
@@ -147,9 +144,10 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
 
             if (i == Npoint)
                 Phi_0 = InitialData_Var3d(Method, Geometry3D, Physics3D, InitialData_Choice);
+                AllPhi{i + 1} = Phi_0{1}
             else     
-                Phi_U = PhiSaved;
-                Phi_0=Phi_U.Phi;  
+                Phi_U = AllPhi{i + 1};
+                Phi_0 = {Phi_U};  
             end
 
             Outputs = OutputsINI_Var3d(Method);
@@ -162,9 +160,10 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
             % Launching simulation
             %-----------------------------------------------------------
 
-            [Phi, Outputs] = GPELab3d(Phi_0, Method, Geometry3D, Physics3D, Outputs, [], Print);
-            PhiSaved = Phi;
-            temp_nmax_j(i) =  2*Alpha*n0*max(max(max(abs(Phi{1}).^2)))
+            [Phi, ~] = GPELab3d(Phi_0, Method, Geometry3D, Physics3D, Outputs, [], Print);
+            PhiMatrix = Phi{1};
+            AllPhi{i} = PhiMatrix
+            temp_nmax_j(i) =  2*Alpha*n0*max(max(max(abs(PhiMatrix).^2)))
         end
 
         nmax(j,:) = temp_nmax_j
