@@ -98,8 +98,8 @@ a1=abb(I);
 a2=acc(I),
 a12=abc(I);
 
-temp = zeros(Npoint)
-
+temp_nmax_j = zeros(Npoint)
+temp_com = zeros(Npoint)
 for i=Npoint:-1:1
  
 
@@ -244,16 +244,16 @@ title(num2str(fitX.c1))
 end
 %% calulate moments
 [meshX,meshY,meshZ] = meshgrid(X,Y,Z);
-temp(i) =  2*Alpha*n0*max(max(max(abs(Phi{1}).^2)))
-COM(i).x=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
-COM(i).y=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
-COM(i).z=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
+temp_nmax_j(i) =  2*Alpha*n0*max(max(max(abs(Phi{1}).^2)))
+temp_com(i).x=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
+temp_com(i).y=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
+temp_com(i).z=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
 
-variance(i).x=sum(sum(sum((meshX-COM(i).x).^2.*abs(Phi{1}).^2)));
-variance(i).y=sum(sum(sum((meshY-COM(i).y).^2.*abs(Phi{1}).^2)));
-variance(i).z=sum(sum(sum((meshZ-COM(i).z).^2.*abs(Phi{1}).^2)));
+variance(i).x=sum(sum(sum((meshX-temp_com(i).x).^2.*abs(Phi{1}).^2)));
+variance(i).y=sum(sum(sum((meshY-temp_com(i).y).^2.*abs(Phi{1}).^2)));
+variance(i).z=sum(sum(sum((meshZ-temp_com(i).z).^2.*abs(Phi{1}).^2)));
 end
-nmax(j,:) = temp
+nmax(j,:) = temp_nmax_j
 end
 
 save(horzcat(SAVEMAT),'nmax');
