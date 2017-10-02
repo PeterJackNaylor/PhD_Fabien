@@ -88,7 +88,6 @@ acc = spline(BSimoni,accSimoni,Bgrid)*a0;
 trapFrequencyRadial=109; %in Hz
 trapFrequencyAxial=5; % in Hz (you have to put a non-zero frequency)
 
-Phi_before = 0.
 
 parfor j=begining:ending
 % B=56.1;   
@@ -163,7 +162,7 @@ Phi_0 = InitialData_Var3d(Method, Geometry3D, Physics3D, InitialData_Choice);
 %Phi_0=Phi_U.Phi_0;  
 else     
 % Phi_U=load(horzcat(SAVELOCATION, num2str(Nat(i+1)),'B_',num2str(B),'G.mat'));
-Phi_U = Phi_before
+Phi_U = PhiSaved;
 Phi_0=Phi_U.Phi;  
 end
 %% Phi_U=load('C:\Users\pcheiney\Desktop\PhiDroplet');
@@ -180,7 +179,7 @@ Print = Print_Var2d(Printing,Evo,Draw);
 
 [Phi, Outputs] = GPELab3d(Phi_0,Method,Geometry3D,Physics3D,Outputs,[],Print);
 
-Phi_before = Phi
+PhiSaved = Phi;
 temp_nmax_j(i) =  2*Alpha*n0*max(max(max(abs(Phi{1}).^2)))
 end
 nmax(j,:) = temp_nmax_j
