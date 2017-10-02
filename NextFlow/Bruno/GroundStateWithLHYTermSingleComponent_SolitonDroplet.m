@@ -1,4 +1,4 @@
-function s=GroundStateWithLHYTermSingleComponent_SolitonDroplet(j)
+function s=GroundStateWithLHYTermSingleComponent_SolitonDroplet(begining, ending)
 
 close all
 clear all
@@ -89,7 +89,7 @@ trapFrequencyAxial=5; % in Hz (you have to put a non-zero frequency)
 
 
 
-
+parfor j
 % B=56.1;   
 B=BminLoop+(j-1)*BStep;
 [tt I]=min((B-Bgrid).^2);
