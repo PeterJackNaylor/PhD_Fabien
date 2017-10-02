@@ -188,70 +188,33 @@ save(horzcat(SAVELOCATION, num2str(Nat(i)),'B_',num2str(B),'G.mat'),'Phi');
 %% Ploting ouptut
 
 %%grid in um
-X=[0:Nx-1]/(Nx-1)*(xmax-xmin)+xmin;X=X*aHO;
-Y=[0:Ny-1]/(Ny-1)*(ymax-ymin)+ymin;Y=Y*aHO;
-Z=[0:Nz-1]/(Nz-1)*(zmax-zmin)+zmin;Z=Z*aHO;
+% X=[0:Nx-1]/(Nx-1)*(xmax-xmin)+xmin;X=X*aHO;
+% Y=[0:Ny-1]/(Ny-1)*(ymax-ymin)+ymin;Y=Y*aHO;
+% Z=[0:Nz-1]/(Nz-1)*(zmax-zmin)+zmin;Z=Z*aHO;
 %%ThomasFermi profile
 
-nTFmax=n0*0.5*(15/4/pi)^(2/5)*beta^(-3/5)*(gamma_x*gamma_y*gamma_z)^(2/5)
-nTFX=max(0,nTFmax-0.5*n0*gamma_x^2/beta*(X/aHO).^2);
-nTFY=max(0,nTFmax-0.5*n0*gamma_y^2/beta*(Y/aHO).^2);
-nTFZ=max(0,nTFmax-0.5*n0*gamma_z^2/beta*(Z/aHO).^2);
+% nTFmax=n0*0.5*(15/4/pi)^(2/5)*beta^(-3/5)*(gamma_x*gamma_y*gamma_z)^(2/5)
+% nTFX=max(0,nTFmax-0.5*n0*gamma_x^2/beta*(X/aHO).^2);
+% nTFY=max(0,nTFmax-0.5*n0*gamma_y^2/beta*(Y/aHO).^2);
+% nTFZ=max(0,nTFmax-0.5*n0*gamma_z^2/beta*(Z/aHO).^2);
 
-dx=(xmax-xmin)/(Nx-1);
-dy=(ymax-ymin)/(Ny-1);
-dz=(zmax-zmin)/(Nz-1);
+% dx=(xmax-xmin)/(Nx-1);
+% dy=(ymax-ymin)/(Ny-1);
+% dz=(zmax-zmin)/(Nz-1);
 
-%%normalization is such that  sum(sum(sum(abs(Phi{1}).^2)))*dx*dy*dz=1
-
-toPlot=0;
-if (toPlot==1)
-%%plot cuts along 3 directions
-figure
-%%% radial directions
-subplot(3,1,2)
-plot(Y*1e6,2*Alpha*n0*abs(squeeze(Phi{1}((end-1)/2,(end-1)/2,:))).^2,'--*');
-fitY = fit(Y'*1e6,2*Alpha*n0*abs(squeeze(Phi{1}((end-1)/2,(end-1)/2,:))).^2,'gauss1')
-hold on
-plot(fitY)
-%plot(Y*1e6,nTFY)
-xlabel('y (um)')
-ylabel('density (at/m^3)')
-title(num2str(fitY.c1))
-
-subplot(3,1,3)
-plot(Z*1e6,2*Alpha*n0*abs(squeeze(Phi{1}(:,(end-1)/2,(end-1)/2))).^2,'--*');
-fitZ = fit(Z'*1e6,2*Alpha*n0*abs(squeeze(Phi{1}(:,(end-1)/2,(end-1)/2))).^2,'gauss1')
-hold on
-plot(fitZ)
-%plot(Z*1e6,nTFZ)
-xlabel('z (um)')
-ylabel('density (at/m^3)')
-title(num2str(fitZ.c1))
-%%% axial direction
-subplot(3,1,1)
-plot(X*1e6,2*Alpha*n0*abs(squeeze(Phi{1}((end-1)/2,:,(end-1)/2))).^2,'--*');
-fitX = fit(X'*1e6,2*Alpha*n0*abs(squeeze(Phi{1}((end-1)/2,:,(end-1)/2))').^2,'gauss1')
-hold on
-plot(fitX)
-%plot(X*1e6,nTFX)
-xlabel('x (um)')
-ylabel('density (at/m^3)')
-title(num2str(fitX.c1))
-end
 %% calulate moments
-[meshX,meshY,meshZ] = meshgrid(X,Y,Z);
+% [meshX,meshY,meshZ] = meshgrid(X,Y,Z);
 temp_nmax_j(i) =  2*Alpha*n0*max(max(max(abs(Phi{1}).^2)))
-temp_com(i).x=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
-temp_com(i).y=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
-temp_com(i).z=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
+% temp_com(i).x=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
+% temp_com(i).y=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
+% temp_com(i).z=sum(sum(sum(meshX.*abs(Phi{1}).^2)));
 
-temp_variance(i).x=sum(sum(sum((meshX-temp_com(i).x).^2.*abs(Phi{1}).^2)));
-temp_variance(i).y=sum(sum(sum((meshY-temp_com(i).y).^2.*abs(Phi{1}).^2)));
-temp_variance(i).z=sum(sum(sum((meshZ-temp_com(i).z).^2.*abs(Phi{1}).^2)));
+% temp_variance(i).x=sum(sum(sum((meshX-temp_com(i).x).^2.*abs(Phi{1}).^2)));
+% temp_variance(i).y=sum(sum(sum((meshY-temp_com(i).y).^2.*abs(Phi{1}).^2)));
+% temp_variance(i).z=sum(sum(sum((meshZ-temp_com(i).z).^2.*abs(Phi{1}).^2)));
 end
-COM = temp_com
-variance = temp_variance
+% COM = temp_com
+% variance = temp_variance
 nmax(j,:) = temp_nmax_j
 end
 
