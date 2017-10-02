@@ -63,11 +63,11 @@ Bmax=56.525;
 DB=(Bmax-Bmin)/(Bpoint-1);
 Bgrid=[Bmin:DB:Bmax];
 
-BPointDiagram=32;
-BminLoop=55.25;
-BMaxLoop=56.0;
-BStep=0.025;
-BVec=[BminLoop:BStep:BMaxLoop];
+BPointDiagram=100;
+BminLoop=55.46447;
+BMaxLoop=56.525;
+DBLoop=(BMaxLoop-BminLoop)/(BPointDiagram-1);
+BVec=[BminLoop:DBLoop:BMaxLoop];
 
 
 %% get scattering from file
@@ -89,7 +89,7 @@ trapFrequencyAxial=5; % in Hz (you have to put a non-zero frequency)
 
 
 % B=56.1;   
-B=BminLoop+(str2num(ji)-1)*BStep;
+B=BminLoop+(str2num(ji)-1)*DBLoop;
 [tt I]=min((B-Bgrid).^2);
 a1=abb(I);
 a2=acc(I),

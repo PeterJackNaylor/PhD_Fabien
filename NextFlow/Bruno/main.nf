@@ -6,12 +6,12 @@ MATLAB_NAME = 'GroundStateWithLHYTermSingleComponent_SolitonDroplet'
 
 COLLECT_MAT = file('Regroup.m')
 COLLECT_MAT_NAME = 'Regroup'
-SIZE = 32
+SIZE = 100
 
 process Compute_J {
     memory = '5GB'
     maxForks 16
-    publishDir "results_j", overwrite: false
+    publishDir "results_1", overwrite: false, pattern: "PhaseDiagram_*_1.mat"
     input:
     file data from DATA
     file gpelab from GPELAB
@@ -35,8 +35,6 @@ process Regroup {
     file _ from NMAX .collect()
     file matlab_file from COLLECT_MAT
     val matlab_file_name from COLLECT_MAT_NAME
-    file __ from Nat .collect()
-    file ___ from BVec .collect()
     output:
     file "FinalMat.mat"
     """
