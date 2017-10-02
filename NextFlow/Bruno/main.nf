@@ -27,8 +27,8 @@ process Compute_J {
     val end from ENDING
     output:
     file "PhaseDiagram_nmax_*.mat" into NMAX
-    file "PhaseDiagram_Nat_*.mat" into Nat
-    file "PhaseDiagram_BVec_*.mat" into BVec
+    file "PhaseDiagram_Nat.mat" into Nat
+    file "PhaseDiagram_BVec.mat" into BVec
 
     """
     matlab -nodisplay -nosplash -nodesktop -r '${matlab_name} $bpointdiagram $beg $end;exit;'
