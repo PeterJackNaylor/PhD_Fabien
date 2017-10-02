@@ -31,7 +31,7 @@ process Compute_J {
     file "PhaseDiagram_BVec_*.mat" into BVec
 
     """
-    matlab -nodisplay -nosplash -nodesktop -r '${matlab_name} $bpoint $beg $end;exit;'
+    matlab -nodisplay -nosplash -nodesktop -r '${matlab_name} $bpointdiagram $beg $end;exit;'
     """
 
 
