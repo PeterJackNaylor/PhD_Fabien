@@ -2,26 +2,38 @@
 DATA = file('scatteringlengthsimoninew.dat')
 GPELAB = file('GPELab')
 MATLAB_FILE = file('GroundStateWithLHYTermSingleComponent_SolitonDroplet.m')
-COLLECT_MAT = file('Regroup.m')
 MATLAB_NAME = 'GroundStateWithLHYTermSingleComponent_SolitonDroplet'
-SIZE = 32
+
+COLLECT_MAT = file('Regroup.m')
+COLLECT_MAT_NAME = 'Regroup'
+BPointDiagram = 100
+Spacing = 9
+
+BEGINING = Channel.from( 1, 11, 21, 31, 41, 51, 61, 71, 81, 91 )
+ENDING   = Channel.from( 10,20, 30, 40, 50, 60, 70, 80, 90, 100 )
 
 process Compute_J {
+    memory = '10GB'
+    cpus 9
+    maxForks 16
     publishDir "results_1", overwrite: false, pattern: "PhaseDiagram_*_1.mat"
-
     input:
     file data from DATA
     file gpelab from GPELAB
     file matlab_file from MATLAB_FILE
-    each col from 1..SIZE
+    val matlab_name from MATLAB_NAME
+    val bpointdiagram from BPointDiagram
+    val beg from BEGINING
+    val end from ENDING
     output:
     file "PhaseDiagram_nmax_*.mat" into NMAX
     file "PhaseDiagram_Nat_*.mat" into Nat
     file "PhaseDiagram_BVec_*.mat" into BVec
 
     """
-    matlab -nodisplay -nosplash -nodesktop -r '${matlab_file} $col;exit;'
+    matlab -nodisplay -nosplash -nodesktop -r '${matlab_name} $bpoint $beg $end;exit;'
     """
+
 
 }
 
@@ -30,10 +42,13 @@ process Regroup {
     input:
     file _ from NMAX .collect()
     file matlab_file from COLLECT_MAT
+    val matlab_file_name from COLLECT_MAT_NAME
+    val bpointdiagram from BPointDiagram
+    val space from Spacing
     output:
     file "FinalMat.mat"
     """
-    matlab -nodisplay -nosplash -nodesktop -r '${matlab_file.split('.')[0]};exit;'
+    matlab -nodisplay -nosplash -nodesktop -r '${matlab_file_name} $bpoint $space;exit;'
     """
 
 

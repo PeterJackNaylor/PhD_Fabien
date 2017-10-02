@@ -1,8 +1,9 @@
-function s=GroundStateWithLHYTermSingleComponent_SolitonDroplet(begining, ending)
+function s=GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, begining, ending)
 
-close all
-clear all
-
+disp(begining)
+disp(ending)
+begining = str2num(begining)
+ending = str2num(ending)
 %%% This file is an example of how to use GPELab (FFT version)
 
 %% GROUND STATE COMPUTATION WITH A LHY Term
@@ -11,10 +12,10 @@ clear all
 GPE_folder = 'GPELab'
 addpath(genpath(GPE_folder))
 DATFILE = 'scatteringlengthsimoninew.dat'   %'Y:\Theory\Cleaned Matlab script\Cleaned Matlab script\scatteringlengthsimoninew.dat'
-SAVELOCATION = '/data/users/pnaylor/Bruno/Result/Phi_Up_N_'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\Phi_Up_N_'
-SAVEMAT = '/data/users/pnaylor/Bruno/Result/PhaseDiagram_nmax.mat'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
-SAVEMAT_Nat = '/data/users/pnaylor/Bruno/Result/PhaseDiagram_Nat.mat'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
-SAVEMAT_BVec = '/data/users/pnaylor/Bruno/Result/PhaseDiagram_BVec.mat'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+SAVELOCATION = 'Phi_Up_N_'    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\Phi_Up_N_'
+SAVEMAT = horzcat('PhaseDiagram_nmax_', num2str(begining), '_', num2str(ending), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+SAVEMAT_Nat = horzcat('PhaseDiagram_Nat_', num2str(begining), '_', num2str(ending), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+SAVEMAT_BVec = horzcat('PhaseDiagram_BVec_', num2str(begining), '_', num2str(ending), '.mat')    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
 %-----------------------------------------------------------
 % Setting the data
 %-----------------------------------------------------------
@@ -65,11 +66,11 @@ Bmax=56.525;
 DB=(Bmax-Bmin)/(Bpoint-1);
 Bgrid=[Bmin:DB:Bmax];
 
-BPointDiagram=32;
-BminLoop=55.25;
-BMaxLoop=56.0;
-BStep=0.025;
-BVec=[BminLoop:BStep:BMaxLoop];
+BPointDiagram=str2num(bpointdiagram);
+BminLoop=55.46447;
+BMaxLoop=56.525;
+DBLoop=(BMaxLoop-BminLoop)/(BPointDiagram-1);
+BVec=[BminLoop:DBLoop:BMaxLoop];
 
 
 %% get scattering from file
@@ -89,15 +90,15 @@ trapFrequencyAxial=5; % in Hz (you have to put a non-zero frequency)
 
 
 
-parfor j
+parfor j=begining:ending
 % B=56.1;   
-B=BminLoop+(j-1)*BStep;
+B=BminLoop+(j-1)*DBLoop;
 [tt I]=min((B-Bgrid).^2);
 a1=abb(I);
 a2=acc(I),
 a12=abc(I);
 
-for i=1:Npoint
+for i=Npoint:-1:1
  
 
         
@@ -156,13 +157,13 @@ Physics3D = Gradienty_Var3d(Method, Physics3D);
 
 %% Setting the initial data
 InitialData_Choice = 1;
-if (i==1)
-    
+if (i==Npoint)
+
 Phi_0 = InitialData_Var3d(Method, Geometry3D, Physics3D, InitialData_Choice);
 %Phi_U=load(horzcat('D:\GPEWavefunctions\Phi_initial.mat'));
 %Phi_0=Phi_U.Phi_0;  
 else     
-Phi_U=load(horzcat(SAVELOCATION, num2str(Nat(i-1)),'B_',num2str(B),'G.mat'));
+Phi_U=load(horzcat(SAVELOCATION, num2str(Nat(i+1)),'B_',num2str(B),'G.mat'));
 Phi_0=Phi_U.Phi;  
 end
 %% Phi_U=load('C:\Users\pcheiney\Desktop\PhiDroplet');
@@ -250,7 +251,7 @@ variance(i).x=sum(sum(sum((meshX-COM(i).x).^2.*abs(Phi{1}).^2)));
 variance(i).y=sum(sum(sum((meshY-COM(i).y).^2.*abs(Phi{1}).^2)));
 variance(i).z=sum(sum(sum((meshZ-COM(i).z).^2.*abs(Phi{1}).^2)));
 end
-
+end
 
 save(horzcat(SAVEMAT),'nmax');
 save(horzcat(SAVEMAT_Nat), 'Nat');
