@@ -1,7 +1,6 @@
 function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, begining, ending)
 
-    disp(begining)
-    disp(ending)
+
     begining = str2num(begining);
     ending = str2num(ending);
     %%% This file is an example of how to use GPELab (FFT version)
@@ -24,16 +23,16 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
     Ncomponents = 1;
     Type = 'BESP';
     Stop_time = [];
-    Stop_crit = {'MaxNorm',1e-4};
+    Stop_crit = {'MaxNorm', 1e-4};
     xmin = -1.5;
     xmax = 1.5;
     ymin = -0.5;
     ymax = 0.5;
     zmin = -0.5;
     zmax = 0.5;
-    Nx = 2^6+1;
-    Ny = 2^5+1;
-    Nz = 2^5+1;
+    Nx = 2^6 + 1;
+    Ny = 2^5 + 1;
+    Nz = 2^5 + 1;
     Geometry3D = Geometry3D_Var3d(xmin, xmax, ymin, ymax, zmin, zmax, Nx, Ny, Nz);
 
     %% Setting the physical problem
