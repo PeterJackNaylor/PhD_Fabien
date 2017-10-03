@@ -14,7 +14,7 @@ ENDING   = Channel.from( 10,20, 30, 40, 50, 60, 70, 80, 90, 100 )
 
 process Compute_J {
     memory = '10GB'
-    cpus 9
+    cpus 10
     maxForks 16
     publishDir "results_1", overwrite: false, pattern: "PhaseDiagram_*_1.mat"
     input:
