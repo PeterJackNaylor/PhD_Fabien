@@ -47,7 +47,7 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
     %%% Problem parameters
 
     % define N grid
-    Npoint = 10;
+    Npoint = 100;
     Nmax = 6500;
     Nmin = 800;
     DN = (Nmax - Nmin) / (Npoint - 1);
