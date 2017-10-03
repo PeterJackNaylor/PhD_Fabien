@@ -83,7 +83,7 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
     trapFrequencyAxial = 5; % in Hz (you have to put a non-zero frequency)
     
     
-
+    nmax = zeros(ending-begining, Npoint);
     parfor j = begining:ending
         % B=56.1;   
         B = BminLoop + (j - 1) * DBLoop;
@@ -92,7 +92,7 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
         a2 = acc(I),
         a12 = abc(I);
         
-        temp_nmax_j = zeros(Npoint)
+        temp_nmax_j = zeros(1, Npoint)
         AllPhi = cell(1, Npoint + 1)
         for i = Npoint:-1:1
 
