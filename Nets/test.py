@@ -1,4 +1,7 @@
-from UNetBatchNorm_v2 import UNetBatchNorm
+from UNetDistance import UNetDistance
+import tensorflow as tf
+import numpy as np
+from Data.CreateTFRecords import read_and_decode
 import tensorflow as tf
 import numpy as np
 import math
@@ -7,9 +10,9 @@ from datetime import datetime
 from optparse import OptionParser
 from UsefulFunctions.ImageTransf import ListTransform
 from Data.DataGenClass import DataGen3, DataGenMulti, DataGen3reduce
-from Data.CreateTFRecords import read_and_decode
 
-class UNetDistance(UNetBatchNorm):
+
+class Test(UNetDistance):
     def __init__(
         self,
         TF_RECORDS,
@@ -73,6 +76,7 @@ class UNetDistance(UNetBatchNorm):
         self.DEBUG = DEBUG
         self.loss_func = LOSS_FUNC
         self.weight_decay = WEIGHT_DECAY
+        self.WritteSummaryImages()
     def init_queue(self, tfrecords_filename):
         self.filename_queue = tf.train.string_input_producer(
                               [tfrecords_filename], num_epochs=10)
@@ -85,26 +89,6 @@ class UNetDistance(UNetBatchNorm):
                                                           True)
             self.annotation = tf.divide(self.annotation, 255.)
         print("Queue initialized")
-
-    def init_training_graph(self):
-
-        with tf.name_scope('Evaluation'):
-            self.logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
-            self.predictions = tf.argmax(self.logits, axis=3)
-            
-            with tf.name_scope('Loss'):
-
-                self.loss = tf.reduce_mean(tf.losses.mean_squared_error(self.logits, self.train_labels_node))
-                tf.summary.scalar("mean squared error", self.loss)
-
-            self.train_prediction = self.logits
-
-            self.test_prediction = self.logits
-
-        tf.global_variables_initializer().run()
-
-        print('Computational graph initialised')
-
     def init_vars(self):
 
         #### had to add is_training, self.reuse
@@ -115,139 +99,32 @@ class UNetDistance(UNetBatchNorm):
         self.input_node = self.input_node_f()
 
         self.train_labels_node = self.label_node_f()
-        n_features = self.N_FEATURES
-
-        self.conv1_1weights = self.weight_xavier(3, self.NUM_CHANNELS, n_features, "conv1_1/")
-        self.conv1_1biases = self.biases_const_f(0.1, n_features, "conv1_1/")
-
-        self.conv1_2weights = self.weight_xavier(3, n_features, n_features, "conv1_2/")
-        self.conv1_2biases = self.biases_const_f(0.1, n_features, "conv1_2/")
-
-        self.conv1_3weights = self.weight_xavier(3, 2 * n_features, n_features, "conv1_3/")
-        self.conv1_3biases = self.biases_const_f(0.1, n_features, "conv1_3/")
-
-        self.conv1_4weights = self.weight_xavier(3, n_features, n_features, "conv1_4/")
-        self.conv1_4biases = self.biases_const_f(0.1, n_features, "conv1_4/")
-
-
-
-        self.conv2_1weights = self.weight_xavier(3, n_features, 2 * n_features, "conv2_1/")
-        self.conv2_1biases = self.biases_const_f(0.1, 2 * n_features, "conv2_1/")
-
-        self.conv2_2weights = self.weight_xavier(3, 2 * n_features, 2 * n_features, "conv2_2/")
-        self.conv2_2biases = self.biases_const_f(0.1, 2 * n_features, "conv2_2/")
-
-        self.conv2_3weights = self.weight_xavier(3, 4 * n_features, 2 * n_features, "conv2_3/")
-        self.conv2_3biases = self.biases_const_f(0.1, 2 * n_features, "conv2_3/")
-
-        self.conv2_4weights = self.weight_xavier(3, 2 * n_features, 2 * n_features, "conv2_4/")
-        self.conv2_4biases = self.biases_const_f(0.1, 2 * n_features, "conv2_4/")
-
-
-
-        self.conv3_1weights = self.weight_xavier(3, 2 * n_features, 4 * n_features, "conv3_1/")
-        self.conv3_1biases = self.biases_const_f(0.1, 4 * n_features, "conv3_1/")
-
-        self.conv3_2weights = self.weight_xavier(3, 4 * n_features, 4 * n_features, "conv3_2/")
-        self.conv3_2biases = self.biases_const_f(0.1, 4 * n_features, "conv3_2/")
-
-        self.conv3_3weights = self.weight_xavier(3, 8 * n_features, 4 * n_features, "conv3_3/")
-        self.conv3_3biases = self.biases_const_f(0.1, 4 * n_features, "conv3_3/")
-
-        self.conv3_4weights = self.weight_xavier(3, 4 * n_features, 4 * n_features, "conv3_4/")
-        self.conv3_4biases = self.biases_const_f(0.1, 4 * n_features, "conv3_4/")
-
-
-
-        self.conv4_1weights = self.weight_xavier(3, 4 * n_features, 8 * n_features, "conv4_1/")
-        self.conv4_1biases = self.biases_const_f(0.1, 8 * n_features, "conv4_1/")
-
-        self.conv4_2weights = self.weight_xavier(3, 8 * n_features, 8 * n_features, "conv4_2/")
-        self.conv4_2biases = self.biases_const_f(0.1, 8 * n_features, "conv4_2/")
-
-        self.conv4_3weights = self.weight_xavier(3, 16 * n_features, 8 * n_features, "conv4_3/")
-        self.conv4_3biases = self.biases_const_f(0.1, 8 * n_features, "conv4_3/")
-
-        self.conv4_4weights = self.weight_xavier(3, 8 * n_features, 8 * n_features, "conv4_4/")
-        self.conv4_4biases = self.biases_const_f(0.1, 8 * n_features, "conv4_4/")
-
-
-
-        self.conv5_1weights = self.weight_xavier(3, 8 * n_features, 16 * n_features, "conv5_1/")
-        self.conv5_1biases = self.biases_const_f(0.1, 16 * n_features, "conv5_1/")
-
-        self.conv5_2weights = self.weight_xavier(3, 16 * n_features, 16 * n_features, "conv5_2/")
-        self.conv5_2biases = self.biases_const_f(0.1, 16 * n_features, "conv5_2/")
-
-
-
-
-        self.tconv5_4weights = self.weight_xavier(2, 8 * n_features, 16 * n_features, "tconv5_4/")
-        self.tconv5_4biases = self.biases_const_f(0.1, 8 * n_features, "tconv5_4/")
-
-        self.tconv4_3weights = self.weight_xavier(2, 4 * n_features, 8 * n_features, "tconv4_3/")
-        self.tconv4_3biases = self.biases_const_f(0.1, 4 * n_features, "tconv4_3/")
-
-        self.tconv3_2weights = self.weight_xavier(2, 2 * n_features, 4 * n_features, "tconv3_2/")
-        self.tconv3_2biases = self.biases_const_f(0.1, 2 * n_features, "tconv3_2/")
-
-        self.tconv2_1weights = self.weight_xavier(2, n_features, 2 * n_features, "tconv2_1/")
-        self.tconv2_1biases = self.biases_const_f(0.1, n_features, "tconv2_1/")
-
-
-
-        self.logits_weight = self.weight_xavier(1, n_features, 1, "logits/")
-        self.logits_biases = self.biases_const_f(0.1, 1, "logits/")
-
         self.keep_prob = tf.Variable(self.DROPOUT, name="dropout_prob")
 
-    def error_rate(self, predictions, labels, iter):
+        print('Model variables initialised')
+    def init_model_architecture(self):
 
-        error = mean_squared_error(labels.flatten(), predictions.flatten())
+        print('Model architecture initialised')
+    def init_training_graph(self):
 
-        return error 
+        tf.global_variables_initializer().run()
 
-    def Validation(self, DG_TEST, step):
-        if DG_TEST is None:
-            print "no validation"
-        else:
-            n_test = DG_TEST.length
-            n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
+        print('Computational graph initialised')
+    def WritteSummaryImages(self):
+        Size1 = tf.shape(self.input_node)[1]
+        Size_to_be = tf.cast(Size1, tf.int32) - 92
+        self.size = Size_to_be
+        self.crop_input_node = tf.slice(self.input_node, [0, 92, 92, 0], [-1, 212, 212, -1])
 
-            l = 0.
-
-            for i in range(n_batch):
-                Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
-                feed_dict = {self.input_node: Xval,
-                             self.train_labels_node: Yval,
-                             self.is_training: False}
-                l_tmp, pred, s = self.sess.run([self.loss, 
-                                                self.predictions,
-                                                self.merged_summary],
-                                                feed_dict=feed_dict)
-                l += l_tmp
-
-            l = l / n_batch
-
-            summary = tf.Summary()
-            summary.value.add(tag="TestMan/Loss", simple_value=l)
-            self.summary_test_writer.add_summary(summary, step) 
-            self.summary_test_writer.add_summary(s, step) 
-            print('  Validation loss: %.1f' % l)
-            self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
+        tf.summary.image("Input", self.crop_input_node, max_outputs=4)
+        tf.summary.image("Label", self.train_labels_node, max_outputs=4)
 
     def train(self, DGTest):
 
         epoch = self.STEPS * self.BATCH_SIZE // self.N_EPOCH
 
-        self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
-
         trainable_var = tf.trainable_variables()
         
-        self.regularize_model()
-        self.optimization(trainable_var)
-        self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
-
         self.summary_test_writer = tf.summary.FileWriter(self.LOG + '/test',
                                             graph=self.sess.graph)
 
@@ -261,24 +138,15 @@ class UNetDistance(UNetBatchNorm):
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
 
-        for step in range(steps):      
+        for step in range(1):      
             # self.optimizer is replaced by self.training_op for the exponential moving decay
-            _, l, lr, predictions, batch_labels, s = self.sess.run(
-                        [self.training_op, self.loss, self.learning_rate,
-                         self.train_prediction, self.train_labels_node,
-                         self.merged_summary])
-
-            if step % self.N_PRINT == 0:
-                i = datetime.now()
-                print i.strftime('%Y/%m/%d %H:%M:%S: \n ')
-                self.summary_writer.add_summary(s, step)                
-                error = self.error_rate(predictions, batch_labels, step)
-                print('  Step %d of %d' % (step, steps))
-                print('  Learning rate: %.5f \n') % lr
-                print('  Mini-batch error: %.5f \n ') % l
-                self.Validation(DGTest, step)
+            image, annotation, image_mean, crop, size, s = self.sess.run(
+                        [self.image, self.annotation, self.images_queue, self.crop_input_node, self.size, self.merged_summary])
+            self.summary_writer.add_summary(s, step)                
+                
         coord.request_stop()
         coord.join(threads)
+        return image, annotation, image_mean, crop, size
 
 if __name__== "__main__":
 
@@ -375,7 +243,7 @@ if __name__== "__main__":
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
     DG_TEST.SetPatient(test_patient)
 
-    model = UNetDistance(TFRecord,    LEARNING_RATE=LEARNING_RATE,
+    model = Test(TFRecord,    LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=SIZE,
                                        NUM_CHANNELS=3,
@@ -390,5 +258,8 @@ if __name__== "__main__":
                                        N_THREADS=N_THREADS,
                                        MEAN_FILE=MEAN_FILE,
                                        DROPOUT=DROPOUT)
-
-    model.train(DG_TEST)
+    Xval, Yval = DG_TEST.Batch(0, 1)
+    feed_dict = {model.input_node: Xval,model.train_labels_node: Yval,model.is_training: False}
+#    with tf.Session() as sess:
+#        image, annotation = sess.run([model.image, model.annotation], feed_dict=feed_dict)
+    image, annotation, mean, crop, size = model.train(DG_TEST)

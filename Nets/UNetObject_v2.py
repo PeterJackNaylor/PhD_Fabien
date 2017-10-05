@@ -27,7 +27,7 @@ class UNet(DataReader):
 
     def WritteSummaryImages(self):
         Size1 = tf.shape(self.input_node)[1]
-        Size_to_be = tf.cast(Size1, tf.int32) - 92
+        Size_to_be = tf.cast(Size1, tf.int32) - 184
         crop_input_node = tf.slice(self.input_node, [0, 92, 92, 0], [-1, Size_to_be, Size_to_be, -1])
 
         tf.summary.image("Input", crop_input_node, max_outputs=4)
