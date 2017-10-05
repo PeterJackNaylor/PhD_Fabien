@@ -9,7 +9,7 @@ for j=1:(space+1):(BPointDiagram-space)
 
 file_name = horzcat('PhaseDiagram_nmax_', num2str(j), '_', num2str(j+space),'.mat')
 nmax_tmp = importdata(file_name)
-nmax(j:(j+space),:) = nmax_tmp((j+space),:)
+nmax(j:(j+space),:) = nmax_tmp(j:(j+space),:)
 %% extrac column and past it into result matrix
 
 end
