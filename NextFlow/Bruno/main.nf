@@ -9,14 +9,16 @@ COLLECT_MAT_NAME = 'Regroup'
 BPointDiagram = 100
 Spacing = 9
 
-BEGINING = Channel.from( 1, 11, 21, 31, 41, 51, 61, 71, 81, 91 )
-ENDING   = Channel.from( 10,20, 30, 40, 50, 60, 70, 80, 90, 100 )
+BEGINING = Channel.from( 1, 11, 21, 31, 41) 
+//BEGINING = Channel.from( 1, 11, 21, 31, 41]) //\\, 51, 61, 71, 81, 91 )
 
+ENDING   = Channel.from( 10,20, 30, 40, 50) 
+//ENDING   = Channel.from( 10,20, 30, 40, 50]) //\\, 60, 70, 80, 90, 100 )
 process Compute_J {
     memory = '10GB'
-    cpus 9
+    cpus 10
     maxForks 16
-    publishDir "results_1", overwrite: false, pattern: "PhaseDiagram_*_1.mat"
+    publishDir "results_1", overwrite: false
     input:
     file data from DATA
     file gpelab from GPELAB
@@ -36,19 +38,19 @@ process Compute_J {
 
 
 }
-
+BPointDiagram2 = 50
 process Regroup {
     publishDir "final_results", overwrite: false
     input:
     file _ from NMAX .collect()
     file matlab_file from COLLECT_MAT
     val matlab_file_name from COLLECT_MAT_NAME
-    val bpointdiagram from BPointDiagram
+    val bpointdiagram from BPointDiagram2
     val space from Spacing
     output:
     file "FinalMat.mat"
     """
-    matlab -nodisplay -nosplash -nodesktop -r '${matlab_file_name} $bpoint $space;exit;'
+    matlab -nodisplay -nosplash -nodesktop -r '${matlab_file_name} $bpointdiagram $space;exit;'
     """
 
 
