@@ -119,7 +119,7 @@ process Training {
     file __ from DATA
     val epoch from params.epoch
     output:
-    file './${__.getBaseName().split("_")[0]}_*' into RESULTS 
+    file "${__.getBaseName().split('.tfrecord')[0]}" into RESULTS 
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
@@ -127,7 +127,7 @@ process Training {
     script:
     """
     python $py --tf_record $__ --path $path  --log ./${__.getBaseName().split('.tfrecord')[0]} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
-    echo './${__.getBaseName().split("_")[0]}_*'
+    echo 'Done' >> ${__.getBaseName().split('.tfrecord')[0]}/readme.md
     """
 }
 
