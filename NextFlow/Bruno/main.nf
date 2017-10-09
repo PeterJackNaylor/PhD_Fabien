@@ -11,15 +11,17 @@ COLLECT_MAT_NAME = 'Regroup'
 BPointDiagram = 100
 Spacing = 9
 
-BEGINING = Channel.from( 51, 61, 71, 81, 91) 
-BEGINING2 = Channel.from( 51, 61, 71, 81, 91) 
+//BEGINING = Channel.from( 51, 61, 71, 81, 91) 
+//BEGINING2 = Channel.from( 51, 61, 71, 81, 91) 
 //BEGINING = Channel.from( 1, 11, 21, 31, 41) 
-//BEGINING = Channel.from( 1, 11, 21, 31, 41, 51, 61, 71, 81, 91 )
-
-ENDING   = Channel.from( 60, 70, 80, 90, 100) 
-ENDING2   = Channel.from( 60, 70, 80, 90, 100) 
+BEGINING = Channel.from( 1, 11, 21, 31, 41, 51, 61, 71, 81, 91 )
+BEGINING2 = Channel.from( 1, 11, 21, 31, 41, 51, 61, 71, 81, 91 )
+//ENDING   = Channel.from( 60, 70, 80, 90, 100) 
+//ENDING2   = Channel.from( 60, 70, 80, 90, 100) 
 //ENDING   = Channel.from( 10,20, 30, 40, 50) 
-//ENDING   = Channel.from( 10,20, 30, 40, 50, 60, 70, 80, 90, 100 )
+ENDING   = Channel.from( 10,20, 30, 40, 50, 60, 70, 80, 90, 100 )
+ENDING2   = Channel.from( 10,20, 30, 40, 50, 60, 70, 80, 90, 100 )
+
 process Compute_JDown {
     memory = '10GB'
     cpus 10
@@ -65,7 +67,7 @@ process Compute_JUp {
     """
 }
 
-BPointDiagram2 = 51
+BPointDiagram2 = 100
 process RegroupDown {
     publishDir "results_down", overwrite: true
     input:

@@ -47,13 +47,12 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
 
     % define N grid
     Npoint = 100;
-    Nmax = 16000;
-    Nmin = 1000;
+    Nmax = 6500;
+    Nmin = 800;
     DN = (Nmax - Nmin) / (Npoint - 1);
     Nat = [Nmin:DN:Nmax];
 
     % define B grid
-
     Bpoint = 1000;
     Bmin = 55.1145;
     Bmax = 56.525;
@@ -61,8 +60,8 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
     Bgrid = [Bmin:DB:Bmax];
 
     BPointDiagram = str2num(bpointdiagram);
-    BminLoop = 55.46447;
-    BMaxLoop = 56.525;
+    BminLoop = 55.1145;
+    BMaxLoop = 56.00;
     DBLoop = (BMaxLoop - BminLoop) / (BPointDiagram - 1);
     BVec = [BminLoop:DBLoop:BMaxLoop];
 

@@ -47,8 +47,8 @@ function GoingUpGround(bpointdiagram, begining, ending)
 
     % define N grid
     Npoint = 100;
-    Nmax = 16000;
-    Nmin = 1000;
+    Nmax = 6500;
+    Nmin = 800;
     DN = (Nmax - Nmin) / (Npoint - 1);
     Nat = [Nmin:DN:Nmax];
 
@@ -61,8 +61,8 @@ function GoingUpGround(bpointdiagram, begining, ending)
     Bgrid = [Bmin:DB:Bmax];
 
     BPointDiagram = str2num(bpointdiagram);
-    BminLoop = 55.46447;
-    BMaxLoop = 56.525;
+    BminLoop = 55.1145;
+    BMaxLoop = 56.00;
     DBLoop = (BMaxLoop - BminLoop) / (BPointDiagram - 1);
     BVec = [BminLoop:DBLoop:BMaxLoop];
 
