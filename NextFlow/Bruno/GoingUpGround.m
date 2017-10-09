@@ -1,4 +1,4 @@
-function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, begining, ending)
+function GoingUpGround(bpointdiagram, begining, ending)
 
 
     begining = str2num(begining);

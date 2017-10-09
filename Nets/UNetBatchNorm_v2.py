@@ -287,7 +287,7 @@ if __name__== "__main__":
     WIDTH = 212
     SIZE = (HEIGHT, WIDTH)
 
-    N_TRAIN_SAVE = 500
+    N_TRAIN_SAVE = 100
  
     CROP = 4
 

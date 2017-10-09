@@ -331,7 +331,7 @@ if __name__== "__main__":
                        transforms=transform_list, UNet=True, num="02", 
                        mean_file=None)
 
-    test_patient = ["02", "06"]
+    test_patient = ["141549", "162438"]
     DG_TRAIN.SetPatient(test_patient)
     N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
     DG_TEST  = DataGen3reduce(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
