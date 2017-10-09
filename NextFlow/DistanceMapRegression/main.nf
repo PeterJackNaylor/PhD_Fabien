@@ -11,7 +11,6 @@ ARCH_FEATURES = [16, 32, 64]
 WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 10
 params.epoch = 1 
-
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 
@@ -34,6 +33,7 @@ BinToDistanceFile = file('BinToDistance.py')
 
 process BinToDistance {
     queue = "all.q"
+    clusterOptions = "-S /bin/bash"
     input:
     file py from BinToDistanceFile
     file toannotate from IMAGE_FOLD
@@ -48,9 +48,9 @@ process BinToDistance {
 TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords.py')
 
 process CreateTFRecords {
-    clusterOptions = "-S /bin/bash -l h_vmem=60G"
+    clusterOptions = "-S /bin/bash -l mem_free=20G"
 //    queue = "all.q"
-    memory = '60G'
+//    memory = '60G'
     input:
     file py from TFRECORDS
     val epoch from params.epoch
@@ -62,7 +62,7 @@ process CreateTFRecords {
     """
     PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
     alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output DistanceTrainRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type JUST_READ --train
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/envs/cpu_tf/bin/python $py --output DistanceTrainRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type JUST_READ --train
     """
 }
 
@@ -105,7 +105,7 @@ process CreateTFRecords2 {
 }
 
 process CreateTestTFRecords {
-    clusterOptions = "-S /bin/bash -l h_vmem=60G"
+    clusterOptions = "-S /bin/bash -l mem_free=20G"
 //    queue = "all.q"
     memory = '60G'
     input:
@@ -119,7 +119,7 @@ process CreateTestTFRecords {
     """
     PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
     alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output DistanceTestRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type JUST_READ --test
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/envs/cpu_tf/bin/python $py --output DistanceTestRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type JUST_READ --test
     """
 }
 
@@ -127,8 +127,8 @@ PY = file(params.python_dir + '/Nets/UNetDistance.py')
 
 process Training {
 
-    clusterOptions = "-S /bin/bash"
-//   publishDir TENSORBOARD, mode: "copy", overwrite: false
+    clusterOptions = "-S /bin/bash -q cuda.q"
+    publishDir "./TrainingData", mode: "copy", overwrite: false
     maxForks = 2
 
     input:
@@ -136,7 +136,6 @@ process Training {
     file py from PY
     val bs from BS
     val home from params.home
-//    val pat from PATIENT
     each feat from ARCH_FEATURES
     each lr from LEARNING_RATE
     each wd from WEIGHT_DECAY    
@@ -146,8 +145,8 @@ process Training {
     output:
     file "${feat}_${wd}_${lr}" into RESULTS 
 
-    beforeScript "source $home/CUDA_LOCK/.whichNODE"
-    afterScript "source $home/CUDA_LOCK/.freeNODE"
+    beforeScript "source ${home}/CUDA_LOCK/.whichNODE"
+    afterScript "source ${home}/CUDA_LOCK/.freeNODE"
 
     script:
     """

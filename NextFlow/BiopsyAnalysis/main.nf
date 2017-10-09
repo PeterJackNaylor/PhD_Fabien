@@ -4,6 +4,7 @@
 params.in = "/share/data40T_v2/Peter/Data/Biopsy/"
 TIFF_REMOTE = file(params.in + "*")
 PublishPatient = "/share/data40T_v2/Peter/PatientFolder"
+params.cleancore = file("/share/data40T_v2/Peter/.cleandir")
 
 /* python files */
 DistributedVersion = file('/share/data40T_v2/Peter/PythonScripts/PhD_Fabien/WrittingTiff/DistributedVersion.py')
@@ -22,9 +23,11 @@ process ChopPatient {
     file x from TIFF_REMOTE
     val wd_REMOTE from PublishPatient
     val marge from WSI_MARGE
+    file cleandir from params.cleancore
     output:
     file "Job_${x.getBaseName()}" into JOB_SUBMIT
     file "Job_${x.getBaseName()}/ParameterDistribution.txt" into PARAM_JOB
+    afterScript "bash $cleandir"
     """
     METHOD=grid_etienne
  
@@ -38,12 +41,12 @@ process SubImage {
     memory '16 GB'
 //    profile = 'cluster'
     validExitStatus 0,134
-    clusterOptions = "-S /bin/bash -q all.q"
+    clusterOptions = "-S /bin/bash -q all.q -l mem_free=16G -pe orte 1 -R y"
     publishDir PublishPatient, overwrite: false
 //    maxForks = 80
     errorStrategy 'retry' 
     maxErrors 50
-
+    
 
     input:
 
@@ -51,12 +54,13 @@ process SubImage {
     val inputt from params.in
     val marge from MARGE_BIN
     val marge_wsi from WSI_MARGE
-
+    file cleandir from params.cleancore
     output:
     file "Job_${p.split()[6]}/prob/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into PROB_PROCESSED
     file "Job_${p.split()[6]}/bin/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into BIN_PROCESSED
     file "Job_${p.split()[6]}/tiled/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into IMAGE_PROCESSED
     file "Job_${p.split()[6]}/table/${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.npy" into TABLE_PROCESSED, TABLE_PROCESSED2, TABLE_PROCESSED3
+    afterScript "bash $cleandir"
     """
 
 
