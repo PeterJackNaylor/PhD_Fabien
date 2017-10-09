@@ -124,7 +124,7 @@ process PlotResults {
     file res from RES
     file py from BARCHARTS
     output:
-    file "BarPlotResultStiching.png"
+    file "*.png"
     
     """
     python $py

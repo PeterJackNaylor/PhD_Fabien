@@ -155,13 +155,13 @@ import cv2
 from Extractors import *
 
 
-stepSize = 150
+stepSize = 175
 windowSize = (224 , 224)
 param = 10
 
 
 def pred_image_from_two_nets(image, net1, net2, stepSize, windowSize,
-                             param=param, marge=1, method="avg", ClearBorder = "Reconstruction"):
+                             param=param, marge=1, method="avg", ClearBorder = "RemoveBorderWithDWS"):
     prob_image1, bin_image1, threshold1 = PredLargeImageFromNet(net1, image, stepSize, windowSize,
                                                                 removeFromBorder=marge,
                                                                 method=method,
