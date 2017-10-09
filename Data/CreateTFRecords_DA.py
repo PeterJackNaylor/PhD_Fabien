@@ -246,8 +246,9 @@ def ListTransform(n_rot=4, n_elastic=50, n_he=50, n_hsv = 50,
     transform_list = [Identity(),
                       Flip(0),
                       Flip(1)]
-    for rot in np.arange(1, 360, n_rot):
-        transform_list.append(Rotation(rot, enlarge=True))
+    if n_rot != 0:
+        for rot in np.arange(1, 360, n_rot):
+            transform_list.append(Rotation(rot, enlarge=True))
 
     for sig in [1, 2, 3, 4]:
         transform_list.append(OutOfFocus(sig))

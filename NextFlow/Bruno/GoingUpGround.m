@@ -1,4 +1,4 @@
-function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, begining, ending)
+function GoingUpGround(bpointdiagram, begining, ending)
 
 
     begining = str2num(begining);
@@ -94,7 +94,7 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
         
         temp_nmax_j = zeros(1, Npoint)
         AllPhi = cell(1, Npoint + 1)
-        for i = Npoint:-1:1
+        for i = 1:Npoint
 
             N = Nat(i);   % Total number of atoms
             Nm = 2000 + 5500 * (B - 55.2).^2;
@@ -141,11 +141,11 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
             %% Setting the initial data
             InitialData_Choice = 1;
 
-            if (i == Npoint)
+            if (i == 1)
                 Phi_0 = InitialData_Var3d(Method, Geometry3D, Physics3D, InitialData_Choice);
-                AllPhi{i + 1} = Phi_0{1}
+                AllPhi{i} = Phi_0{1}
             else     
-                Phi_U = AllPhi{i + 1};
+                Phi_U = AllPhi{i - 1};
                 Phi_0 = {Phi_U};  
             end
 
