@@ -263,7 +263,7 @@ if __name__== "__main__":
 
     LEARNING_RATE = options.lr
     if int(str(LEARNING_RATE)[-1]) > 7:
-	lr_str = "1E-{}".format(str(LEARNING_RATE)[-1])
+        lr_str = "1E-{}".format(str(LEARNING_RATE)[-1])
     else:
         lr_str = "{0:.8f}".format(LEARNING_RATE).rstrip("0")
     SAVE_DIR = options.log + "/" + "{}".format(N_FEATURES) + "_" +"{0:.8f}".format(WEIGHT_DECAY).rstrip("0") + "_" + lr_str

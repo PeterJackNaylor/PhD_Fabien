@@ -4,9 +4,9 @@ function Regroup(bpointdiagram, space)
     NPoint = 100
     space = str2num(space)
     %% create result matrix of the good size
-    file_name = horzcat('PhaseDiagram_nmax_', num2str(BPointDiagram - space), '_', num2str(BPointDiagram),'.mat')
-    nmax = importdata(file_name)
-    nmax_final = zeros(NPoint, BPointDiagram)
+%    file_name = horzcat('PhaseDiagram_nmax_', num2str(BPointDiagram - space), '_', num2str(BPointDiagram),'.mat')
+%    nmax = importdata(file_name)
+    nmax_final = zeros(NPoint, 100)
     for j=BPointDiagram:(space+1):(100-space)
 
         file_name = horzcat('PhaseDiagram_nmax_', num2str(j), '_', num2str(j+space),'.mat')
