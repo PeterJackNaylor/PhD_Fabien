@@ -66,6 +66,44 @@ process CreateTFRecords {
     """
 }
 
+process CreateTFRecords {
+    clusterOptions = "-S /bin/bash -l h_vmem=60G"
+//    queue = "all.q"
+    memory = '60G'
+    input:
+    file py from TFRECORDS
+    val epoch from params.epoch
+    file path from DISTANCE_FOLD
+
+    output:
+    file "DistanceTrainRecords.tfrecords" into DATAQUEUE_TRAIN
+
+    """
+    PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
+    alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output DistanceTrainRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type JUST_READ --train
+    """
+}
+
+process CreateTFRecords2 {
+    clusterOptions = "-S /bin/bash -l h_vmem=60G"
+//    queue = "all.q"
+    memory = '60G'
+    input:
+    file py from TFRECORDS
+    val epoch from params.epoch
+    file path from DISTANCE_FOLD3
+
+    output:
+    file "DistanceTrainRecords.tfrecords" into DATAQUEUE_TRAIN2
+
+    """
+    PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
+    alias pyglib='/share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python'
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output DistanceTrainRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type JUST_READ --train
+    """
+}
+
 process CreateTestTFRecords {
     clusterOptions = "-S /bin/bash -l h_vmem=60G"
 //    queue = "all.q"
@@ -88,6 +126,38 @@ process CreateTestTFRecords {
 PY = file(params.python_dir + '/Nets/UNetDistance.py')
 
 process Training {
+
+    clusterOptions = "-S /bin/bash"
+//   publishDir TENSORBOARD, mode: "copy", overwrite: false
+    maxForks = 2
+
+    input:
+    file path from DISTANCE_FOLD3
+    file py from PY
+    val bs from BS
+    val home from params.home
+//    val pat from PATIENT
+    each feat from ARCH_FEATURES
+    each lr from LEARNING_RATE
+    each wd from WEIGHT_DECAY    
+    file _ from MeanFile
+    file __ from DATAQUEUE_TRAIN
+    val epoch from params.epoch
+    output:
+    file "${feat}_${wd}_${lr}" into RESULTS 
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
+
+    """
+}
+
+
+process Training2 {
 
     clusterOptions = "-S /bin/bash"
 //   publishDir TENSORBOARD, mode: "copy", overwrite: false

@@ -123,12 +123,14 @@ def example_data():
             [0.942, 0.873, 0.787, 0.781, 0.784, 0.776],
             [0.955, 0.877, 0.820, 0.774, 0.867, 0.818],
             [0.925, 0.806, 0.720, 0.650, 0.784, 0.675],
-            [0.944, 0.922, 0.804, 0.900, 0.741, 0.802]]),
+            [0.944, 0.922, 0.804, 0.900, 0.741, 0.802],
+            [0.650, 0.650, 0.650, 0.650, 0.650, 0.650]]),
         ('More data', [
             [0.955, 0.899, 0.823, 0.799, 0.861, 0.828],
             [0.952, 0.873, 0.814, 0.767, 0.864, 0.811],
             [0.650, 0.650, 0.650, 0.650, 0.650, 0.650],
-            [0.953, 0.926, 0.825, 0.896, 0.777, 0.825]])
+            [0.953, 0.926, 0.825, 0.896, 0.777, 0.825],
+            [0.951, 0.879, 0.803, 0.796, 0.786, 0.791]])
     ]
     return data
 
@@ -145,6 +147,8 @@ if __name__ == '__main__':
     fig.subplots_adjust(wspace=0.25, hspace=0.20, top=0.85, bottom=0.05)
 
     colors = ['b', 'r', 'darkorange', 'g']
+    colors = ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e']
+    colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"]
     # Plot the four cases from the example data on separate axes
     for ax, (title, case_data) in zip(axes.flatten(), data):
         ax.set_rgrids([0.2, 0.4, 0.65, 0.75, 0.85, 0.95])
@@ -157,7 +161,7 @@ if __name__ == '__main__':
 
     # add legend relative to top-left plot
     ax = axes[0]
-    labels = ('FCN', 'DeconvNet', 'PangNet', 'Ensemble')
+    labels = ('FCN', 'DeconvNet', 'PangNet', 'Ensemble', 'UNet')
     legend = ax.legend(labels, loc=(-0.2, .95),
                        labelspacing=0.1, fontsize='small')
 
@@ -165,4 +169,4 @@ if __name__ == '__main__':
     #         horizontalalignment='center', color='black', weight='bold',
     #         size='large')
 
-    plt.show()
+    fig.savefig('SpyderPlots.png', bbox_inches='tight')
