@@ -12,10 +12,12 @@ BPointDiagram = 100
 Spacing = 9
 
 BEGINING = Channel.from( 51, 61, 71, 81, 91) 
+BEGINING2 = Channel.from( 51, 61, 71, 81, 91) 
 //BEGINING = Channel.from( 1, 11, 21, 31, 41) 
 //BEGINING = Channel.from( 1, 11, 21, 31, 41, 51, 61, 71, 81, 91 )
 
 ENDING   = Channel.from( 60, 70, 80, 90, 100) 
+ENDING2   = Channel.from( 60, 70, 80, 90, 100) 
 //ENDING   = Channel.from( 10,20, 30, 40, 50) 
 //ENDING   = Channel.from( 10,20, 30, 40, 50, 60, 70, 80, 90, 100 )
 process Compute_JDown {
@@ -42,7 +44,7 @@ process Compute_JDown {
 }
 process Compute_JUp {
     memory = '10GB'
-    cpus 10
+    cpus 15
     maxForks 16
     publishDir "results_up", overwrite: true
     input:
@@ -51,8 +53,8 @@ process Compute_JUp {
     file matlab_file from MATLAB_FILE2
     val matlab_name from MATLAB_NAME2
     val bpointdiagram from BPointDiagram
-    val beg from BEGINING
-    val end from ENDING
+    val beg from BEGINING2
+    val end from ENDING2
     output:
     file "PhaseDiagram_nmax_*.mat" into NMAXUp
     file "PhaseDiagram_Nat.mat" into NatUp
@@ -63,7 +65,7 @@ process Compute_JUp {
     """
 }
 
-BPointDiagram2 = 50
+BPointDiagram2 = 51
 process RegroupDown {
     publishDir "results_down", overwrite: true
     input:

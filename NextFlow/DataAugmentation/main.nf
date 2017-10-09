@@ -8,10 +8,10 @@ params.home = "/data/users/pnaylor"
 params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
-PY = file(params.python_dir + '/Nets/UNetMultiClass_v2.py')
+PY = file(params.python_dir + '/Nets/UNetBatchNorm_v2.py')
 TENSORBOARD = file(params.image_dir + '/tensorboard_DA')
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
-TFRECORDS = file('CreateTFRecords_DA.py')
+TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords_DA.py')
 
 LEARNING_RATE = [0.0001]
 ARCH_FEATURES = [32]
@@ -98,10 +98,10 @@ process CreateTFRecords_elast {
     """
 }
 
-DATA = DATAQUEUE_HE.concat(DATAQUEUE_HE, DATAQUEUE_HSV)
+DATA = DATAQUEUE_HE.concat(DATAQUEUE_HSV, DATAQUEUE_ELAST)
 
 process Training {
-
+//    scratch '/scratch'
     clusterOptions = "-S /bin/bash"
 //   publishDir TENSORBOARD, mode: "copy", overwrite: false
     maxForks = 2
@@ -119,15 +119,15 @@ process Training {
     file __ from DATA
     val epoch from params.epoch
     output:
-    file '${__.split(".")[0]}' into RESULTS 
+    file "${__.getBaseName().split('.tfrecord')[0]}" into RESULTS 
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     script:
     """
-    python $py --tf_record $__ --path $path  --log ${__.split(".")[0]} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
-
+    python $py --tf_record $__ --path $path  --log ./${__.getBaseName().split('.tfrecord')[0]} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
+    echo 'Done' >> ${__.getBaseName().split('.tfrecord')[0]}/readme.md
     """
 }
 
