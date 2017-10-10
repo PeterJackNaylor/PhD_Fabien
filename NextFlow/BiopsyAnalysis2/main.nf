@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 /*  inputs */
-params.in = "/share/data40T_v2/Peter/Data/Biopsy"
+params.in = "/share/data40T_v2/Peter/Data/Biopsy2"
 params.python = "/share/data40T_v2/Peter/PythonScripts/PhD_Fabien"
 params.publish = "/share/data40T_v2/Peter/PatientFolder"
 params.cleancore = file("/share/data40T_v2/Peter/.cleandir")
@@ -31,7 +31,7 @@ process ChopPatient {
 
 
 PREDICT = file("Predict.py")
-params.pretrained = "/share/data40T_v2/Peter/Data/"
+params.pretrained = "/share/data40T_v2/Peter/pretrained_models"
 
 process SubImage {
 //    executor 'sge'
@@ -49,8 +49,6 @@ process SubImage {
     file pred from PREDICT
     val p from PARAM_JOB.each().splitText() 
     val inputt from params.in
-    val marge from MARGE_BIN
-    val marge_wsi from WSI_MARGE
     file cleandir from params.cleancore
     val train_folder from params.pretrained
     output:

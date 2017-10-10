@@ -6,7 +6,7 @@ params.home = "/data/users/pnaylor"
 params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
 
 
-LEARNING_RATE = [0.01, 0.001, 0.0001]
+LEARNING_RATE = [0.01, 0.001, 0.0001, 0.00001]
 ARCH_FEATURES = [16, 32, 64]
 WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 10
@@ -38,7 +38,7 @@ process BinToDistance {
     file py from BinToDistanceFile
     file toannotate from IMAGE_FOLD
     output:
-    file 'ToAnnotateDistance' into DISTANCE_FOLD, DISTANCE_FOLD2, DISTANCE_FOLD3
+    file 'ToAnnotateDistance' into DISTANCE_FOLD, DISTANCE_FOLD2, DISTANCE_FOLD3, DISTANCE_FOLD4, DISTANCE_FOLD5
 
     """
     python $py $toannotate
@@ -115,7 +115,7 @@ process Training {
     maxForks = 2
 
     input:
-    file path from DISTANCE_FOLD3
+    file path from DISTANCE_FOLD4
     file py from PY
     val bs from BS
     val home from params.home
@@ -146,7 +146,7 @@ process Training2 {
     maxForks = 2
 
     input:
-    file path from DISTANCE_FOLD3
+    file path from DISTANCE_FOLD5
     file py from PY
     val bs from BS
     file res from RESULTS
