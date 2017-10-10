@@ -68,15 +68,18 @@ if __name__ == "__main__":
 
 
     windowSize = min(options.size_x, options.size_y)
-    stepSize = windowSize - 50
+    windowSize = (windowSize, windowSize)
+    stepSize = windowSize[0] - 50
+    prob_fin = np.zeros(shape=(image.shape[0], image.shape[1])).astype(float)
 
-    net_1.blobs['data'].reshape(1, 3, windowSize, windowSize)
-    net_2.blobs['data'].reshape(1, 3, windowSize, windowSize)
- 
-    prob_1, bin_1, thresh_1 = PredLargeImageFromNet(net_1, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
-    prob_2, bin_2, thresh_2 = PredLargeImageFromNet(net_2, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
+    for cn in [cn_1, cn_2]:
+        net = GetNet(cn, wd)
+        net.blobs['data'].reshape(1, 3, windowSize[0], windowSize[1])
+        prob, bin, thresh = PredLargeImageFromNet(net, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
+	prob_fin += prob
+        del net
 
-    prob = (prob_1 + prob_2) / 2
+    prob = prob_fin / 2
     prob = prob * 255
     prob = prob.astype(np.uint8)
     imsave(options.output ,prob)
