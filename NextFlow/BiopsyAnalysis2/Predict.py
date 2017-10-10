@@ -1,10 +1,11 @@
 from optparse import OptionParser
 from UsefulFunctions.UsefulOpenSlide import GetImage
-from Deprocessing.InOutProcess import Forward, ProcessLoss
+#from Deprocessing.InOutProcess import Forward, ProcessLoss
 import openslide
 import caffe
 import numpy as np
 from skimage.io import imsave
+from UsefulFunctions.UsefulImageConstruction import sliding_window, PredLargeImageFromNet
 
 
 def options_min():
@@ -65,14 +66,15 @@ if __name__ == "__main__":
     slide = openslide.open_slide(slide)
     image = np.array(GetImage(slide, para))[:,:,:3]
 
-    net_1.blobs['data'].reshape(1, 3, options.size_x, options.size_y)
-    net_2.blobs['data'].reshape(1, 3, options.size_x, options.size_y)
 
-    out_1 = Forward(net_1, image)
-    out_2 = Forward(net_2, image)
+    windowSize = min(options.size_x, options.size_y)
+    stepSize = windowSize - 50
 
-    prob_1 = ProcessLoss(out_1, method='softmax')
-    prob_2 = ProcessLoss(out_2, method='softmax')
+    net_1.blobs['data'].reshape(1, 3, windowSize, windowSize)
+    net_2.blobs['data'].reshape(1, 3, windowSize, windowSize)
+ 
+    prob_1, bin_1, thresh_1 = PredLargeImageFromNet(net_1, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
+    prob_2, bin_2, thresh_2 = PredLargeImageFromNet(net_2, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
 
     prob = (prob_1 + prob_2) / 2
     prob = prob * 255
