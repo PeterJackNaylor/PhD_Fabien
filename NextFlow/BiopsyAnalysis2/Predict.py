@@ -4,7 +4,7 @@ from UsefulFunctions.UsefulOpenSlide import GetImage
 import openslide
 import caffe
 import numpy as np
-from skimage.io import imsave
+from tifffile import imsave
 from UsefulFunctions.UsefulImageConstruction import sliding_window, PredLargeImageFromNet
 
 
@@ -76,11 +76,12 @@ if __name__ == "__main__":
         net = GetNet(cn, wd)
         net.blobs['data'].reshape(1, 3, windowSize[0], windowSize[1])
         prob, bin, thresh = PredLargeImageFromNet(net, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
-	prob_fin += prob
+        prob_fin += prob
         del net
 
     prob = prob_fin / 2
     prob = prob * 255
     prob = prob.astype(np.uint8)
-    imsave(options.output ,prob)
+    imsave(options.output, prob, resolution=[1.0,1.0])
+    imsave(options.output.replace('prob', 'rgb'), image, resolution=[1.0,1.0])
 

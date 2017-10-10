@@ -5,10 +5,23 @@ params.in = "/share/data40T_v2/Peter/Data/Biopsy2"
 params.python = "/share/data40T_v2/Peter/PythonScripts/PhD_Fabien"
 params.publish = "/share/data40T_v2/Peter/PatientFolder"
 params.cleancore = file("/share/data40T_v2/Peter/.cleandir")
+params.pretrained = file("/share/data40T_v2/Peter/pretrained_models")
 
 CHOP = file('Chop.py')
 WSI_MARGE = 50
+LAMBDA = 7
+SMALLOBJECT = 50
+SMOOTH = 5
+RES = 5
 TIFF_REMOTE = file(params.in + "/*.tiff")
+WrittingTiff = file(params.python + '/WrittingTiff/WriteFromFiles.py')
+PREDICT = file("src/Predict.py")
+EXTRACTOR = file('src/Extraction.py')
+MergeTable = file("src/MergeTabsAndPlot.py")
+DistributionPlot = file("src/DistributionPlot.py")
+FeatureHeatMaps = file("src/FeatureHeatMaps.py")
+ADDING_COLORS = file("src/AddingColors.py")
+
 
 process ChopPatient {
     validExitStatus 0, 134
@@ -30,14 +43,12 @@ process ChopPatient {
 }
 
 
-PREDICT = file("Predict.py")
-params.pretrained = "/share/data40T_v2/Peter/pretrained_models"
 
-process SubImage {
+process ProbabilityMap {
 //    executor 'sge'
     memory '16 GB'
 //    profile = 'cluster'
-    validExitStatus 0,134
+    validExitStatus 0, 134
     clusterOptions = "-S /bin/bash -q all.q -l mem_free=16G -pe orte 1 -R y"
 //    publishDir PublishPatient, overwrite: false
 //    maxForks = 80
@@ -52,11 +63,191 @@ process SubImage {
     file cleandir from params.cleancore
     val train_folder from params.pretrained
     output:
-    file "prob_${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into PROB
+    file "prob_${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into PROB, PROB2
+    file "rgb_${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff" into RGB, RGB2
     afterScript "bash $cleandir"
     """
-
     python $pred -x ${p.split()[1]} -y ${p.split()[2]} --size_x ${p.split()[3]} --size_y ${p.split()[4]} --ref_level ${p.split()[5]} --slide $inputt/${p.split()[6]}.tiff --output prob_${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff --trained $train_folder
+    """
+}
 
+
+process BinaryMaps {
+    clusterOptions = "-S /bin/bash -q all.q -pe orte 1 -R y"
+    errorStrategy 'retry' 
+    maxErrors 50
+    input:
+    file probs from PROB
+    val param from LAMBDA
+    val smallobject from SMALLOBJECT
+    output:
+    file "bin_*.tiff" into BIN
+    """
+    #!/usr/bin/env python
+    from tifffile import imread, imsave
+    from skimage.morphology import remove_small_objects
+    from createfold import DynamicWatershedAlias
+
+    probs = imread($probs)
+    probs = probs.astype(float)
+    probs = probs / 255
+
+
+    bin_img = DynamicWatershedAlias(prob_image, $param)
+    bin_img = remove_small_objects(bin_img, $smallobject)
+
+    bin_img[bin_img > 0] = 255
+    bin_img = bin_img.astype(np.uint8)
+    imsave(${probs}.replace('prob', 'bin'), bin_img, resolution=[1.0,1.0])
+    """
+}
+
+
+process ExtractionFeatures {
+    clusterOptions = "-S /bin/bash -q all.q"
+    input:
+    file bin from BIN
+    file rgb from RGB
+    file py from EXTRACTOR.last()
+    val marge from WSI_MARGE
+    output:
+    file "segmented_*.tiff" into SEG
+    file "table_*.csv" into TABLE
+    """
+    python $py --bin $bin --rgb $rgb --marge $marge
+    """
+}
+
+def getKey( file ) {
+      file.name.split('_')[1] 
+}
+
+TABLE  .map { file -> tuple(getKey(file), file) }
+                 .groupTuple() 
+                 .set { TableGroups }
+
+process CollectMergeTables {
+    executor 'local'
+    maxForks = 200
+    errorStrategy 'retry' 
+    maxErrors 5
+    publishDir "./tables", overwrite: false, pattern: "${key}.csv"
+
+
+    input:
+    set key, file(tables) from TableGroups 
+    file py from MergeTable
+    val inputt from params.in
+    val marge_wsi from WSI_MARGE
+    output:
+    file "${key}.csv" into TAB_WSI, TAB_WSI2
+    file "Ranked_${key}/*.csv" into NEW_TAB mode flatten
+    """
+    python $py --slide ${inputt}${key}.tiff --marge $marge_wsi
+    """   
+}
+
+SEG  .map { file -> tuple(getKey(file), file) }
+                 .groupTuple() 
+                 .set { SegmentedByPatient }
+
+process SegStiching {
+    clusterOptions = "-S /bin/bash -q all.q -l mem_free=16G"
+    publishDir "./Segmented", overwrite: false
+    errorStrategy 'retry' 
+    maxErrors 50
+    input:
+    set key, file(vec_color) from SegmentedByPatient
+    val inputt from params.in
+    file py from WrittingTiff
+    val marge_wsi from WSI_MARGE
+    output:
+    file "Segmented_${key}.tiff"
+    """
+    python $py $marge_wsi ${inputt}${key}.tiff Segmented_${key}.tiff *.tiff 
+    """
+}
+
+
+process FeatureDistribution {
+    clusterOptions = "-S /bin/bash -q all.q"
+    publishDir "./FeatureDistribution", overwrite: false
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    file wholeTab from TAB_WSI
+    file py from DistributionPlot
+    output:
+    file "*.png" into histogramme
+    """
+    python $py --table $wholeTab --output ${wholeTab.name.split(".")[0]}
+    """
+}
+
+
+process HeatMaps {
+    clusterOptions = "-S /bin/bash -q all.q"
+    publishDir "Heatmaps", overwrite: false
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    file wholeTab from TAB_WSI2
+    file py from FeatureHeatMaps
+    val inputt from params.in
+    val res from RES
+    val smooth from SMOOTH
+    output:
+    file "${wholeTab.getBaseName().split('.')[0]}/*.png" into heatmaps
+    beforeScript "source ~/.bashrc"
+    """
+    python $py --table $wholeTab --output ${wholeTab.name.split(".")[0]} --slide ${inputt}${wholeTab.name.split(".")[0]}.tiff --res $res --smooth $smooth
+    """
+}
+
+process MakeColors {
+    clusterOptions = "-S /bin/bash -q all.q"
+    errorStrategy 'retry' 
+    maxErrors 5
+
+    input:
+    file table from NEW_TAB
+    file py from ADDING_COLORS
+    val marge_wsi from WSI_MARGE
+    output:
+    file "feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
+
+    """
+    python $py --table $table --key ${table.name.split('_')[0]} --output . --marge $marge_wsi
+    """   
+}
+
+def getColorKey( file ) {     
+      file.toString().split('feat_')[1].split('/')[0] + "___" + file.toString().split('feat_')[1].split('/')[1].split('_')[0] 
+
+}
+
+COLOR_TIFF       .map { file -> tuple(getColorKey(file), file) }
+                 .groupTuple() 
+                 .set { COLOR_TIFF_GROUPED_BY_PATIENT_FEAT }
+// this one may not work
+process StichingFeatTiff {
+    memory '11 GB'
+    clusterOptions = "-S /bin/bash"
+    publishDir PublishPatient, overwrite: false
+//    maxForks = 80
+    errorStrategy 'retry' 
+    maxErrors 50
+    input:
+    set key, file(tiled_color) from COLOR_TIFF_GROUPED_BY_PATIENT_FEAT
+    val inputt from params.in
+    file py from WrittingTiff
+    val marge_wsi from WSI_MARGE
+    output:
+    file "Segmented_${key}.tiff"
+
+    """
+    python $py $marge_wsi ${inputt}${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff
     """
 }
