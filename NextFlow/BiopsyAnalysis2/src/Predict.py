@@ -67,7 +67,7 @@ if __name__ == "__main__":
     image = np.array(GetImage(slide, para))[:,:,:3]
 
 
-    windowSize = min(options.size_x, options.size_y)
+    windowSize = min(options.size_x, options.size_y) / 2
     windowSize = (windowSize, windowSize)
     stepSize = windowSize[0] - 50
     prob_fin = np.zeros(shape=(image.shape[0], image.shape[1])).astype(float)

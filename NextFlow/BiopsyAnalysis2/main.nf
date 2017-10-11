@@ -7,7 +7,7 @@ params.publish = "/share/data40T_v2/Peter/PatientFolder"
 params.cleancore = file("/share/data40T_v2/Peter/.cleandir")
 params.pretrained = file("/share/data40T_v2/Peter/pretrained_models")
 
-CHOP = file('Chop.py')
+CHOP = file('src/Chop.py')
 WSI_MARGE = 50
 LAMBDA = 7
 SMALLOBJECT = 50
@@ -49,9 +49,10 @@ process ProbabilityMap {
     memory '16 GB'
 //    profile = 'cluster'
     validExitStatus 0, 134
-    clusterOptions = "-S /bin/bash -q all.q -l mem_free=16G -pe orte 1 -R y"
+    clusterOptions = "-S /bin/bash -q all.q -l mem_free=16G -pe orte 4 -R y"
+//    cpu 2
 //    publishDir PublishPatient, overwrite: false
-//    maxForks = 80
+    maxForks = 50
     errorStrategy 'retry' 
     maxErrors 50
     
@@ -86,19 +87,20 @@ process BinaryMaps {
     #!/usr/bin/env python
     from tifffile import imread, imsave
     from skimage.morphology import remove_small_objects
-    from createfold import DynamicWatershedAlias
+    from Deprocessing.Morphology import DynamicWatershedAlias
+    import numpy as np
 
-    probs = imread($probs)
+    probs = imread("$probs")
     probs = probs.astype(float)
     probs = probs / 255
 
 
-    bin_img = DynamicWatershedAlias(prob_image, $param)
+    bin_img = DynamicWatershedAlias(probs, $param)
     bin_img = remove_small_objects(bin_img, $smallobject)
 
     bin_img[bin_img > 0] = 255
     bin_img = bin_img.astype(np.uint8)
-    imsave(${probs}.replace('prob', 'bin'), bin_img, resolution=[1.0,1.0])
+    imsave("${probs}".replace('prob', 'bin'), bin_img, resolution=[1.0,1.0])
     """
 }
 
@@ -108,7 +110,7 @@ process ExtractionFeatures {
     input:
     file bin from BIN
     file rgb from RGB
-    file py from EXTRACTOR.last()
+    val py from EXTRACTOR
     val marge from WSI_MARGE
     output:
     file "segmented_*.tiff" into SEG
@@ -235,7 +237,7 @@ COLOR_TIFF       .map { file -> tuple(getColorKey(file), file) }
 process StichingFeatTiff {
     memory '11 GB'
     clusterOptions = "-S /bin/bash"
-    publishDir PublishPatient, overwrite: false
+    publishDir "./Feature", overwrite: false
 //    maxForks = 80
     errorStrategy 'retry' 
     maxErrors 50
