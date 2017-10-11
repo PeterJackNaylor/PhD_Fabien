@@ -7,6 +7,17 @@ from skimage.color import rgb2gray
 import pdb
 from scipy.misc import imsave
 
+
+def GetNames(feat_list):
+    names = []
+    for el in list_feature:
+        if el.size != 1:
+            for it in range(el.size):
+                names.append(el._return_name()[it])
+        else:
+            names.append(el._return_name())
+    return names
+
 def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=False, do_label=True):
     bin_image_copy = bin_image.copy()
 
@@ -29,7 +40,12 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
         if len(np.unique(bin_image_copy)) == 1:
             if 0 in bin_image_copy:
                 print "Return blank matrix. Change this shit"
-                return np.array([[0] * p])
+                white_npy = np.zeros(shape=(1, p))
+                if not pandas_table:
+                    return white_npy
+                else:
+                    names = GetNames(list_feature) 
+                    return pd.DataFrame(white_npy, columns=names)
             else:
                 print "Error, must give a bin image."
     
@@ -54,13 +70,7 @@ def bin_analyser(RGB_image, bin_image, list_feature, marge=None, pandas_table=Fa
             offset_ALL += feat.size - 1
 
     if pandas_table:
-        names = []
-        for el in list_feature:
-            if el.size != 1:
-                for it in range(el.size):
-                    names.append(el._return_name()[it])
-            else:
-                names.append(el._return_name())
+        names = GetNames(list_feature)
         return pd.DataFrame(TABLE, columns=names)
     else:
         return TABLE
