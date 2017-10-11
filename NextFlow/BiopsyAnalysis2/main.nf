@@ -104,12 +104,17 @@ process BinaryMaps {
     """
 }
 
+def getPositionID( file ) {
+      file.name.split('_').drop(1).join('_')
+}
+//RGB .subscribe {println getID(it)}
+RGB .phase(BIN, remainder: true) { it -> getPositionID(it) } .set { RGB_AND_BIN }
+
 
 process ExtractionFeatures {
     clusterOptions = "-S /bin/bash -q all.q"
     input:
-    file bin from BIN
-    file rgb from RGB
+    set file(rgb), file(bin) from RGB_AND_BIN
     val py from EXTRACTOR
     val marge from WSI_MARGE
     output:
