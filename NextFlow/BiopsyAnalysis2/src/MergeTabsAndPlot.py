@@ -26,12 +26,13 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     patient = basename(options.slide).split('.')[0]
     slide = op.open_slide(options.slide)
-    iter = glob.glob("*.npy")
+    iter = glob.glob("*.csv")
     list_table = []
 
     for el in iter:
-        tmp_table = pd.DataFrame(np.load(el), columns=list_f_names)
-        tmp_table["Parent"] = el.split('.')[0]
+        tmp_table = pd.read_csv(el, index_col=0)
+        na = el.split('.')[0].split('_')[1::]
+        tmp_table["Parent"] = '_'.join(na)
         list_table.append(tmp_table)
     table = pd.concat(list_table)
     table = table.reset_index(drop=True)
@@ -40,8 +41,7 @@ if __name__ == "__main__":
 
     def Coordinates_0(x, y, parent):
         para = parent.split('_')
-        x, y = int(x), int(y)
-        X, Y = int(x) + int(para[2]), int(y) + int(para[1]) 
+        X, Y = x + int(para[2]), y + int(para[1]) 
         return X, Y
 
 
@@ -109,7 +109,7 @@ if __name__ == "__main__":
             without_parent[feat + "_rank"] = without_parent[feat].rank(ascending=True)
             table2 = pd.concat([table2, without_parent[feat + "_rank"]], axis=1)
 
-    output_new_tab = "Ranked_{}".format()
+    output_new_tab = "Ranked_{}".format(patient)
     CheckOrCreate(output_new_tab)
     ranks = table2[names]
     result = pd.concat([table, ranks], axis=1, join_axes=[table.index])
