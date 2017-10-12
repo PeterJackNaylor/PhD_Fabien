@@ -13,6 +13,11 @@ BS = 10
 params.epoch = 1 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
+BinToDistanceFile = file('BinToDistance.py')
+TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords.py')
+PY = file(params.python_dir + '/Nets/UNetDistance.py')
+PY_PRETRAIN = file(params.python_dir + '/Nets/UNetDistancePretrain.py')
+PRETRAINED = 
 
 process Mean {
     executor 'local'
@@ -22,14 +27,13 @@ process Mean {
     file py from MEANPY
     file toannotate from IMAGE_FOLD
     output:
-    file "mean_file.npy" into MeanFile, MeanFile2
+    file "mean_file.npy" into MeanFile, MeanFile2, MeanFile3
 
     """
     python $py --path $toannotate --output .
     """
 }
 
-BinToDistanceFile = file('BinToDistance.py')
 
 process BinToDistance {
     queue = "all.q"
@@ -38,14 +42,13 @@ process BinToDistance {
     file py from BinToDistanceFile
     file toannotate from IMAGE_FOLD
     output:
-    file 'ToAnnotateDistance' into DISTANCE_FOLD, DISTANCE_FOLD2, DISTANCE_FOLD3, DISTANCE_FOLD4, DISTANCE_FOLD5
+    file 'ToAnnotateDistance' into DISTANCE_FOLD, DISTANCE_FOLD2, DISTANCE_FOLD3, DISTANCE_FOLD4, DISTANCE_FOLD5, DISTANCE_FOLD6
 
     """
     python $py $toannotate
     """
 }
 
-TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords.py')
 
 process CreateTFRecords {
     clusterOptions = "-S /bin/bash -l mem_free=20G"
@@ -57,7 +60,7 @@ process CreateTFRecords {
     file path from DISTANCE_FOLD
 
     output:
-    file "DistanceTrainRecords.tfrecords" into DATAQUEUE_TRAIN
+    file "DistanceTrainRecords.tfrecords" into DATAQUEUE_TRAIN, DATAQUEUE_TRAIN1_2
 
     """
     PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
@@ -106,7 +109,6 @@ process CreateTestTFRecords {
     """
 }
 
-PY = file(params.python_dir + '/Nets/UNetDistance.py')
 
 process Training {
 
@@ -164,6 +166,38 @@ process Training2 {
     script:
     """
     /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --tf_record $__ --path $path  --log . --learning_rate ${res.name.split('_')[2]} --batch_size $bs --epoch $epoch --n_features ${res.name.split('_')[0]} --weight_decay ${res.name.split('_')[1]} --mean_file $_ --n_threads 100
+
+    """
+}
+
+
+process PreTraining {
+
+    clusterOptions = "-S /bin/bash -q cuda.q"
+//    publishDir "./FirstResult", mode: "copy", overwrite: false
+    maxForks = 2
+
+    input:
+    file path from DISTANCE_FOLD6
+    file py from PY_PRETRAIN
+    val bs from BS
+    val home from params.home
+    each feat from ARCH_FEATURES
+    each lr from LEARNING_RATE
+    each wd from WEIGHT_DECAY    
+    file _ from MeanFile3
+    file __ from DATAQUEUE_TRAIN1_2
+    val epoch from params.epoch
+    file pretrain from PRETRAINED
+    output:
+    file "${feat}_${wd}_${lr}" into RESULTS 
+
+    beforeScript "source ${home}/CUDA_LOCK/.whichNODE"
+    afterScript "source ${home}/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --pretrainmodel $pretrain
 
     """
 }
