@@ -148,14 +148,14 @@ process Training2 {
     maxForks = 2
 
     input:
-    file path from DISTANCE_FOLD5
-    file py from PY
+    file path from DISTANCE_FOLD5.last()
+    file py from PY.last()
     val bs from BS
     file res from RESULTS
-    val home from params.home
+    val home from params.home 
 //    val pat from PATIENT
-    file _ from MeanFile2
-    file __ from DATAQUEUE_TRAIN2
+    file _ from MeanFile2.first()
+    file __ from DATAQUEUE_TRAIN2.first()
     val epoch from params.epoch
     output:
     file res into RESULTS2

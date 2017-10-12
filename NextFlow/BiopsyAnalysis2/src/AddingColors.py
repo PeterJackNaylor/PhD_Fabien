@@ -109,11 +109,11 @@ def ClosestLabel(binary, x, y):
         MAX_Y = min(max_y - 1, max(0, y+dist))
         MIN_Y = min(max_y - 1, max(0, y-dist))
     
-            possible_labels = np.unique(binary[MIN_X:MAX_X, MIN_Y:MAX_Y])
-            if len(possible_labels) != 1:
-                found = True
+        possible_labels = np.unique(binary[MIN_X:MAX_X, MIN_Y:MAX_Y])
+        if len(possible_labels) != 1:
+            found = True
     try:
-            return possible_labels[1]
+        return possible_labels[1]
     except:
         pdb.set_trace()
 if __name__ == "__main__":
@@ -148,8 +148,8 @@ if __name__ == "__main__":
         for feat in [el for el in table.columns if "_rank" in el]:
             color_copy = np.zeros(shape=(x,y,3), dtype='uint8')
             def f(val, x, y):
-        x -= options.marge + 2
-        y -= options.marge + 2
+                x -= options.marge + 2
+                y -= options.marge + 2
                 label = ClosestLabel(bin, x, y)
                 color_copy[bin == label] = DivergingPurpleGreen(val, max_rank)
 
