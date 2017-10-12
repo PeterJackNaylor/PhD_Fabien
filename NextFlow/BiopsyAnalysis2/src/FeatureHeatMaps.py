@@ -53,7 +53,7 @@ if __name__ == "__main__":
     image = GetWholeImage(slide, level = options.res)
     x_S, y_S = image.size   
     def h(coord):
-        x0, y0 = [int(el) for el in coord[1:-1].split(', ')]
+        x0, y0 = [float(el) for el in coord[1:-1].split(', ')]
         va, va2 = get_X_Y_from_0(slide, x0, y0, options.res)
         return va, va2
     feat_res = "coord_res_{}".format(options.res)

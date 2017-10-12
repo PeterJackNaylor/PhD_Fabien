@@ -22,7 +22,7 @@ size_x, size_y = openslide.open_slide(slide_name).dimensions
 
 outfile = sys.argv[3]
 
-CheckOrCreate( outfile[0:-(len(basename(outfile))+1)] )
+##CheckOrCreate( outfile[0:-(len(basename(outfile))+1)] )
 
 
 
@@ -34,7 +34,7 @@ for i in range(4, val):
 	tile = Vips.Image.new_from_file(sys.argv[i], 
 			                    access = Vips.Access.SEQUENTIAL_UNBUFFERED)
 	#pdb.set_trace()
-	slide_name, _x, _y, _size_x, _size_y, ref_level = sys.argv[i].split('/')[-1].split('_')
+	type_file, slide_name, _x, _y, _size_x, _size_y, ref_level = sys.argv[i].split('/')[-1].split('_')
 	img = img.insert(tile, int(_x) + margin, int(_y) + margin)
 
 img.tiffsave(outfile, compression="jpeg", tile=True, pyramid=True, bigtiff = True)

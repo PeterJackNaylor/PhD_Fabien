@@ -150,7 +150,7 @@ process CollectMergeTables {
     file "${key}.csv" into TAB_WSI, TAB_WSI2
     file "Ranked_${key}/*.csv" into NEW_TAB mode flatten
     """
-    python $py --slide ${inputt}${key}.tiff --marge $marge_wsi
+    python $py --slide ${inputt}/${key}.tiff --marge $marge_wsi
     """   
 }
 
@@ -171,31 +171,28 @@ process SegStiching {
     output:
     file "Segmented_${key}.tiff"
     """
-    python $py $marge_wsi ${inputt}${key}.tiff Segmented_${key}.tiff *.tiff 
+    python $py $marge_wsi ${inputt}/${key}.tiff Segmented_${key}.tiff *.tiff 
     """
 }
-
 
 process FeatureDistribution {
     clusterOptions = "-S /bin/bash -q all.q"
     publishDir "./FeatureDistribution", overwrite: false
     errorStrategy 'retry' 
     maxErrors 5
-
     input:
     file wholeTab from TAB_WSI
     file py from DistributionPlot
     output:
     file "*.png" into histogramme
     """
-    python $py --table $wholeTab --output ${wholeTab.name.split(".")[0]}
+    python $py  --table ${wholeTab} --output ${wholeTab.baseName}.png 
     """
 }
 
-
 process HeatMaps {
     clusterOptions = "-S /bin/bash -q all.q"
-    publishDir "Heatmaps", overwrite: false
+    publishDir "./Heatmaps", overwrite: false
     errorStrategy 'retry' 
     maxErrors 5
 
@@ -206,10 +203,10 @@ process HeatMaps {
     val res from RES
     val smooth from SMOOTH
     output:
-    file "${wholeTab.getBaseName().split('.')[0]}/*.png" into heatmaps
+    file "${wholeTab.baseName}/*.png" into heatmaps
     beforeScript "source ~/.bashrc"
     """
-    python $py --table $wholeTab --output ${wholeTab.name.split(".")[0]} --slide ${inputt}${wholeTab.name.split(".")[0]}.tiff --res $res --smooth $smooth
+    python $py --table $wholeTab --output ${wholeTab.baseName} --slide ${inputt}/${wholeTab.baseName}.tiff --res $res --smooth $smooth
     """
 }
 
@@ -223,7 +220,7 @@ process MakeColors {
     file py from ADDING_COLORS
     val marge_wsi from WSI_MARGE
     output:
-    file "feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
+    file "feat_/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
 
     """
     python $py --table $table --key ${table.name.split('_')[0]} --output . --marge $marge_wsi
@@ -238,12 +235,10 @@ def getColorKey( file ) {
 COLOR_TIFF       .map { file -> tuple(getColorKey(file), file) }
                  .groupTuple() 
                  .set { COLOR_TIFF_GROUPED_BY_PATIENT_FEAT }
-// this one may not work
 process StichingFeatTiff {
     memory '11 GB'
     clusterOptions = "-S /bin/bash"
     publishDir "./Feature", overwrite: false
-//    maxForks = 80
     errorStrategy 'retry' 
     maxErrors 50
     input:
@@ -255,6 +250,6 @@ process StichingFeatTiff {
     file "Segmented_${key}.tiff"
 
     """
-    python $py $marge_wsi ${inputt}${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff
+    python $py $marge_wsi ${inputt}/${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff
     """
 }

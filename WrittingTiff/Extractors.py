@@ -10,7 +10,7 @@ from scipy.misc import imsave
 
 def GetNames(feat_list):
     names = []
-    for el in list_feature:
+    for el in feat_list:
         if el.size != 1:
             for it in range(el.size):
                 names.append(el._return_name()[it])

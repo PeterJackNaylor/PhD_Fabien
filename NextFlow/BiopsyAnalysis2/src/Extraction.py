@@ -41,4 +41,4 @@ if __name__ == "__main__":
     image = rgb.copy()
     image[x, y] = np.array([0, 0, 0])
     imsave(options.rgb.replace('rgb', 'segmented'), image, resolution=[1.0,1.0])
-    table.to_csv(options.bin.replace('rgb', 'table').repalce('tiff', 'csv'))
+    table.to_csv(options.rgb.replace('rgb', 'table').replace('tiff', 'csv'))
