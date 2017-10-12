@@ -147,7 +147,7 @@ process CollectMergeTables {
     val inputt from params.in
     val marge_wsi from WSI_MARGE
     output:
-    file "${key}.csv" into TAB_WSI, TAB_WSI2
+    file "${key}.csv" into TAB_WSI, TAB_WSI2, TAB_WSI3
     file "Ranked_${key}/*.csv" into NEW_TAB mode flatten
     """
     python $py --slide ${inputt}/${key}.tiff --marge $marge_wsi
@@ -210,20 +210,24 @@ process HeatMaps {
     """
 }
 
+NEW_TAB .phase(BIN) { it -> getPositionID(it) } .set { TAB_AND_BIN }
+
+
 process MakeColors {
     clusterOptions = "-S /bin/bash -q all.q"
     errorStrategy 'retry' 
     maxErrors 5
 
     input:
-    file table from NEW_TAB
+    set file(table), file(bin) from TAB_AND_BIN
     file py from ADDING_COLORS
     val marge_wsi from WSI_MARGE
+    file wholeTab from TAB_WSI3 .collect()
     output:
     file "feat_/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
 
     """
-    python $py --table $table --key ${table.name.split('_')[0]} --output . --marge $marge_wsi
+    python $py --table $table --key ${table.name.split('_')[0]} --output . --marge $marge_wsi --bin $bin
     """   
 }
 

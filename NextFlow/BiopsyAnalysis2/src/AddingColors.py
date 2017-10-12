@@ -129,9 +129,14 @@ if __name__ == "__main__":
                       help="patient id")
     parser.add_option("--marge", dest="marge", type="int",
               help="how much to reduce indexing")
+    parser.add_option("--bin", dest="bin", type="str",
+              help="bin image")
+    parser.add_option("--whole", dest="whole", type="str",
+              help="csv files for the whole WSI")
     (options, args) = parser.parse_args()
-    bin = label(imread("Job_{}/bin/{}".format(options.key, options.table.replace('.csv', '.tiff'))))
-    max_rank = pd.read_csv('Job_{}/{}_whole_slide.csv'.format(options.key, options.key)).shape[0]
+    bin = label(imread(options.bin))
+    key = options.bin.split('_')[1]
+    max_rank = pd.read_csv(key + '.csv').shape[0]
     CheckOrCreate(options.out)
     x, y = bin.shape
     table = pd.read_csv(options.table, header=0, index_col=0, sep=';')
