@@ -103,15 +103,15 @@ def ClosestLabel(binary, x, y):
         dist = 0
         while not found:
             dist += 1
-        MIN_X = min(max_x - 1, max(0, x-dist))
-        MAX_X = min(max_x - 1, max(0, x+dist))
+            MIN_X = min(max_x - 1, max(0, x-dist))
+            MAX_X = min(max_x - 1, max(0, x+dist))
         
-        MAX_Y = min(max_y - 1, max(0, y+dist))
-        MIN_Y = min(max_y - 1, max(0, y-dist))
+            MAX_Y = min(max_y - 1, max(0, y+dist))
+            MIN_Y = min(max_y - 1, max(0, y-dist))
     
-        possible_labels = np.unique(binary[MIN_X:MAX_X, MIN_Y:MAX_Y])
-        if len(possible_labels) != 1:
-            found = True
+            possible_labels = np.unique(binary[MIN_X:MAX_X, MIN_Y:MAX_Y])
+            if len(possible_labels) != 1:
+                found = True
     try:
         return possible_labels[1]
     except:
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     table = pd.read_csv(options.table, header=0, index_col=0, sep=';')
     table = table.drop('coord_res_0', 1)
     table = table.drop('Parent', 1)
-    table = table[table.notnull().all(axis=1)]
+    table = table[table["Pixel_sum"] != 0]
     if table.shape[0] == 0:
         for feat in [el for el in table.columns if "_rank" in el]:
             out = join(options.out, "feat_" + feat.split('_rank')[0])

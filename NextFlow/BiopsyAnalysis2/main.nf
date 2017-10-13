@@ -231,9 +231,8 @@ process MakeColors {
     python $py --table $table --key ${table.name.split('_')[1]} --output . --marge $marge_wsi --bin $bin
     """   
 }
-/*
 def getColorKey( file ) {     
-      file.toString().split('feat_')[1].split('/')[0] + "___" + file.toString().split('feat_')[1].split('/')[1].split('_')[0] 
+      file.toString().split('feat_')[1].split('/')[0] + "___" + file.toString().split('feat_')[1].split('/')[1].split('_')[1] 
 
 }
 
@@ -257,4 +256,4 @@ process StichingFeatTiff {
     """
     python $py $marge_wsi ${inputt}/${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff
     """
-}*/
+}

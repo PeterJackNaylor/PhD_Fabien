@@ -36,67 +36,38 @@ if __name__ == "__main__":
         list_table.append(tmp_table)
     table = pd.concat(list_table)
     table = table.reset_index(drop=True)
-
-
+    table["zeros"] = 0
+    table.ix[table['Pixel_sum']==0, 'zeros'] = 1
 
     def Coordinates_0(x, y, parent):
         para = parent.split('_')
-        X, Y = x + int(para[2]), y + int(para[1]) 
+        X, Y = int(x) + int(para[2]), int(y) + int(para[1]) 
         return X, Y
-
-
-    def InBox(x, y, parent):
+    def distancefromborder(x, y, parent):
         para = parent.split('_')
         width = int(para[4])
         height = int(para[3])
-        if (x < options.marge) or (x > width - options.marge) or (y < options.marge) or (y > height - options.marge):
-            return 0
-        else:
-            return 1
-
+        dist_ = [x, y, width - x, height - y]
+        return min(dist_)
     table["coord_res_0"] = table.apply(lambda r: Coordinates_0(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
-    table["InBox"] = table.apply(lambda r: InBox(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
-
-    col_name = table.columns[:-4]
-    table.ix[table['InBox']==0, col_name] = [0] * len(table.columns[:-4])
-    table = table.drop("InBox", axis=1)
-    ### killing doubles that overlap with two tiff
-    group = table.groupby('coord_res_0')['Parent'].unique()
-    index_to_iter = group[group.apply(lambda x: len(x)>1)]
-
-    def CentroidInImage(x, y, parent):
-        para = parent.split('_')
-        width = int(para[4]) - 2 * options.marge
-        height = int(para[3]) - 2 * options.marge
-        x, y = int(x) - options.marge, int(y) - options.marge
-
-        if x < 0 or x > width or y < 0 or y > height:
-            return max(width, height)
-        else:
-            distance_to_border = [x - 0, y - 0, width - x, height - y]
-            return min(distance_to_border)
-
-
-
-    n_cols = len(table.columns[:-3])
-
-    for el in index_to_iter.index:
-        df = table[table["coord_res_0"] == el]
-        df["distance_to_border"] = df.apply(lambda row: CentroidInImage(row['Centroid_x'], row['Centroid_y'], row['Parent']) ,axis=1)
-        keep_index = df['distance_to_border'].idxmin()
-        other_index = [el for el in df.index if el != keep_index]
-        for other_el in other_index:
-            table.iloc[other_el][table.columns[:-3]] = [0.] * n_cols
-    without_parent = table.drop('Parent', 1)
-    without_parent = without_parent.drop('coord_res_0', 1)
-    without_parent = without_parent[(without_parent.T != 0).any()]
-
-
-
-
-
-    table2 = table.ix[without_parent.index] 
-    table2.to_csv('{}.csv'.format(patient))
+    table["dupl"] = 0
+    table["id_dupl"] = 0
+    grouped = table.groupby(['coord_res_0'])
+    dupli = grouped.filter(lambda x: len(x) > 1)
+    for el in np.unique(dupli['coord_res_0']):
+        small = dupli[dupli['coord_res_0']==el]
+        small['distancefromborder'] = small.apply(lambda r: distancefromborder(r['Centroid_x'], r['Centroid_y'], r['Parent']), axis=1)
+        small['postoborder'] = small['distancefromborder'].rank(ascending=False)
+        keep = small.index[0]
+        dupl = small.index[1::]
+        for el in dupl:
+            table.ix[el, "dupl"] = 1
+            table.ix[el, "id_dupl"] = keep
+    without_dup = table.copy()
+    without_dup = without_dup[without_dup["dupl"] == 0]
+    without_dup = without_dup[without_dup['Pixel_sum'] != 0]
+   
+    without_dup.to_csv('{}.csv'.format(patient))
 
     
 
@@ -106,13 +77,20 @@ if __name__ == "__main__":
     for feat in list_f_names:
         if feat not in ["Centroid_x", "Centroid_y", "coord_res_0"]:
             names.append(feat + "_rank")
-            without_parent[feat + "_rank"] = without_parent[feat].rank(ascending=True)
-            table2 = pd.concat([table2, without_parent[feat + "_rank"]], axis=1)
-
-            output_new_tab = "Ranked_{}_{}".format(patient, feat)
-            CheckOrCreate(output_new_tab)
-            ranks = table2[names]
-            result = pd.concat([table, ranks], axis=1, join_axes=[table.index])
-            for group_name, df in result.groupby(['Parent']):
-                with open(join(output_new_tab, "ranked_" + group_name + ".csv"), 'w+') as f:
-                    df.to_csv(f, sep=';')
+            without_dup[feat + "_rank"] = without_dup[feat].rank(ascending=True)
+    def giveranktodupl(row):
+        if row["zeros"] == 1:
+            return [1.] * len(names)    
+        if row["dupl"] == 1:
+            return without_dup.ix[row['id_dupl'], names]
+        else:
+            return without_dup.ix[row.name, names]
+    table[names] = table.apply(lambda row: giveranktodupl(row), axis=1)
+    output_new_tab = "Ranked_{}_{}".format(patient, feat)
+    CheckOrCreate(output_new_tab)
+    table.drop('dupl', axis=1, inplace=True)
+    table.drop('id_dupl', axis=1, inplace=True)
+    table.drop('zeros', axis=1, inplace=True)
+    for group_name, df in table.groupby(['Parent']):
+        with open(join(output_new_tab, "ranked_" + group_name + ".csv"), 'w+') as f:
+            df.to_csv(f, sep=';')
