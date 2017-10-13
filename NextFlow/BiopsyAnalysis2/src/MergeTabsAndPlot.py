@@ -109,10 +109,10 @@ if __name__ == "__main__":
             without_parent[feat + "_rank"] = without_parent[feat].rank(ascending=True)
             table2 = pd.concat([table2, without_parent[feat + "_rank"]], axis=1)
 
-    output_new_tab = "Ranked_{}".format(patient)
-    CheckOrCreate(output_new_tab)
-    ranks = table2[names]
-    result = pd.concat([table, ranks], axis=1, join_axes=[table.index])
-    for group_name, df in result.groupby(['Parent']):
-        with open(join(output_new_tab, "ranked_" + group_name + ".csv"), 'w+') as f:
-            df.to_csv(f, sep=';')
+            output_new_tab = "Ranked_{}_{}".format(patient, feat)
+            CheckOrCreate(output_new_tab)
+            ranks = table2[names]
+            result = pd.concat([table, ranks], axis=1, join_axes=[table.index])
+            for group_name, df in result.groupby(['Parent']):
+                with open(join(output_new_tab, "ranked_" + group_name + ".csv"), 'w+') as f:
+                    df.to_csv(f, sep=';')

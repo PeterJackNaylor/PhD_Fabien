@@ -134,7 +134,8 @@ if __name__ == "__main__":
     parser.add_option("--whole", dest="whole", type="str",
               help="csv files for the whole WSI")
     (options, args) = parser.parse_args()
-    bin = label(imread(options.bin))
+    c = options.marge
+    bin = label(imread(options.bin)[c:-c, c:-c])
     key = options.bin.split('_')[1]
     max_rank = pd.read_csv(key + '.csv').shape[0]
     CheckOrCreate(options.out)

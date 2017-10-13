@@ -82,7 +82,7 @@ process BinaryMaps {
     val param from LAMBDA
     val smallobject from SMALLOBJECT
     output:
-    file "bin_*.tiff" into BIN
+    file "bin_*.tiff" into BIN, BIN2
     """
     #!/usr/bin/env python
     from tifffile import imread, imsave
@@ -148,7 +148,7 @@ process CollectMergeTables {
     val marge_wsi from WSI_MARGE
     output:
     file "${key}.csv" into TAB_WSI, TAB_WSI2, TAB_WSI3
-    file "Ranked_${key}/*.csv" into NEW_TAB mode flatten
+    file "Ranked_${key}_*/*.csv" into NEW_TAB mode flatten
     """
     python $py --slide ${inputt}/${key}.tiff --marge $marge_wsi
     """   
@@ -209,9 +209,10 @@ process HeatMaps {
     python $py --table $wholeTab --output ${wholeTab.baseName} --slide ${inputt}/${wholeTab.baseName}.tiff --res $res --smooth $smooth
     """
 }
-
-NEW_TAB .phase(BIN) { it -> getPositionID(it) } .set { TAB_AND_BIN }
-
+def getPositionIDWithoutEnd( file ) {
+      file.baseName.split('_').drop(1).join('_')
+}
+NEW_TAB .phase(BIN2, remainder: true) { it -> getPositionIDWithoutEnd(it) } .set { TAB_AND_BIN }
 
 process MakeColors {
     clusterOptions = "-S /bin/bash -q all.q"
@@ -222,15 +223,15 @@ process MakeColors {
     set file(table), file(bin) from TAB_AND_BIN
     file py from ADDING_COLORS
     val marge_wsi from WSI_MARGE
-    file wholeTab from TAB_WSI3 .collect()
+    file wholeTab from TAB_WSI3 .toList()
     output:
-    file "feat_/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
+    file "feat_*/${table.getBaseName()}.tiff" into COLOR_TIFF mode flatten
 
     """
-    python $py --table $table --key ${table.name.split('_')[0]} --output . --marge $marge_wsi --bin $bin
+    python $py --table $table --key ${table.name.split('_')[1]} --output . --marge $marge_wsi --bin $bin
     """   
 }
-
+/*
 def getColorKey( file ) {     
       file.toString().split('feat_')[1].split('/')[0] + "___" + file.toString().split('feat_')[1].split('/')[1].split('_')[0] 
 
@@ -256,4 +257,4 @@ process StichingFeatTiff {
     """
     python $py $marge_wsi ${inputt}/${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff
     """
-}
+}*/
