@@ -184,9 +184,9 @@ process FeatureDistribution {
     file wholeTab from TAB_WSI
     file py from DistributionPlot
     output:
-    file "*.png" into histogramme
+    file "${wholeTab.baseName}" into histogramme
     """
-    python $py  --table ${wholeTab} --output ${wholeTab.baseName}.png 
+    python $py  --table ${wholeTab} --output ${wholeTab.baseName}
     """
 }
 
@@ -242,7 +242,7 @@ COLOR_TIFF       .map { file -> tuple(getColorKey(file), file) }
 process StichingFeatTiff {
     memory '11 GB'
     clusterOptions = "-S /bin/bash"
-    publishDir "./Feature", overwrite: false
+    publishDir "./FeatureWSI/${key.split('___')[1]}", overwrite: false
     errorStrategy 'retry' 
     maxErrors 50
     input:
@@ -251,9 +251,9 @@ process StichingFeatTiff {
     file py from WrittingTiff
     val marge_wsi from WSI_MARGE
     output:
-    file "Segmented_${key}.tiff"
+    file "${key}.tiff"
 
     """
-    python $py $marge_wsi ${inputt}/${key.split('___')[1]}.tiff ./Job_${key.split('___')[1]}/WSI/Segmented_${key}.tiff *.tiff
+    python $py $marge_wsi ${inputt}/${key.split('___')[1]}.tiff ./${key}.tiff *.tiff
     """
 }
