@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 /*  inputs */
-params.in = "/share/data40T_v2/Peter/Data/Biopsy2"
+params.in = "/share/data40T_v2/Peter/Data/Biopsy"
 params.python = "/share/data40T_v2/Peter/PythonScripts/PhD_Fabien"
 params.publish = "/share/data40T_v2/Peter/PatientFolder"
 params.cleancore = file("/share/data40T_v2/Peter/.cleandir")
@@ -25,7 +25,7 @@ ADDING_COLORS = file("src/AddingColors.py")
 
 process ChopPatient {
     validExitStatus 0, 134
-    clusterOptions = "-S /bin/bash"
+    clusterOptions = "-S /bin/bash -q all.q"
 //    publishDir PublishPatient, overwrite: false
     input:
     file PYTHONFILE from CHOP
@@ -49,7 +49,7 @@ process ProbabilityMap {
     memory '16 GB'
 //    profile = 'cluster'
     validExitStatus 0, 134
-    clusterOptions = "-S /bin/bash -q all.q -l mem_free=16G -pe orte 4 -R y"
+    clusterOptions = "-S /bin/bash -q all.q -l mem_free=16G -pe orte 6 -R y"
 //    cpu 2
 //    publishDir PublishPatient, overwrite: false
     maxForks = 50
