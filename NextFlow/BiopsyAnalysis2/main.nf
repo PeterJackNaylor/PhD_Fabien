@@ -16,6 +16,7 @@ RES = 5
 TIFF_REMOTE = file(params.in + "/*.tiff")
 WrittingTiff = file(params.python + '/WrittingTiff/WriteFromFiles.py')
 PREDICT = file("src/Predict.py")
+PREDICTGPU = file("src/PredictGPU.py")
 EXTRACTOR = file('src/Extraction.py')
 MergeTable = file("src/MergeTabsAndPlot.py")
 DistributionPlot = file("src/DistributionPlot.py")
@@ -34,24 +35,47 @@ process ChopPatient {
     file cleandir from params.cleancore
     output:
     file "Parameter.txt" into PARAM_JOB
+    file "$x" into SLIDES
     afterScript "bash $cleandir"
     """
     METHOD=grid_etienne
- 
+    touch $x
     python $PYTHONFILE --slide $x --output Parameter.txt --method \$METHOD --marge $marge
     """
 }
 
-
-
 process ProbabilityMap {
-//    executor 'sge'
     memory '16 GB'
-//    profile = 'cluster'
+    validExitStatus 0, 134
+    clusterOptions = "-S /bin/bash -q cuda.q"
+    maxForks = 2
+    errorStrategy 'retry' 
+    maxErrors 50
+    
+
+    input:
+    file pred from PREDICTGPU
+    file p from PARAM_JOB 
+    file slide from SLIDES
+    file cleandir from params.cleancore
+    val train_folder from params.pretrained
+    output:
+    file "prob_*.tiff" into PROB, PROB2
+    file "rgb_*.tiff" into RGB, RGB2
+
+    beforeScript "source ${home}/CUDA_LOCK/.whichNODE"
+    afterScript "source ${home}/CUDA_LOCK/.freeNODE"
+    afterScript "bash $cleandir"
+    """
+    python $pred --slide $slide --parameter $p --output . --trained $train_folder
+    """
+}
+
+/*
+process ProbabilityMap {
+    memory '16 GB'
     validExitStatus 0, 134
     clusterOptions = "-S /bin/bash -q all.q -l mem_free=16G -pe orte 4 -R y"
-//    cpu 2
-//    publishDir PublishPatient, overwrite: false
     maxForks = 50
     errorStrategy 'retry' 
     maxErrors 50
@@ -70,7 +94,7 @@ process ProbabilityMap {
     """
     python $pred -x ${p.split()[1]} -y ${p.split()[2]} --size_x ${p.split()[3]} --size_y ${p.split()[4]} --ref_level ${p.split()[5]} --slide $inputt/${p.split()[6]}.tiff --output prob_${p.split()[6]}_${p.split()[1]}_${p.split()[2]}_${p.split()[3]}_${p.split()[4]}_${p.split()[5]}.tiff --trained $train_folder
     """
-}
+}*/
 
 
 process BinaryMaps {
