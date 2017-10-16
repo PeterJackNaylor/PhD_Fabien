@@ -58,8 +58,8 @@ if __name__ == "__main__":
     wd = options.wd
     cn_1 = "FCN_0.01_0.99_0.0005"
     cn_2 = "DeconvNet_0.01_0.99_0.0005"
-    net_1 = GetNet(cn_1, wd)
-    net_2 = GetNet(cn_2, wd)
+#    net_1 = GetNet(cn_1, wd)
+#    net_2 = GetNet(cn_2, wd)
 
     slide = options.slide
     para = [options.x, options.y, options.size_x, options.size_y, options.ref_level]

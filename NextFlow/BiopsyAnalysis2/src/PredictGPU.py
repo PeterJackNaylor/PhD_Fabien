@@ -3,10 +3,17 @@ from UsefulFunctions.UsefulOpenSlide import GetImage
 #from Deprocessing.InOutProcess import Forward, ProcessLoss
 import openslide
 import caffe
+caffe.set_mode_gpu()
 import numpy as np
-from tifffile import imsave
-from UsefulFunctions.UsefulImageConstruction import sliding_window, PredLargeImageFromNet
+from tifffile import imsave, imread
+from UsefulFunctions.UsefulImageConstruction2 import sliding_window, PredLargeImageFromNet
+import tempfile
+import shutil
+import os.path
+from os.path import basename, isfile, join
 
+
+PROB = tempfile.mkdtemp()
 
 def options_min():
 
@@ -22,9 +29,6 @@ def options_min():
                       help="folder where the pretrained networks are")
 
     (options, args) = parser.parse_args()
-
-    options.param = [options.x, options.y, options.ref_level, options.size_x, options.size_y]
-
 
     return options
 
@@ -42,7 +46,37 @@ def GetNet(cn, wd):
     net = caffe.Net(deploy, weight, caffe.TRAIN)
     return net
 
+def LoadFile(slide, para, dir_tmp):
+    fname = "rgb_{}_{}_{}_{}_{}_{}.tiff"
+    param_ = [basename(slide)] + para
+    fname = fname.format(*para)
+    fname = join(dir_tmp, fname)
+    if isfile(fname):
+        rgb = imread(fname)
+    else:
+        rgb = np.array(GetImage(slide, para))[:,:,:3]
+        imsave(fname, rgb)
+    return rgb
 
+def SaveProb(slide, para, dir_tmp, prob):
+    fname = "prob_{}_{}_{}_{}_{}_{}.tiff"
+    param_ = [basename(slide)] + para
+    fname = fname.format(*para)
+    tmp_fname = join(dir_tmp, fname)
+
+    if isfile(tmp_fname):
+        oldprob = imread(tmp_fname)
+        oldprob = oldprob.astype(float)
+        oldprob = oldprob / 255.
+        oldprob += prob 
+        oldprob = oldprob / 2
+        oldprob = oldprob * 255.
+        oldprob = oldprob.astype(np.uint8)
+        imsave(join('.', fname), oldprob, resolution=[1.0,1.0])
+    else:
+        prob = prob * 255
+        prob = prob.astype(np.uint8)
+        imsave(tmp_fname, prob, resolution=[1.0,1.0])
 
 if __name__ == "__main__":
     options = options_min()
@@ -50,30 +84,32 @@ if __name__ == "__main__":
     wd = options.wd
     cn_1 = "FCN_0.01_0.99_0.0005"
     cn_2 = "DeconvNet_0.01_0.99_0.0005"
-    net_1 = GetNet(cn_1, wd)
-    net_2 = GetNet(cn_2, wd)
+#    net_1 = GetNet(cn_1, wd)
+#    net_2 = GetNet(cn_2, wd)
 
     slide = options.slide
-    para = [options.x, options.y, options.size_x, options.size_y, options.ref_level]
     slide = openslide.open_slide(slide)
-    image = np.array(GetImage(slide, para))[:,:,:3]
+    file_content = open(options.parameter)
+    file_content = file_content.readlines()
 
 
-    windowSize = min(options.size_x, options.size_y) / 2
-    windowSize = (windowSize, windowSize)
-    stepSize = windowSize[0] - 50
-    prob_fin = np.zeros(shape=(image.shape[0], image.shape[1])).astype(float)
 
     for cn in [cn_1, cn_2]:
         net = GetNet(cn, wd)
-        net.blobs['data'].reshape(1, 3, windowSize[0], windowSize[1])
-        prob, bin, thresh = PredLargeImageFromNet(net, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
-        prob_fin += prob
+        for lines in file_content:
+            p = lines.split(' ')
+            para = [p[1], p[2], p[3], p[4], p[5]]
+            
+
+            windowSize_x = min(p[3], p[4]) / 2
+            windowSize = (windowSize_x, windowSize_x)
+            stepSize = windowSize_x - 50
+            net.blobs['data'].reshape(1, 3, windowSize[0], windowSize[1])
+            image = LoadFile(slide, para, ".")
+            prob, bin, thresh = PredLargeImageFromNet(net, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
+            SaveProb(slide, para, PROB, prob)
         del net
 
-    prob = prob_fin / 2
-    prob = prob * 255
-    prob = prob.astype(np.uint8)
-    imsave(options.output, prob, resolution=[1.0,1.0])
-    imsave(options.output.replace('prob', 'rgb'), image, resolution=[1.0,1.0])
 
+
+    shutil.rmtree(PROB)
