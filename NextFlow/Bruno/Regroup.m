@@ -1,7 +1,7 @@
 function Regroup(bpointdiagram, space)
 
     BPointDiagram = str2num(bpointdiagram);
-    NPoint = 100;
+    NPoint = 20;
     space = str2num(space);
     %% create result matrix of the good size
 %    file_name = horzcat('PhaseDiagram_nmax_', num2str(BPointDiagram - space), '_', num2str(BPointDiagram),'.mat')

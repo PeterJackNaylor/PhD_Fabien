@@ -9,22 +9,22 @@ MATLAB_NAME2 = 'GoingUpGround'
 COLLECT_MAT = file('Regroup.m')
 COLLECT_MAT_NAME = 'Regroup'
 BPointDiagram = 100
-Spacing = 9
+Spacing = 1
 
 //BEGINING = Channel.from( 51, 61, 71, 81, 91) 
 //BEGINING2 = Channel.from( 51, 61, 71, 81, 91) 
 //BEGINING = Channel.from( 1, 11, 21, 31, 41) 
-BEGINING = Channel.from( 1, 11, 21, 31, 41, 51, 61, 71, 81, 91 )
-BEGINING2 = Channel.from( 1, 11, 21, 31, 41, 51, 61, 71, 81, 91 )
+BEGINING = Channel.from( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 )
+BEGINING2 = Channel.from( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 )
 //ENDING   = Channel.from( 60, 70, 80, 90, 100) 
 //ENDING2   = Channel.from( 60, 70, 80, 90, 100) 
 //ENDING   = Channel.from( 10,20, 30, 40, 50) 
-ENDING   = Channel.from( 10,20, 30, 40, 50, 60, 70, 80, 90, 100 )
-ENDING2   = Channel.from( 10,20, 30, 40, 50, 60, 70, 80, 90, 100 )
+ENDING   = Channel.from( 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 )
+ENDING2   = Channel.from( 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 )
 
 process Compute_JDown {
     memory = '10GB'
-    cpus 10
+    cpus 2
     maxForks 16
     publishDir "results_down", overwrite: true
     errorStrategy 'finish'
@@ -47,7 +47,7 @@ process Compute_JDown {
 }
 process Compute_JUp {
     memory = '10GB'
-    cpus 5
+    cpus 2
     maxForks 16
     publishDir "results_up", overwrite: true
     errorStrategy 'finish'
@@ -69,7 +69,7 @@ process Compute_JUp {
     """
 }
 
-BPointDiagram2 = 100
+BPointDiagram2 = 12
 process RegroupDown {
     publishDir "results_down", overwrite: true
     errorStrategy 'finish'
