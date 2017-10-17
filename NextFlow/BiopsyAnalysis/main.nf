@@ -105,8 +105,6 @@ process StichingTiff {
     python $py $marge_wsi ${inputt}${key}.tiff ./Job_${key}/WSI/Segmented_${key}.tiff *.tiff 
 
     """
-
-
 }
 
 
