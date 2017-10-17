@@ -27,6 +27,7 @@ process Compute_JDown {
     cpus 10
     maxForks 16
     publishDir "results_down", overwrite: true
+    errorStrategy 'finish'
     input:
     file data from DATA
     file gpelab from GPELAB
@@ -46,9 +47,10 @@ process Compute_JDown {
 }
 process Compute_JUp {
     memory = '10GB'
-    cpus 15
+    cpus 5
     maxForks 16
     publishDir "results_up", overwrite: true
+    errorStrategy 'finish'
     input:
     file data from DATA
     file gpelab from GPELAB
@@ -70,6 +72,7 @@ process Compute_JUp {
 BPointDiagram2 = 100
 process RegroupDown {
     publishDir "results_down", overwrite: true
+    errorStrategy 'finish'
     input:
     file _ from NMAXDown .collect()
     file matlab_file from COLLECT_MAT
@@ -84,6 +87,7 @@ process RegroupDown {
 }
 process RegroupUp {
     publishDir "results_up", overwrite: true
+    errorStrategy 'finish'
     input:
     file _ from NMAXUp .collect()
     file matlab_file from COLLECT_MAT
