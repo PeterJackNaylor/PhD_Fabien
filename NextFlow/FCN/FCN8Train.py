@@ -67,7 +67,7 @@ if __name__ == '__main__':
     class_labels.append(255)
 
 
-    fcn_16s_checkpoint_path = glob(options.checkpoint + "/*.data*")[0].split(".data")[0] 
+    fcn_8s_checkpoint_path = glob(options.checkpoint + "/*.data*")[0].split(".data")[0] 
 
     filename_queue = tf.train.string_input_producer(
         [tfrecord_filename], num_epochs=2)
@@ -90,7 +90,7 @@ if __name__ == '__main__':
                                                  num_threads=2,
                                                  min_after_dequeue=1000)
 
-    upsampled_logits_batch, fcn_16s_variables_mapping = FCN_8s(image_batch_tensor=image_batch,
+    upsampled_logits_batch, fcn_8s_variables_mapping = FCN_8s(image_batch_tensor=image_batch,
                                                                number_of_classes=number_of_classes,
                                                                is_training=True)
 
@@ -142,8 +142,8 @@ if __name__ == '__main__':
     #adam_optimizer_variables = slim.get_variables_to_restore(include=['adam_vars'])
 
     # Variable's initialization functions
-    init_fn = slim.assign_from_checkpoint_fn(model_path=fcn_16s_checkpoint_path,
-                                             var_list=fcn_16s_variables_mapping)
+    init_fn = slim.assign_from_checkpoint_fn(model_path=fcn_8s_checkpoint_path,
+                                             var_list=fcn_8s_variables_mapping)
 
     global_vars_init_op = tf.global_variables_initializer()
 

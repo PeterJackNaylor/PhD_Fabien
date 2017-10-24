@@ -131,4 +131,27 @@ process Training {
     """
 }
 
+TESTPY=file("Testing.py")
 
+process Testing {
+    clusterOptions = "-S /bin/bash"
+//   publishDir TENSORBOARD, mode: "copy", overwrite: false
+    maxForks = 2
+    input:
+    file path from IMAGE_FOLD
+    file py from TESTPY
+    file folder from RESULTS
+    val home from params.home
+    file _ from MeanFile2
+    output:
+    file "$folder/*/*.csv" into RES
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    python $py --path $path --output $folder -f $folder/*/ --mean_file $_
+    """
+
+}

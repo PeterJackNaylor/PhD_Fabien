@@ -57,10 +57,10 @@ def PredImageFromNetTF(model, load_meta, window, MEAN_FILE="mean_file.npy"):
     if MEAN_FILE is not None:
         window = window - np.load(MEAN_FILE)
     if hasattr(model, "is_training"):
-        DIC = {input_var: np.expand_dims(window, axis=0),
+        DIC = {input_var: window,
                 model.is_training: False}
     else:
-        DIC = {input_var: np.expand_dims(window, axis=0)}
+        DIC = {input_var: window}
 #    saver = tf.train.import_meta_graph(load_meta)
     ckpt = tf.train.get_checkpoint_state(os.path.dirname(load_meta))
 
@@ -79,7 +79,7 @@ def PredImageFromNetTF(model, load_meta, window, MEAN_FILE="mean_file.npy"):
 #        saver.restore(sess, tf.train.latest_checkpoint(os.path.dirname(load_meta)))
 #        sess.run(tf.global_variables_initializer())
         bin, logits = sess.run([predictions, logits], feed_dict=DIC)
-        prob = softmax(logits[0])
-
+        #prob = softmax(logits[0])
+    return bin, logits
     return prob, bin[0]
 

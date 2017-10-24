@@ -25,25 +25,24 @@ def CreateTFRecord(OUTNAME, PATH, CROP, SIZE,
     
     if TYPE == "Normal":
         DG = DataGenRandomT(PATH, split=SPLIT, crop=CROP, size=SIZE,
-                        transforms=TRANSFORM_LIST, UNet=UNET,
+                        transforms=TRANSFORM_LIST, UNet=UNET, num=TEST_PATIENT,
                         mean_file=MEAN_FILE, seed_=SEED)
 
     elif TYPE == "3class":
         DG = DataGen3(PATH, split=SPLIT, crop = CROP, size=SIZE, 
-                       transforms=TRANSFORM_LIST, UNet=UNET, 
+                       transforms=TRANSFORM_LIST, UNet=UNET, num=TEST_PATIENT,
                        mean_file=MEAN_FILE, seed_=SEED)
     elif TYPE == "ReducedClass":
         DG = DataGen3reduce(PATH, split=SPLIT, crop = CROP, size=SIZE, 
-                       transforms=TRANSFORM_LIST, UNet=UNET, 
+                       transforms=TRANSFORM_LIST, UNet=UNET, num=TEST_PATIENT,
                        mean_file=MEAN_FILE, seed_=SEED)
     elif TYPE == "JUST_READ":
         DG = DataGenMulti(PATH, split=SPLIT, crop = CROP, size=SIZE, 
-                       transforms=TRANSFORM_LIST, UNet=UNET, 
+                       transforms=TRANSFORM_LIST, UNet=UNET, num=TEST_PATIENT,
                        mean_file=MEAN_FILE, seed_=SEED)
 
     DG.SetPatient(TEST_PATIENT)
     N_ITER_MAX = N_EPOCH * DG.length
-
 
     original_images = []
     key = DG.RandomKey(False)
@@ -99,7 +98,7 @@ def CreateTFRecord(OUTNAME, PATH, CROP, SIZE,
     writer.close()
 
 def read_and_decode(filename_queue, IMAGE_HEIGHT, IMAGE_WIDTH,
-                    BATCH_SIZE, N_THREADS, UNET):
+                    BATCH_SIZE, N_THREADS, UNET, CHANNELS=3):
     
     reader = tf.TFRecordReader()
 
@@ -161,13 +160,13 @@ def read_and_decode(filename_queue, IMAGE_HEIGHT, IMAGE_WIDTH,
     annotation = tf.decode_raw(features['mask_raw'], tf.uint8)
     
     
-    image_shape = tf.stack([height_img, width_img, 3])
+    image_shape = tf.stack([height_img, width_img, CHANNELS])
     annotation_shape = tf.stack([height_mask, width_mask, 1])
     
     image = tf.reshape(image, image_shape)
     annotation = tf.reshape(annotation, annotation_shape)
     
-    image_size_const = tf.constant((const_IMG_HEIGHT, const_IMG_WIDTH, 3), dtype=tf.int32)
+    image_size_const = tf.constant((const_IMG_HEIGHT, const_IMG_WIDTH, CHANNELS), dtype=tf.int32)
     annotation_size_const = tf.constant((const_MASK_HEIGHT, const_MASK_WIDTH, 1), dtype=tf.int32)
     
     # Random transformations can be put here: right before you crop images
@@ -239,7 +238,7 @@ if __name__ == '__main__':
     TRANSFORM_LIST = transform_list
     UNET = options.UNet
     SEED = options.seed
-    TEST_PATIENT = ["141549", "162438"]
+    TEST_PATIENT = ["test"]
     N_EPOCH = options.epoch
     TYPE = options.type
     
