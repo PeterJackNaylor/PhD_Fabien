@@ -144,14 +144,14 @@ process Testing {
     val home from params.home
     file _ from MeanFile2
     output:
-    file "$folder/*/*.csv" into RES
+    file "${folder}.txt" into RES
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     script:
     """
-    python $py --path $path --output $folder -f $folder/*/ --mean_file $_
+    python $py --path $path --output $folder -f $folder/32_0.00005_0.0001 --mean_file $_
     """
 
 }
