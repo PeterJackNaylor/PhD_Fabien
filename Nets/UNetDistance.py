@@ -8,6 +8,7 @@ from optparse import OptionParser
 from UsefulFunctions.ImageTransf import ListTransform
 from Data.DataGenClass import DataGen3, DataGenMulti, DataGen3reduce
 from Data.CreateTFRecords import read_and_decode
+import pdb
 
 class UNetDistance(UNetBatchNorm):
     def __init__(
@@ -84,24 +85,30 @@ class UNetDistance(UNetBatchNorm):
                                                           self.N_THREADS,
                                                           True,
                                                           self.NUM_CHANNELS)
-            self.annotation = tf.divide(self.annotation, 255.)
+            #self.annotation = tf.divide(self.annotation, 255.)
         print("Queue initialized")
 
     def init_training_graph(self):
 
         with tf.name_scope('Evaluation'):
-            ##self.logits = tf.nn.conv2d(self.last, self.logits_weight, strides=strides, padding=padding)
-            self.logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
+            # self.logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
+            with tf.name_scope("logits/"):
+                self.logits2 = tf.nn.conv2d(self.last, self.logits_weight, strides=[1,1,1,1], padding="VALID")
+                self.logits = tf.nn.bias_add(self.logits2, self.logits_biases)
             self.predictions = self.logits
-            
+            #self.predictions = tf.squeeze(self.logits, [3])
+            #softmax = tf.nn.softmax(self.logits)
+            #print softmax.get_shape()
+            #self.predictions = tf.slice(softmax, [0, 0, 0, 0], [-1, -1, -1, 1])
             with tf.name_scope('Loss'):
 
                 self.loss = tf.reduce_mean(tf.losses.mean_squared_error(self.logits, self.train_labels_node))
-                tf.summary.scalar("mean squared error", self.loss)
+                #self.loss = tf.reduce_mean(tf.losses.mean_squared_error(self.predictions, self.train_labels_node))
+                tf.summary.scalar("mean_squared_error", self.loss)
+            self.predictions = tf.squeeze(self.predictions, [3])
+            self.train_prediction = self.predictions
 
-            self.train_prediction = self.logits
-
-            self.test_prediction = self.logits
+            self.test_prediction = self.predictions
 
         tf.global_variables_initializer().run()
 
@@ -306,9 +313,9 @@ class UNetDistance(UNetBatchNorm):
         self.relu1_3 = self.relu_layer_f(self.conv1_3, self.conv1_3biases, "conv1_3/")
 
         self.conv1_4 = self.conv_layer_f(self.relu1_3, self.conv1_4weights, "conv1_4/")
-#        self.relu1_4 = self.relu_layer_f(self.conv1_4, self.conv1_4biases, "conv1_4/")
+        self.relu1_4 = self.relu_layer_f(self.conv1_4, self.conv1_4biases, "conv1_4/")
 
-        self.last = self.conv1_4
+        self.last = self.relu1_4
 
         print('Model architecture initialised')
 
@@ -328,9 +335,9 @@ class UNetDistance(UNetBatchNorm):
             n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
 
             l = 0.
-
             for i in range(n_batch):
                 Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
+                #Yval = Yval / 255.
                 feed_dict = {self.input_node: Xval,
                              self.train_labels_node: Yval,
                              self.is_training: False}
@@ -385,13 +392,19 @@ class UNetDistance(UNetBatchNorm):
                 i = datetime.now()
                 print i.strftime('%Y/%m/%d %H:%M:%S: \n ')
                 self.summary_writer.add_summary(s, step)                
-                error = self.error_rate(predictions, batch_labels, step)
                 print('  Step %d of %d' % (step, steps))
                 print('  Learning rate: %.5f \n') % lr
-                print('  Mini-batch error: %.5f \n ') % l
+                print('  Mini-batch loss: %.5f \n ') % l
+                print('  Max value: %.5f \n ') % np.max(predictions)
                 self.Validation(DGTest, step)
         coord.request_stop()
         coord.join(threads)
+    def predict(self, tensor):
+        feed_dict = {self.input_node: tensor,
+                     self.is_training: False}
+        pred = self.sess.run(self.predictions,
+                            feed_dict=feed_dict)
+        return pred
 
 if __name__== "__main__":
 
@@ -458,7 +471,7 @@ if __name__== "__main__":
     
     
     BATCH_SIZE = options.bs
-    LRSTEP = "10epoch"
+    LRSTEP = "4epoch"
     SUMMARY = True
     S = SUMMARY
     N_EPOCH = options.epoch
@@ -470,7 +483,7 @@ if __name__== "__main__":
     WIDTH = 212
     SIZE = (HEIGHT, WIDTH)
 
-    N_TRAIN_SAVE = 100
+    N_TRAIN_SAVE = 10
  
     CROP = 4
 
@@ -478,7 +491,7 @@ if __name__== "__main__":
     transform_list, transform_list_test = ListTransform(n_elastic=0)
 
     DG_TRAIN = DataGenMulti(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
-                       transforms=transform_list, UNet=True, mean_file=None)
+                       transforms=transform_list, num="test", UNet=True, mean_file=None)
 
     test_patient = ["141549", "162438"]
     DG_TRAIN.SetPatient(test_patient)
@@ -503,5 +516,4 @@ if __name__== "__main__":
                                        N_THREADS=N_THREADS,
                                        MEAN_FILE=MEAN_FILE,
                                        DROPOUT=DROPOUT)
-    pdb.set_trace()
     model.train(DG_TEST)

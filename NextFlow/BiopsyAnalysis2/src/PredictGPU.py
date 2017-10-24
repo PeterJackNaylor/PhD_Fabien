@@ -99,8 +99,6 @@ if __name__ == "__main__":
         for lines in file_content:
             p = lines.split(' ')
             para = [p[1], p[2], p[3], p[4], p[5]]
-            
-
             windowSize_x = min(p[3], p[4]) / 2
             windowSize = (windowSize_x, windowSize_x)
             stepSize = windowSize_x - 50
@@ -109,7 +107,4 @@ if __name__ == "__main__":
             prob, bin, thresh = PredLargeImageFromNet(net, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
             SaveProb(slide, para, PROB, prob)
         del net
-
-
-
     shutil.rmtree(PROB)

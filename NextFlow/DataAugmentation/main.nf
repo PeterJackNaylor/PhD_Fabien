@@ -155,3 +155,51 @@ process Testing {
     """
 
 }
+
+
+process RegroupResults {
+    clusterOptions = "-S /bin/bash"
+    publishDir "./Results", overwrite: true
+
+    input:
+    file fold from RES .toList()
+    output:
+    file "results.csv" into RES
+
+    """
+    #!/usr/bin/env python
+
+    from glob import glob
+    import pandas as pd 
+    from os.path import join, basename
+    from UsefulFunctions.RandomUtils import textparser
+
+    filess = glob('*.txt')
+    result = pd.DataFrame(columns=['Model', 'Param1', 'Param2', 'Param3', 'AJI', 'Mean acc', 'Precision', 'Recall', 'F1', 'ACC'])
+
+    def name_parse(string):
+        string = basename(string).split('.')[0]
+        model = string.split('_')[0]
+        Param1 = string.split('_')[1]
+        Param2 = string.split('_')[2]
+        if model == 'Elast':
+            Param3 = string.split('_')[3]
+        else:
+            Param3 = None
+        return model, Param1, Param2, Param3
+
+    for k, f in enumerate(folders):
+        model, p1, p2, p3 = name_parse(f)
+        dic = textparser(f)
+        dic['Param1'] = p1
+        dic['Param2'] = p2
+        dic['Param3'] = p3
+        dic['Model'] = model
+        result.loc[k] = pd.Series(dic)
+
+    result = result.set_index(['Model', 'Param1', 'Param2', 'Param3']) 
+    result.to_csv('results.csv')
+    """
+}
+
+
