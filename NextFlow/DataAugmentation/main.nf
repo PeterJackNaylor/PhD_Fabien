@@ -50,7 +50,7 @@ process CreateTFRecords_he {
     file path from IMAGE_FOLD
     each he1 from HE
     each he2 from HE
-
+    maxForks = 2
     output:
     file "HE_${he1}_${he2}.tfrecords" into DATAQUEUE_HE
     """
@@ -69,7 +69,7 @@ process CreateTFRecords_hsv {
     file path from IMAGE_FOLD
     each hsv1 from HSV
     each hsv2 from HSV
-
+    maxForks = 2
     output:
     file "HSV_${hsv1}_${hsv2}.tfrecords" into DATAQUEUE_HSV
     """
