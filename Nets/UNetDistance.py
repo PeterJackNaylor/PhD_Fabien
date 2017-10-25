@@ -357,16 +357,20 @@ class UNetDistance(UNetBatchNorm):
             self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", step)
 
     def train(self, DGTest):
-
         epoch = self.STEPS * self.BATCH_SIZE // self.N_EPOCH
-
-        self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
-
+        self.Saver()
         trainable_var = tf.trainable_variables()
-        
-        self.regularize_model()
+        self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
         self.optimization(trainable_var)
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
+        init_op = tf.group(tf.global_variables_initializer()),
+                   tf.local_variables_initializer())
+        self.sess.run(init_op)
+        self.regularize_model()
+
+        self.Saver()
+        
+        
 
         self.summary_test_writer = tf.summary.FileWriter(self.LOG + '/test',
                                             graph=self.sess.graph)
@@ -375,13 +379,12 @@ class UNetDistance(UNetBatchNorm):
         self.merged_summary = tf.summary.merge_all()
         steps = self.STEPS
 
-        init_op = tf.group(tf.global_variables_initializer(),
-                   tf.local_variables_initializer())
-        self.sess.run(init_op)
+        print "self.global step", int(self.global_step.eval())
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
-
-        for step in range(steps):      
+        begin = int(self.global_step.eval())
+        print "begin", begin
+        for step in range(begin, steps + begin):  
             # self.optimizer is replaced by self.training_op for the exponential moving decay
             _, l, lr, predictions, batch_labels, s = self.sess.run(
                         [self.training_op, self.loss, self.learning_rate,
