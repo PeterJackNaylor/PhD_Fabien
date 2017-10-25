@@ -11,7 +11,7 @@ import tempfile
 import shutil
 import os.path
 from os.path import basename, isfile, join
-
+import pdb
 
 PROB = tempfile.mkdtemp()
 
@@ -48,8 +48,8 @@ def GetNet(cn, wd):
 
 def LoadFile(slide, para, dir_tmp):
     fname = "rgb_{}_{}_{}_{}_{}_{}.tiff"
-    param_ = [basename(slide)] + para
-    fname = fname.format(*para)
+    param_ = [basename(options.slide).split('.')[0]] + para
+    fname = fname.format(*param_)
     fname = join(dir_tmp, fname)
     if isfile(fname):
         rgb = imread(fname)
@@ -60,11 +60,12 @@ def LoadFile(slide, para, dir_tmp):
 
 def SaveProb(slide, para, dir_tmp, prob):
     fname = "prob_{}_{}_{}_{}_{}_{}.tiff"
-    param_ = [basename(slide)] + para
-    fname = fname.format(*para)
+    param_ = [basename(options.slide).split('.')[0]] + para
+    fname = fname.format(*param_)
     tmp_fname = join(dir_tmp, fname)
 
     if isfile(tmp_fname):
+        # pdb.set_trace()
         oldprob = imread(tmp_fname)
         oldprob = oldprob.astype(float)
         oldprob = oldprob / 255.
@@ -97,11 +98,15 @@ if __name__ == "__main__":
     for cn in [cn_1, cn_2]:
         net = GetNet(cn, wd)
         for lines in file_content:
-            p = lines.split(' ')
-            para = [p[1], p[2], p[3], p[4], p[5]]
+            p = lines.split(' ')[1:]
+            p = [int(el) for el in p]
+            para = [p[0], p[1], p[2], p[3], p[4]]
             
-
-            windowSize_x = min(p[3], p[4]) / 2
+            if cn == cn_1:
+                windowSize_x = min(min(p[2], p[3]), 800)
+            else:
+                windowSize_x = min(min(p[2], p[3]), 500)
+            print " {} : {} ".format(cn, windowSize_x)
             windowSize = (windowSize_x, windowSize_x)
             stepSize = windowSize_x - 50
             net.blobs['data'].reshape(1, 3, windowSize[0], windowSize[1])

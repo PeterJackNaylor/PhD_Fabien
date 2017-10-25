@@ -144,12 +144,12 @@ process Training {
 process Training2 {
 
     clusterOptions = "-S /bin/bash -q cuda.q"
-   publishDir "./Results", mode: "copy", overwrite: false
+   publishDir "./ResultsNew", mode: "copy", overwrite: false
     maxForks = 2
 
     input:
     file path from DISTANCE_FOLD5.last()
-    file py from PY.last()
+    file py from PY
     val bs from BS
     file res from RESULTS
     val home from params.home 
@@ -170,7 +170,7 @@ process Training2 {
     """
 }
 
-
+/*
 process PreTraining {
 
     clusterOptions = "-S /bin/bash -q cuda.q"
@@ -190,7 +190,7 @@ process PreTraining {
     val epoch from params.epoch
     file pretrain from PRETRAINED
     output:
-    file "${feat}_${wd}_${lr}" into RESULTS 
+    file "${feat}_${wd}_${lr}" into RESULTS_pre 
 
     beforeScript "source ${home}/CUDA_LOCK/.whichNODE"
     afterScript "source ${home}/CUDA_LOCK/.freeNODE"
@@ -200,4 +200,4 @@ process PreTraining {
     /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --pretrainmodel $pretrain
 
     """
-}
+}*/
