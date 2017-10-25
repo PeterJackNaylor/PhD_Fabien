@@ -114,7 +114,4 @@ if __name__ == "__main__":
             prob, bin, thresh = PredLargeImageFromNet(net, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
             SaveProb(slide, para, PROB, prob)
         del net
-
-
-
     shutil.rmtree(PROB)

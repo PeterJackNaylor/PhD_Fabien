@@ -8,6 +8,7 @@ params.cleancore = file("/share/data40T_v2/Peter/.cleandir")
 params.pretrained = file("/share/data40T_v2/Peter/pretrained_models")
 params.home = "/share/data40T_v2/Peter"
 
+CLEANDIR_AND_CUDA = file(params.home + '/.cleandir_and_cuda')
 CHOP = file('src/Chop.py')
 WSI_MARGE = 50
 LAMBDA = 7
@@ -40,15 +41,14 @@ process ChopPatient {
     afterScript "bash $cleandir"
     """
     METHOD=grid_etienne
-    touch $x
     python $PYTHONFILE --slide $x --output Parameter.txt --method \$METHOD --marge $marge
     """
 }
 
 process ProbabilityMap {
-    memory '16 GB'
     validExitStatus 0, 134
     clusterOptions = "-S /bin/bash -q cuda.q"
+//    scratch true
     maxForks = 2
     errorStrategy 'retry' 
     maxErrors 50
@@ -60,13 +60,14 @@ process ProbabilityMap {
     file slide from SLIDES
     file cleandir from params.cleancore
     val train_folder from params.pretrained
+    val home from params.home
+    file both from CLEANDIR_AND_CUDA
     output:
-    file "prob_*.tiff" into PROB, PROB2
-    file "rgb_*.tiff" into RGB, RGB2
+    file "prob_*.tiff" into PROB, PROB2 mode flatten
+    file "rgb_*.tiff" into RGB, RGB2 mode flatten
 
     beforeScript "source ${home}/CUDA_LOCK/.whichNODE"
-    afterScript "source ${home}/CUDA_LOCK/.freeNODE"
-    afterScript "bash $cleandir"
+    afterScript "source $both"
     """
     python $pred --slide $slide --parameter $p --output . --trained $train_folder
     """

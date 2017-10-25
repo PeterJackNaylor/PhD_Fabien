@@ -24,15 +24,15 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
     Type = 'BESP';
     Stop_time = [];
     Stop_crit = {'MaxNorm', 1e-4};
-    xmin = -1.5;
-    xmax = 1.5;
-    ymin = -0.5;
-    ymax = 0.5;
-    zmin = -0.5;
-    zmax = 0.5;
-    Nx = 2^6 + 1;
-    Ny = 2^5 + 1;
-    Nz = 2^5 + 1;
+    xmin = -3.0;
+    xmax = 3.0;
+    ymin = -1.0;
+    ymax = 1.0;
+    zmin = -1.0;
+    zmax = 1.0;
+    Nx = 2^7 + 1;
+    Ny = 2^6 + 1;
+    Nz = 2^6 + 1;
     Geometry3D = Geometry3D_Var3d(xmin, xmax, ymin, ymax, zmin, zmax, Nx, Ny, Nz);
 
     %% Setting the physical problem
@@ -46,9 +46,9 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
     %%% Problem parameters
 
     % define N grid
-    Npoint = 100;
-    Nmax = 6500;
-    Nmin = 800;
+    Npoint = 20;
+    Nmax = 6000;
+    Nmin = 5000;
     DN = (Nmax - Nmin) / (Npoint - 1);
     Nat = [Nmin:DN:Nmax];
 
@@ -60,8 +60,8 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
     Bgrid = [Bmin:DB:Bmax];
 
     BPointDiagram = str2num(bpointdiagram);
-    BminLoop = 55.1145;
-    BMaxLoop = 56.00;
+    BminLoop = 55.85;
+    BMaxLoop = 55.95;
     DBLoop = (BMaxLoop - BminLoop) / (BPointDiagram - 1);
     BVec = [BminLoop:DBLoop:BMaxLoop];
 
@@ -79,7 +79,7 @@ function GroundStateWithLHYTermSingleComponent_SolitonDroplet(bpointdiagram, beg
 
 
     trapFrequencyRadial = 109; %in Hz
-    trapFrequencyAxial = 5; % in Hz (you have to put a non-zero frequency)
+    trapFrequencyAxial = 2.5; % in Hz (you have to put a non-zero frequency)
     
     
     nmax = zeros(ending-begining, Npoint);

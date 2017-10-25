@@ -8,6 +8,7 @@ from optparse import OptionParser
 from UsefulFunctions.ImageTransf import ListTransform
 from Data.DataGenClass import DataGen3, DataGenMulti, DataGen3reduce
 from Data.CreateTFRecords import read_and_decode
+import pdb
 
 class UNetDistance(UNetBatchNorm):
     def __init__(
@@ -82,24 +83,32 @@ class UNetDistance(UNetBatchNorm):
                                                           self.IMAGE_SIZE[1],
                                                           self.BATCH_SIZE,
                                                           self.N_THREADS,
-                                                          True)
-            self.annotation = tf.divide(self.annotation, 255.)
+                                                          True,
+                                                          self.NUM_CHANNELS)
+            #self.annotation = tf.divide(self.annotation, 255.)
         print("Queue initialized")
 
     def init_training_graph(self):
 
         with tf.name_scope('Evaluation'):
-            self.logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
-            self.predictions = tf.argmax(self.logits, axis=3)
-            
+            # self.logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
+            with tf.name_scope("logits/"):
+                self.logits2 = tf.nn.conv2d(self.last, self.logits_weight, strides=[1,1,1,1], padding="VALID")
+                self.logits = tf.nn.bias_add(self.logits2, self.logits_biases)
+            self.predictions = self.logits
+            #self.predictions = tf.squeeze(self.logits, [3])
+            #softmax = tf.nn.softmax(self.logits)
+            #print softmax.get_shape()
+            #self.predictions = tf.slice(softmax, [0, 0, 0, 0], [-1, -1, -1, 1])
             with tf.name_scope('Loss'):
 
                 self.loss = tf.reduce_mean(tf.losses.mean_squared_error(self.logits, self.train_labels_node))
-                tf.summary.scalar("mean squared error", self.loss)
+                #self.loss = tf.reduce_mean(tf.losses.mean_squared_error(self.predictions, self.train_labels_node))
+                tf.summary.scalar("mean_squared_error", self.loss)
+            self.predictions = tf.squeeze(self.predictions, [3])
+            self.train_prediction = self.predictions
 
-            self.train_prediction = self.logits
-
-            self.test_prediction = self.logits
+            self.test_prediction = self.predictions
 
         tf.global_variables_initializer().run()
 
@@ -201,6 +210,117 @@ class UNetDistance(UNetBatchNorm):
 
         self.keep_prob = tf.Variable(self.DROPOUT, name="dropout_prob")
 
+
+    def init_model_architecture(self):
+
+        self.conv1_1 = self.conv_layer_f(self.input_node, self.conv1_1weights, "conv1_1/")
+        self.relu1_1 = self.relu_layer_f(self.conv1_1, self.conv1_1biases, "conv1_1/")
+
+        self.conv1_2 = self.conv_layer_f(self.relu1_1, self.conv1_2weights, "conv1_2/")
+        self.relu1_2 = self.relu_layer_f(self.conv1_2, self.conv1_2biases, "conv1_2/")
+
+
+        self.pool1_2 = self.max_pool(self.relu1_2, name="pool1_2")
+
+
+        self.conv2_1 = self.conv_layer_f(self.pool1_2, self.conv2_1weights, "conv2_1/")
+        self.relu2_1 = self.relu_layer_f(self.conv2_1, self.conv2_1biases, "conv2_1/")
+
+        self.conv2_2 = self.conv_layer_f(self.relu2_1, self.conv2_2weights, "conv2_2/")
+        self.relu2_2 = self.relu_layer_f(self.conv2_2, self.conv2_2biases, "conv2_2/")        
+
+
+        self.pool2_3 = self.max_pool(self.relu2_2, name="pool2_3")
+
+
+        self.conv3_1 = self.conv_layer_f(self.pool2_3, self.conv3_1weights, "conv3_1/")
+        self.relu3_1 = self.relu_layer_f(self.conv3_1, self.conv3_1biases, "conv3_1/")
+
+        self.conv3_2 = self.conv_layer_f(self.relu3_1, self.conv3_2weights, "conv3_2/")
+        self.relu3_2 = self.relu_layer_f(self.conv3_2, self.conv3_2biases, "conv3_2/")     
+
+
+        self.pool3_4 = self.max_pool(self.relu3_2, name="pool3_4")
+
+
+        self.conv4_1 = self.conv_layer_f(self.pool3_4, self.conv4_1weights, "conv4_1/")
+        self.relu4_1 = self.relu_layer_f(self.conv4_1, self.conv4_1biases, "conv4_1/")
+
+        self.conv4_2 = self.conv_layer_f(self.relu4_1, self.conv4_2weights, "conv4_2/")
+        self.relu4_2 = self.relu_layer_f(self.conv4_2, self.conv4_2biases, "conv4_2/")
+
+
+        self.pool4_5 = self.max_pool(self.relu4_2, name="pool4_5")
+
+
+        self.conv5_1 = self.conv_layer_f(self.pool4_5, self.conv5_1weights, "conv5_1/")
+        self.relu5_1 = self.relu_layer_f(self.conv5_1, self.conv5_1biases, "conv5_1/")
+
+        self.conv5_2 = self.conv_layer_f(self.relu5_1, self.conv5_2weights, "conv5_2/")
+        self.relu5_2 = self.relu_layer_f(self.conv5_2, self.conv5_2biases, "conv5_2/")
+
+
+
+        self.tconv5_4 = self.transposeconv_layer_f(self.relu5_2, self.tconv5_4weights, "tconv5_4/")
+        self.trelu5_4 = self.relu_layer_f(self.tconv5_4, self.tconv5_4biases, "tconv5_4/")
+        self.bridge4 = self.CropAndMerge(self.relu4_2, self.trelu5_4, "bridge4")
+
+
+
+        self.conv4_3 = self.conv_layer_f(self.bridge4, self.conv4_3weights, "conv4_3/")
+        self.relu4_3 = self.relu_layer_f(self.conv4_3, self.conv4_3biases, "conv4_3/")
+
+        self.conv4_4 = self.conv_layer_f(self.relu4_3, self.conv4_4weights, "conv4_4/")
+        self.relu4_4 = self.relu_layer_f(self.conv4_4, self.conv4_4biases, "conv4_4/")
+
+
+
+        self.tconv4_3 = self.transposeconv_layer_f(self.relu4_4, self.tconv4_3weights, "tconv4_3/")
+        self.trelu4_3 = self.relu_layer_f(self.tconv4_3, self.tconv4_3biases, "tconv4_3/")
+        self.bridge3 = self.CropAndMerge(self.relu3_2, self.trelu4_3, "bridge3")
+
+
+
+        self.conv3_3 = self.conv_layer_f(self.bridge3, self.conv3_3weights, "conv3_3/")
+        self.relu3_3 = self.relu_layer_f(self.conv3_3, self.conv3_3biases, "conv3_3/")
+
+        self.conv3_4 = self.conv_layer_f(self.relu3_3, self.conv3_4weights, "conv3_4/")
+        self.relu3_4 = self.relu_layer_f(self.conv3_4, self.conv3_4biases, "conv3_4/")
+
+
+
+        self.tconv3_2 = self.transposeconv_layer_f(self.relu3_4, self.tconv3_2weights, "tconv3_2/")
+        self.trelu3_2 = self.relu_layer_f(self.tconv3_2, self.tconv3_2biases, "tconv3_2/")
+        self.bridge2 = self.CropAndMerge(self.relu2_2, self.trelu3_2, "bridge2")
+
+
+
+        self.conv2_3 = self.conv_layer_f(self.bridge2, self.conv2_3weights, "conv2_3/")
+        self.relu2_3 = self.relu_layer_f(self.conv2_3, self.conv2_3biases, "conv2_3/")
+
+        self.conv2_4 = self.conv_layer_f(self.relu2_3, self.conv2_4weights, "conv2_4/")
+        self.relu2_4 = self.relu_layer_f(self.conv2_4, self.conv2_4biases, "conv2_4/")
+
+
+
+        self.tconv2_1 = self.transposeconv_layer_f(self.relu2_4, self.tconv2_1weights, "tconv2_1/")
+        self.trelu2_1 = self.relu_layer_f(self.tconv2_1, self.tconv2_1biases, "tconv2_1/")
+        self.bridge1 = self.CropAndMerge(self.relu1_2, self.trelu2_1, "bridge1")
+
+
+
+        self.conv1_3 = self.conv_layer_f(self.bridge1, self.conv1_3weights, "conv1_3/")
+        self.relu1_3 = self.relu_layer_f(self.conv1_3, self.conv1_3biases, "conv1_3/")
+
+        self.conv1_4 = self.conv_layer_f(self.relu1_3, self.conv1_4weights, "conv1_4/")
+        self.relu1_4 = self.relu_layer_f(self.conv1_4, self.conv1_4biases, "conv1_4/")
+
+        self.last = self.relu1_4
+
+        print('Model architecture initialised')
+
+
+
     def error_rate(self, predictions, labels, iter):
 
         error = mean_squared_error(labels.flatten(), predictions.flatten())
@@ -215,9 +335,9 @@ class UNetDistance(UNetBatchNorm):
             n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
 
             l = 0.
-
             for i in range(n_batch):
                 Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
+                #Yval = Yval / 255.
                 feed_dict = {self.input_node: Xval,
                              self.train_labels_node: Yval,
                              self.is_training: False}
@@ -272,13 +392,19 @@ class UNetDistance(UNetBatchNorm):
                 i = datetime.now()
                 print i.strftime('%Y/%m/%d %H:%M:%S: \n ')
                 self.summary_writer.add_summary(s, step)                
-                error = self.error_rate(predictions, batch_labels, step)
                 print('  Step %d of %d' % (step, steps))
                 print('  Learning rate: %.5f \n') % lr
-                print('  Mini-batch error: %.5f \n ') % l
+                print('  Mini-batch loss: %.5f \n ') % l
+                print('  Max value: %.5f \n ') % np.max(predictions)
                 self.Validation(DGTest, step)
         coord.request_stop()
         coord.join(threads)
+    def predict(self, tensor):
+        feed_dict = {self.input_node: tensor,
+                     self.is_training: False}
+        pred = self.sess.run(self.predictions,
+                            feed_dict=feed_dict)
+        return pred
 
 if __name__== "__main__":
 
@@ -345,7 +471,7 @@ if __name__== "__main__":
     
     
     BATCH_SIZE = options.bs
-    LRSTEP = "10epoch"
+    LRSTEP = "4epoch"
     SUMMARY = True
     S = SUMMARY
     N_EPOCH = options.epoch
@@ -357,7 +483,7 @@ if __name__== "__main__":
     WIDTH = 212
     SIZE = (HEIGHT, WIDTH)
 
-    N_TRAIN_SAVE = 100
+    N_TRAIN_SAVE = 10
  
     CROP = 4
 
@@ -365,7 +491,7 @@ if __name__== "__main__":
     transform_list, transform_list_test = ListTransform(n_elastic=0)
 
     DG_TRAIN = DataGenMulti(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
-                       transforms=transform_list, UNet=True, mean_file=None)
+                       transforms=transform_list, num="test", UNet=True, mean_file=None)
 
     test_patient = ["141549", "162438"]
     DG_TRAIN.SetPatient(test_patient)
@@ -390,5 +516,4 @@ if __name__== "__main__":
                                        N_THREADS=N_THREADS,
                                        MEAN_FILE=MEAN_FILE,
                                        DROPOUT=DROPOUT)
-
     model.train(DG_TEST)

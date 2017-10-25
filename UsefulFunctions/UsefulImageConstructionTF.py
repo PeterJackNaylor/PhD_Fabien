@@ -9,7 +9,7 @@ from math import ceil
 import pdb
 from skimage.morphology import dilation, disk
 from scipy.misc import imsave
-from NewStuff.PredTF import PredImageFromNetTF
+from Prediction.PredTF import PredImageFromNetTF
 
 
 def Contours(bin_image, contour_size=3):

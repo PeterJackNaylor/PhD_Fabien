@@ -50,7 +50,7 @@ process CreateTFRecords_he {
     file path from IMAGE_FOLD
     each he1 from HE
     each he2 from HE
-
+    maxForks = 2
     output:
     file "HE_${he1}_${he2}.tfrecords" into DATAQUEUE_HE
     """
@@ -69,7 +69,7 @@ process CreateTFRecords_hsv {
     file path from IMAGE_FOLD
     each hsv1 from HSV
     each hsv2 from HSV
-
+    maxForks = 2
     output:
     file "HSV_${hsv1}_${hsv2}.tfrecords" into DATAQUEUE_HSV
     """
@@ -128,6 +128,77 @@ process Training {
     """
     python $py --tf_record $__ --path $path  --log ./${__.getBaseName().split('.tfrecord')[0]} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
     echo 'Done' >> ${__.getBaseName().split('.tfrecord')[0]}/readme.md
+    """
+}
+
+TESTPY=file("Testing.py")
+
+process Testing {
+    clusterOptions = "-S /bin/bash"
+//   publishDir TENSORBOARD, mode: "copy", overwrite: false
+    maxForks = 2
+    input:
+    file path from IMAGE_FOLD
+    file py from TESTPY
+    file folder from RESULTS
+    val home from params.home
+    file _ from MeanFile2
+    output:
+    file "${folder}.txt" into RES
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    python $py --path $path --output $folder -f $folder/32_0.00005_0.0001 --mean_file $_
+    """
+
+}
+
+
+process RegroupResults {
+    clusterOptions = "-S /bin/bash"
+    publishDir "./Results", overwrite: true
+
+    input:
+    file fold from RES .toList()
+    output:
+    file "results.csv" into RES
+
+    """
+    #!/usr/bin/env python
+
+    from glob import glob
+    import pandas as pd 
+    from os.path import join, basename
+    from UsefulFunctions.RandomUtils import textparser
+
+    filess = glob('*.txt')
+    result = pd.DataFrame(columns=['Model', 'Param1', 'Param2', 'Param3', 'AJI', 'Mean acc', 'Precision', 'Recall', 'F1', 'ACC'])
+
+    def name_parse(string):
+        string = basename(string).split('.')[0]
+        model = string.split('_')[0]
+        Param1 = string.split('_')[1]
+        Param2 = string.split('_')[2]
+        if model == 'Elast':
+            Param3 = string.split('_')[3]
+        else:
+            Param3 = None
+        return model, Param1, Param2, Param3
+
+    for k, f in enumerate(folders):
+        model, p1, p2, p3 = name_parse(f)
+        dic = textparser(f)
+        dic['Param1'] = p1
+        dic['Param2'] = p2
+        dic['Param3'] = p3
+        dic['Model'] = model
+        result.loc[k] = pd.Series(dic)
+
+    result = result.set_index(['Model', 'Param1', 'Param2', 'Param3']) 
+    result.to_csv('results.csv')
     """
 }
 

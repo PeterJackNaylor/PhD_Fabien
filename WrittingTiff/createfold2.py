@@ -161,9 +161,6 @@ if __name__ == '__main__':
     slide_name = opt.input
     out_slide = opt.output
 
-    import caffe
-    caffe.set_mode_gpu()
-
     cn_1 = "FCN_0.01_0.99_0.0005"
 
     wd_1 = "/home/pnaylor/Documents/Experiences/FCN"
