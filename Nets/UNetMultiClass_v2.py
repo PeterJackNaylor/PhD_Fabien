@@ -207,7 +207,7 @@ class UNetMultiClass(UNetBatchNorm):
 
     def train(self, DGTest=None, lb_name=MULTICLASS_NAME, saver=True):
         epoch = self.STEPS * self.BATCH_SIZE // self.N_EPOCH
-        self.Saver()	
+        self.Saver()
         trainable_var = tf.trainable_variables()
         self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
         self.optimization(trainable_var)
@@ -231,7 +231,7 @@ class UNetMultiClass(UNetBatchNorm):
         print "self.global step", int(self.global_step.eval())
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
-	begin = int(self.global_step.eval())
+        begin = int(self.global_step.eval())
         print "begin", begin
         for step in range(begin, steps + begin):
             # self.optimizer is replaced by self.training_op for the exponential moving decay

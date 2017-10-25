@@ -9,6 +9,7 @@ from scipy.ndimage.morphology import distance_transform_cdt
 from skimage.measure import label, regionprops
 from Deprocessing.Morphology import generate_wsl
 import pdb
+import numpy as np
 
 def LoadGT(path):
 
@@ -25,6 +26,15 @@ def LoadGT(path):
         img = img.transpose()
     return img
 
+def DistanceWithoutNormalise(bin_image):
+    res = np.zeros_like(bin_image)
+    for j in range(1, bin_image.max() + 1):
+        one_cell = np.zeros_like(bin_image)
+        one_cell[bin_image == j] = 1
+        one_cell = distance_transform_cdt(one_cell)
+        res[bin_image == j] = one_cell[bin_image == j]
+    res = res.astype('uint8')
+    return res
 
 NEW_FOLDER = 'ToAnnotateDistance'
 CheckOrCreate(NEW_FOLDER)
@@ -41,13 +51,5 @@ for image in glob('ToAnnotate/Slide_*/*.png'):
 
     copy(image, join(NEW_FOLDER, Slide_N, baseN))
     bin_image = LoadGT(join(OLD_FOLDER, GT_N, GT_name))
-    res = distance_transform_cdt(bin_image)
-    props = regionprops(label(bin_image))
-    res = res.astype('float')
-    for p in props:
-        MAX_VALUE = res[p.coords].max()
-        for x, y in p.coords:
-            res[x, y] = res[x, y] / float(MAX_VALUE)
-    res = res * 255
-    res = res.astype('uint8')
+    res = DistanceWithoutNormalise(bin_image)
     imsave(join(NEW_FOLDER, GT_N, baseN), res)
