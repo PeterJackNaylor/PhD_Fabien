@@ -171,6 +171,7 @@ process Training2 {
 }
 
 /*
+
 process PreTraining {
 
     clusterOptions = "-S /bin/bash -q cuda.q"
