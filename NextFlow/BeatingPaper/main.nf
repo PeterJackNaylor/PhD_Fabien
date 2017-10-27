@@ -169,7 +169,7 @@ process Mean {
 process UNetTraining {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARD, mode: "copy", overwrite: false
+    publishDir TENSORBOARDUNET, mode: "copy", overwrite: false
     maxForks = 2
 
     input:
