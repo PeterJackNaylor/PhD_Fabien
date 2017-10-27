@@ -16,6 +16,7 @@ MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 BinToDistanceFile = file('BinToDistance.py')
 TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords.py')
 PY = file(params.python_dir + '/Nets/UNetDistance.py')
+PYTEST = file('src/Testing.py')
 PY_PRETRAIN = file(params.python_dir + '/Nets/UNetDistancePretrain.py')
 PRETRAINED = 
 
@@ -144,7 +145,7 @@ process Training {
 process Training2 {
 
     clusterOptions = "-S /bin/bash -q cuda.q"
-   publishDir "./Results", mode: "copy", overwrite: false
+   publishDir "./Results", mode: "copy", overwrite: true
     maxForks = 2
 
     input:
@@ -170,7 +171,34 @@ process Training2 {
     """
 }
 
+process Testing {
 
+    clusterOptions = "-S /bin/bash -q cuda.q"
+    publishDir "./ResultTest", mode: "copy", overwrite: true
+    maxForks = 2
+
+    input:
+    file path from DISTANCE_FOLD6.last()
+    file py from PYTEST.last()
+    val bs from BS
+    file res from RESULTS2
+    val home from params.home 
+    file _ from MeanFile2.first()
+    val epoch from params.epoch
+    each lamb from LAMBDA
+    each thresh from THRESH
+    output:
+    file res into RESULTS2
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --path $path --log $res --batch_size $bs --n_features ${res.split('_')[0]} --mean_file $_ --lambda $lamb --thresh $thresh --output ${res.split('_')[0]}_${res.split('_')[1]}_${res.split('_')[2]}.txt
+    """
+}
+/*
 process PreTraining {
 
     clusterOptions = "-S /bin/bash -q cuda.q"
@@ -201,3 +229,4 @@ process PreTraining {
 
     """
 }
+*/
