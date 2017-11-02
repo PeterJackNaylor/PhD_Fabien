@@ -363,7 +363,7 @@ class UNetDistance(UNetBatchNorm):
         self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
         self.optimization(trainable_var)
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
-        init_op = tf.group(tf.global_variables_initializer()),
+        init_op = tf.group(tf.global_variables_initializer(),
                    tf.local_variables_initializer())
         self.sess.run(init_op)
         self.regularize_model()
@@ -494,7 +494,7 @@ if __name__== "__main__":
     transform_list, transform_list_test = ListTransform(n_elastic=0)
 
     DG_TRAIN = DataGenMulti(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
-                       transforms=transform_list, num="test", UNet=True, mean_file=None)
+                       transforms=transform_list, num="141549", UNet=True, mean_file=None)
 
     test_patient = ["141549", "162438"]
     DG_TRAIN.SetPatient(test_patient)
