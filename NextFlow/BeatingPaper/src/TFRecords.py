@@ -89,14 +89,13 @@ if __name__ == '__main__':
                                                         var_he=var_he) 
     if options.split == "train":
         TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
-                        "bladder", "colorectal", "stomach", "validation"]
+                        "bladder", "colorectal", "stomach", "test"]
     elif options.split == "test":
+        TEST_PATIENT = ["test"]
+    elif options.split == "validation":
+        options.split = "test"
         TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
                         "bladder", "colorectal", "stomach"]
-    else:
-        options.split = "test"
-        TEST_PATIENT = ["validation"]
-
     TRANSFORM_LIST = transform_list
 
 
