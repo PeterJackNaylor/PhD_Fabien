@@ -22,6 +22,7 @@ FCN16TEST = file('src/FCN16Test.py')
 FCN8TRAIN = file("src/FCN8Train.py")
 FCN8TEST = file('src/FCN8Test.py')
 UNET = file('src/UNetTraining.py')
+UNNETTEST = file('src/UNetTesting.py')
 
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')
@@ -98,7 +99,7 @@ process CreateTestRecords {
     output:
     file "TestBin.tfrecords" into TestRECORDBIN
     """
-    python $py --output TestBin.tfrecords --path $path --crop 16 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split test
+    python $py --output TestBin.tfrecords --path $path --crop 4 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split test
     """
 }
 
@@ -115,7 +116,7 @@ process CreateTestRecordsUnet {
     output:
     file "TestBin.tfrecords" into TestRECORDBINUNET
     """
-    python $py --output TestBin.tfrecords --path $path --crop 16 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split test
+    python $py --output TestBin.tfrecords --path $path --crop 4 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split test
     """
 }
 
@@ -132,7 +133,7 @@ process CreateValidationRecords {
     output:
     file "ValBin.tfrecords" into ValRECORDBIN
     """
-    python $py --output ValBin.tfrecords --path $path --crop 4 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation
+    python $py --output ValBin.tfrecords --path $path --crop 16 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation
     """
 }
 
@@ -149,7 +150,7 @@ process CreateValidationRecordsUnet {
     output:
     file "ValBin.tfrecords" into ValRECORDBINUNET
     """
-    python $py --output ValBin.tfrecords --path $path --crop 4 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation
+    python $py --output ValBin.tfrecords --path $path --crop 16 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation
     """
 }
 
@@ -167,7 +168,7 @@ process Mean {
     python $py --path $toannotate --output .
     """
 }
-/*
+
 process UNetTraining {
 
     clusterOptions = "-S /bin/bash"
@@ -195,7 +196,7 @@ process UNetTraining {
     """
     python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
     """
-}*/
+}
 
 /*
 process UNetTest {
@@ -206,7 +207,7 @@ process UNetTest {
 
     input:
     file path from IMAGE_FOLD
-    file py from UNNET
+    file py from UNNETTEST
     val bs from BS_UNET
     val home from params.home
     each feat from ARCH_FEATURES_UNET

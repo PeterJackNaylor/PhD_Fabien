@@ -52,6 +52,9 @@ if __name__== "__main__":
     parser.add_option('--n_threads', dest="THREADS", type=int, default=100,
                       help="number of threads to use for the preprocessing.")
 
+    parser.add_option('--crop', dest="crop", type=int, default=4,
+                      help="crop size depending on validation/test/train phase.")
+
     (options, args) = parser.parse_args()
 
 #    os.environ["CUDA_VISIBLE_DEVICES"] = options.gpu
@@ -93,7 +96,7 @@ if __name__== "__main__":
 
     N_TRAIN_SAVE = 100
  
-    CROP = 16
+    CROP = options.crop
 
 
     transform_list, transform_list_test = ListTransform()
@@ -105,8 +108,9 @@ if __name__== "__main__":
 
     DG_TRAIN.SetPatient(TEST_PATIENT)
     N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
-    TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
-                        "bladder", "colorectal", "stomach"]
+    
+    TEST_PATIENT = ["test"]
+
     DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE, num=TEST_PATIENT)
     DG_TEST.SetPatient(TEST_PATIENT)
