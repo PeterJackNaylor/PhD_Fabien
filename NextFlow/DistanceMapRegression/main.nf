@@ -170,7 +170,8 @@ process Training2 {
 
     """
 }
-
+LAMBDA = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+THRESH = [0.9, 1.0, 2.0]
 process Testing {
 
     clusterOptions = "-S /bin/bash -q cuda.q"
@@ -183,12 +184,12 @@ process Testing {
     val bs from BS
     file res from RESULTS2
     val home from params.home 
-    file _ from MeanFile2.first()
+    file _ from MeanFile3.first()
     val epoch from params.epoch
     each lamb from LAMBDA
     each thresh from THRESH
     output:
-    file res into RESULTS2
+    file res into RESULTS3
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"

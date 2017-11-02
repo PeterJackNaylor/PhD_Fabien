@@ -363,7 +363,7 @@ class UNetDistance(UNetBatchNorm):
         self.LearningRateSchedule(self.LEARNING_RATE, self.K, epoch)
         self.optimization(trainable_var)
         self.ExponentialMovingAverage(trainable_var, self.DECAY_EMA)
-        init_op = tf.group(tf.global_variables_initializer()),
+        init_op = tf.group(tf.global_variables_initializer(),
                    tf.local_variables_initializer())
         self.sess.run(init_op)
         self.regularize_model()
