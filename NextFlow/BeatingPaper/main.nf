@@ -6,8 +6,9 @@ params.image_dir = '/data/users/pnaylor/Bureau'
 params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
 params.home = "/data/users/pnaylor"
 params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
-params.epoch = 50
+params.epoch = 40
 
+TENSORBOARDUNET = file(params.image_dir + '/tensorboard_unet')
 TENSORBOARD_BIN_32 = file(params.image_dir + '/tensorboard_fcn_bin_32')
 TENSORBOARD_BIN_16 = file(params.image_dir + '/tensorboard_fcn_bin_16')
 TENSORBOARD_BIN_8 = file(params.image_dir + '/tensorboard_fcn_bin_8')
@@ -20,15 +21,17 @@ FCN16TRAIN = file("src/FCN16Train.py")
 FCN16TEST = file('src/FCN16Test.py')
 FCN8TRAIN = file("src/FCN8Train.py")
 FCN8TEST = file('src/FCN8Test.py')
-UNET = file(params.python_dir + '/Data/UNetBatchNorm_v2.py')
+UNET = file('src/UNetTraining.py')
+UNNETTEST = file('src/UNetTesting.py')
 
+MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')
 SlideName = file(params.python_dir + '/PrepareData/EverythingExceptColor.py')
 GivingBackIdea = file("GivingBackID.py")
 CELLCOG_classif = file(params.cellcogn + '/classifier_January2017')
 CELLCOG_folder = file(params.cellcogn + '/Fabien')
 
-IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
+IMAGE_FOLD = file(params.image_dir + "/ForDataGenTrainTestVal")
 CHECKPOINT_VGG = file(params.image_dir + "/pretrained/vgg_16.ckpt")
 IMAGE_SIZE = 224
 IMAGE_SIZEUNET = 212
@@ -96,7 +99,7 @@ process CreateTestRecords {
     output:
     file "TestBin.tfrecords" into TestRECORDBIN
     """
-    python $py --output TestBin.tfrecords --path $path --crop 16 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split test
+    python $py --output TestBin.tfrecords --path $path --crop 4 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split test
     """
 }
 
@@ -113,7 +116,7 @@ process CreateTestRecordsUnet {
     output:
     file "TestBin.tfrecords" into TestRECORDBINUNET
     """
-    python $py --output TestBin.tfrecords --path $path --crop 16 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split test
+    python $py --output TestBin.tfrecords --path $path --crop 4 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split test
     """
 }
 
@@ -130,7 +133,7 @@ process CreateValidationRecords {
     output:
     file "ValBin.tfrecords" into ValRECORDBIN
     """
-    python $py --output ValBin.tfrecords --path $path --crop 4 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation
+    python $py --output ValBin.tfrecords --path $path --crop 16 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation
     """
 }
 
@@ -147,7 +150,7 @@ process CreateValidationRecordsUnet {
     output:
     file "ValBin.tfrecords" into ValRECORDBINUNET
     """
-    python $py --output ValBin.tfrecords --path $path --crop 4 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation
+    python $py --output ValBin.tfrecords --path $path --crop 16 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation
     """
 }
 
@@ -169,12 +172,12 @@ process Mean {
 process UNetTraining {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARD, mode: "copy", overwrite: false
+    publishDir TENSORBOARDUNET, mode: "copy", overwrite: false
     maxForks = 2
 
     input:
     file path from IMAGE_FOLD
-    file py from UNNET
+    file py from UNET
     val bs from BS_UNET
     val home from params.home
     each feat from ARCH_FEATURES_UNET
@@ -182,7 +185,7 @@ process UNetTraining {
     each wd from WEIGHT_DECAY_UNET    
     file _ from MeanFile
     file __ from TrainRECORDBINUNET
-
+    val epoch from params.epoch
     output:
     file "${feat}_${wd}_${lr}" into RES_UNET
 
@@ -204,7 +207,7 @@ process UNetTest {
 
     input:
     file path from IMAGE_FOLD
-    file py from UNNET
+    file py from UNNETTEST
     val bs from BS_UNET
     val home from params.home
     each feat from ARCH_FEATURES_UNET
