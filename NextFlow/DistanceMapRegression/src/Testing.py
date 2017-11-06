@@ -86,8 +86,8 @@ if __name__== "__main__":
     test_patient = ["141549", "162438"]
 
     PATH = options.path
-    CROP = 4
-    HEIGHT, WIDTH = 212, 212
+    CROP = 1
+    HEIGHT, WIDTH = 500, 500
     BATCH_SIZE = options.bs
     SAVE_DIR = options.log
     N_FEATURES = options.n_features

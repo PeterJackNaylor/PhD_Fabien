@@ -196,9 +196,49 @@ process Testing {
 
     script:
     """
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --path $path --log $res --batch_size $bs --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $lamb --thresh $thresh --output ${res.name.split('_')[0]}_${res.name.split('_')[1]}_${res.name.split('_')[2]}.txt
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --path $path --log $res --batch_size $bs --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $lamb --thresh $thresh --output ${res.name.split('_')[0]}_${res.name.split('_')[1]}_${res.name.split('_')[2]}_${lamb}_${thresh}.txt
     """
 }
+
+process RegroupResults {
+    clusterOptions = "-S /bin/bash -q all.q"
+    publishDir "./ResultTest", mode: "copy", overwrite: true
+
+    input:
+    file _ from UNET_TEST .toList()
+    file __ from RES_UNET2 .toList()
+    output:
+    file "bestmodel" into BEST_UNET
+    file "UNET_results.csv" into UNET_table
+    """
+    #!/usr/bin/env python
+
+    from glob import glob
+    import pandas as pd 
+    from os.path import join
+    from UsefulFunctions.RandomUtils import textparser
+
+    folders = glob('*_*_*_*_*.txt')
+    result = pd.DataFrame(columns=["Model", "AJI", "F1", "MSE", "lambda", "thresh"])
+
+    def name_parse(string):
+        string = string.split('.')[0]
+        img_model = string.split('_')[0]
+        return img_model
+
+    for k, f in enumerate(folders):
+        model, n_feat, lr, wd, lamb, thresh = name_parse(f)
+        dic = textparser(join(f, "Characteristics.txt"))
+        dic["Model"] = model
+        dic["lambda"] = lamb
+        dic["thresh"] = thresh
+        result.loc[k] = pd.Series(dic)
+
+    result = result.set_index(["Model"]) 
+    result.to_csv("UNET_results.csv")
+    """
+}
+
 /*
 process PreTraining {
 
