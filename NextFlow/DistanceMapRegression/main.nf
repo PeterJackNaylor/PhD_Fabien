@@ -149,14 +149,14 @@ process Training2 {
     maxForks = 2
 
     input:
-    file path from DISTANCE_FOLD5.last()
-    file py from PY.last()
+    file path from DISTANCE_FOLD5 .last()
+    file py from PY 
     val bs from BS
     file res from RESULTS
     val home from params.home 
 //    val pat from PATIENT
-    file _ from MeanFile2.first()
-    file __ from DATAQUEUE_TRAIN2.first()
+    file _ from MeanFile2 .last()
+    file __ from DATAQUEUE_TRAIN2 .last()
     val epoch from params.epoch
     output:
     file res into RESULTS2
@@ -179,12 +179,12 @@ process Testing {
     maxForks = 2
 
     input:
-    file path from DISTANCE_FOLD6.last()
-    file py from PYTEST.last()
+    file path from DISTANCE_FOLD6
+    file py from PYTEST
     val bs from BS
     file res from RESULTS2
     val home from params.home 
-    file _ from MeanFile3.first()
+    file _ from MeanFile3
     val epoch from params.epoch
     each lamb from LAMBDA
     each thresh from THRESH
@@ -196,7 +196,7 @@ process Testing {
 
     script:
     """
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --path $path --log $res --batch_size $bs --n_features ${res.split('_')[0]} --mean_file $_ --lambda $lamb --thresh $thresh --output ${res.split('_')[0]}_${res.split('_')[1]}_${res.split('_')[2]}.txt
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --path $path --log $res --batch_size $bs --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $lamb --thresh $thresh --output ${res.name.split('_')[0]}_${res.name.split('_')[1]}_${res.name.split('_')[2]}.txt
     """
 }
 /*
