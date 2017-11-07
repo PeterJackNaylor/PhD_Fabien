@@ -16,6 +16,7 @@ MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 BinToDistanceFile = file('BinToDistance.py')
 TFRECORDS = file('src/TFRecords.py')
 PY = file(params.python_dir + '/Nets/UNetDistance.py')
+PY2 = file('src/UNetTraining2.py')
 PYTEST = file('src/Testing.py')
 PY_PRETRAIN = file(params.python_dir + '/Nets/UNetDistancePretrain.py')
 PRETRAINED = 
@@ -150,7 +151,7 @@ process Training2 {
 
     input:
     file path from DISTANCE_FOLD5 .last()
-    file py from PY 
+    file py from PY2 
     val bs from BS
     file res from RESULTS
     val home from params.home 
@@ -159,14 +160,14 @@ process Training2 {
     file __ from DATAQUEUE_TRAIN2 .last()
     val epoch from params.epoch
     output:
-    file res into RESULTS2
+    file "longer/${res}" into RESULTS2
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     script:
     """
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --tf_record $__ --path $path  --log . --learning_rate ${res.name.split('_')[2]} --batch_size $bs --epoch $epoch --n_features ${res.name.split('_')[0]} --weight_decay ${res.name.split('_')[1]} --mean_file $_ --n_threads 100
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --tf_record $__ --path $path  --log long --learning_rate ${res.name.split('_')[2]} --batch_size $bs --epoch $epoch --n_features ${res.name.split('_')[0]} --weight_decay ${res.name.split('_')[1]} --mean_file $_ --n_threads 100 --restore $res
 
     """
 }
