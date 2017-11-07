@@ -6,9 +6,9 @@ params.home = "/data/users/pnaylor"
 params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
 
 
-LEARNING_RATE = [0.01, 0.001, 0.0001, 0.00001]
-ARCH_FEATURES = [16, 32, 64]
-WEIGHT_DECAY = [0.0005, 0.00005]
+LEARNING_RATE = [0.01] //, 0.001, 0.0001, 0.00001]
+ARCH_FEATURES = [16] //, 32, 64]
+WEIGHT_DECAY = [0.0005] //, 0.00005]
 BS = 10
 params.epoch = 1 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
@@ -179,18 +179,17 @@ process Testing {
     maxForks = 2
 
     input:
-    file path from DISTANCE_FOLD6
+    file path from DISTANCE_FOLD6 .last()
     file py from PYTEST
     val bs from BS
     file res from RESULTS2
     val home from params.home 
-    file _ from MeanFile3
-    val epoch from params.epoch
+    file _ from MeanFile3 .last()
     each lamb from LAMBDA
     each thresh from THRESH
     output:
-    file res into RESULTS3
-
+    file res into RES_UNET
+    file "*.txt" into UNET_TEST
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
@@ -206,7 +205,7 @@ process RegroupResults {
 
     input:
     file _ from UNET_TEST .toList()
-    file __ from RES_UNET2 .toList()
+    file __ from RES_UNET .toList()
     output:
     file "bestmodel" into BEST_UNET
     file "UNET_results.csv" into UNET_table
