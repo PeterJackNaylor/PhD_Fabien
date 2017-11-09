@@ -6,9 +6,9 @@ params.home = "/data/users/pnaylor"
 params.cellcogn = "/data/users/pnaylor/Bureau/CellCognition"
 
 
-LEARNING_RATE = [0.01] //, 0.001, 0.0001, 0.00001]
-ARCH_FEATURES = [16] //, 32, 64]
-WEIGHT_DECAY = [0.0005] //, 0.00005]
+LEARNING_RATE = [0.01, 0.001, 0.0001, 0.00001]
+ARCH_FEATURES = [16, 32, 64]
+WEIGHT_DECAY = [0.0005, 0.00005]
 BS = 10
 params.epoch = 1 
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
@@ -160,7 +160,7 @@ process Training2 {
     file __ from DATAQUEUE_TRAIN2 .last()
     val epoch from params.epoch
     output:
-    file "longer/${res}" into RESULTS2
+    file "long/${res}" into RESULTS2
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
@@ -175,9 +175,8 @@ LAMBDA = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 THRESH = [0.9, 1.0, 2.0]
 process Testing {
 
-    clusterOptions = "-S /bin/bash -q cuda.q"
+    clusterOptions = "-S /bin/bash -q all.q"
     publishDir "./ResultTest", mode: "copy", overwrite: true
-    maxForks = 2
 
     input:
     file path from DISTANCE_FOLD6 .last()
@@ -191,12 +190,13 @@ process Testing {
     output:
     file res into RES_UNET
     file "*.txt" into UNET_TEST
-    beforeScript "source $home/CUDA_LOCK/.whichNODE"
-    afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     script:
     """
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --path $path --log $res --batch_size $bs --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $lamb --thresh $thresh --output ${res.name.split('_')[0]}_${res.name.split('_')[1]}_${res.name.split('_')[2]}_${lamb}_${thresh}.txt
+    function pyglib {
+        /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/envs/cpu_tf/bin/python \$@
+    }
+    pyglib $py --path $path --log $res --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $lamb --thresh $thresh --output ${res.name.split('_')[0]}_${res.name.split('_')[1]}_${res.name.split('_')[2]}_${lamb}_${thresh}.txt
     """
 }
 
@@ -217,18 +217,19 @@ process RegroupResults {
     import pandas as pd 
     from os.path import join
     from UsefulFunctions.RandomUtils import textparser
-
+    from os.path import join
     folders = glob('*_*_*_*_*.txt')
     result = pd.DataFrame(columns=["Model", "AJI", "F1", "MSE", "lambda", "thresh"])
 
     def name_parse(string):
-        string = string.split('.')[0]
-        img_model = string.split('_')[0]
+        string = string.split('.tx')[0]
+        img_model = string.split('_')
+        img_model = [string] + img_model
         return img_model
 
     for k, f in enumerate(folders):
         model, n_feat, lr, wd, lamb, thresh = name_parse(f)
-        dic = textparser(join(f, "Characteristics.txt"))
+        dic = textparser(f)
         dic["Model"] = model
         dic["lambda"] = lamb
         dic["thresh"] = thresh

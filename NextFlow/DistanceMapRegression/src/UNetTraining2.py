@@ -182,7 +182,7 @@ if __name__== "__main__":
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
     DG_TEST.SetPatient(test_patient)
 
-    model = UNetDistance(TFRecord,    LEARNING_RATE=LEARNING_RATE,
+    model = UNetDistance2(TFRecord,    LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=SIZE,
                                        NUM_CHANNELS=3,
