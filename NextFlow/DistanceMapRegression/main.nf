@@ -234,9 +234,14 @@ process RegroupResults {
         dic["lambda"] = lamb
         dic["thresh"] = thresh
         result.loc[k] = pd.Series(dic)
-
-    result = result.set_index(["Model"]) 
+    result = result.set_index(["Model"])
+    best_index = result['AJI'].argmax()
+    best_index = "_".join(best_index.split('_')[:-2]) 
     result.to_csv("UNET_results.csv")
+    TOMOVE = best_index
+    for file in TOMOVE:
+        os.mkdir('bestmodel')
+        os.rename(file, os.path.join("bestmodel", file))
     """
 }
 
