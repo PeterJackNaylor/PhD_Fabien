@@ -11,6 +11,7 @@ import tempfile
 import shutil
 import os.path
 from os.path import basename, isfile, join
+import pdb
 
 
 PROB = tempfile.mkdtemp()
@@ -48,8 +49,8 @@ def GetNet(cn, wd):
 
 def LoadFile(slide, para, dir_tmp):
     fname = "rgb_{}_{}_{}_{}_{}_{}.tiff"
-    param_ = [basename(slide)] + para
-    fname = fname.format(*para)
+    param_ = [basename(slide).split('.')[0]] + para
+    fname = fname.format(*param_)
     fname = join(dir_tmp, fname)
     if isfile(fname):
         rgb = imread(fname)
@@ -60,8 +61,8 @@ def LoadFile(slide, para, dir_tmp):
 
 def SaveProb(slide, para, dir_tmp, prob):
     fname = "prob_{}_{}_{}_{}_{}_{}.tiff"
-    param_ = [basename(slide)] + para
-    fname = fname.format(*para)
+    param_ = [basename(slide).split('.')[0]] + para
+    fname = fname.format(*param_)
     tmp_fname = join(dir_tmp, fname)
 
     if isfile(tmp_fname):
@@ -98,13 +99,13 @@ if __name__ == "__main__":
         net = GetNet(cn, wd)
         for lines in file_content:
             p = lines.split(' ')
-            para = [p[1], p[2], p[3], p[4], p[5]]
+            para = [int(p[1]), int(p[2]), int(p[3]), int(p[4]), int(p[5])]
             windowSize_x = min(int(p[3]), int(p[4])) / 2
             windowSize = (windowSize_x, windowSize_x)
             stepSize = windowSize_x - 50
             net.blobs['data'].reshape(1, 3, windowSize[0], windowSize[1])
-            image = LoadFile(slide, para, ".")
+            image = LoadFile(options.slide, para, ".")
             prob, bin, thresh = PredLargeImageFromNet(net, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
-            SaveProb(slide, para, PROB, prob)
+            SaveProb(options.slide, para, PROB, prob)
         del net
     shutil.rmtree(PROB)
