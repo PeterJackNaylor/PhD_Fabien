@@ -6,7 +6,7 @@ import caffe
 caffe.set_mode_gpu()
 import numpy as np
 from tifffile import imsave, imread
-from UsefulFunctions.UsefulImageConstruction2 import sliding_window, PredLargeImageFromNet
+from UsefulFunctions.UsefulImageConstruction import sliding_window, PredLargeImageFromNet
 import tempfile
 import shutil
 import os.path

@@ -40,7 +40,6 @@ process ChopPatient {
     afterScript "bash $cleandir"
     """
     METHOD=grid_etienne
-    touch $x
     python $PYTHONFILE --slide $x --output Parameter.txt --method \$METHOD --marge $marge
     """
 }
@@ -55,6 +54,7 @@ process ProbabilityMap {
     
 
     input:
+    val home from params.home
     file pred from PREDICTGPU
     file p from PARAM_JOB 
     file slide from SLIDES
