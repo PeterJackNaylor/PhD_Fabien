@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 
-params.image_dir = '/data/users/pnaylor/Bureau'
-params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
-params.home = "/data/users/pnaylor"
+params.image_dir = '/share/data40T_v2/Peter/Data'
+params.python_dir = '/share/data40T_v2/Peter/PythonScripts/PhD_Fabien'
+params.home = "/share/data40T_v2/Peter"
 params.epoch = 50
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
 PY = file(params.python_dir + '/Data/UNetBatchNorm_v2.py')
@@ -11,9 +11,9 @@ MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 TFRECORDS = file('src/TFRecords.py')
 
 LEARNING_RATE = [0.001, 0.0001, 0.00001]
-ARCH_FEATURES = [32]
+ARCH_FEATURES = [16, 32, 64]
 WEIGHT_DECAY = [0.00005, 0.0005]
-BS = 32
+BS = 10
 
 
 process Mean {
@@ -54,7 +54,7 @@ process CreateTFRecords {
 
 process Training {
 
-    clusterOptions = "-S /bin/bash"
+    clusterOptions = "-S /bin/bash -q cuda.q"
     publishDir TENSORBOARD, mode: "copy", overwrite: false
     maxForks = 2
 
@@ -84,7 +84,7 @@ process Training {
     """
 }
 
-process Testing {
+//process Testing {
     
 
 
@@ -93,4 +93,4 @@ process Testing {
 
 
     
-}
+//}

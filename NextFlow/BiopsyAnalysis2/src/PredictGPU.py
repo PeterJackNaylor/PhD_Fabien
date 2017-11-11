@@ -99,7 +99,7 @@ if __name__ == "__main__":
         for lines in file_content:
             p = lines.split(' ')
             para = [p[1], p[2], p[3], p[4], p[5]]
-            windowSize_x = min(p[3], p[4]) / 2
+            windowSize_x = min(int(p[3]), int(p[4])) / 2
             windowSize = (windowSize_x, windowSize_x)
             stepSize = windowSize_x - 50
             net.blobs['data'].reshape(1, 3, windowSize[0], windowSize[1])
