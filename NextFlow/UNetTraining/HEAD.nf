@@ -95,7 +95,7 @@ process Testing {
     input:
     file path from IMAGE_FOLD
     file py from PYTEST 
-    file _ from MeanFile2
+    file _ from MeanFile2 .last()
     each val from WSD
     file res from RESULTS
     output:
@@ -106,7 +106,7 @@ process Testing {
     function pyglib {
         /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/envs/cpu_tf/bin/python \$@
     }
-    pyglib $py --path $path --output ${res}__${val}.csv --log $res --batch_size 1 --n_features ${res.name.split('.')[0]} --mean_file $_ --lambda $val --thresh 0.5
+    pyglib $py --path $path --output ${res}__${val}.csv --log $res --batch_size 1 --n_features ${res.baseName.split('_')[0]} --mean_file $_ --lambda $val --thresh 0.5
     """
 
 

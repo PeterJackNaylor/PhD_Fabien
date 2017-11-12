@@ -1,4 +1,5 @@
 from Nets.UNetBatchNorm_v2 import UNetBatchNorm
+from Data.DataGenRandomT import DataGenRandomT
 import math
 from Data.DataGenClass import DataGen3, DataGenMulti, DataGen3reduce
 from UsefulFunctions.ImageTransf import ListTransform
@@ -21,8 +22,10 @@ def AJIcompute(FP, GT):
 
 def SoftMax(x):
     """Compute softmax values for each sets of scores in x. along axis 2"""
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum(axis=2)
+    l1 = x[:, :, 0]
+    l2 = x[:, :, 1]
+    mat = np.exp(l1 - l2)
+    return 1 / (1 + mat)
 
 class TestModel(UNetBatchNorm):
     def Validation(self, DG_TEST, p1, thresh):
@@ -41,7 +44,6 @@ class TestModel(UNetBatchNorm):
             l_tmp, logit = self.sess.run([self.loss, 
                                                 self.logits],
                                                 feed_dict=feed_dict)
-            pdb.set_trace()
             j = 0
             prob = SoftMax(logit[0])
             FP = PostProcess(prob, p1, thresh)
@@ -100,8 +102,7 @@ if __name__== "__main__":
 
 
     SIZE = (HEIGHT, WIDTH)
-
-    DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+    DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
     DG_TEST.SetPatient(test_patient)
 
@@ -109,6 +110,7 @@ if __name__== "__main__":
                            BATCH_SIZE=BATCH_SIZE,
                            IMAGE_SIZE=SIZE,
                            NUM_CHANNELS=3,
+                           NUM_LABELS=2,
                            STEPS=100,
                            LRSTEP=1,
                            N_PRINT=100,
