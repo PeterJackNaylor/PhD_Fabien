@@ -130,7 +130,7 @@ process RegroupResults {
     from os.path import join
     from UsefulFunctions.RandomUtils import textparser
     from os.path import join
-    
+    import os 
     CSV = glob('*.csv')
     res = []
     for k, f in enumerate(CSV):
@@ -145,8 +145,8 @@ process RegroupResults {
     res = pd.concat(res)
     res = res.set_index(['Features', 'Learning rate', 'Weight decay','Lambda'])
     res.to_csv('general.csv')
-    best_index = result['AJI'].argmax()
-    TOMOVE = best_index
+    best_index = res['AJI'].argmax()
+    TOMOVE = ["_".join(best_index[0:3])]
     for file in TOMOVE:
         os.mkdir('best_model')
         os.rename(file, os.path.join('best_model', file))
