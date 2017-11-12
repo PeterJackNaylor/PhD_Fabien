@@ -5,7 +5,7 @@ params.python_dir = '/share/data40T_v2/Peter/PythonScripts/PhD_Fabien'
 params.home = "/share/data40T_v2/Peter"
 params.epoch = 50
 IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
-PY = file(params.python_dir + '/Data/UNetBatchNorm_v2.py')
+PY = file(params.python_dir + '/Nets/UNetBatchNorm_v2.py')
 TENSORBOARD = file(params.image_dir + '/tensorboard_withmean')
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 TFRECORDS = file('src/TFRecords.py')
@@ -79,8 +79,7 @@ process Training {
     function pyglib {
         /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/bin/python \$@
     }
-    pyglib $py --tfrecord $tfrecord --epoch 80 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd --mean_file $_
-
+    pyglib $py --tf_record $tfrecord --epoch 80 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd --mean_file $_
     """
 }
 
