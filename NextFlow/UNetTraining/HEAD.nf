@@ -9,7 +9,7 @@ PY = file(params.python_dir + '/Data/UNetBatchNorm_v2.py')
 TENSORBOARD = file(params.image_dir + '/tensorboard_withmean')
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 TFRECORDS = file('src/TFRecords.py')
-
+PYTEST = file('src/Testing.py')
 LEARNING_RATE = [0.001, 0.0001, 0.00001]
 ARCH_FEATURES = [16, 32, 64]
 WEIGHT_DECAY = [0.00005, 0.0005]
