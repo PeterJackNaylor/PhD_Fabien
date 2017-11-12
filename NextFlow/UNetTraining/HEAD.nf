@@ -24,7 +24,7 @@ process Mean {
     file py from MEANPY
     file toannotate from IMAGE_FOLD
     output:
-    file "mean_file.npy" into MeanFile
+    file "mean_file.npy" into MeanFile, MeanFile2
 
     """
     python $py --path $toannotate --output .
@@ -55,7 +55,7 @@ process CreateTFRecords {
 process Training {
 
     clusterOptions = "-S /bin/bash -q cuda.q"
-    publishDir TENSORBOARD, mode: "copy", overwrite: false
+    publishDir "./Training", mode: "copy", overwrite: false
     maxForks = 2
 
     input:
@@ -83,13 +83,32 @@ process Training {
     """
 }
 
-//process Testing {
+
+WSD = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+process Testing {
+    clusterOptions = "-S /bin/bash -q all.q"
+    publishDir "./Testing", mode: "copy", overwrite: false
+
+
+
+    input:
+    file path from IMAGE_FOLD
+    file py from PYTEST 
+    file _ from MeanFile2
+    each val from WSD
+    file res from RESULTS
+    output:
+    file "${res}__${val}.csv" into RESULTS_TEST
+
+    script:
+    """
+    function pyglib {
+        /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/envs/cpu_tf/bin/python \$@
+    }
+    pyglib $py --path $path --output ${res}__${val}.csv --log $res --batch_size 1 --n_features ${res.name.split('.')[0]} --mean_file $_ --lambda $val --thresh 0.5
+    """
+
+
     
-
-
-
-
-
-
-    
-//}
+}

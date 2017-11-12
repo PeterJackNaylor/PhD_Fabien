@@ -1,4 +1,4 @@
-from Nets.UNetDistance import UNetDistance
+from Nets.UNetBatchNorm_v2 import UNetBatchNorm
 import math
 from Data.DataGenClass import DataGen3, DataGenMulti, DataGen3reduce
 from UsefulFunctions.ImageTransf import ListTransform
@@ -7,6 +7,7 @@ from Deprocessing.Morphology import PostProcess
 from skimage.measure import label
 from sklearn.metrics import f1_score
 from Prediction.AJI import AJI_fast
+import numpy as np
 import pdb
 def F1compute(FP, GT):
     pr = FP.copy()
@@ -18,8 +19,12 @@ def F1compute(FP, GT):
 def AJIcompute(FP, GT):
     return AJI_fast(FP, GT)
 
+def SoftMax(x):
+    """Compute softmax values for each sets of scores in x. along axis 2"""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=2)
 
-class TestModel(UNetDistance):
+class TestModel(UNetBatchNorm):
     def Validation(self, DG_TEST, p1, thresh):
         n_test = DG_TEST.length
         n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
@@ -37,14 +42,14 @@ class TestModel(UNetDistance):
                                                 self.logits],
                                                 feed_dict=feed_dict)
             pdb.set_trace()
-            pred = pred.astype('uint8')
-            for j in range(self.BATCH_SIZE):
-                FP = PostProcess(pred[j], p1, thresh)
-                GT = Yval[j, :, :, 0].copy()
-                GT[GT > 0] = 1
-                GT = label(GT)
-                f1 += F1compute(FP, GT)
-                AJI += AJIcompute(FP, GT)
+            j = 0
+            prob = SoftMax(logit[0])
+            FP = PostProcess(prob, p1, thresh)
+            GT = Yval[j, :, :, 0].copy()
+            GT[GT > 0] = 1
+            GT = label(GT)
+            f1 += F1compute(FP, GT)
+            AJI += AJIcompute(FP, GT)
 
             l += l_tmp
 
@@ -119,7 +124,6 @@ if __name__== "__main__":
     
     file_name = options.output
     f = open(file_name, 'w')
-    f.write('AJI: # {} #\n'.format(AJI))
-    f.write('F1: # {} #\n'.format(f1))
-    f.write('MSE: # {} #\n'.format(l)) 
+    f.write(',{},{},{}\n'.format('CrossEntropy', 'F1', 'AJI'))
+    f.write('{},{},{},{}\n'.format(0, l, f1, AJI))
     f.close()
