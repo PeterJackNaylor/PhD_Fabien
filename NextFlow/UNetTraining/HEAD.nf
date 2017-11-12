@@ -69,7 +69,7 @@ process Training {
     each wd from WEIGHT_DECAY    
     file _ from MeanFile
     output:
-    file "${feat}_${wd}_${lr}" into RESULTS
+    file "${feat}_${wd}_${lr}" into RESULTS, RESULTS2
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
@@ -116,6 +116,7 @@ process RegroupResults {
 
     input:
     file _ from RESULTS_TEST .collect ()
+    file res from RESULTS2 .toList()
     output:
     file "best_model" into RESULTS_TEST
     file "general.csv" into GENERAL
@@ -134,7 +135,7 @@ process RegroupResults {
     res = []
     for k, f in enumerate(CSV):
         tmp = pd.read_csv(f, index_col=0)
-        f = f.split('.')[0]
+        f = '.'.join(f.split('.')[:-1])
         f, lamb = f.split('__')
         feat, lr, wd = f.split('_')
         tmp.ix[0, 'Features'] = feat
@@ -148,6 +149,6 @@ process RegroupResults {
     TOMOVE = best_index
     for file in TOMOVE:
         os.mkdir('best_model')
-        os.rename(file, os.path.join("bestmodel", file))
+        os.rename(file, os.path.join('best_model', file))
     """
 }
