@@ -115,10 +115,10 @@ process RegroupResults {
     publishDir "./Bestmodels", mode: "copy", overwrite: false
 
     input:
-    file _ from RESULTS_TEST .collect ()
+    file _ from RESULTS_TEST .toList()
     file res from RESULTS2 .toList()
     output:
-    file "best_model" into RESULTS_TEST
+    file "best_model" into BEST_MODEL
     file "general.csv" into GENERAL
 
     script:

@@ -42,8 +42,8 @@ class TestModel(UNetBatchNorm):
                          self.train_labels_node: Yval,
                          self.is_training: False}
             l_tmp, logit = self.sess.run([self.loss, 
-                                                self.logits],
-                                                feed_dict=feed_dict)
+                                          self.logits],
+                                          feed_dict=feed_dict)
             j = 0
             prob = SoftMax(logit[0])
             FP = PostProcess(prob, p1, thresh)
@@ -126,6 +126,6 @@ if __name__== "__main__":
     
     file_name = options.output
     f = open(file_name, 'w')
-    f.write(',{},{},{}\n'.format('CrossEntropy', 'F1', 'AJI'))
-    f.write('{},{},{},{}\n'.format(0, l, f1, AJI))
+    f.write(',{},{},{},{}\n'.format('CrossEntropy', 'F1', 'AJI', 'Lambda'))
+    f.write('{},{},{},{},{}\n'.format(0, l, f1, AJI, options.p1))
     f.close()
