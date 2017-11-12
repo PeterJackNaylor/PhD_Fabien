@@ -108,7 +108,46 @@ process Testing {
     }
     pyglib $py --path $path --output ${res}__${val}.csv --log $res --batch_size 1 --n_features ${res.baseName.split('_')[0]} --mean_file $_ --lambda $val --thresh 0.5
     """
+}
 
+process RegroupResults {
+    clusterOptions = "-S /bin/bash -q all.q"
+    publishDir "./Bestmodels", mode: "copy", overwrite: false
 
+    input:
+    file _ from RESULTS_TEST .collect ()
+    output:
+    file "best_model" into RESULTS_TEST
+    file "general.csv" into GENERAL
+
+    script:
+    """
+    #!/usr/bin/env python
+
+    from glob import glob
+    import pandas as pd 
+    from os.path import join
+    from UsefulFunctions.RandomUtils import textparser
+    from os.path import join
     
+    CSV = glob('*.csv')
+    res = []
+    for k, f in enumerate(CSV):
+        tmp = pd.read_csv(f, index_col=0)
+        f = f.split('.')[0]
+        f, lamb = f.split('__')
+        feat, lr, wd = f.split('_')
+        tmp.ix[0, 'Features'] = feat
+        tmp.ix[0, 'Learning rate'] = lr 
+        tmp.ix[0, 'Weight decay'] = wd
+        res.append(tmp)
+    res = pd.concat(res)
+    res = res.set_index(['Features', 'Learning rate', 'Weight decay','Lambda'])
+    res.to_csv('general.csv')
+    best_index = result['AJI'].argmax()
+    TOMOVE = best_index
+    for file in TOMOVE:
+        os.mkdir('best_model')
+        os.rename(file, os.path.join("bestmodel", file))
+    """
 }
