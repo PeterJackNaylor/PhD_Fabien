@@ -40,7 +40,7 @@ class TestModel(UNetDistance):
             pred = pred.astype('uint8')
             for j in range(self.BATCH_SIZE):
                 FP = PostProcess(pred[j], p1, thresh)
-                GT = Yval[j, :, :, 0]
+                GT = Yval[j, :, :, 0].copy()
                 GT[GT > 0] = 1
                 GT = label(GT)
                 f1 += F1compute(FP, GT)
