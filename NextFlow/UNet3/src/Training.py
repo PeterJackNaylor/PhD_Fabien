@@ -1,22 +1,18 @@
-# -*- coding: utf-8 -*-
-### for objects
 from UNetBatchNorm_v2 import UNetBatchNorm
 import tensorflow as tf
-import math
 import numpy as np
-from sklearn.metrics import confusion_matrix
+import math
+from sklearn.metrics import mean_squared_error
 from datetime import datetime
-### for main
 from optparse import OptionParser
-from Data.DataGenClass import DataGen3reduce
 from UsefulFunctions.ImageTransf import ListTransform
+from Data.DataGenClass import DataGen3, DataGenMulti, DataGen3reduce
+from Data.CreateTFRecords import read_and_decode
 import pdb
+from sklearn.metrics import confusion_matrix
 
-MULTICLASS_NAME = ["Background", "Adiposite", "Cancerous", "Lymphocyte", "Fibroblast",
-                   "Mitosis", "Epithelial", "Endothelial",
-                   "Ignore", "Necroses"]
-MULTICLASS_NAME = ["Background", "Adiposite", "Cancerous", "Lymphocyte", "Fibroblast",
-                   "Ignore"]
+lb_name = ['Background', 'Border', 'Cell']
+
 def CM_DIV(cm, index, max_lab):
     list_FP = []
     list_TN = []
@@ -50,34 +46,93 @@ def GetCMInfo_TF(cm, index, max_lab):
     TN = tf.reduce_sum(list_TN)
     return TP, TN, FP, FN
 
-def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
-    """pretty print for confusion matrixes"""
-    columnwidth = max([len(x) for x in labels]+[5]) # 5 is value length
-    empty_cell = " " * columnwidth
-    # Print header
-    print "    " + empty_cell,
-    for label in labels: 
-        print "%{0}s".format(columnwidth) % label,
-    print
-    # Print rows
-    for i, label1 in enumerate(labels):
-        print "    %{0}s".format(columnwidth) % label1,
-        for j in range(len(labels)): 
-            cell = "%{0}.1f".format(columnwidth) % cm[i, j]
-            if hide_zeroes:
-                cell = cell if float(cm[i, j]) != 0 else empty_cell
-            if hide_diagonal:
-                cell = cell if i != j else empty_cell
-            if hide_threshold:
-                cell = cell if cm[i, j] > hide_threshold else empty_cell
-            print cell,
-        print
+class UNet3(UNetBatchNorm):
+    def __init__(
+        self,
+        TF_RECORDS,
+        LEARNING_RATE=0.01,
+        K=0.96,
+        BATCH_SIZE=10,
+        IMAGE_SIZE=28,
+        NUM_CHANNELS=1,
+        NUM_TEST=10000,
+        STEPS=2000,
+        LRSTEP=200,
+        DECAY_EMA=0.9999,
+        N_PRINT = 100,
+        LOG="/tmp/net",
+        SEED=42,
+        DEBUG=True,
+        WEIGHT_DECAY=0.00005,
+        LOSS_FUNC=tf.nn.l2_loss,
+        N_FEATURES=16,
+        N_EPOCH=1,
+        N_THREADS=1,
+        MEAN_FILE=None,
+        DROPOUT=0.5,
+        RESTORE="/tmp/net"):
 
-def print_dim(text ,tensor):
-    print text, tensor.get_shape()
-    print
+        self.LEARNING_RATE = LEARNING_RATE
+        self.K = K
+        self.BATCH_SIZE = BATCH_SIZE
+        self.IMAGE_SIZE = IMAGE_SIZE
+        self.NUM_CHANNELS = NUM_CHANNELS
+        self.N_FEATURES = N_FEATURES
+#        self.NUM_TEST = NUM_TEST
+        self.STEPS = STEPS
+        self.N_PRINT = N_PRINT
+        self.LRSTEP = LRSTEP
+        self.DECAY_EMA = DECAY_EMA
+        self.LOG = LOG
+        self.SEED = SEED
+        self.N_EPOCH = N_EPOCH
+        self.N_THREADS = N_THREADS
+        self.DROPOUT = DROPOUT
+        self.RESTORE = RESTORE
+        if MEAN_FILE is not None:
+            MEAN_ARRAY = tf.constant(np.load(MEAN_FILE), dtype=tf.float32) # (3)
+            self.MEAN_ARRAY = tf.reshape(MEAN_ARRAY, [1, 1, 3])
+            self.SUB_MEAN = True
+        else:
+            self.SUB_MEAN = False
 
-class UNetMultiClass(UNetBatchNorm):
+        self.sess = tf.InteractiveSession()
+
+        self.sess.as_default()
+        
+        self.var_to_reg = []
+        self.var_to_sum = []
+        self.TF_RECORDS = TF_RECORDS
+        self.init_queue(TF_RECORDS)
+
+        self.init_vars()
+        self.init_model_architecture()
+        self.init_training_graph()
+        self.Saver()
+        self.DEBUG = DEBUG
+        self.loss_func = LOSS_FUNC
+        self.weight_decay = WEIGHT_DECAY
+    def Saver(self):
+        print("Setting up Saver...")
+        self.saver = tf.train.Saver()
+        ckpt = tf.train.get_checkpoint_state(self.RESTORE)
+        if ckpt and ckpt.model_checkpoint_path:
+            self.saver.restore(self.sess, ckpt.model_checkpoint_path)
+            print("Model restored...")
+
+    def init_queue(self, tfrecords_filename):
+        self.filename_queue = tf.train.string_input_producer(
+                              [tfrecords_filename], num_epochs=10)
+        with tf.device('/cpu:0'):
+            self.image, self.annotation = read_and_decode(self.filename_queue, 
+                                                          self.IMAGE_SIZE[0], 
+                                                          self.IMAGE_SIZE[1],
+                                                          self.BATCH_SIZE,
+                                                          self.N_THREADS,
+                                                          True,
+                                                          self.NUM_CHANNELS)
+            #self.annotation = tf.divide(self.annotation, 255.)
+        print("Queue initialized")
 
     def init_training_graph(self):
         with tf.name_scope('Evaluation'):
@@ -131,25 +186,40 @@ class UNetMultiClass(UNetBatchNorm):
 
         print('Computational graph initialised')
 
-    def Validation(self, DG_TEST, step, lb_name):
+    def error_rate(self, predictions, labels, iter):
+        predictions = np.argmax(predictions, 3)
+        labels = labels[:,:,:,0]
+
+        cm = confusion_matrix(labels.flatten(), predictions.flatten(), labels=range(self.NUM_LABELS)).astype(np.float)
+        b, x, y = predictions.shape
+        total = b * x * y
+        acc = cm.diagonal().sum() / total
+        error = 100 - acc
+
+        return error, acc * 100, cm
+
+
+    def Validation(self, DG_TEST, step):
         if DG_TEST is None:
             print "no validation"
         else:
-                
             n_test = DG_TEST.length
             n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
-
 
             l, acc = 0., 0.
             cm = np.zeros((self.NUM_LABELS, self.NUM_LABELS))
 
-
             for i in range(n_batch):
                 Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
+                #Yval = Yval / 255.
                 feed_dict = {self.input_node: Xval,
                              self.train_labels_node: Yval,
                              self.is_training: False}
-                l_tmp, acc_tmp, cm_tmp, s = self.sess.run([self.loss, self.accuracy, self.cm, self.merged_summary], feed_dict=feed_dict)
+                l_tmp, acc_tmp, cm_tmp, s = self.sess.run([self.loss, 
+                                                self.accuracy,
+                                                self.cm,
+                                                self.merged_summary],
+                                                feed_dict=feed_dict)
                 l += l_tmp
                 acc += acc_tmp
                 cm += cm_tmp
@@ -189,23 +259,7 @@ class UNetMultiClass(UNetBatchNorm):
             tf.summary.image('confusion', confusion_image)
             self.saver.save(self.sess, self.LOG + '/' + "model.ckpt", global_step=self.global_step)
 
-
-
-    def error_rate(self, predictions, labels, iter):
-        predictions = np.argmax(predictions, 3)
-        labels = labels[:,:,:,0]
-
-        cm = confusion_matrix(labels.flatten(), predictions.flatten(), labels=range(self.NUM_LABELS)).astype(np.float)
-        b, x, y = predictions.shape
-        total = b * x * y
-        acc = cm.diagonal().sum() / total
-        error = 100 - acc
-
-        return error, acc * 100, cm
-
-
-
-    def train(self, DGTest=None, lb_name=MULTICLASS_NAME, saver=True):
+    def train(self, DGTest):
         epoch = self.STEPS * self.BATCH_SIZE // self.N_EPOCH
         self.Saver()
         trainable_var = tf.trainable_variables()
@@ -233,7 +287,7 @@ class UNetMultiClass(UNetBatchNorm):
         threads = tf.train.start_queue_runners(coord=coord)
         begin = int(self.global_step.eval())
         print "begin", begin
-        for step in range(begin, steps + begin):
+        for step in range(begin, steps + begin):  
             # self.optimizer is replaced by self.training_op for the exponential moving decay
             _, l, lr, predictions, batch_labels, s = self.sess.run(
                         [self.training_op, self.loss, self.learning_rate,
@@ -244,117 +298,16 @@ class UNetMultiClass(UNetBatchNorm):
                 i = datetime.now()
                 print i.strftime('%Y/%m/%d %H:%M:%S: \n ')
                 self.summary_writer.add_summary(s, step)                
-                error, acc, cm = self.error_rate(predictions, batch_labels, lb_name, step)
                 print('  Step %d of %d' % (step, steps))
                 print('  Learning rate: %.5f \n') % lr
-                print('  Mini-batch loss: %.5f \n       Accuracy: %.1f%% \n ' % 
-                      (l, acc))
-                print_cm(cm, lb_name)
+                print('  Mini-batch loss: %.5f \n ') % l
+                print('  Max value: %.5f \n ') % np.max(predictions)
                 self.Validation(DGTest, step)
         coord.request_stop()
         coord.join(threads)
-
-
-if __name__== "__main__":
-
-    parser = OptionParser()
-
-    parser.add_option("--tf_record", dest="TFRecord", type="string",
-                      help="Where to find the TFrecord file")
-
-    parser.add_option("--path", dest="path", type="string",
-                      help="Where to collect the patches")
-
-    parser.add_option("--log", dest="log",
-                      help="log dir")
-
-    parser.add_option("--learning_rate", dest="lr", type="float",
-                      help="learning_rate")
-
-    parser.add_option("--batch_size", dest="bs", type="int",
-                      help="batch size")
-
-    parser.add_option("--epoch", dest="epoch", type="int",
-                      help="number of epochs")
-
-    parser.add_option("--n_features", dest="n_features", type="int",
-                      help="number of channels on first layers")
-
-    parser.add_option("--weight_decay", dest="weight_decay", type="float",
-                      help="weight decay value")
-
-    parser.add_option("--dropout", dest="dropout", type="float",
-                      default=0.5, help="dropout value to apply to the FC layers.")
-
-    parser.add_option("--mean_file", dest="mean_file", type="str",
-                      help="where to find the mean file to substract to the original image.")
-
-    parser.add_option('--n_threads', dest="THREADS", type=int, default=100,
-                      help="number of threads to use for the preprocessing.")
-
-    parser.add_option('--num_labels', dest="labels", type=int, default=len(MULTICLASS_NAME),
-                      help="number of labels.")
-    (options, args) = parser.parse_args()
-
-    TFRecord = options.TFRecord
-    N_FEATURES = options.n_features
-    WEIGHT_DECAY = options.weight_decay
-    DROPOUT = options.dropout
-    MEAN_FILE = options.mean_file 
-    N_THREADS = options.THREADS
-
-    LEARNING_RATE = options.lr
-    BATCH_SIZE = options.bs
-    LRSTEP = "50epoch"
-
-    SUMMARY = True
-    S = SUMMARY
-    N_EPOCH = options.epoch
-    PATH = options.path
-    HEIGHT = 212
-    WIDTH = 212
-    SIZE = (HEIGHT, WIDTH)
-    N_TRAIN_SAVE = 100
-    CROP = 4
-    #pdb.set_trace()
-    if int(str(LEARNING_RATE)[-1]) > 7:
-        lr_str = "1E-{}".format(str(LEARNING_RATE)[-1])
-    else:
-        lr_str = "{0:.8f}".format(LEARNING_RATE).rstrip("0")
-    
-    SAVE_DIR = options.log + "/" + "{}".format(N_FEATURES) + "_" +"{0:.8f}".format(WEIGHT_DECAY).rstrip("0") + "_" + lr_str
-
-
-    transform_list, transform_list_test = ListTransform()
-
-    DG_TRAIN = DataGen3reduce(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
-                       transforms=transform_list, UNet=True, num="02", 
-                       mean_file=None)
-
-    test_patient = ["141549", "162438"]
-    DG_TRAIN.SetPatient(test_patient)
-    N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
-    DG_TEST  = DataGen3reduce(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
-                       transforms=transform_list_test, UNet=True, num="02",
-                       mean_file=MEAN_FILE)
-    DG_TEST.SetPatient(test_patient)
-
-    model = UNetMultiClass(TFRecord,   LEARNING_RATE=LEARNING_RATE,
-                                       BATCH_SIZE=BATCH_SIZE,
-                                       IMAGE_SIZE=SIZE,
-                                       NUM_LABELS=options.labels,
-                                       NUM_CHANNELS=3,
-                                       STEPS=N_ITER_MAX,
-                                       LRSTEP=LRSTEP,
-                                       N_PRINT=N_TRAIN_SAVE,
-                                       LOG=SAVE_DIR,
-                                       SEED=42,
-                                       WEIGHT_DECAY=WEIGHT_DECAY,
-                                       N_FEATURES=N_FEATURES,
-                                       N_EPOCH=N_EPOCH,
-                                       N_THREADS=N_THREADS,
-                                       MEAN_FILE=MEAN_FILE,
-                                       DROPOUT=DROPOUT)
-    
-    model.train(DG_TEST, lb_name=MULTICLASS_NAME)
-    lb = ["Background", "Nuclei", "NucleiBorder"]
+    def predict(self, tensor):
+        feed_dict = {self.input_node: tensor,
+                     self.is_training: False}
+        pred = self.sess.run(self.predictions,
+                            feed_dict=feed_dict)
+        return pred

@@ -3,36 +3,34 @@
 params.image_dir = '/data/users/pnaylor/Bureau'
 params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
 params.home = "/data/users/pnaylor"
+params.epoch = 50
 
-IMAGE_FOLD = file(params.image_dir + "/ToAnnotate")
-PY = file(params.python_dir + '/Nets/UNet3_v2.py')
-TENSORBOARD = file(params.image_dir + '/UNet3')
+
+IMAGES = file(params.image_dir + "/ToAnnotate")
+
+BINTO3 = file('src/BinTo3.py')
+PY = file('src/UNet3.py')
+TENSORBOARD = file(params.image_dir + '/tensorboard_withmean')
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
-TFRECORDS = file(params.python_dir + '/Data/CreateTFRecords.py')
+TFRECORDS = file('src/TFRecords.py')
+PYTEST = file('src/Testing.py')
+LEARNING_RATE = [0.001, 0.0001, 0.00001]
+ARCH_FEATURES = [16, 32, 64]
+WEIGHT_DECAY = [0.00005, 0.0005]
+BS = 10
+DISKSIZE = [2, 3, 4]
 
-LEARNING_RATE = [0.01, 0.001, 0.0001]
-ARCH_FEATURES = [2, 4, 8, 16]
-WEIGHT_DECAY = [0.0005, 0.00005]
-BS = 32
-
-params.epoch = 1
-
-
-
-process CreateTFRecords {
-    clusterOptions = "-S /bin/bash -l h_vmem=60G"
-    queue = "all.q"
-    memory = '60G'
+process BinTo3 {
+    clusterOptions = "-S /bin/bash"
     input:
-    file py from TFRECORDS
-    val epoch from params.epoch
-    file path from IMAGE_FOLD
-
+    file py from BINTO3
+    file toannotate from IMAGES
+    each disk from DISKSIZE
     output:
-    file "UNetRecords.tfrecords" into DATAQUEUE
+    file 'ToAnnotate3_$disk' into IMAGE_FOLD, IMAGE_FOLD2, IMAGE_FOLD3, IMAGE_FOLD4
+
     """
-    PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --output UNetRecords.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type 3class
+    python $py $disk
     """
 }
 
@@ -42,42 +40,55 @@ process Mean {
 
     input:
     file py from MEANPY
-    file toannotate from IMAGE_FOLD
+    file toannotate from IMAGES
     output:
-    file "mean_file.npy" into MeanFile
+    file "mean_file.npy" into MeanFile, MeanFile2
 
     """
     python $py --path $toannotate --output .
     """
 }
 
-process Training {
-
-    clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARD, mode: "copy", overwrite: false
-    maxForks = 2
-
+process CreateTFRecords {
+//    clusterOptions = "-S /bin/bash -l mem_free=20G"
+//    queue = "all.q"
+//    memory = '60G'
+    maxFork = 2
     input:
-    file path from IMAGE_FOLD
-    file py from PY
-    val bs from BS
-    val home from params.home
-//    val pat from PATIENT
-    each feat from ARCH_FEATURES
-    each lr from LEARNING_RATE
-    each wd from WEIGHT_DECAY    
-    file _ from MeanFile
-    file __ from DATAQUEUE
+    file py from TFRECORDS
     val epoch from params.epoch
+    file path from IMAGE_FOLD
+
     output:
-    file "${feat}_${wd}_${lr}" into RESULTS
+    file "UNet_${path.name.split('_')[1]}.tfrecords" into DATAQUEUE_TRAIN
 
-    beforeScript "source $home/CUDA_LOCK/.whichNODE"
-    afterScript "source $home/CUDA_LOCK/.freeNODE"
-
-    script:
     """
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --tf_record UNetRecords.tfrecords --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
+    function pyglib {
+        PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
+        /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/envs/cpu_tf/bin/python \$@
+    }
+    python $py --output UNet_${path.name.split('_')[1]}.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type JUST_READ --train
+    """
+}
 
+
+process CreateTFRecords2 {
+    clusterOptions = "-S /bin/bash -l h_vmem=20G"
+//    queue = "all.q"
+    memory = '60G'
+    input:
+    file py from TFRECORDS
+    val epoch from params.epoch
+    file path from DISTANCE_FOLD2
+
+    output:
+    file "UNet_${path.name.split('_')[1]}.tfrecords" into DATAQUEUE_TRAIN2
+
+    """
+    function pyglib {
+        PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
+        /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/envs/cpu_tf/bin/python \$@
+    }
+    python $py --output UNet_${path.name.split('_')[1]}.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type JUST_READ --train
     """
 }
