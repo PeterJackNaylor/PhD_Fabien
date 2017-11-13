@@ -1,4 +1,5 @@
-
+from glob import glob
+from os.path import join
 import tensorflow as tf
 import numpy as np
 import skimage.io as io
@@ -15,7 +16,7 @@ from sklearn.metrics import accuracy_score, auc, f1_score, precision_score, reca
 from Prediction.AJI import AJI_fast
 from optparse import OptionParser
 import pandas as pd
-from tf_image_segmentation.models.fcn_16s import FCN_16s
+from tf_image_segmentation.models.fcn_8s import FCN_8s
 
 
 
@@ -35,13 +36,13 @@ if __name__ == '__main__':
 
     parser.add_option('--iter', dest="iter", type="int", 
                       help="iter")
+    parser.add_option('--output', dest="output", type="str") 
 
     (options, args) = parser.parse_args()
 
 
 
-    restoremodel = options.checkpoint
-    lr = restoremodel.split('__')[1]
+    restoremodel = ".".join(glob(join(options.checkpoint, '*_*'))[0].split('.')[:-1])
     slim = tf.contrib.slim
 
 
@@ -50,7 +51,7 @@ if __name__ == '__main__':
     number_of_classes = options.labels
 
     filename_queue = tf.train.string_input_producer(
-        [tfrecord_filename], num_epochs=2)
+        [tfrecord_filename], num_epochs=25)
 
     image, annotation = read_tfrecord_and_decode_into_image_annotation_pair_tensors(filename_queue)
 
@@ -60,10 +61,10 @@ if __name__ == '__main__':
     annotation_batch_tensor = tf.expand_dims(annotation, axis=0)
     # Be careful: after adaptation, network returns final labels
     # and not logits
-    FCN_16s = adapt_network_for_any_size_input(FCN_16s, 32)
+    FCN_8s = adapt_network_for_any_size_input(FCN_8s, 32)
 
 
-    pred, fcn_32s_variables_mapping = FCN_16s(image_batch_tensor=image_batch_tensor,
+    pred, fcn_16s_variables_mapping = FCN_8s(image_batch_tensor=image_batch_tensor,
                                               number_of_classes=number_of_classes,
                                               is_training=False)
 
@@ -73,7 +74,7 @@ if __name__ == '__main__':
     # Define the accuracy metric: Mean Intersection Over Union
     # miou, update_op = slim.metrics.streaming_mean_iou(predictions=pred,
     #                                                   labels=annotation_batch_tensor,
-    #                                                   num_classes=number_of_classes,
+    #                                                    num_classes=number_of_classes,
     #                                                   weights=weights)
 
     # The op for initializing the variables.
@@ -81,13 +82,13 @@ if __name__ == '__main__':
 
     saver = tf.train.Saver()
 
-    ACC = 0
-    AUC = 0
-    AJI = 0
-    F1 = 0
-    RECALL = 0
-    PRECISION = 0
-    IU = 0
+    ACC = []
+    AUC = []
+    AJI = []
+    F1 = []
+    RECALL = []
+    PRECISION = []
+    IU = []
 
     with tf.Session() as sess:
         
@@ -102,18 +103,17 @@ if __name__ == '__main__':
         for i in xrange(options.iter):
             
             image_np, annotation_np, pred_np = sess.run([image, annotation, pred])
-            
             y_true = annotation_np.flatten()
             y_true[y_true > 0] = 1
             y_pred = pred_np.flatten()
-            ACC += accuracy_score(y_true, y_pred)
-            AUC += auc(y_true, y_pred)
-            #pdb.set_trace()
-            AJI += AJI_fast(annotation_np[:,:,0], pred_np[0,:,:,0])
-            F1 += f1_score(y_true, y_pred, pos_label=1)
-            PRECISION += precision_score(y_true, y_pred, pos_label=1)
-            RECALL += recall_score(y_true, y_pred, pos_label=1)
-            IU += jaccard_similarity_score(y_true, y_pred)
+            ACC.append(accuracy_score(y_true, y_pred))
+            AUC.append(auc(y_true, y_pred))
+            AJI.append(AJI_fast(annotation_np[:,:,0], pred_np[0,:,:,0]))
+            F1.append(f1_score(y_true, y_pred, pos_label=1))
+            PRECISION.append(precision_score(y_true, y_pred, pos_label=1))
+            RECALL.append(recall_score(y_true, y_pred, pos_label=1))
+            IU.append(jaccard_similarity_score(y_true, y_pred))
+
             # Display the image and the segmentation result
             # upsampled_predictions = pred_np.squeeze()
             #plt.imshow(image_np)
@@ -123,15 +123,16 @@ if __name__ == '__main__':
         coord.request_stop()
         coord.join(threads)
         
-        ACC = ACC / options.iter
-        AUC = AUC / options.iter
-        AJI = AJI / options.iter
-        F1 = F1 / options.iter
-        PRECISION = PRECISION / options.iter
-        RECALL = RECALL / options.iter
-        IU = IU / options.iter
-        results = {'ACC':[ACC,],'AUC':[AUC,], 'F1':[F1,], 
-                    'PRECISION':[PRECISION,], 'RECALL':[RECALL,], 
-                    "IU":[IU,], "AJI":[AJI,]}
+       # ACC = ACC / options.iter
+       # AJI = AJI / options.iter
+       # AUC = AUC / options.iter
+       # F1 = F1 / options.iter
+       # PRECISION = PRECISION / options.iter
+       # RECALL = RECALL / options.iter
+       # IU = IU / options.iter
+        ORGAN = options.output.split('.')[0].split('_')[1]
+        results = {'ORGAN':[ORGAN, ORGAN], 'NUMBER':list(range(options.iter)),'ACC':ACC,'AUC':AUC, 'F1':F1, 
+                    'PRECISION':PRECISION, 'RECALL':RECALL, 
+                    "IU":IU, "AJI":AJI}
         df_results = pd.DataFrame(results)
-        df_results.to_csv('fcn16__{}.csv'.format(lr))
+        df_results.to_csv(options.output)

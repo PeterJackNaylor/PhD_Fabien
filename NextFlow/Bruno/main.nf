@@ -13,18 +13,23 @@ Spacing = 1
 
 //BEGINING = Channel.from( 51, 61, 71, 81, 91) 
 //BEGINING2 = Channel.from( 51, 61, 71, 81, 91) 
-//BEGINING = Channel.from( 1, 11, 21, 31, 41) 
-BEGINING = Channel.from( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 )
-BEGINING2 = Channel.from( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 )
+
+
+BEGINING  = Channel.from( 1, 11, 21, 31, 41, 51, 61, 71, 81, 91) 
+BEGINING2 = Channel.from( 1, 11, 21, 31, 41, 51, 61, 71, 81, 91) 
+ENDING    = Channel.from( 10,20, 30, 40, 50, 60, 70, 80, 90, 100) 
+ENDING2   = Channel.from( 10,20, 30, 40, 50, 60, 70, 80, 90, 100) 
+
+//BEGINING = Channel.from( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 )
+//BEGINING2 = Channel.from( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 )
 //ENDING   = Channel.from( 60, 70, 80, 90, 100) 
 //ENDING2   = Channel.from( 60, 70, 80, 90, 100) 
-//ENDING   = Channel.from( 10,20, 30, 40, 50) 
-ENDING   = Channel.from( 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 )
-ENDING2   = Channel.from( 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 )
+//ENDING   = Channel.from( 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 )
+//ENDING2   = Channel.from( 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 )
 
 process Compute_JDown {
     memory = '10GB'
-    cpus 2
+    cpus 10
     maxForks 16
     publishDir "results_down", overwrite: true
     errorStrategy 'finish'
@@ -40,14 +45,14 @@ process Compute_JDown {
     file "PhaseDiagram_nmax_*.mat" into NMAXDown
     file "PhaseDiagram_Nat.mat" into NatDown
     file "PhaseDiagram_BVec.mat" into BVecDown
-
+    file "energyBruno*.mat" into energyBrunoDown
     """
     matlab -nodisplay -nosplash -nodesktop -r '${matlab_name} $bpointdiagram $beg $end;exit;'
     """
 }
 process Compute_JUp {
     memory = '10GB'
-    cpus 2
+    cpus 10
     maxForks 16
     publishDir "results_up", overwrite: true
     errorStrategy 'finish'
@@ -63,6 +68,7 @@ process Compute_JUp {
     file "PhaseDiagram_nmax_*.mat" into NMAXUp
     file "PhaseDiagram_Nat.mat" into NatUp
     file "PhaseDiagram_BVec.mat" into BVecUp
+    file "energyBruno*.mat" into energyBrunoUp
 
     """
     matlab -nodisplay -nosplash -nodesktop -r '${matlab_name} $bpointdiagram $beg $end;exit;'
@@ -74,6 +80,7 @@ process RegroupDown {
     publishDir "results_down", overwrite: true
     errorStrategy 'finish'
     input:
+    file __ from energyBrunoDown .collect()
     file _ from NMAXDown .collect()
     file matlab_file from COLLECT_MAT
     val matlab_file_name from COLLECT_MAT_NAME
@@ -89,6 +96,7 @@ process RegroupUp {
     publishDir "results_up", overwrite: true
     errorStrategy 'finish'
     input:
+    file __ from energyBrunoUp .collect()
     file _ from NMAXUp .collect()
     file matlab_file from COLLECT_MAT
     val matlab_file_name from COLLECT_MAT_NAME

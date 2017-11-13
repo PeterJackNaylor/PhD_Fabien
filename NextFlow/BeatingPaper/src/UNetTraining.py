@@ -11,6 +11,69 @@ from UsefulFunctions.ImageTransf import ListTransform
 import math
 import pdb
 
+class unet_diff(UNetBatchNorm):
+    def init_training_graph(self):
+
+        with tf.name_scope('Evaluation'):
+            self.logits = self.conv_layer_f(self.last, self.logits_weight, strides=[1,1,1,1], scope_name="logits/")
+            self.predictions = tf.argmax(self.logits, axis=3)
+
+            with tf.name_scope('Loss'):
+                condition = tf.equal(self.train_labels_node, 255)
+                case_true = tf.ones(self.train_labels_node.get_shape())
+                case_false = self.train_labels_node
+                anno = tf.where(condition, case_true, case_false)
+                anno = tf.squeeze(tf.cast(anno, tf.int32), squeeze_dims=[3])
+#                anno = tf.divide(anno, 255.)
+                self.loss = tf.reduce_mean((tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits,
+                                                                          labels=anno,
+                                                                          name="entropy")))
+                tf.summary.scalar("entropy", self.loss)
+            with tf.name_scope('Accuracy'):
+
+                LabelInt = tf.squeeze(tf.cast(self.train_labels_node, tf.int64), squeeze_dims=[3])
+                CorrectPrediction = tf.equal(self.predictions, LabelInt)
+                self.accuracy = tf.reduce_mean(tf.cast(CorrectPrediction, tf.float32))
+                tf.summary.scalar("accuracy", self.accuracy)
+
+            with tf.name_scope('Prediction'):
+
+                self.TP = tf.count_nonzero(self.predictions * LabelInt)
+                self.TN = tf.count_nonzero((self.predictions - 1) * (LabelInt - 1))
+                self.FP = tf.count_nonzero(self.predictions * (LabelInt - 1))
+                self.FN = tf.count_nonzero((self.predictions - 1) * LabelInt)
+
+            with tf.name_scope('Precision'):
+
+                self.precision = tf.divide(self.TP, tf.add(self.TP, self.FP))
+                tf.summary.scalar('Precision', self.precision)
+
+            with tf.name_scope('Recall'):
+
+                self.recall = tf.divide(self.TP, tf.add(self.TP, self.FN))
+                tf.summary.scalar('Recall', self.recall)
+            with tf.name_scope('F1'):
+
+                num = tf.multiply(self.precision, self.recall)
+                dem = tf.add(self.precision, self.recall)
+                self.F1 = tf.scalar_mul(2, tf.divide(num, dem))
+                tf.summary.scalar('F1', self.F1)
+
+            with tf.name_scope('MeanAccuracy'):
+
+                Nprecision = tf.divide(self.TN, tf.add(self.TN, self.FN))
+                self.MeanAcc = tf.divide(tf.add(self.precision, Nprecision) ,2)
+                tf.summary.scalar('Performance', self.MeanAcc)
+            #self.batch = tf.Variable(0, name = "batch_iterator")
+
+            self.train_prediction = tf.nn.softmax(self.logits)
+
+            self.test_prediction = tf.nn.softmax(self.logits)
+
+        tf.global_variables_initializer().run()
+
+
+        print('Computational graph initialised')
 
 
 if __name__== "__main__":
@@ -63,7 +126,7 @@ if __name__== "__main__":
     N_FEATURES = options.n_features
     WEIGHT_DECAY = options.weight_decay
     DROPOUT = options.dropout
-    MEAN_FILE = None #options.mean_file 
+    MEAN_FILE = options.mean_file 
     N_THREADS = options.THREADS
 
 
@@ -115,7 +178,7 @@ if __name__== "__main__":
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE, num=TEST_PATIENT)
     DG_TEST.SetPatient(TEST_PATIENT)
 
-    model = UNetBatchNorm(TFRecord,    LEARNING_RATE=LEARNING_RATE,
+    model = unet_diff(TFRecord,    LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=SIZE,
                                        NUM_LABELS=2,

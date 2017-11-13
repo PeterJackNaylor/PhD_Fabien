@@ -14,6 +14,7 @@ function GoingUpGround(bpointdiagram, begining, ending)
     SAVEMAT = horzcat('PhaseDiagram_nmax_', num2str(begining), '_', num2str(ending), '.mat');    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
     SAVEMAT_Nat = horzcat('PhaseDiagram_Nat.mat');    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
     SAVEMAT_BVec = horzcat('PhaseDiagram_BVec.mat');    %'Y:\Personal folders\Bruno\Soliton_Droplet\SolitonToDroplet\PhaseDiagram_nmax.mat'
+    SAVEMAT_ENERGY = horzcat('energyBruno', num2str(begining), '_', num2str(ending), '.mat'); 
     %-----------------------------------------------------------
     % Setting the data
     %-----------------------------------------------------------
@@ -24,15 +25,15 @@ function GoingUpGround(bpointdiagram, begining, ending)
     Type = 'BESP';
     Stop_time = [];
     Stop_crit = {'MaxNorm', 1e-4};
-    xmin = -3.0;
-    xmax = 3.0;
-    ymin = -1.0;
-    ymax = 1.0;
-    zmin = -1.0;
-    zmax = 1.0;
-    Nx = 2^7 + 1;
-    Ny = 2^6 + 1;
-    Nz = 2^6 + 1;
+    xmin = -1.5;
+    xmax = 1.5;
+    ymin = -0.5;
+    ymax = 0.5;
+    zmin = -0.5;
+    zmax = 0.5;
+    Nx = 2^6 + 1;
+    Ny = 2^5 + 1;
+    Nz = 2^5 + 1;
     Geometry3D = Geometry3D_Var3d(xmin, xmax, ymin, ymax, zmin, zmax, Nx, Ny, Nz);
 
     %% Setting the physical problem
@@ -46,9 +47,9 @@ function GoingUpGround(bpointdiagram, begining, ending)
     %%% Problem parameters
 
     % define N grid
-    Npoint = 20;
-    Nmax = 6000;
-    Nmin = 5000;
+    Npoint = 100;
+    Nmax = 6500;
+    Nmin = 1000;
     DN = (Nmax - Nmin) / (Npoint - 1);
     Nat = [Nmin:DN:Nmax];
 
@@ -61,8 +62,8 @@ function GoingUpGround(bpointdiagram, begining, ending)
     Bgrid = [Bmin:DB:Bmax];
 
     BPointDiagram = str2num(bpointdiagram);
-    BminLoop = 55.85;
-    BMaxLoop = 55.95;
+    BminLoop = 55.1145;
+    BMaxLoop = 56.0;
     DBLoop = (BMaxLoop - BminLoop) / (BPointDiagram - 1);
     BVec = [BminLoop:DBLoop:BMaxLoop];
 
@@ -80,9 +81,9 @@ function GoingUpGround(bpointdiagram, begining, ending)
 
 
     trapFrequencyRadial = 109; %in Hz
-    trapFrequencyAxial = 2.5; % in Hz (you have to put a non-zero frequency)
+    trapFrequencyAxial = 5.0; % in Hz (you have to put a non-zero frequency)
     
-    
+    energyiBruno = zeros(ending-begining, Npoint); 
     nmax = zeros(ending-begining, Npoint);
     parfor (j = begining:ending, 10)
         % B=56.1;   
@@ -92,6 +93,7 @@ function GoingUpGround(bpointdiagram, begining, ending)
         a2 = acc(I),
         a12 = abc(I);
         
+        temp_energy = zeros(1, Npoint)
         temp_nmax_j = zeros(1, Npoint)
         AllPhi = cell(1, Npoint + 1)
         for i = 1:Npoint
@@ -159,15 +161,19 @@ function GoingUpGround(bpointdiagram, begining, ending)
             % Launching simulation
             %-----------------------------------------------------------
 
-            [Phi, ~] = GPELab3d(Phi_0, Method, Geometry3D, Physics3D, Outputs, [], Print);
+            [Phi, Outputs] = GPELab3d(Phi_0, Method, Geometry3D, Physics3D, Outputs, [], Print);
+            
             PhiMatrix = Phi{1};
             AllPhi{i} = PhiMatrix
             temp_nmax_j(i) =  2*Alpha*n0*max(max(max(abs(PhiMatrix).^2)))
+            temp_energy(i) = Outputs.Energy{1}(end)
         end
 
+        energyBruno(j,:) = temp_energy
         nmax(j,:) = temp_nmax_j
     end %end j parfor loop
 
+    save(horzcat(SAVEMAT_ENERGY),'energyBruno');
     save(horzcat(SAVEMAT),'nmax');
     save(horzcat(SAVEMAT_Nat), 'Nat');
     save(horzcat(SAVEMAT_BVec), 'BVec');

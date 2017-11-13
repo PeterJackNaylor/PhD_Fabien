@@ -1,5 +1,6 @@
 import numpy as np
 from DataGenRandomT import DataGenRandomT
+from DataGenClass import DataGenMulti
 from UsefulFunctions.ImageTransf import ListTransform
 import pdb
 from os.path import join
@@ -27,7 +28,7 @@ if __name__ == '__main__':
 
     size = (224, 224)
     crop = 4
-    DG = DataGenRandomT(path, crop=crop, size=size, transforms=transf_test,
+    DG = DataGenMulti(path, crop=crop, size=size, transforms=transf_test,
                  split="train", num="")
 
     res = np.zeros(shape=(224, 224, 3, DG.length))

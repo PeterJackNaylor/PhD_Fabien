@@ -164,7 +164,7 @@ process RegroupResults {
     input:
     file fold from RES .toList()
     output:
-    file "results.csv" into RES
+    file "results.csv" into RES_TOGETHER
 
     """
     #!/usr/bin/env python
@@ -178,7 +178,8 @@ process RegroupResults {
     result = pd.DataFrame(columns=['Model', 'Param1', 'Param2', 'Param3', 'AJI', 'Mean acc', 'Precision', 'Recall', 'F1', 'ACC'])
 
     def name_parse(string):
-        string = basename(string).split('.')[0]
+        string = basename(string).split('.')[:-1]
+        string = ".".join(string)        
         model = string.split('_')[0]
         Param1 = string.split('_')[1]
         Param2 = string.split('_')[2]
@@ -188,7 +189,7 @@ process RegroupResults {
             Param3 = None
         return model, Param1, Param2, Param3
 
-    for k, f in enumerate(folders):
+    for k, f in enumerate(filess):
         model, p1, p2, p3 = name_parse(f)
         dic = textparser(f)
         dic['Param1'] = p1

@@ -70,10 +70,13 @@ if __name__ == '__main__':
     fcn_32s_checkpoint_path = glob(options.checkpoint + "/*.data*")[0].split(".data")[0] 
 
     filename_queue = tf.train.string_input_producer(
-        [tfrecord_filename], num_epochs=2)
+        [tfrecord_filename], num_epochs=10)
 
     image, annotation = read_tfrecord_and_decode_into_image_annotation_pair_tensors(filename_queue)
-
+    condition = tf.equal(annotation, 255)
+    case_true = tf.ones([options.size, options.size, 1], dtype=tf.uint8)
+    case_false = annotation
+    annotation = tf.where(condition, case_true, case_false)
     # Various data augmentation stages
     #image, annotation = flip_randomly_left_right_image_with_annotation(image, annotation)
 
