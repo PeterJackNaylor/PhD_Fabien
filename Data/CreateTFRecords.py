@@ -238,7 +238,7 @@ if __name__ == '__main__':
     TRANSFORM_LIST = transform_list
     UNET = options.UNet
     SEED = options.seed
-    TEST_PATIENT = ["test"]
+    TEST_PATIENT = ["141549", "162438"]
     N_EPOCH = options.epoch
     TYPE = options.type
     

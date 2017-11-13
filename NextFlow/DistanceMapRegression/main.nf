@@ -145,12 +145,12 @@ process Training {
 process Training2 {
 
     clusterOptions = "-S /bin/bash -q cuda.q"
-   publishDir "./Results", mode: "copy", overwrite: true
+    publishDir "./ResultsNew", mode: "copy", overwrite: true
     maxForks = 2
 
     input:
     file path from DISTANCE_FOLD5.last()
-    file py from PY.last()
+    file py from PY
     val bs from BS
     file res from RESULTS
     val home from params.home 
@@ -170,7 +170,8 @@ process Training2 {
 
     """
 }
-
+LAMBDA = [1,2,3,4,5,6,7,8]
+THRESH = [0.9, 1.0, 2.0, 3.0]
 process Testing {
 
     clusterOptions = "-S /bin/bash -q cuda.q"
@@ -179,23 +180,23 @@ process Testing {
 
     input:
     file path from DISTANCE_FOLD6.last()
-    file py from PYTEST.last()
+    file py from PYTEST
     val bs from BS
     file res from RESULTS2
     val home from params.home 
-    file _ from MeanFile2.first()
+    file _ from MeanFile3.first()
     val epoch from params.epoch
     each lamb from LAMBDA
     each thresh from THRESH
     output:
-    file res into RESULTS2
+    file res into RESULTS3
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     script:
     """
-    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --path $path --log $res --batch_size $bs --n_features ${res.split('_')[0]} --mean_file $_ --lambda $lamb --thresh $thresh --output ${res.split('_')[0]}_${res.split('_')[1]}_${res.split('_')[2]}.txt
+    /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --path $path --log $res --batch_size $bs --n_features ${res.baseName.split('_')[0]} --mean_file $_ --lambda $lamb --thresh $thresh --output ${res.baseName.split('_')[0]}_${res.baseName.split('_')[1]}_${res.baseName.split('_')[2]}.txt
     """
 }
 /*
@@ -213,12 +214,12 @@ process PreTraining {
     each feat from ARCH_FEATURES
     each lr from LEARNING_RATE
     each wd from WEIGHT_DECAY    
-    file _ from MeanFile3
+    file _ from MeanFile4
     file __ from DATAQUEUE_TRAIN1_2
     val epoch from params.epoch
     file pretrain from PRETRAINED
     output:
-    file "${feat}_${wd}_${lr}" into RESULTS 
+    file "${feat}_${wd}_${lr}" into RESULTS_pre 
 
     beforeScript "source ${home}/CUDA_LOCK/.whichNODE"
     afterScript "source ${home}/CUDA_LOCK/.freeNODE"
@@ -228,5 +229,4 @@ process PreTraining {
     /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH /cbio/donnees/pnaylor/anaconda2/bin/python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --pretrainmodel $pretrain
 
     """
-}
-*/
+}*/

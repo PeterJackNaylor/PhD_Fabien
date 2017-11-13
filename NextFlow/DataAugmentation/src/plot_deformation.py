@@ -114,7 +114,7 @@ if __name__ == '__main__':
     DG = DataGenRandomT(PATH, split=SPLIT, crop=CROP, size=SIZE,
                         transforms=TRANSFORM_LIST, UNet=UNET,
                         mean_file=None, seed_=SEED)
-    N_ITER_MAX = 1 #options.epoch * DG.length / (col * row)
+    N_ITER_MAX = options.epoch * DG.length / (col * row)
     for _ in range(N_ITER_MAX):
         fig, ax = plt.subplots(nrows=row, ncols=col, figsize=(6, 6))
         for i in range(row):
