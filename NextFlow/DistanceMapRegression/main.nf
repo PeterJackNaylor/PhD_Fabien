@@ -215,12 +215,12 @@ process RegroupResults {
 
     from glob import glob
     import pandas as pd 
-    from os.path import join
+    import os
     from UsefulFunctions.RandomUtils import textparser
     from os.path import join
     folders = glob('*_*_*_*_*.txt')
     result = pd.DataFrame(columns=["Model", "AJI", "F1", "MSE", "lambda", "thresh"])
-
+    
     def name_parse(string):
         string = string.split('.tx')[0]
         img_model = string.split('_')
@@ -238,7 +238,7 @@ process RegroupResults {
     best_index = result['AJI'].argmax()
     best_index = "_".join(best_index.split('_')[:-2]) 
     result.to_csv("UNET_results.csv")
-    TOMOVE = best_index
+    TOMOVE = [best_index]
     for file in TOMOVE:
         os.mkdir('bestmodel')
         os.rename(file, os.path.join("bestmodel", file))

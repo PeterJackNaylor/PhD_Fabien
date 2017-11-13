@@ -49,8 +49,8 @@ process ProbabilityMap {
     validExitStatus 0, 134
     clusterOptions = "-S /bin/bash -q cuda.q"
     maxForks = 2
-    errorStrategy 'retry' 
-    maxErrors 50
+//    errorStrategy 'retry' 
+//    maxErrors 50
     
 
     input:

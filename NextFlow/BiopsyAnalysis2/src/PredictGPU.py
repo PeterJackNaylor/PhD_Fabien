@@ -100,10 +100,13 @@ if __name__ == "__main__":
         for lines in file_content:
             p = lines.split(' ')
             para = [int(p[1]), int(p[2]), int(p[3]), int(p[4]), int(p[5])]
-            windowSize_x = min(int(p[3]), int(p[4])) / 2
+            if cn == cn_1:
+                windowSize_x = min(min(p[2], p[3]), 800)
+            else:
+                windowSize_x = min(min(p[2], p[3]), 500)
             windowSize = (windowSize_x, windowSize_x)
             stepSize = windowSize_x - 50
-            net.blobs['data'].reshape(1, 3, windowSize[0], windowSize[1])
+            net.blobs['data'].reshape(1, 3, windowSize_x, windowSize_x)
             image = LoadFile(options.slide, para, ".")
             prob, bin, thresh = PredLargeImageFromNet(net, image, stepSize, windowSize, 1, 'avg', 7, "RemoveBorderWithDWS", 0.5)
             SaveProb(options.slide, para, PROB, prob)

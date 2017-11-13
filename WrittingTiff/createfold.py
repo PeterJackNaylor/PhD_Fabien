@@ -161,8 +161,8 @@ if __name__ == '__main__':
     slide_name = opt.input
     out_slide = opt.output
 
-    import caffe
-    caffe.set_mode_cpu()
+    #import caffe
+    #caffe.set_mode_cpu()
 
     cn_1 = "FCN_0.01_0.99_0.0005"
 
