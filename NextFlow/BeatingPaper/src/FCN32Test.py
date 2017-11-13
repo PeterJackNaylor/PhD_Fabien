@@ -46,7 +46,7 @@ if __name__ == '__main__':
     number_of_classes = options.labels
 
     filename_queue = tf.train.string_input_producer(
-        [tfrecord_filename], num_epochs=1)
+        [tfrecord_filename], num_epochs=2)
 
     image, annotation = read_tfrecord_and_decode_into_image_annotation_pair_tensors(filename_queue)
 
@@ -99,13 +99,14 @@ if __name__ == '__main__':
         for i in xrange(options.iter):
             image_np, annotation_np, pred_np = sess.run([image, annotation, pred])
             y_true = annotation_np.flatten()
+            y_true[y_true > 0] = 1
             y_pred = pred_np.flatten()
             ACC += accuracy_score(y_true, y_pred)
             AUC += auc(y_true, y_pred)
             AJI += AJI_fast(annotation_np[:,:,0], pred_np[0,:,:,0])
-            F1 += f1_score(y_true, y_pred, pos_label=255)
-            PRECISION += precision_score(y_true, y_pred, pos_label=255)
-            RECALL += recall_score(y_true, y_pred, pos_label=255)
+            F1 += f1_score(y_true, y_pred, pos_label=1)
+            PRECISION += precision_score(y_true, y_pred, pos_label=1)
+            RECALL += recall_score(y_true, y_pred, pos_label=1)
             IU += jaccard_similarity_score(y_true, y_pred) 
 
             # Display the image and the segmentation result

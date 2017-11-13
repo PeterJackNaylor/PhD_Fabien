@@ -88,7 +88,7 @@ class TestModel(unet_diff):
             n_test = DG_TEST.length
             n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
 
-            l, acc, F1, recall, precision, meanacc, AJI = 0., 0., 0., 0., 0., 0., 0.
+            l, acc, F1, recall, precision, meanacc, AJI = [], [], [], [], [], [], []
 
             for i in range(n_batch):
                 Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
@@ -101,20 +101,19 @@ class TestModel(unet_diff):
                                                                                             self.recall, self.precision,
                                                                                             self.MeanAcc, self.train_prediction],
                                                                                             feed_dict=feed_dict)
-                l += l_tmp
-                acc += acc_tmp
-                F1 += F1_tmp
-                recall += recall_tmp
-                precision += precision_tmp
-                meanacc += meanacc_tmp
+                l.append(l_tmp)
+                acc.append(acc_tmp)
+                F1.append(F1_tmp)
+                recall.append(recall_tmp)
+                precision.append(precision_tmp)
+                meanacc.append(meanacc_tmp)
                 for j in range(self.BATCH_SIZE):
                     FP = PostProcess(prob[j,:,:,0], p1, p2)
                     GT = Yval[j, :, :, 0]
                     GT[GT > 0] = 1
                     GT = label(GT)
-                    AJI += AJI_fast(FP, GT)
-                AJI = AJI / self.BATCH_SIZE
-            l, acc, F1, recall, precision, meanacc, AJI = np.array([l, acc, F1, recall, precision, meanacc, AJI]) / n_batch
+                    AJI.append(AJI_fast(FP, GT))
+            # l, acc, F1, recall, precision, meanacc, AJI = np.array([l, acc, F1, recall, precision, meanacc, AJI]) / n_batch
             return l, acc, F1, recall, precision, meanacc, AJI
 
 
@@ -146,9 +145,9 @@ if __name__== "__main__":
     (options, args) = parser.parse_args()
 
 
-    # TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
-    #                 "bladder", "colorectal", "stomach"]
-    TEST_PATIENT = ["test"]
+    TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
+                     "bladder", "colorectal", "stomach"]
+    #TEST_PATIENT = ["test"]
     transform_list, transform_list_test = ListTransform(n_elastic=0)
 
     PATH = options.path
@@ -179,11 +178,14 @@ if __name__== "__main__":
                            DROPOUT=0.5)
     file_name = options.output
     f = open(file_name, 'w')
-    f.write('{}, {}, {}, {}, {}, {}, {}, {}\n'.format("Organ", "Loss", "Acc", "F1", "Recall", "Precision", "Meanacc", "AJI"))
+    f.write('{},{},{},{},{},{},{},{},{},{}\n'.format("ORGAN", "NUMBER", "Loss", "ACC", "F1", "RECALL", "PRECISION", "MEANACC", "AJI", "LAMBDA"))
+    count = 0
     for organ in TEST_PATIENT:
         DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH),num=[organ],
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
         DG_TEST.SetPatient([organ])
         Loss, Acc, f1, Recall, Precision, Meanacc, AJI = model.Validation(DG_TEST, options.p1, options.thresh)
-        f.write('{}, {}, {}, {}, {}, {}, {}, {}, {}\n'.format(organ, Loss, Acc, f1, Recall, Precision, Meanacc, AJI, options.p1))
+        for i in range(len(Loss)):
+            f.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(count, organ, i, Loss[i], Acc[i], f1[i], Recall[i], Precision[i], Meanacc[i], AJI[i], options.p1))
+            count += 1
     f.close()
