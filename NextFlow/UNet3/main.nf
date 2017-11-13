@@ -79,7 +79,7 @@ process CreateTFRecords2 {
     input:
     file py from TFRECORDS
     val epoch from params.epoch
-    file path from DISTANCE_FOLD2
+    file path from IMAGE_FOLD2
 
     output:
     file "UNet_${path.name.split('_')[1]}.tfrecords" into DATAQUEUE_TRAIN2
