@@ -5,6 +5,7 @@ from tifffile import imsave, imread
 from Extractors import bin_analyser, PixelSize, MeanIntensity, Centroid
 import numpy as np
 from skimage.morphology import dilation, erosion, disk
+import pdb
 
 list_f = [PixelSize("Pixel_sum", 0), MeanIntensity("Intensity_mean_0", 0), 
           MeanIntensity("Intensity_mean_5", 5), Centroid(["Centroid_x", "Centroid_y"], 0)]
@@ -32,7 +33,6 @@ if __name__ == "__main__":
 
     rgb = imread(options.rgb)
     bin = imread(options.bin)
-
     table = bin_analyser(rgb, bin, list_f, options.marge, pandas_table=True)
 
     bin[bin > 0] = 1

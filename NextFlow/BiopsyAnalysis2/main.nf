@@ -48,7 +48,7 @@ process ProbabilityMap {
     memory '16 GB'
     validExitStatus 0, 134
     clusterOptions = "-S /bin/bash -q cuda.q"
-    maxForks = 2
+    maxForks = 1
 //    errorStrategy 'retry' 
 //    maxErrors 50
     
@@ -61,8 +61,8 @@ process ProbabilityMap {
     file cleandir from params.cleancore
     val train_folder from params.pretrained
     output:
-    file "prob_*.tiff" into PROB, PROB2
-    file "rgb_*.tiff" into RGB, RGB2
+    file "prob_*.tiff" into PROB, PROB2 mode flatten
+    file "rgb_*.tiff" into RGB, RGB2  mode flatten
 
     beforeScript "source ${home}/CUDA_LOCK/.whichNODE"
     afterScript "source ${home}/CUDA_LOCK/.freeNODE"
@@ -117,24 +117,23 @@ process BinaryMaps {
     from Deprocessing.Morphology import DynamicWatershedAlias
     import numpy as np
 
-    probs = imread("$probs")
+    probs = imread("${probs}")
     probs = probs.astype(float)
     probs = probs / 255
 
 
-    bin_img = DynamicWatershedAlias(probs, $param)
-    bin_img = remove_small_objects(bin_img, $smallobject)
+    bin_img = DynamicWatershedAlias(probs, ${param})
+    bin_img = remove_small_objects(bin_img, ${smallobject})
 
     bin_img[bin_img > 0] = 255
     bin_img = bin_img.astype(np.uint8)
-    imsave("${probs}".replace('prob', 'bin'), bin_img, resolution=[1.0,1.0])
+    imsave('${probs}'.replace('prob', 'bin'), bin_img, resolution=[1.0,1.0])
     """
 }
 
 def getPositionID( file ) {
-      file.name.split('_').drop(1).join('_')
+        file.baseName.split('_') .drop(1).join('_')
 }
-//RGB .subscribe {println getID(it)}
 RGB .phase(BIN, remainder: true) { it -> getPositionID(it) } .set { RGB_AND_BIN }
 
 
@@ -258,6 +257,7 @@ process MakeColors {
     python $py --table $table --key ${table.name.split('_')[1]} --output . --marge $marge_wsi --bin $bin
     """   
 }
+
 def getColorKey( file ) {     
       file.toString().split('feat_')[1].split('/')[0] + "___" + file.toString().split('feat_')[1].split('/')[1].split('_')[1] 
 
@@ -284,3 +284,4 @@ process StichingFeatTiff {
     python $py $marge_wsi ${inputt}/${key.split('___')[1]}.tiff ./${key}.tiff *.tiff
     """
 }
+
