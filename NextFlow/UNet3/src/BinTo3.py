@@ -13,7 +13,7 @@ import numpy as np
 from skimage.morphology import erosion, disk
 import sys
 
-radius = sys.argv[1]
+radius = int(sys.argv[1])
 
 def LoadGT(path):
 
