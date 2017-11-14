@@ -29,7 +29,7 @@ UNNETTEST = file('src/UNetTesting.py')
 UNNETVAL = file('src/UNetVal.py')
 PLOT_RES = file('src/plot.py')
 
-MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
+MEANPY = file('src/MeanCalculation.py')
 BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')
 SlideName = file(params.python_dir + '/PrepareData/EverythingExceptColor.py')
 GivingBackIdea = file("GivingBackID.py")
