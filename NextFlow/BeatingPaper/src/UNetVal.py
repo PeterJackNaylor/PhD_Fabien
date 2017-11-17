@@ -1,4 +1,6 @@
 from Nets.UNetBatchNorm_v2 import UNetBatchNorm
+from os.path import join
+import glob
 import pdb
 import math
 from Data.DataGenClass import DataGen3, DataGenMulti, DataGen3reduce
@@ -152,9 +154,9 @@ if __name__== "__main__":
 
     PATH = options.path
     CROP = 1
-    HEIGHT, WIDTH = 500, 500
+    HEIGHT, WIDTH = 996, 996
     BATCH_SIZE = options.bs
-    SAVE_DIR = options.log
+    SAVE_DIR = glob.glob(join(options.log, "*_0.*"))[0]
     N_FEATURES = options.n_features
     MEAN_FILE = options.mean_file 
 
