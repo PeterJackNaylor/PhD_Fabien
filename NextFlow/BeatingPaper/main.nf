@@ -168,7 +168,7 @@ process Mean {
     file py from MEANPY
     file toannotate from IMAGE_FOLD
     output:
-    file "mean_file.npy" into MeanFile, MeanFile2, MeanFile3, MeanFile4
+    file "mean_file.npy" into MeanFile, MeanFile2, MeanFile3, MeanFile4, MeanFile5, MeanFile6, MeanFile7
 
     """
     python $py --path $toannotate --output .
@@ -584,6 +584,204 @@ process FCN8_val_org {
     """
 }
 
+// Distance method part
+BinToDistanceFile = file('BinToDistance.py')
+
+process BinToDistance {
+    queue = "all.q"
+    clusterOptions = "-S /bin/bash"
+    input:
+    file py from BinToDistanceFile
+    file toannotate from IMAGE_FOLD
+    output:
+    file 'ToAnnotateDistance' into DISTANCE_FOLD, DISTANCE_FOLD2, DISTANCE_FOLD3, DISTANCE_FOLD4, DISTANCE_FOLD5, DISTANCE_FOLD6
+
+    """
+    python $py $toannotate
+    """
+}
+
+process CreateTrainRecordsUnet {
+    clusterOptions = "-S /bin/bash -l h_vmem=60G"
+    queue = "all.q"
+    memory = '60G'
+    input:
+    file py from TFRECORDS
+    val epoch from params.epoch
+    file path from DISTANCE_FOLD
+    val i_s from IMAGE_SIZEUNET
+
+    output:
+    file "TrainDistance.tfrecords" into TrainRECORDDISTUNET
+    """
+    python $py --output TrainDistance.tfrecords --path $path --crop 16 --UNet --size $i_s --seed 42 --epoch $epoch --type JUST_READ --split train
+    """
+}
+
+process CreateTestRecordsUnet {
+    clusterOptions = "-S /bin/bash -l h_vmem=60G"
+    queue = "all.q"
+    memory = '60G'
+    input:
+    file py from TFRECORDS
+    val epoch from params.epoch
+    file path from DISTANCE_FOLD2
+    val i_s from IMAGE_SIZEUNET
+
+    output:
+    file "TestDistance.tfrecords" into TestRECORDDISTUNET
+    """
+    python $py --output TestDistance.tfrecords --path $path --crop 4 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split test
+    """
+}
+
+process CreateValidationRecordsUnet {
+    clusterOptions = "-S /bin/bash -l h_vmem=60G"
+    queue = "all.q"
+    memory = '60G'
+    input:
+    file py from TFRECORDS
+    val epoch from params.epoch
+    file path from DISTANCE_FOLD3
+    val i_s from IMAGE_SIZEUNET
+
+    output:
+    file "ValDistance.tfrecords" into ValRECORDDISTUNET
+    """
+    python $py --output ValDistance.tfrecords --path $path --crop 16 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation
+    """
+}
+
+PYDIST = file('src/UNetDistanceTraining.py')
+DISTTEST = file('src/UNetDistanceTesting.py')
+DISTVAL = file('src/UNetDistanceVal.py')
+
+P1= [1, 2, 3]
+
+process UNetDistTraining {
+
+    clusterOptions = "-S /bin/bash"
+    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+    maxForks = 2
+
+    input:
+    file path from DISTANCE_FOLD4
+    file py from PYDIST
+    val bs from BS_UNET
+    val home from params.home
+    each feat from ARCH_FEATURES_UNET
+    each lr from LEARNING_RATE_UNET
+    each wd from WEIGHT_DECAY_UNET    
+    file _ from MeanFile5
+    file __ from TrainRECORDDISTUNET
+    val epoch from EPOCHUNET
+    output:
+    file "${feat}_${wd}_${lr}__Dist" into RES_DIST, RES_DIST2
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    python $py --tf_record $__ --path $path  --log . --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
+    """
+}
+process UNetDistTest {
+
+    clusterOptions = "-S /bin/bash"
+    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+    maxForks = 2
+
+    input:
+    file path from DISTANCE_FOLD5
+    file py from DISTTEST
+    val bs from BS_UNET
+    val home from params.home
+    file _ from MeanFile6
+    file __ from TestRECORDDISTUNET
+    each p from P1
+    file res from RES_DIST
+    output:
+    file "${res.name}_${p}__Dist.csv" into DIST_TEST
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    python $py --path $path  --log ${res} --batch_size $bs --n_features ${res.name.split('_')[0]} --mean_file $_ --p1 $p --thresh 0.9 --output ${res.name}_${p}__Dist.csv
+    """
+}
+process RegroupUNET_results {
+    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+
+    input:
+    file _ from DIST_TEST .toList()
+    file __ from RES_DIST2 .toList()
+    output:
+    file "bestmodel_*" into BEST_Dist
+    file "Dist_results.csv" into Dist_table
+//    file "log__fcn32__*" into PUBLISH32
+    """
+    #!/usr/bin/env python
+    import os
+    import pandas as pd
+    import pdb
+    from glob import glob
+    CSV = glob('*.csv')
+    df_list = []
+    for f in CSV:
+        df = pd.read_csv(f, index_col=False)
+        name = f.split('__')[0].split('/')[-1]
+        df.index = name
+        df.loc[name, 'p1'] = name.split('_')[-1]
+        df_list.append(df)
+    table = pd.concat(df_list)
+    best_index = table[' F1'].argmax()
+    table.to_csv('Dist_results.csv')
+    tmove_name = "{}".format(best_index).split('_')[:-1]
+    res = ""
+    for el in tmove_name:
+        res += el
+        if el == "0":
+            res += "."
+        else:
+            res += "_"
+    res = res[:-1]
+    TOMOVE = glob(res)
+    n_feat = res.split('_')[0]
+    name = 'bestmodel_' + n_feat
+    os.mkdir(name)
+    for file in TOMOVE:
+        os.rename(file, os.path.join(name, file))
+    """
+}
+
+process DistVal {
+
+    clusterOptions = "-S /bin/bash"
+    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+    maxForks = 2
+
+    input:
+    file path from DISTANCE_FOLD6
+    file py from DISTVAL
+    val home from params.home
+    file _ from MeanFile7
+    file __ from ValRECORDDISTUNET
+    file res from BEST_Dist
+    output:
+    file "DIST_VAL.csv" into DIST_VAL
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    python $py --path $path  --log ${res} --batch_size 1 --n_features ${res.name.split('_')[1]} --mean_file $_ --thresh 0.9 --output DIST_VAL.csv
+    """
+}
+
 NEERAJ = file('Neeraj_PAPER.csv')
 
 process RegroupPlot {
@@ -592,6 +790,7 @@ process RegroupPlot {
     input:
     file _ from UNET_VAL .collect()
     file __ from FCN_VAL_RES .collect()
+    file ___ from DIST_VAL .collect()
     file py from PLOT_RES
     file ___ from NEERAJ
     output:
