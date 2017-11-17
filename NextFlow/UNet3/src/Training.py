@@ -54,6 +54,7 @@ class UNet3(UNetBatchNorm):
         K=0.96,
         BATCH_SIZE=10,
         IMAGE_SIZE=28,
+        NUM_LABELS=10,
         NUM_CHANNELS=1,
         NUM_TEST=10000,
         STEPS=2000,
@@ -76,6 +77,7 @@ class UNet3(UNetBatchNorm):
         self.K = K
         self.BATCH_SIZE = BATCH_SIZE
         self.IMAGE_SIZE = IMAGE_SIZE
+        self.NUM_LABELS = NUM_LABELS
         self.NUM_CHANNELS = NUM_CHANNELS
         self.N_FEATURES = N_FEATURES
 #        self.NUM_TEST = NUM_TEST
@@ -252,7 +254,7 @@ class UNet3(UNetBatchNorm):
             print('  Validation loss: %.1f' % l)
             print('       Accuracy: %1.f%% \n   ' % (acc * 100))
             print('  Confusion matrix: \n')
-            print_cm(cm, lb_name)
+#            print_cm(cm, lb_name)
             confusion = tf.Variable(cm, name='confusion' )
             confusion_image = tf.reshape( tf.cast( confusion, tf.float32),
                                       [1, self.NUM_LABELS, self.NUM_LABELS, 1])
@@ -311,3 +313,119 @@ class UNet3(UNetBatchNorm):
         pred = self.sess.run(self.predictions,
                             feed_dict=feed_dict)
         return pred
+
+
+if __name__== "__main__":
+
+    parser = OptionParser()
+
+#    parser.add_option("--gpu", dest="gpu", default="0", type="string",
+#                      help="Input file (raw data)")
+    parser.add_option("--tf_record", dest="TFRecord", type="string",
+                      help="Where to find the TFrecord file")
+
+    parser.add_option("--path", dest="path", type="string",
+                      help="Where to collect the patches")
+
+    parser.add_option("--log", dest="log",
+                      help="log dir")
+
+    parser.add_option("--learning_rate", dest="lr", type="float",
+                      help="learning_rate")
+
+    parser.add_option("--batch_size", dest="bs", type="int",
+                      help="batch size")
+
+    parser.add_option("--epoch", dest="epoch", type="int",
+                      help="number of epochs")
+
+    parser.add_option("--n_features", dest="n_features", type="int",
+                      help="number of channels on first layers")
+
+    parser.add_option("--weight_decay", dest="weight_decay", type="float",
+                      help="weight decay value")
+
+    parser.add_option("--dropout", dest="dropout", type="float",
+                      default=0.5, help="dropout value to apply to the FC layers.")
+
+    parser.add_option("--mean_file", dest="mean_file", type="str",
+                      help="where to find the mean file to substract to the original image.")
+
+    parser.add_option('--n_threads', dest="THREADS", type=int, default=100,
+                      help="number of threads to use for the preprocessing.")
+
+    (options, args) = parser.parse_args()
+
+#    os.environ["CUDA_VISIBLE_DEVICES"] = options.gpu
+
+    TFRecord = options.TFRecord
+    N_FEATURES = options.n_features
+    WEIGHT_DECAY = options.weight_decay
+    DROPOUT = options.dropout
+    MEAN_FILE = options.mean_file 
+    N_THREADS = options.THREADS
+
+
+
+    LEARNING_RATE = options.lr
+    if int(str(LEARNING_RATE)[-1]) > 7:
+        lr_str = "1E-{}".format(str(LEARNING_RATE)[-1])
+    else:
+        lr_str = "{0:.8f}".format(LEARNING_RATE).rstrip("0")
+    SAVE_DIR = options.log + "/" + "{}".format(N_FEATURES) + "_" +"{0:.8f}".format(WEIGHT_DECAY).rstrip("0") + "_" + lr_str
+
+    
+    
+    HEIGHT = 224 
+    WIDTH = 224
+    
+    
+    BATCH_SIZE = options.bs
+    LRSTEP = "10epoch"
+    SUMMARY = True
+    S = SUMMARY
+    N_EPOCH = options.epoch
+
+    PATH = options.path
+
+
+    HEIGHT = 212
+    WIDTH = 212
+    SIZE = (HEIGHT, WIDTH)
+
+    N_TRAIN_SAVE = 100
+ 
+    CROP = 4
+
+
+    transform_list, transform_list_test = ListTransform()
+
+    DG_TRAIN = DataGenMulti(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
+                       transforms=transform_list, UNet=True, mean_file=None)
+
+    test_patient = ["141549", "162438"]
+    DG_TRAIN.SetPatient(test_patient)
+    N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
+
+    DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+                       transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
+    DG_TEST.SetPatient(test_patient)
+
+    model = UNet3(TFRecord,    LEARNING_RATE=LEARNING_RATE,
+                                       BATCH_SIZE=BATCH_SIZE,
+                                       IMAGE_SIZE=SIZE,
+                                       NUM_LABELS=3,
+                                       NUM_CHANNELS=3,
+                                       STEPS=N_ITER_MAX,
+                                       LRSTEP=LRSTEP,
+                                       N_PRINT=N_TRAIN_SAVE,
+                                       LOG=SAVE_DIR,
+                                       SEED=42,
+                                       WEIGHT_DECAY=WEIGHT_DECAY,
+                                       N_FEATURES=N_FEATURES,
+                                       N_EPOCH=N_EPOCH,
+                                       N_THREADS=N_THREADS,
+                                       MEAN_FILE=MEAN_FILE,
+                                       DROPOUT=DROPOUT)
+
+    model.train(DG_TEST)

@@ -12,7 +12,7 @@ params.epoch = 40
 IMAGES = file(params.image_dir + "/ToAnnotate")
 
 BINTO3 = file('src/BinTo3.py')
-PY = file('src/UNet3.py')
+PY = file('src/Training.py')
 TENSORBOARD = file(params.image_dir + '/tensorboard_withmean')
 MEANPY = file(params.python_dir + '/Data/MeanCalculation.py')
 TFRECORDS = file('src/TFRecords.py')
@@ -24,7 +24,7 @@ BS = 10
 DISKSIZE = [2, 3, 4]
 
 process BinTo3 {
-    clusterOptions = "-S /bin/bash"
+    clusterOptions "-S /bin/bash"
     input:
     file py from BINTO3
     file toannotate from IMAGES
@@ -39,7 +39,7 @@ process BinTo3 {
 
 process Mean {
     executor 'local'
-    clusterOptions = "-S /bin/bash"
+    clusterOptions "-S /bin/bash"
 
     input:
     file py from MEANPY
@@ -123,5 +123,44 @@ process CreateTFRecords2 {
         /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/envs/cpu_tf/bin/python \$@
     }
     pyglib $py --output UNet_${path.name.split('_')[1]}.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type JUST_READ --train
+    """
+}
+
+// we have to phase the outputs of create and paths
+
+def getPositionID( file ) {
+        file.baseName.split('_')[1]
+}
+IMAGE_FOLD3 .phase(DATAQUEUE_TRAIN, remainder: true) { it -> getPositionID(it) } .set { PATH_AND_RECORD }
+IMAGE_FOLD4 .phase(DATAQUEUE_TRAIN2, remainder: true) { it -> getPositionID(it) } .set { PATH_AND_RECORD2 }
+
+
+process Training {
+
+    clusterOptions = "-S /bin/bash -q cuda.q"
+    publishDir "./Training", mode: "copy", overwrite: false
+    maxForks = 2
+
+    input:
+    set file(path), file(tfrecord) from PATH_AND_RECORD
+    file py from PY
+    val bs from BS
+    val home from params.home
+    each feat from ARCH_FEATURES
+    each lr from LEARNING_RATE
+    each wd from WEIGHT_DECAY    
+    file _ from MeanFile
+    output:
+    file "${feat}_${wd}_${lr}" into RESULTS, RESULTS2
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    function pyglib {
+        /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/bin/python \$@
+    }
+    pyglib $py --tf_record $tfrecord --epoch 80 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd --mean_file $_
     """
 }
