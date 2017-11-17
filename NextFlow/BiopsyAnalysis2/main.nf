@@ -4,7 +4,7 @@
 params.in = "/share/data40T_v2/Peter/Data/Biopsy"
 params.python = "/share/data40T_v2/Peter/PythonScripts/PhD_Fabien"
 params.publish = "/share/data40T_v2/Peter/PatientFolder"
-params.cleancore = file("/share/data40T_v2/Peter/.cleandir")
+params.cleancore = file("/share/data40T_v2/Peter/.cleandir_and_cuda")
 params.pretrained = file("/share/data40T_v2/Peter/pretrained_models")
 params.home = "/share/data40T_v2/Peter"
 
@@ -37,7 +37,6 @@ process ChopPatient {
     output:
     file "Parameter.txt" into PARAM_JOB
     file "$x" into SLIDES
-    afterScript "bash $cleandir"
     """
     METHOD=grid_etienne
     python $PYTHONFILE --slide $x --output Parameter.txt --method \$METHOD --marge $marge
@@ -45,10 +44,10 @@ process ChopPatient {
 }
 
 process ProbabilityMap {
-    memory '16 GB'
+//    memory '16 GB'
     validExitStatus 0, 134
     clusterOptions = "-S /bin/bash -q cuda.q"
-    maxForks = 1
+    maxForks = 2
 //    errorStrategy 'retry' 
 //    maxErrors 50
     
