@@ -110,7 +110,7 @@ class TestModel(unet_diff):
                 precision.append(precision_tmp)
                 meanacc.append(meanacc_tmp)
                 for j in range(self.BATCH_SIZE):
-                    FP = PostProcess(prob[j,:,:,0], p1, p2)
+                    FP = PostProcess(prob[j,:,:,1], p1, p2)
                     GT = Yval[j, :, :, 0]
                     GT[GT > 0] = 1
                     GT = label(GT)
