@@ -585,8 +585,8 @@ process FCN8_val_org {
 }
 
 // Distance method part
-BinToDistanceFile = file('BinToDistance.py')
-
+BinToDistanceFile = file('src/BinToDistance.py')
+DISTTFRECORDS = file('src/DistTFRecords.py')
 process BinToDistance {
     queue = "all.q"
     clusterOptions = "-S /bin/bash"
@@ -606,7 +606,7 @@ process CreateTrainRecordsUnet {
     queue = "all.q"
     memory = '60G'
     input:
-    file py from TFRECORDS
+    file py from DISTTFRECORDS
     val epoch from params.epoch
     file path from DISTANCE_FOLD
     val i_s from IMAGE_SIZEUNET
@@ -623,7 +623,7 @@ process CreateTestRecordsUnet {
     queue = "all.q"
     memory = '60G'
     input:
-    file py from TFRECORDS
+    file py from DISTTFRECORDS
     val epoch from params.epoch
     file path from DISTANCE_FOLD2
     val i_s from IMAGE_SIZEUNET
@@ -640,7 +640,7 @@ process CreateValidationRecordsUnet {
     queue = "all.q"
     memory = '60G'
     input:
-    file py from TFRECORDS
+    file py from DISTTFRECORDS
     val epoch from params.epoch
     file path from DISTANCE_FOLD3
     val i_s from IMAGE_SIZEUNET
