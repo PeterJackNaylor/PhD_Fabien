@@ -601,7 +601,7 @@ process BinToDistance {
     """
 }
 
-process CreateTrainRecordsUnet {
+process CreateTrainRecordsDist {
     clusterOptions = "-S /bin/bash -l h_vmem=60G"
     queue = "all.q"
     memory = '60G'
@@ -618,7 +618,7 @@ process CreateTrainRecordsUnet {
     """
 }
 
-process CreateTestRecordsUnet {
+process CreateTestRecordsDist {
     clusterOptions = "-S /bin/bash -l h_vmem=60G"
     queue = "all.q"
     memory = '60G'
@@ -635,7 +635,7 @@ process CreateTestRecordsUnet {
     """
 }
 
-process CreateValidationRecordsUnet {
+process CreateValidationRecordsDist {
     clusterOptions = "-S /bin/bash -l h_vmem=60G"
     queue = "all.q"
     memory = '60G'
@@ -702,17 +702,17 @@ process UNetDistTest {
     each p from P1
     file res from RES_DIST
     output:
-    file "${res.name}_${p}__Dist.csv" into DIST_TEST
+    file "${res.name}_${p}.csv" into DIST_TEST
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     script:
     """
-    python $py --path $path  --log ${res} --batch_size $bs --n_features ${res.name.split('_')[0]} --mean_file $_ --p1 $p --thresh 0.9 --output ${res.name}_${p}__Dist.csv
+    python $py --path $path  --log ${res} --batch_size $bs --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $p --thresh 0.9 --output ${res.name}_${p}__Dist.csv
     """
 }
-process RegroupUNET_results {
+process RegroupDIST_results {
     publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
 
     input:

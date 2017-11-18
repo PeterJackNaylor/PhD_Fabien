@@ -98,15 +98,17 @@ if __name__== "__main__":
 
 
     TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
-                        "bladder", "colorectal", "stomach", "validation"]
-    DG_TRAIN = DataGenMulti(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
+                        "bladder", "colorectal", "stomach", "test"]
+    DG_TRAIN = DataGenMulti(PATH, split='train', crop = 16, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True, mean_file=None, num=TEST_PATIENT)
 
     DG_TRAIN.SetPatient(TEST_PATIENT)
     N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
 
-    DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+    DG_TEST  = DataGenMulti(PATH, split="test", crop = 4, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE, num=TEST_PATIENT)
+
+    TEST_PATIENT = ["test"]
     DG_TEST.SetPatient(TEST_PATIENT)
 
     model = UNetDistance(TFRecord,    LEARNING_RATE=LEARNING_RATE,

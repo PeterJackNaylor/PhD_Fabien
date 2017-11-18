@@ -166,7 +166,7 @@ if __name__== "__main__":
 
     TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
                         "bladder", "colorectal", "stomach", "validation"]
-    DG_TRAIN = DataGenMulti(PATH, split='train', crop = CROP, size=(HEIGHT, WIDTH),
+    DG_TRAIN = DataGenMulti(PATH, split='train', crop = 16, size=(HEIGHT, WIDTH),
                        transforms=transform_list, UNet=True, mean_file=None, num=TEST_PATIENT)
 
     DG_TRAIN.SetPatient(TEST_PATIENT)
@@ -174,7 +174,7 @@ if __name__== "__main__":
     
     TEST_PATIENT = ["test"]
 
-    DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
+    DG_TEST  = DataGenMulti(PATH, split="test", crop = 4, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE, num=TEST_PATIENT)
     DG_TEST.SetPatient(TEST_PATIENT)
 

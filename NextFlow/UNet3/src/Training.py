@@ -13,6 +13,29 @@ from sklearn.metrics import confusion_matrix
 
 lb_name = ['Background', 'Border', 'Cell']
 
+def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
+    """pretty print for confusion matrixes"""
+    columnwidth = max([len(x) for x in labels]+[5]) # 5 is value length
+    empty_cell = " " * columnwidth
+    # Print header
+    print "    " + empty_cell,
+    for label in labels: 
+        print "%{0}s".format(columnwidth) % label,
+    print
+    # Print rows
+    for i, label1 in enumerate(labels):
+        print "    %{0}s".format(columnwidth) % label1,
+        for j in range(len(labels)): 
+            cell = "%{0}.1f".format(columnwidth) % cm[i, j]
+            if hide_zeroes:
+                cell = cell if float(cm[i, j]) != 0 else empty_cell
+            if hide_diagonal:
+                cell = cell if i != j else empty_cell
+            if hide_threshold:
+                cell = cell if cm[i, j] > hide_threshold else empty_cell
+            print cell,
+        print
+
 def CM_DIV(cm, index, max_lab):
     list_FP = []
     list_TN = []
@@ -142,22 +165,34 @@ class UNet3(UNetBatchNorm):
             self.predictions = tf.argmax(self.logits, axis=3)
             
             with tf.name_scope('Loss'):
+                LabelInt = tf.cast(self.train_labels_node, tf.int64)
+                condition = tf.equal(LabelInt, 255)
+                case_true = tf.multiply(tf.ones(LabelInt.get_shape(), dtype=tf.int64), 2)
+                case_false = LabelInt
+                LabelInt = tf.where(condition, case_true, case_false)
+
+                condition = tf.equal(LabelInt, 127)
+                case_true = tf.ones(LabelInt.get_shape(), dtype=tf.int64)
+                case_false = LabelInt
+                self.LabelInt = tf.where(condition, case_true, case_false)
+
                 self.loss = tf.reduce_mean((tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits,
-                                                                          labels=tf.squeeze(tf.cast(self.train_labels_node, tf.int32), squeeze_dims=[3]),
+                                                                          labels=tf.squeeze(tf.cast(self.LabelInt, tf.int32), squeeze_dims=[3]),
                                                                           name="entropy")))
                 tf.summary.scalar("entropy", self.loss)
 
             with tf.name_scope('Accuracy'):
 
-                LabelInt = tf.squeeze(tf.cast(self.train_labels_node, tf.int64), squeeze_dims=[3])
+                LabelInt = tf.squeeze(tf.cast(self.LabelInt, tf.int64), squeeze_dims=[3])
+
                 CorrectPrediction = tf.equal(self.predictions, LabelInt)
                 self.accuracy = tf.reduce_mean(tf.cast(CorrectPrediction, tf.float32))
                 tf.summary.scalar("accuracy", self.accuracy)
 
             with tf.name_scope('ClassPrediction'):
-                flat_LabelInt = tf.reshape(LabelInt, [-1])
-                flat_predictions = tf.reshape(self.predictions, [-1])
-                self.cm = tf.confusion_matrix(flat_LabelInt, flat_predictions, self.NUM_LABELS)
+                self.flat_LabelInt = tf.reshape(LabelInt, [-1])
+                self.flat_predictions = tf.reshape(self.predictions, [-1])
+                self.cm = tf.confusion_matrix(self.flat_LabelInt, self.flat_predictions, self.NUM_LABELS)
                 flatten_confusion_matrix = tf.reshape(self.cm, [-1])
                 total = tf.reduce_sum(self.cm)
                 for i in range(self.NUM_LABELS):
@@ -251,10 +286,10 @@ class UNet3(UNetBatchNorm):
             self.summary_test_writer.add_summary(summary, step)
             self.summary_test_writer.add_summary(s, step)
 
-            print('  Validation loss: %.1f' % l)
-            print('       Accuracy: %1.f%% \n   ' % (acc * 100))
+            print('  Validation loss: %.5f' % l)
+            print('       Accuracy: %5.f%% \n   ' % (acc * 100))
             print('  Confusion matrix: \n')
-#            print_cm(cm, lb_name)
+            print_cm(cm, lb_name)
             confusion = tf.Variable(cm, name='confusion' )
             confusion_image = tf.reshape( tf.cast( confusion, tf.float32),
                                       [1, self.NUM_LABELS, self.NUM_LABELS, 1])
@@ -291,6 +326,7 @@ class UNet3(UNetBatchNorm):
         print "begin", begin
         for step in range(begin, steps + begin):  
             # self.optimizer is replaced by self.training_op for the exponential moving decay
+            #pdb.set_trace()
             _, l, lr, predictions, batch_labels, s = self.sess.run(
                         [self.training_op, self.loss, self.learning_rate,
                          self.train_prediction, self.train_labels_node,
@@ -303,7 +339,6 @@ class UNet3(UNetBatchNorm):
                 print('  Step %d of %d' % (step, steps))
                 print('  Learning rate: %.5f \n') % lr
                 print('  Mini-batch loss: %.5f \n ') % l
-                print('  Max value: %.5f \n ') % np.max(predictions)
                 self.Validation(DGTest, step)
         coord.request_stop()
         coord.join(threads)
