@@ -70,7 +70,7 @@ def Assign( file ) {
 def Assign2( file ) {
     disk = file.name.split('_')[1].toInteger()
     if( disk == 2 ) {
-        18
+        24
     }
     else { 
         if( disk == 3 ) {
