@@ -733,23 +733,14 @@ process RegroupDIST_results {
     for f in CSV:
         df = pd.read_csv(f, index_col=False)
         name = f.split('__')[0].split('/')[-1]
-        df.index = name
-        df.loc[name, 'p1'] = name.split('_')[-1]
+        df.index = [name]
         df_list.append(df)
     table = pd.concat(df_list)
     best_index = table[' F1'].argmax()
     table.to_csv('Dist_results.csv')
-    tmove_name = "{}".format(best_index).split('_')[:-1]
-    res = ""
-    for el in tmove_name:
-        res += el
-        if el == "0":
-            res += "."
-        else:
-            res += "_"
-    res = res[:-1]
-    TOMOVE = glob(res)
-    n_feat = res.split('_')[0]
+    tmove_name = "{}".format(best_index)
+    TOMOVE = glob(tmove_name + "__Dist")
+    n_feat = tmove_name.split('_')[0]
     name = 'bestmodel_' + n_feat
     os.mkdir(name)
     for file in TOMOVE:
@@ -770,6 +761,7 @@ process DistVal {
     file _ from MeanFile7
     file __ from ValRECORDDISTUNET
     file res from BEST_Dist
+    file test_res from Dist_table
     output:
     file "DIST_VAL.csv" into DIST_VAL
 
@@ -778,7 +770,7 @@ process DistVal {
 
     script:
     """
-    python $py --path $path  --log ${res} --batch_size 1 --n_features ${res.name.split('_')[1]} --mean_file $_ --thresh 0.9 --output DIST_VAL.csv
+    python $py --path $path  --log ${res} --batch_size 1 --n_features ${res.name.split('_')[1]} --mean_file $_ --thresh 0.9 --output DIST_VAL.csv --test_res $test_res
     """
 }
 
