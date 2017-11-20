@@ -135,7 +135,7 @@ IMAGE_FOLD3 .phase(DATAQUEUE_TRAIN, remainder: true) { it -> getPositionID(it) }
 IMAGE_FOLD4 .phase(DATAQUEUE_TRAIN2, remainder: true) { it -> getPositionID(it) } .set { PATH_AND_RECORD2 }
 
 
-process Training {
+process Train_1 {
 
     clusterOptions = "-S /bin/bash -q cuda.q"
     publishDir "./Training", mode: "copy", overwrite: false
@@ -151,7 +151,7 @@ process Training {
     each wd from WEIGHT_DECAY    
     file _ from MeanFile
     output:
-    file "${feat}_${wd}_${lr}" into RESULTS, RESULTS2
+    file "${feat}_${wd}_${lr}__${path.name.split('_')[1]}_*" into RESULTS, RESULTS2
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
@@ -165,21 +165,34 @@ process Training {
     """
 }
 
-process Training {
+def ThreeWayPhase( file ) {
+    if (file.hasProperty('size')){
+        if( file.size == 2 ) {
+                 file[0].name.split('_')[1]
+        }
+    }
+    else {
+        file.name.split('_')[5]
+    }
+}
+PATH_AND_RECORD2 .phase(RESULTS, remainder: true) { it -> ThreeWayPhase(it) } .set { RES_PATH_AND_RECORD }
+RES_PATH_AND_RECORD .subscribe{ println it  }
+
+/*
+process Train_2 {
 
     clusterOptions = "-S /bin/bash -q cuda.q"
-    publishDir "./Training", mode: "copy", overwrite: false
+    publishDir "./Training2", mode: "copy", overwrite: false
     maxForks = 2
 
     input:
     set file(path), file(tfrecord) from PATH_AND_RECORD2
     file py from PY
     val bs from BS
-    val home from params.home 
-    file res from RESULTS
+    val home from params.home
     file _ from MeanFile2
     output:
-    file "long/${res}" into RESULTS2
+    file "${res.split('__')[0]}_*_second" into RESULTS3
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
@@ -189,6 +202,6 @@ process Training {
     function pyglib {
         /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/bin/python \$@
     }
-    pyglib $py --tf_record $tfrecord --epoch 80 --path $path --log long --restore $res --learning_rate ${res.name.split('_')[2]} --batch_size $bs --n_features ${res.name.split('_')[0]} --weight_decay ${res.name.split('_')[1]} --mean_file $_
+    pyglib $py --restore $res --tf_record $tfrecord --epoch 80 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd --mean_file $_
     """
-}
+}*/
