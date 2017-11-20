@@ -709,7 +709,7 @@ process UNetDistTest {
 
     script:
     """
-    python $py --path $path  --log ${res} --batch_size $bs --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $p --thresh 0.9 --output ${res.name}_${p}__Dist.csv
+    python $py --path $path  --log ${res} --batch_size $bs --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $p --thresh 0.9 --output ${res.name}_${p}.csv
     """
 }
 process RegroupDIST_results {
