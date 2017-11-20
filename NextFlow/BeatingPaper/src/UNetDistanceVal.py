@@ -1,7 +1,7 @@
 import pdb
 from UNetDistanceTraining import UNetDistance
 from Deprocessing.Morphology import PostProcess
-
+import pandas as pd
 import math
 from Data.DataGenClass import DataGen3, DataGenMulti, DataGen3reduce
 from UsefulFunctions.ImageTransf import ListTransform
@@ -89,9 +89,11 @@ if __name__== "__main__":
 
     parser.add_option("--lambda", dest="p1", type="int")
     parser.add_option("--thresh", dest="thresh", type="float")
-
+    parser.add_option("--test_res", dest="test_res", type="str")
     (options, args) = parser.parse_args()
 
+
+    
 
     TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
                     "bladder", "colorectal", "stomach"]
@@ -105,6 +107,11 @@ if __name__== "__main__":
     N_FEATURES = options.n_features
     MEAN_FILE = options.mean_file 
 
+    #### Figuring out p1:
+    
+    table = pd.read_csv(options.test_res)
+    options.p1 = table.ix[table[' F1'].argmax(), " p1"]
+    ####
 
     SIZE = (HEIGHT, WIDTH)
 
@@ -125,7 +132,7 @@ if __name__== "__main__":
                            DROPOUT=0.5)
     file_name = options.output
     f = open(file_name, 'w')
-    f.write('{},{},{},{},{},{},{}\n'.format("ORGAN", "NUMBER", "Loss", "ACC", "F1", "AJI", "p1"))
+    f.write('{},{},{},{},{},{},{}\n'.format("ORGAN", "NUMBER", "Loss", "ACC", "F1", "AJI", "LAMBDA"))
     
     count = 0
     for organ in TEST_PATIENT:
@@ -134,6 +141,6 @@ if __name__== "__main__":
         DG_TEST.SetPatient([organ])
         Loss, Acc, f1, AJI = model.Validation(DG_TEST, options.p1, options.thresh)
         for i in range(len(Loss)):
-            f.write('{},{},{},{},{},{},{},{},\n'.format(count, organ, i, Loss[i], Acc[i], f1[i], AJI[i], options.p1))
+            f.write('{},{},{},{},{},{},{},{}\n'.format(count, organ, i, Loss[i], Acc[i], f1[i], AJI[i], options.p1))
             count += 1
     f.close()
