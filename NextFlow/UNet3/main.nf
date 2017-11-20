@@ -70,7 +70,7 @@ def Assign( file ) {
 def Assign2( file ) {
     disk = file.name.split('_')[1].toInteger()
     if( disk == 2 ) {
-        18
+        24
     }
     else { 
         if( disk == 3 ) {
@@ -162,5 +162,33 @@ process Training {
         /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/bin/python \$@
     }
     pyglib $py --tf_record $tfrecord --epoch 80 --path $path --log . --learning_rate $lr --batch_size $bs --n_features $feat --weight_decay $wd --mean_file $_
+    """
+}
+
+process Training {
+
+    clusterOptions = "-S /bin/bash -q cuda.q"
+    publishDir "./Training", mode: "copy", overwrite: false
+    maxForks = 2
+
+    input:
+    set file(path), file(tfrecord) from PATH_AND_RECORD2
+    file py from PY
+    val bs from BS
+    val home from params.home 
+    file res from RESULTS
+    file _ from MeanFile2
+    output:
+    file "long/${res}" into RESULTS2
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    function pyglib {
+        /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/bin/python \$@
+    }
+    pyglib $py --tf_record $tfrecord --epoch 80 --path $path --log long --restore $res --learning_rate ${res.name.split('_')[2]} --batch_size $bs --n_features ${res.name.split('_')[0]} --weight_decay ${res.name.split('_')[1]} --mean_file $_
     """
 }
