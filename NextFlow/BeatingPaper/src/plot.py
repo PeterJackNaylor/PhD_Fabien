@@ -46,7 +46,7 @@ for i, ((slide, num), tble) in enumerate(grouped):
     ind = 2 * np.where(organ_order == slide)[0][0] + int(num)
     tble.apply(lambda row: fill_dic(row, ind), axis=1)
 
-width = 0.3
+width = 0.2
 for j, model in enumerate(methods):
     ind = np.arange(len(dic["ACC"][model]))
     rectsACC = ax[0].bar(ind + j * width, dic["ACC"][model], width, color=colors[j])
@@ -66,10 +66,11 @@ for el in organ_order:
 
 for j in range(3):
     if j == 2:
-        ax[j].set_xticks(ind + width / 2)
+        ax[j].set_xticks(ind + 3 * width / 2)
         ax[j].set_xticklabels(Image_names, rotation=0)
     else:
-        ax[j].set_xticklabels([])
+        ax[j].set_xticks(ind + 3 * width / 2)
+        ax[j].set_xticklabels(Image_names, rotation=0)
     ax[j].axhline(y=0.75,xmin=0,xmax=3,c="gray",ls="--",linewidth=0.5,zorder=0)
     ax[j].axhline(y=0.50,xmin=0,xmax=3,c="black",ls="-.",linewidth=0.5,zorder=0)
     ax[j].axhline(y=0.25,xmin=0,xmax=3,c="gray",ls="--",linewidth=0.5,zorder=0)
@@ -87,18 +88,19 @@ for j, organ in enumerate(organ_order):
     P0 = [ind[j] * 2 -2, -2]
     P1 = [ind[j] * 2 + 1 -2, -2]
     line_x, line_y = np.array([P0, P1])
-    line_x, line_y = np.array([[0.05, 0.05], [0.05, 0.5]])
+    line_x, line_y = np.array([[0.05, 0.05], [0.05, 0.55]])
     line1 = lines.Line2D(line_x, line_y, lw=2., color='k')
     #ax2.add_line(line1)
-    alpha = 0.85
-    xmin = (float(ind[j * 2]) / np.max(ind) + 0.01 + 0.16) * alpha
-    xmax = (float(ind[j * 2 + 1]) / np.max(ind) - 0.01)  * alpha
+    alpha = 0.861
+    xmin = (float(ind[j * 2]) / np.max(ind) + 0.01 + 0.16) * alpha + 0.006
+    xmax = (float(ind[j * 2 + 1]) / np.max(ind) - 0.01 )  * alpha
     XY = np.mean([xmin, xmax])
     fs = 6.
     ax[2].annotate(organ, xy=(XY, -0.15), xytext=(XY, -0.2), xycoords='axes fraction',
                 fontsize=fs*1.5, ha='center', va='top',
                 bbox=dict(boxstyle='square', fc='white'),
-                arrowprops=dict(arrowstyle='-[, widthB=5.0, lengthB=0.5', lw=2.0))
+                arrowprops=dict(arrowstyle='-[, widthB=5.65, lengthB=0.5', lw=2.0))
 
 # #set_matplotlib_formats('pdf', 'svg')
 fig.savefig("VSPaper.png",bbox_inches='tight')
+
