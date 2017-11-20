@@ -388,7 +388,8 @@ if __name__== "__main__":
 
     parser.add_option('--n_threads', dest="THREADS", type=int, default=100,
                       help="number of threads to use for the preprocessing.")
-
+    parser.add_option('--restore', dest="restore", type=str,
+                      help="Folder from where to restore parameters.")
     (options, args) = parser.parse_args()
 
 #    os.environ["CUDA_VISIBLE_DEVICES"] = options.gpu
@@ -408,8 +409,9 @@ if __name__== "__main__":
     else:
         lr_str = "{0:.8f}".format(LEARNING_RATE).rstrip("0")
     SAVE_DIR = options.log + "/" + "{}".format(N_FEATURES) + "_" +"{0:.8f}".format(WEIGHT_DECAY).rstrip("0") + "_" + lr_str
-
-    
+    disk_size = options.TFRecord.split('.')[0].split('_')[1]
+    ap = "first" if options.restore is None else "second"
+    SAVE_DIR = SAVE_DIR + "__" + disk_size + "_" + ap 
     
     HEIGHT = 224 
     WIDTH = 224
