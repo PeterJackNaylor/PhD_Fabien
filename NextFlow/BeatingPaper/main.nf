@@ -31,6 +31,7 @@ UNET = file('src/UNetTraining.py')
 UNNETTEST = file('src/UNetTesting.py')
 UNNETVAL = file('src/UNetVal.py')
 PLOT_RES = file('src/plot.py')
+PLOT_RES_NEE = file('src/plot_NEE.py')
 
 MEANPY = file('src/MeanCalculation.py')
 BinToColorPy = file(params.python_dir + '/PrepareData/XmlParsing.py')
@@ -787,7 +788,7 @@ process RegroupPlot {
     file __ from FCN_VAL_RES .collect()
     file ___ from DIST_VAL .collect()
     file py from PLOT_RES
-    file ___ from NEERAJ
+    file ____ from NEERAJ
     output:
     file "VSPaper.csv"
     file "*.png"
@@ -839,14 +840,14 @@ process UNetVal_NEE {
     val lamb from LAMBDA
     file res from RES_UNET_NEE
     output:
-    file "${res.name}_${lamb}.csv" into UNET_VAL_NEE
+    file "${res.name}_${lamb}__UNet.csv" into UNET_VAL_NEE
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     script:
     """
-    python $py --path $path  --log . --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $lamb --thresh 0.5 --output ${res.name}_${lamb}.csv
+    python $py --path $path  --log . --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $lamb --thresh 0.5 --output ${res.name}_${lamb}__UNet.csv
     """
 }
 
@@ -865,13 +866,34 @@ process DistVal_NEE {
     file res from RES_DIST_NEE
     each p from P1
     output:
-    file "${res.name}_${p}.csv" into DIST_VAL_NEE
+    file "${res.name}_${p}__Dist.csv" into DIST_VAL_NEE
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     script:
     """
-    python $py --path $path  --log . --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --thresh 0.9 --output ${res.name}_${p}.csv --lambda $p
+    python $py --path $path  --log . --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --thresh 0.9 --output ${res.name}_${p}__Dist.csv --lambda $p
     """
 }
+
+process regroupAndPlot {
+    publishDir './Final_NEE/', mode: 'copy', overwrite: true
+
+    clusterOptions = "-S /bin/bash"
+    maxForks = 2
+
+    input:
+    file _ from UNET_VAL_NEE .collect()
+    file __ from FCN_VAL_RES_NEE .collect()
+    file ___ from DIST_VAL_NEE .collect()
+    file py from PLOT_RES_NEE
+    file ____ from NEERAJ
+    output:
+    file "VSPaper_NEE.csv"
+    file "*.png"
+    """
+    python $py
+    """
+}
+
