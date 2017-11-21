@@ -814,16 +814,17 @@ process FCN8_val_NEE {
     val i_s from IMAGE_SIZE_VAL
     each organ from ORGANS
     output:
-    file "FCN_${organ}__${cp.first().name.split('ckpt.data')[0]}.csv" into FCN_VAL_RES_NEE
+    file "FCN_${organ}__${cp.first().name.split('.ckpt.data')[0]}.csv" into FCN_VAL_RES_NEE
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     """
     python $pre_py --output ${organ}.tfrecords --path $path --crop 1 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation --organ $organ 
-    python $py --checkpoint . --tf_records ${organ}.tfrecords --labels 2 --iter 2 --output FCN_${organ}__${cp.first().name.split('ckpt.data')[0]}.csv
+    python $py --checkpoint . --tf_records ${organ}.tfrecords --labels 2 --iter 2 --output FCN_${organ}__${cp.first().name.split('.ckpt.data')[0]}.csv
     """
 }
+
 
 process UNetVal_NEE {
 
@@ -834,10 +835,10 @@ process UNetVal_NEE {
     input:
     file path from IMAGE_FOLD
     file py from UNNETVAL
-    val home from params.home
-    file _ from MeanFile4_NEE
-    file __ from ValRECORDBINUNET_NEE
-    val lamb from LAMBDA
+    val home from params.home 
+    file _ from MeanFile4_NEE .last()
+    file __ from ValRECORDBINUNET_NEE .last()
+    each lamb from LAMBDA
     file res from RES_UNET_NEE
     output:
     file "${res.name}_${lamb}__UNet.csv" into UNET_VAL_NEE
@@ -866,14 +867,14 @@ process DistVal_NEE {
     file res from RES_DIST_NEE
     each p from P1
     output:
-    file "${res.name}_${p}__Dist.csv" into DIST_VAL_NEE
+    file "${res.name}_${p}.csv" into DIST_VAL_NEE
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     script:
     """
-    python $py --path $path  --log . --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --thresh 0.9 --output ${res.name}_${p}__Dist.csv --lambda $p
+    python $py --path $path  --log . --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --thresh 0.9 --output ${res.name}_${p}.csv --lambda $p
     """
 }
 
@@ -890,8 +891,9 @@ process regroupAndPlot {
     file py from PLOT_RES_NEE
     file ____ from NEERAJ
     output:
-    file "VSPaper_NEE.csv"
+    file "Best_by_groups.csv"
     file "*.png"
+    file "Test_HP.csv"
     """
     python $py
     """

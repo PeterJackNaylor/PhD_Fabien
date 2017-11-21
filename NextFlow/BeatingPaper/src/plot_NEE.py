@@ -14,11 +14,17 @@ for f in CSV:
     tmp = pd.read_csv(f, index_col=0)
     if "FCN" == f.split('_')[0]:
         model, organ = f.split("__")[0].split('_')
-        id_model = f.split("__")[1].split('.')[0]
+        id_model = "__".join(f.split("__")[1:]).split('.')[0]
         tmp["ORGAN"] = organ
+    elif "Neeraj" == f.split('_')[0]:
+        model = f.split("_")[0]
+        id_model = ".".join(f.split(".")[:-1])
+    elif "UNet.csv" == f.split('__')[1]:
+        model = "UNet"
+        id_model = ".".join(f.split(".")[:-1])
     else:
-        model = f.split('__')[1].split('.')[0]
-        id_model = f.split("__")[0]
+        model = f.split('__')[1].split('_')[0]
+        id_model = ".".join(f.split(".")[:-1])
 
     tmp["MODEL"] = model
     tmp["Model_Unique"] = id_model
@@ -28,11 +34,12 @@ table = pd.concat(df_s)
 table.to_csv('Test_HP.csv')
 
 
-new_table = table.groupby(['Model_Unique']).mean()
+new_table = table.groupby(['Model_Unique', 'MODEL'], as_index=False).mean()
 idx = new_table.groupby(['MODEL'])['AJI'].transform(max) == new_table['AJI']
 winners = np.unique(new_table[idx]['Model_Unique'])
 
 table = table.loc[table.Model_Unique.isin(winners)]
+table.to_csv('Best_by_groups.csv')
 
 grouped = table.groupby(['ORGAN', 'NUMBER'])
 
@@ -41,7 +48,7 @@ colors = ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c",
           "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"]
 
 Patches = []
-methods = np.unique(table["Model"])
+methods = np.unique(table["MODEL"])
 organ_order = np.unique(table["ORGAN"])
 
 mod = {el:[0.] * len(organ_order) * len(np.unique(table["NUMBER"])) for el in methods}
@@ -53,7 +60,7 @@ def fill_dic(row, ind):
     acc = row["ACC"]
     f1 = row["F1"]
     aji = row["AJI"]
-    model = row["Model"]
+    model = row["MODEL"]
     dic["ACC"][model][ind] = acc
     dic["F1"][model][ind] = f1
     dic["AJI"][model][ind] = aji
@@ -118,5 +125,5 @@ for j, organ in enumerate(organ_order):
                 arrowprops=dict(arrowstyle='-[, widthB=5.65, lengthB=0.5', lw=2.0))
 
 # #set_matplotlib_formats('pdf', 'svg')
-fig.savefig("VSPaper.png",bbox_inches='tight')
+fig.savefig("VSPaper_NEE.png",bbox_inches='tight')
 
