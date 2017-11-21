@@ -108,9 +108,9 @@ if __name__== "__main__":
     MEAN_FILE = options.mean_file 
 
     #### Figuring out p1:
-    
-    table = pd.read_csv(options.test_res)
-    options.p1 = table.ix[table[' F1'].argmax(), " p1"]
+    if options.p1 is None:    
+        table = pd.read_csv(options.test_res)
+        options.p1 = table.ix[table[' F1'].argmax(), " p1"]
     ####
 
     SIZE = (HEIGHT, WIDTH)

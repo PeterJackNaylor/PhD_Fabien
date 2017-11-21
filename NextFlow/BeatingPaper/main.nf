@@ -813,14 +813,14 @@ process FCN8_val_NEE {
     val i_s from IMAGE_SIZE_VAL
     each organ from ORGANS
     output:
-    file "FCN_${organ}.csv" into FCN_VAL_RES_NEE
+    file "FCN_${organ}__${cp.first().name.split('ckpt.data')[0]}.csv" into FCN_VAL_RES_NEE
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     """
     python $pre_py --output ${organ}.tfrecords --path $path --crop 1 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation --organ $organ 
-    python $py --checkpoint ${cp.first().name.split('.data')[0]} --tf_records ${organ}.tfrecords --labels 2 --iter 2 --output FCN_${organ}.csv
+    python $py --checkpoint . --tf_records ${organ}.tfrecords --labels 2 --iter 2 --output FCN_${organ}__${cp.first().name.split('ckpt.data')[0]}.csv
     """
 }
 
@@ -846,7 +846,7 @@ process UNetVal_NEE {
 
     script:
     """
-    python $py --path $path  --log ${res} --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $lamb --thresh 0.5 --output ${res.name}_${lamb}.csv
+    python $py --path $path  --log . --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $lamb --thresh 0.5 --output ${res.name}_${lamb}.csv
     """
 }
 
@@ -872,6 +872,6 @@ process DistVal_NEE {
 
     script:
     """
-    python $py --path $path  --log ${res} --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --thresh 0.9 --output ${res.name}_${p}.csv
+    python $py --path $path  --log . --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --thresh 0.9 --output ${res.name}_${p}.csv --lambda $p
     """
 }
