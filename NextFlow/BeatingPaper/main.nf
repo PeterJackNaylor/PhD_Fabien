@@ -10,9 +10,12 @@ params.epoch = 40
 EPOCHUNET = 80
 
 TENSORBOARDUNET = file(params.image_dir + '/tensorboard_unet')
+TENSORBOARDDIST = file(params.image_dir + '/tensorboard_dist')
+
 TENSORBOARD_BIN_32 = file(params.image_dir + '/tensorboard_fcn_bin_32')
 TENSORBOARD_BIN_16 = file(params.image_dir + '/tensorboard_fcn_bin_16')
 TENSORBOARD_BIN_8 = file(params.image_dir + '/tensorboard_fcn_bin_8')
+TENSORBOARD_BIN_8_NEE = file(params.image_dir + '/tensorboard_fcn_bin_8_no_cross')
 RESULTS_DIR = file(params.image_dir + '/results')
 
 TFRECORDS = file('src/TFRecords.py')
@@ -154,7 +157,7 @@ process CreateValidationRecordsUnet {
     val i_s from IMAGE_SIZEUNET
 
     output:
-    file "ValBin.tfrecords" into ValRECORDBINUNET
+    file "ValBin.tfrecords" into ValRECORDBINUNET, ValRECORDBINUNET_NEE
     """
     python $py --output ValBin.tfrecords --path $path --crop 16 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation
     """
@@ -168,7 +171,7 @@ process Mean {
     file py from MEANPY
     file toannotate from IMAGE_FOLD
     output:
-    file "mean_file.npy" into MeanFile, MeanFile2, MeanFile3, MeanFile4, MeanFile5, MeanFile6, MeanFile7
+    file "mean_file.npy" into MeanFile, MeanFile2, MeanFile3, MeanFile4, MeanFile5, MeanFile6, MeanFile7, MeanFile4_NEE, MeanFile7_NEE
 
     """
     python $py --path $toannotate --output .
@@ -178,7 +181,7 @@ process Mean {
 process UNetTraining {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+//    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
     maxForks = 2
 
     input:
@@ -193,7 +196,7 @@ process UNetTraining {
     file __ from TrainRECORDBINUNET
     val epoch from EPOCHUNET
     output:
-    file "${feat}_${wd}_${lr}" into RES_UNET, RES_UNET2
+    file "${feat}_${wd}_${lr}" into RES_UNET, RES_UNET2, RES_UNET_NEE
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
@@ -209,7 +212,7 @@ LAMBDA = [7]
 process UNetTest {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+//    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
     maxForks = 2
 
     input:
@@ -305,7 +308,7 @@ process UNetVal {
 process FCN32 {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARD_BIN_32, overwrite: true, pattern: "log__*"
+//    publishDir TENSORBOARD_BIN_32, overwrite: true, pattern: "log__*"
     maxForks = 2
 
     input:
@@ -391,7 +394,7 @@ process RegroupFCN32_results {
 process FCN16 {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARD_BIN_16, overwrite: true, pattern: "log__*"
+//    publishDir TENSORBOARD_BIN_16, overwrite: true, pattern: "log__*"
     maxForks = 2
 
     input:
@@ -476,7 +479,7 @@ process RegroupFCN16_results {
 process FCN8 {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARD_BIN_8, overwrite: true, pattern: "log__*"
+//    publishDir TENSORBOARD_BIN_8, overwrite: true, pattern: "log__*"
     maxForks = 2
 
     input:
@@ -490,7 +493,7 @@ process FCN8 {
     val iter from ITER8
     output:
     file "log__fcn8__*" into RESULTS_8
-    file "model__*__fcn8s.ckpt.*" into CHECKPOINT_8
+    file "model__*__fcn8s.ckpt.*" into CHECKPOINT_8, CHECKPOINT_8_NEE
     file "model__*__fcn8s.ckpt.*" into CHECKPOINT_8_1 mode flatten
     
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
@@ -594,7 +597,7 @@ process BinToDistance {
     file py from BinToDistanceFile
     file toannotate from IMAGE_FOLD
     output:
-    file 'ToAnnotateDistance' into DISTANCE_FOLD, DISTANCE_FOLD2, DISTANCE_FOLD3, DISTANCE_FOLD4, DISTANCE_FOLD5, DISTANCE_FOLD6
+    file 'ToAnnotateDistance' into DISTANCE_FOLD, DISTANCE_FOLD2, DISTANCE_FOLD3, DISTANCE_FOLD4, DISTANCE_FOLD5, DISTANCE_FOLD6, DISTANCE_FOLD6_NEE
 
     """
     python $py $toannotate
@@ -646,7 +649,7 @@ process CreateValidationRecordsDist {
     val i_s from IMAGE_SIZEUNET
 
     output:
-    file "ValDistance.tfrecords" into ValRECORDDISTUNET
+    file "ValDistance.tfrecords" into ValRECORDDISTUNET, ValRECORDDISTUNET_NEE
     """
     python $py --output ValDistance.tfrecords --path $path --crop 16 --UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation
     """
@@ -661,7 +664,7 @@ P1= [1, 2, 3]
 process UNetDistTraining {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+//    publishDir TENSORBOARDDIST, mode: "copy", overwrite: true
     maxForks = 2
 
     input:
@@ -676,7 +679,7 @@ process UNetDistTraining {
     file __ from TrainRECORDDISTUNET
     val epoch from EPOCHUNET
     output:
-    file "${feat}_${wd}_${lr}__Dist" into RES_DIST, RES_DIST2
+    file "${feat}_${wd}_${lr}__Dist" into RES_DIST, RES_DIST2, RES_DIST_NEE
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
@@ -689,7 +692,7 @@ process UNetDistTraining {
 process UNetDistTest {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+//    publishDir TENSORBOARDDIST, mode: "copy", overwrite: true
     maxForks = 2
 
     input:
@@ -713,7 +716,7 @@ process UNetDistTest {
     """
 }
 process RegroupDIST_results {
-    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+    publishDir TENSORBOARDDIST, mode: "copy", overwrite: true
 
     input:
     file _ from DIST_TEST .toList()
@@ -751,7 +754,7 @@ process RegroupDIST_results {
 process DistVal {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+    publishDir TENSORBOARDDIST, mode: "copy", overwrite: true
     maxForks = 2
 
     input:
@@ -793,3 +796,82 @@ process RegroupPlot {
     """
 }
 
+
+// Here we will not be cross validating on my dataset
+
+
+
+
+process FCN8_val_NEE {
+//    publishDir TENSORBOARD_BIN_8_NEE, mode: "copy", overwrite: true
+    input:
+    file pre_py from TFRECORDS_VAL
+    file py from FCN8VAL
+    file cp from CHECKPOINT_8_NEE
+    val home from params.home
+    file path from IMAGE_FOLD
+    val i_s from IMAGE_SIZE_VAL
+    each organ from ORGANS
+    output:
+    file "FCN_${organ}.csv" into FCN_VAL_RES_NEE
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    """
+    python $pre_py --output ${organ}.tfrecords --path $path --crop 1 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation --organ $organ 
+    python $py --checkpoint ${cp.first().name.split('.data')[0]} --tf_records ${organ}.tfrecords --labels 2 --iter 2 --output FCN_${organ}.csv
+    """
+}
+
+process UNetVal_NEE {
+
+    clusterOptions = "-S /bin/bash"
+//    publishDir TENSORBOARDUNET_NEE, mode: "copy", overwrite: true
+    maxForks = 2
+
+    input:
+    file path from IMAGE_FOLD
+    file py from UNNETVAL
+    val home from params.home
+    file _ from MeanFile4_NEE
+    file __ from ValRECORDBINUNET_NEE
+    val lamb from LAMBDA
+    file res from RES_UNET_NEE
+    output:
+    file "${res.name}_${lamb}.csv" into UNET_VAL_NEE
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    python $py --path $path  --log ${res} --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --lambda $lamb --thresh 0.5 --output ${res.name}_${lamb}.csv
+    """
+}
+
+process DistVal_NEE {
+
+    clusterOptions = "-S /bin/bash"
+//    publishDir TENSORBOARDDIST_NEE, mode: "copy", overwrite: true
+    maxForks = 2
+
+    input:
+    file path from DISTANCE_FOLD6_NEE
+    file py from DISTVAL
+    val home from params.home
+    file _ from MeanFile7_NEE
+    file __ from ValRECORDDISTUNET_NEE
+    file res from RES_DIST_NEE
+    each p from P1
+    output:
+    file "${res.name}_${p}.csv" into DIST_VAL_NEE
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+
+    script:
+    """
+    python $py --path $path  --log ${res} --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --thresh 0.9 --output ${res.name}_${p}.csv
+    """
+}
