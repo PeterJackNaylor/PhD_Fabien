@@ -27,7 +27,7 @@ def AJIcompute(FP, GT):
 def ACCcompute(FP, GT):
     FP[FP > 0] = 1
     GT[GT > 0] = 1
-    res = np.mean(FP - GT)
+    res = np.mean((FP == GT).astype('float')) * 100
     return res
 
 
