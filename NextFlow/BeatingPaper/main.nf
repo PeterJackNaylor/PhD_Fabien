@@ -825,6 +825,7 @@ process FCN8_val_NEE {
     """
 }
 
+
 process UNetVal_NEE {
 
     clusterOptions = "-S /bin/bash"
@@ -834,10 +835,10 @@ process UNetVal_NEE {
     input:
     file path from IMAGE_FOLD
     file py from UNNETVAL
-    val home from params.home
-    file _ from MeanFile4_NEE
-    file __ from ValRECORDBINUNET_NEE
-    val lamb from LAMBDA
+    val home from params.home 
+    file _ from MeanFile4_NEE .last()
+    file __ from ValRECORDBINUNET_NEE .last()
+    each lamb from LAMBDA
     file res from RES_UNET_NEE
     output:
     file "${res.name}_${lamb}__UNet.csv" into UNET_VAL_NEE
@@ -873,7 +874,7 @@ process DistVal_NEE {
 
     script:
     """
-    python $py --path $path  --log . --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --thresh 0.9 --output ${res.name}_${p}__Dist.csv --lambda $p
+    python $py --path $path  --log . --batch_size 1 --n_features ${res.name.split('_')[0]} --mean_file $_ --thresh 0.9 --output ${res.name}_${p}.csv --lambda $p
     """
 }
 
@@ -890,8 +891,9 @@ process regroupAndPlot {
     file py from PLOT_RES_NEE
     file ____ from NEERAJ
     output:
-    file "VSPaper_NEE.csv"
+    file "Best_by_groups.csv"
     file "*.png"
+    file "Test_HP.csv"
     """
     python $py
     """
