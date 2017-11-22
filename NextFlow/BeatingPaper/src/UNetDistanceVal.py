@@ -13,7 +13,8 @@ from Prediction.AJI import AJI_fast
 import numpy as np
 from os.path import join
 import glob
-
+from UsefulFunctions.RandomUtils import CheckOrCreate, color_bin
+from skimage.io import imsave
 
 def F1compute(FP, GT):
     pr = FP.copy()
@@ -32,7 +33,7 @@ def ACCcompute(FP, GT):
 
 
 class TestModel(UNetDistance):
-    def Validation(self, DG_TEST, p1, thresh):
+    def Validation(self, DG_TEST, p1, thresh, save_folder):
         n_test = DG_TEST.length
         n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
 
@@ -52,13 +53,22 @@ class TestModel(UNetDistance):
             pred[pred < 0] = 0
             pred = pred.astype('uint8')
             for j in range(self.BATCH_SIZE):
+                xval_name = join(save_folder, "X_val_{}_{}.png".format(i, j))
+                yval_name = join(save_folder, "Y_val_{}_{}.png".format(i, j))
+                pred_name = join(save_folder, "pred_{}_{}.png".format(i, j))
+                pred_bin_name = join(save_folder, "predbin_{}_{}.png".format(i, j))
+                imsave(pred_name, pred[j])
+                imsave(xval_name, (Xval[j,92:-92,92:-92] + np.load('mean_file.npy')).astype('uint8'))
                 FP = PostProcess(pred[j], p1, thresh)
+                imsave(pred_bin_name, color_bin(FP))
                 GT = Yval[j, :, :, 0].copy()
                 GT[GT > 0] = 1
                 GT = label(GT)
                 f1.append(F1compute(FP, GT))
                 AJI.append(AJIcompute(FP, GT))
                 ACC.append(ACCcompute(FP, GT))
+                imsave(yval_name, color_bin(GT))
+
             l.append(l_tmp)
 
         return l, ACC, f1, AJI
@@ -90,7 +100,9 @@ if __name__== "__main__":
     parser.add_option("--lambda", dest="p1", type="int")
     parser.add_option("--thresh", dest="thresh", type="float")
     parser.add_option("--test_res", dest="test_res", type="str")
+    parser.add_option("--save_sample", dest="save_sample", type="str")
     (options, args) = parser.parse_args()
+    CheckOrCreate(options.save_sample)
 
 
     
@@ -139,7 +151,9 @@ if __name__== "__main__":
         DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH),num=[organ],
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
         DG_TEST.SetPatient([organ])
-        Loss, Acc, f1, AJI = model.Validation(DG_TEST, options.p1, options.thresh)
+        save_organ = join(options.save_folder, organ)
+        CheckOrCreate(save_organ)
+        Loss, Acc, f1, AJI = model.Validation(DG_TEST, options.p1, options.thresh, save_organ)
         for i in range(len(Loss)):
             f.write('{},{},{},{},{},{},{},{}\n'.format(count, organ, i, Loss[i], Acc[i], f1[i], AJI[i], options.p1))
             count += 1

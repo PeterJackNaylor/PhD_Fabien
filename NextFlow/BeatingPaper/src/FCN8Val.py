@@ -17,7 +17,8 @@ from Prediction.AJI import AJI_fast
 from optparse import OptionParser
 import pandas as pd
 from tf_image_segmentation.models.fcn_8s import FCN_8s
-
+from UsefulFunctions.RandomUtils import CheckOrCreate, color_bin
+from skimage.io import imsave
 
 
 if __name__ == '__main__':
@@ -37,9 +38,12 @@ if __name__ == '__main__':
     parser.add_option('--iter', dest="iter", type="int", 
                       help="iter")
     parser.add_option('--output', dest="output", type="str") 
+    parser.add_option("--save_sample", dest="save_sample", type="str")
 
     (options, args) = parser.parse_args()
-
+    CheckOrCreate(options.save_sample)
+    save_folder = join(options.save_sample, options.tf_records.split('.')[0])
+    CheckOrCreate(save_folder)
 
 
     restoremodel = ".".join(glob(join(options.checkpoint, '*_*'))[0].split('.')[:-1])
@@ -114,11 +118,13 @@ if __name__ == '__main__':
             RECALL.append(recall_score(y_true, y_pred, pos_label=1))
             IU.append(jaccard_similarity_score(y_true, y_pred))
 
-            # Display the image and the segmentation result
-            # upsampled_predictions = pred_np.squeeze()
-            #plt.imshow(image_np)
-            #plt.show()
-            #visualize_segmentation_adaptive(upsampled_predictions, pascal_voc_lut)
+            j = 0
+            xval_name = join(save_folder, "X_val_{}_{}.png".format(i, j))
+            yval_name = join(save_folder, "Y_val_{}_{}.png".format(i, j))
+            pred_bin_name = join(save_folder, "predbin_{}_{}.png".format(i, j))
+            imsave(xval_name, image_np)
+            imsave(yval_name, color_bin(annotation_np))
+            imsave(pred_bin_name, color_bin(pred_np))
             
         coord.request_stop()
         coord.join(threads)

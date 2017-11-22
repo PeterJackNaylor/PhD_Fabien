@@ -52,3 +52,14 @@ def textparser(file):
         res[key] = float(val)
     return res
     
+def color_bin(bin_labl):
+    dim = bin_labl.shape
+    x, y = dim[0], dim[1]
+    res = np.zeros(shape=(x, y, 3))
+    for i in range(1, bin_labl.max() + 1):
+        rgb = np.random.normal(loc = 125, scale=100, size=3)
+        rgb[rgb < 0 ] = 0
+        rgb[rgb > 255] = 255
+        rgb = rgb.astype(np.uint8)
+        res[bin_labl == i] = rgb
+    return res.astype(np.uint8)

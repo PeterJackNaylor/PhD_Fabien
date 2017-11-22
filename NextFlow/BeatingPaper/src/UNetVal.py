@@ -10,9 +10,9 @@ from UNetTraining import unet_diff
 import tensorflow as tf
 import numpy as np
 from skimage.measure import label
-
+from UsefulFunctions.RandomUtils import CheckOrCreate, color_bin
 from Prediction.AJI import AJI_fast
-	
+from skimage.io import imsave	
 from Deprocessing.Morphology import PostProcess
 
 
@@ -83,7 +83,7 @@ class TestModel(unet_diff):
         self.weight_decay = WEIGHT_DECAY
         self.Saver()
 
-    def Validation(self, DG_TEST, p1, p2):
+    def Validation(self, DG_TEST, p1, p2, save_folder):
         if DG_TEST is None:
             print "no validation"
         else:
@@ -110,14 +110,21 @@ class TestModel(unet_diff):
                 precision.append(precision_tmp)
                 meanacc.append(meanacc_tmp)
                 for j in range(self.BATCH_SIZE):
+                    xval_name = join(save_folder, "X_val_{}_{}.png".format(i, j))
+                    yval_name = join(save_folder, "Y_val_{}_{}.png".format(i, j))
+                    pred_name = join(save_folder, "pred_{}_{}.png".format(i, j))
+                    pred_bin_name = join(save_folder, "predbin_{}_{}.png".format(i, j))
+                    imsave(pred_name, prob[j,:,:,1])
+                    imsave(xval_name, (Xval[j,92:-92,92:-92] + np.load('mean_file.npy')).astype('uint8'))
                     FP = PostProcess(prob[j,:,:,1], p1, p2)
+                    imsave(pred_bin_name, color_bin(FP))
                     GT = Yval[j, :, :, 0]
                     GT[GT > 0] = 1
                     GT = label(GT)
+                    imsave(yval_name, color_bin(GT))
                     AJI.append(AJI_fast(FP, GT))
             # l, acc, F1, recall, precision, meanacc, AJI = np.array([l, acc, F1, recall, precision, meanacc, AJI]) / n_batch
             return l, acc, F1, recall, precision, meanacc, AJI
-
 
 if __name__== "__main__":
 
@@ -143,9 +150,10 @@ if __name__== "__main__":
 
     parser.add_option("--lambda", dest="p1", type="int")
     parser.add_option("--thresh", dest="thresh", type="float")
+    parser.add_option("--save_sample", dest="save_sample", type="str")
 
     (options, args) = parser.parse_args()
-
+    CheckOrCreate(options.save_sample)
 
     TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
                      "bladder", "colorectal", "stomach"]
@@ -186,7 +194,9 @@ if __name__== "__main__":
         DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH),num=[organ],
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
         DG_TEST.SetPatient([organ])
-        Loss, Acc, f1, Recall, Precision, Meanacc, AJI = model.Validation(DG_TEST, options.p1, options.thresh)
+        save_organ = join(options.save_folder, organ)
+        CheckOrCreate(save_organ)
+        Loss, Acc, f1, Recall, Precision, Meanacc, AJI = model.Validation(DG_TEST, options.p1, options.thresh, save_organ)
         for i in range(len(Loss)):
             f.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(count, organ, i, Loss[i], Acc[i], f1[i], Recall[i], Precision[i], Meanacc[i], AJI[i], options.p1))
             count += 1
