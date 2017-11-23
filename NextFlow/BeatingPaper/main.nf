@@ -887,9 +887,12 @@ process regroupAndPlot {
     maxForks = 2
 
     input:
-    file _ from UNET_VAL_NEE .collect()
-    file __ from FCN_VAL_RES_NEE .collect()
-    file ___ from DIST_VAL_NEE .collect()
+    file _ from UNET_VAL_NEE       .collect()
+    file __ from FCN_VAL_RES_NEE   .collect()
+    file ___ from DIST_VAL_NEE     .collect()
+    file _s from SAMPLES_DIST_NEE  .collect()
+    file __s from SAMPLES_UNET_NEE .collect()
+    file ___s from SAMPLES_FCN_NEE .collect()
     file py from PLOT_RES_NEE
     file ____ from NEERAJ
     output:
