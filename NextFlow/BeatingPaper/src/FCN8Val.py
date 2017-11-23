@@ -8,7 +8,7 @@ import os, sys
 from PIL import Image
 from matplotlib import pyplot as plt
 import pdb
-
+from scipy import misc
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
 from tf_image_segmentation.utils.inference import adapt_network_for_any_size_input
 from tf_image_segmentation.utils.visualization import visualize_segmentation_adaptive
@@ -17,7 +17,7 @@ from Prediction.AJI import AJI_fast
 from optparse import OptionParser
 import pandas as pd
 from tf_image_segmentation.models.fcn_8s import FCN_8s
-from UsefulFunctions.RandomUtils import CheckOrCreate, color_bin
+from UsefulFunctions.RandomUtils import CheckOrCreate, color_bin, add_contours
 from skimage.io import imsave
 from Deprocessing.Morphology import PostProcess
 
@@ -109,8 +109,10 @@ if __name__ == '__main__':
             
             image_np, annotation_np, pred_np, prob_np = sess.run([image, annotation, pred, prob])
             prob_float = np.exp(-prob_np[0,:,:,0]) / (np.exp(-prob_np[0,:,:,0]) + np.exp(-prob_np[0,:,:,1]))
-            prob_int8 = (prob_float.copy() * 255).astype(np.uint8)
-            FP = PostProcess(prob, p1, p2)
+            prob_int8 = misc.imresize(prob_float, size=image_np[:,:,0].shape)
+
+            prob_float = (prob_int8.copy().astype(float) / 255)
+            FP = PostProcess(prob_float, p1, p2)
             y_true = annotation_np.flatten()
             y_true[y_true > 0] = 1
             y_pred = pred_np.flatten()
@@ -129,10 +131,14 @@ if __name__ == '__main__':
             yval_name = join(save_folder, "Y_val_{}_{}.png".format(i, j))
             pred_bin_name = join(save_folder, "predbin_{}_{}.png".format(i, j))
             prob_name = join(save_folder, "prob_{}_{}.png".format(i, j))
+            cont_true_name = join(save_folder, "contpred_{}_{}.png".format(i, j))
+            cont_pred_name = join(save_folder, "conttrue_{}_{}.png".format(i, j))
             imsave(xval_name, image_np)
-            imsave(yval_name, color_bin(labeled_pred))
-            imsave(pred_bin_name, color_bin(labeled_anno))
+            imsave(pred_bin_name, color_bin(labeled_pred))
+            imsave(yval_name, color_bin(labeled_anno))
             imsave(prob_name, prob_int8)
+            imsave(cont_true_name, add_contours(image_np, labeled_anno))
+            imsave(cont_pred_name, add_contours(image_np, labeled_pred))
             
         coord.request_stop()
         coord.join(threads)

@@ -10,7 +10,7 @@ from UNetTraining import unet_diff
 import tensorflow as tf
 import numpy as np
 from skimage.measure import label
-from UsefulFunctions.RandomUtils import CheckOrCreate, color_bin
+from UsefulFunctions.RandomUtils import CheckOrCreate, color_bin, add_contours
 from Prediction.AJI import AJI_fast
 from skimage.io import imsave	
 from Deprocessing.Morphology import PostProcess
@@ -114,6 +114,8 @@ class TestModel(unet_diff):
                     yval_name = join(save_folder, "Y_val_{}_{}.png".format(i, j))
                     pred_name = join(save_folder, "pred_{}_{}.png".format(i, j))
                     pred_bin_name = join(save_folder, "predbin_{}_{}.png".format(i, j))
+                    cont_true_name = join(save_folder, "contpred_{}_{}.png".format(i, j))
+                    cont_pred_name = join(save_folder, "conttrue_{}_{}.png".format(i, j))
                     imsave(pred_name, prob[j,:,:,1])
                     imsave(xval_name, (Xval[j,92:-92,92:-92] + np.load('mean_file.npy')).astype('uint8'))
                     FP = PostProcess(prob[j,:,:,1], p1, p2)
@@ -123,6 +125,9 @@ class TestModel(unet_diff):
                     GT = label(GT)
                     imsave(yval_name, color_bin(GT))
                     AJI.append(AJI_fast(FP, GT))
+                    rgb = (Xval[j,92:-92,92:-92] + np.load('mean_file.npy')).astype('uint8')
+                    imsave(cont_true_name, add_contours(rgb, GT))
+                    imsave(cont_pred_name, add_contours(rgb, FP))
             # l, acc, F1, recall, precision, meanacc, AJI = np.array([l, acc, F1, recall, precision, meanacc, AJI]) / n_batch
             return l, acc, F1, recall, precision, meanacc, AJI
 

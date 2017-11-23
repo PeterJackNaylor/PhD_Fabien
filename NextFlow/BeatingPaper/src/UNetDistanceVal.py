@@ -13,7 +13,7 @@ from Prediction.AJI import AJI_fast
 import numpy as np
 from os.path import join
 import glob
-from UsefulFunctions.RandomUtils import CheckOrCreate, color_bin
+from UsefulFunctions.RandomUtils import CheckOrCreate, color_bin, add_contours
 from skimage.io import imsave
 
 def F1compute(FP, GT):
@@ -57,6 +57,8 @@ class TestModel(UNetDistance):
                 yval_name = join(save_folder, "Y_val_{}_{}.png".format(i, j))
                 pred_name = join(save_folder, "pred_{}_{}.png".format(i, j))
                 pred_bin_name = join(save_folder, "predbin_{}_{}.png".format(i, j))
+                cont_true_name = join(save_folder, "contpred_{}_{}.png".format(i, j))
+                cont_pred_name = join(save_folder, "conttrue_{}_{}.png".format(i, j))
                 imsave(pred_name, pred[j])
                 imsave(xval_name, (Xval[j,92:-92,92:-92] + np.load('mean_file.npy')).astype('uint8'))
                 FP = PostProcess(pred[j], p1, thresh)
@@ -68,6 +70,9 @@ class TestModel(UNetDistance):
                 AJI.append(AJIcompute(FP, GT))
                 ACC.append(ACCcompute(FP.copy(), GT.copy()))
                 imsave(yval_name, color_bin(GT))
+                rgb = (Xval[j,92:-92,92:-92] + np.load('mean_file.npy')).astype('uint8')
+                imsave(cont_true_name, add_contours(rgb, GT))
+                imsave(cont_pred_name, add_contours(rgb, FP))
 
             l.append(l_tmp)
 
