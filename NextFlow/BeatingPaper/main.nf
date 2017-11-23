@@ -238,7 +238,7 @@ process UNetTest {
 }
 
 process RegroupUNET_results {
-    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+    publishDir "./UNet", overwrite: true
 
     input:
     file _ from UNET_TEST .toList()
@@ -283,7 +283,7 @@ process RegroupUNET_results {
 process UNetVal {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARDUNET, mode: "copy", overwrite: true
+    publishDir "./UNet", overwrite: true
     maxForks = 2
 
     input:
@@ -356,7 +356,7 @@ process FCN32_testing {
 
 process RegroupFCN32_results {
 
-    publishDir TENSORBOARD_BIN_32, mode: "copy", overwrite: true
+//    publishDir TENSORBOARD_BIN_32, mode: "copy", overwrite: true
 
     input:
     file _ from RES32 .toList()
@@ -441,7 +441,7 @@ process FCN16_testing {
 
 process RegroupFCN16_results {
 
-    publishDir TENSORBOARD_BIN_16, mode: "copy", overwrite: true
+//    publishDir TENSORBOARD_BIN_16, mode: "copy", overwrite: true
 
     input:
     file _ from RES16 .toList()
@@ -526,7 +526,7 @@ process FCN8_testing {
 
 process RegroupFCN8_results {
 
-    publishDir TENSORBOARD_BIN_8, mode: "copy", overwrite: true
+    publishDir "./FCN", overwrite: true
 
 
     input:
@@ -567,7 +567,7 @@ ORGANS = ["testbreast", "testliver", "testkidney", "testprostate",
                         "bladder", "colorectal", "stomach"]
 
 process FCN8_val_org {
-    publishDir TENSORBOARD_BIN_8, mode: "copy", overwrite: true
+    publishDir "./FCN", overwrite: true
     input:
     file pre_py from TFRECORDS_VAL
     file py from FCN8VAL
@@ -717,7 +717,7 @@ process UNetDistTest {
     """
 }
 process RegroupDIST_results {
-    publishDir TENSORBOARDDIST, mode: "copy", overwrite: true
+    publishDir "./Dist", overwrite: true
 
     input:
     file _ from DIST_TEST .toList()
@@ -755,7 +755,7 @@ process RegroupDIST_results {
 process DistVal {
 
     clusterOptions = "-S /bin/bash"
-    publishDir TENSORBOARDDIST, mode: "copy", overwrite: true
+    publishDir "./Dist", overwrite: true
     maxForks = 2
 
     input:
@@ -896,6 +896,7 @@ process regroupAndPlot {
     file "Best_by_groups.csv"
     file "*.png"
     file "Test_HP.csv"
+    file "samples_NEE"
     """
     python $py
     """
