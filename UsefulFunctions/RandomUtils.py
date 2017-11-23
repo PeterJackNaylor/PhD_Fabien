@@ -2,7 +2,7 @@ import os
 from sklearn.metrics import confusion_matrix
 import numpy as np
 import shutil
-
+from skimage.morphology import erosion, disk
 def CheckOrCreate(path):
     if not os.path.isdir(path):
         os.makedirs(path)
@@ -63,3 +63,14 @@ def color_bin(bin_labl):
         rgb = rgb.astype(np.uint8)
         res[bin_labl == i] = rgb
     return res.astype(np.uint8)
+
+def add_contours(rgb_image, contour, ds = 2):
+    """
+    The image has to be a binary image 
+    """
+    rgb = rgb_image.copy()
+    contour[contour > 0] = 1
+    boundery = contour - erosion(contour, disk(ds))
+    rgb[boundery > 0] = np.array([0, 0, 0])
+    return rgb
+
