@@ -71,6 +71,7 @@ if __name__ == '__main__':
     pred, fcn_16s_variables_mapping = FCN_8s(image_batch_tensor=image_batch_tensor,
                                               number_of_classes=number_of_classes,
                                               is_training=False)
+    prob = [h for h in [s for s in [t for t in pred.op.inputs][0].op.inputs][0].op.inputs][0]
 
     # Take away the masked out values from evaluation
     # weights = tf.to_float( tf.not_equal(annotation_batch_tensor, 255) )
@@ -106,7 +107,8 @@ if __name__ == '__main__':
         
         for i in xrange(options.iter):
             
-            image_np, annotation_np, pred_np = sess.run([image, annotation, pred])
+            image_np, annotation_np, pred_np, prob_np = sess.run([image, annotation, pred, prob])
+            pdb.set_trace()
             y_true = annotation_np.flatten()
             y_true[y_true > 0] = 1
             y_pred = pred_np.flatten()
