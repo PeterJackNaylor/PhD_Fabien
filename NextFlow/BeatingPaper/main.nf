@@ -880,8 +880,10 @@ process DistVal_NEE {
     """
 }
 
+PLOT_RES_NEE2 = file('src/MoveSamples.csv')
+
 process regroupAndPlot {
-    publishDir './Final_NEE/', mode: 'copy', overwrite: true
+    publishDir './Final_NEE/', overwrite: true
 
     clusterOptions = "-S /bin/bash"
     maxForks = 2
@@ -894,6 +896,7 @@ process regroupAndPlot {
     file __s from SAMPLES_UNET_NEE .collect()
     file ___s from SAMPLES_FCN_NEE .collect()
     file py from PLOT_RES_NEE
+    file py2 from PLOT_RES_NEE2
     file ____ from NEERAJ
     output:
     file "Best_by_groups.csv"
@@ -902,6 +905,7 @@ process regroupAndPlot {
     file "samples_NEE"
     """
     python $py
+    python $py2
     """
 }
 
