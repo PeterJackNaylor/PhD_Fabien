@@ -1,4 +1,5 @@
 from glob import glob
+from skimage.measure import label
 from os.path import join
 import tensorflow as tf
 import numpy as np
@@ -8,7 +9,6 @@ from PIL import Image
 from matplotlib import pyplot as plt
 import pdb
 
-from matplotlib import pyplot as plt
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
 from tf_image_segmentation.utils.inference import adapt_network_for_any_size_input
 from tf_image_segmentation.utils.visualization import visualize_segmentation_adaptive
@@ -112,6 +112,8 @@ if __name__ == '__main__':
             y_pred = pred_np.flatten()
             ACC.append(accuracy_score(y_true, y_pred))
             AUC.append(auc(y_true, y_pred))
+            labeled_pred = label(pred_np[0,:,:,0])
+            labeled_anno = label(annotation_np[:,:,0])
             AJI.append(AJI_fast(annotation_np[:,:,0], pred_np[0,:,:,0]))
             F1.append(f1_score(y_true, y_pred, pos_label=1))
             PRECISION.append(precision_score(y_true, y_pred, pos_label=1))
@@ -123,8 +125,8 @@ if __name__ == '__main__':
             yval_name = join(save_folder, "Y_val_{}_{}.png".format(i, j))
             pred_bin_name = join(save_folder, "predbin_{}_{}.png".format(i, j))
             imsave(xval_name, image_np)
-            imsave(yval_name, color_bin(annotation_np))
-            imsave(pred_bin_name, color_bin(pred_np))
+            imsave(yval_name, color_bin(labeled_pred))
+            imsave(pred_bin_name, color_bin(labeled_anno))
             
         coord.request_stop()
         coord.join(threads)

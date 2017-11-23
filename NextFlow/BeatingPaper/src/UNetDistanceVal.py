@@ -66,7 +66,7 @@ class TestModel(UNetDistance):
                 GT = label(GT)
                 f1.append(F1compute(FP, GT))
                 AJI.append(AJIcompute(FP, GT))
-                ACC.append(ACCcompute(FP, GT))
+                ACC.append(ACCcompute(FP.copy(), GT.copy()))
                 imsave(yval_name, color_bin(GT))
 
             l.append(l_tmp)
@@ -102,7 +102,6 @@ if __name__== "__main__":
     parser.add_option("--test_res", dest="test_res", type="str")
     parser.add_option("--save_sample", dest="save_sample", type="str")
     (options, args) = parser.parse_args()
-    CheckOrCreate(options.save_sample)
 
 
     
@@ -146,12 +145,13 @@ if __name__== "__main__":
     f = open(file_name, 'w')
     f.write('{},{},{},{},{},{},{}\n'.format("ORGAN", "NUMBER", "Loss", "ACC", "F1", "AJI", "LAMBDA"))
     
+    CheckOrCreate(options.save_sample)
     count = 0
     for organ in TEST_PATIENT:
         DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH),num=[organ],
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
         DG_TEST.SetPatient([organ])
-        save_organ = join(options.save_folder, organ)
+        save_organ = join(options.save_sample, organ)
         CheckOrCreate(save_organ)
         Loss, Acc, f1, AJI = model.Validation(DG_TEST, options.p1, options.thresh, save_organ)
         for i in range(len(Loss)):

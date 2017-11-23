@@ -153,7 +153,6 @@ if __name__== "__main__":
     parser.add_option("--save_sample", dest="save_sample", type="str")
 
     (options, args) = parser.parse_args()
-    CheckOrCreate(options.save_sample)
 
     TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
                      "bladder", "colorectal", "stomach"]
@@ -169,8 +168,8 @@ if __name__== "__main__":
     MEAN_FILE = options.mean_file 
 
 
+    CheckOrCreate(options.save_sample)
     SIZE = (HEIGHT, WIDTH)
-
     model = TestModel("",  LEARNING_RATE=0.001,
                            BATCH_SIZE=BATCH_SIZE,
                            IMAGE_SIZE=SIZE,
@@ -194,7 +193,7 @@ if __name__== "__main__":
         DG_TEST  = DataGenMulti(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH),num=[organ],
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
         DG_TEST.SetPatient([organ])
-        save_organ = join(options.save_folder, organ)
+        save_organ = join(options.save_sample, organ)
         CheckOrCreate(save_organ)
         Loss, Acc, f1, Recall, Precision, Meanacc, AJI = model.Validation(DG_TEST, options.p1, options.thresh, save_organ)
         for i in range(len(Loss)):
