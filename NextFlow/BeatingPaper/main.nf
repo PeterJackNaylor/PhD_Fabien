@@ -238,7 +238,7 @@ process UNetTest {
 }
 
 process RegroupUNET_results {
-    publishDir "./UNet", overwrite: true
+    publishDir "./Final/UNet", overwrite: true
 
     input:
     file _ from UNET_TEST .toList()
@@ -283,7 +283,7 @@ process RegroupUNET_results {
 process UNetVal {
 
     clusterOptions = "-S /bin/bash"
-    publishDir "./UNet", overwrite: true
+    publishDir "./Final/UNet", overwrite: true
     maxForks = 2
 
     input:
@@ -526,7 +526,7 @@ process FCN8_testing {
 
 process RegroupFCN8_results {
 
-    publishDir "./FCN", overwrite: true
+    publishDir "./Final/FCN", overwrite: true
 
 
     input:
@@ -567,7 +567,7 @@ ORGANS = ["testbreast", "testliver", "testkidney", "testprostate",
                         "bladder", "colorectal", "stomach"]
 
 process FCN8_val_org {
-    publishDir "./FCN", overwrite: true
+    publishDir "./Final/FCN", overwrite: true
     input:
     file pre_py from TFRECORDS_VAL
     file py from FCN8VAL
@@ -584,7 +584,7 @@ process FCN8_val_org {
 
     """
     python $pre_py --output ${organ}.tfrecords --path $path --crop 1 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation --organ $organ 
-    python $py --checkpoint ${cp.first().name.split('.data')[0]} --tf_records ${organ}.tfrecords --labels 2 --iter 2 --output FCN_${organ}.csv --save_sample samples_FCN
+    python $py --checkpoint ${cp.first().name.split('.data')[0]} --tf_records ${organ}.tfrecords --labels 2 --iter 2 --output FCN_${organ}.csv --save_sample samples_FCN --lamda 7
     """
 }
 
@@ -717,7 +717,7 @@ process UNetDistTest {
     """
 }
 process RegroupDIST_results {
-    publishDir "./Dist", overwrite: true
+    publishDir "./Final/Dist", overwrite: true
 
     input:
     file _ from DIST_TEST .toList()
@@ -755,7 +755,7 @@ process RegroupDIST_results {
 process DistVal {
 
     clusterOptions = "-S /bin/bash"
-    publishDir "./Dist", overwrite: true
+    publishDir "./Final/Dist", overwrite: true
     maxForks = 2
 
     input:
@@ -821,7 +821,7 @@ process FCN8_val_NEE {
 
     """
     python $pre_py --output ${organ}.tfrecords --path $path --crop 1 --no-UNet --size $i_s --seed 42 --epoch 1 --type JUST_READ --split validation --organ $organ 
-    python $py --checkpoint . --tf_records ${organ}.tfrecords --labels 2 --iter 2 --output FCN_${organ}__${cp.first().name.split('.ckpt.data')[0]}.csv --save_sample samples_FCN__${cp.first().name.split('.ckpt.data')[0]}
+    python $py --checkpoint . --tf_records ${organ}.tfrecords --labels 2 --iter 2 --output FCN_${organ}__${cp.first().name.split('.ckpt.data')[0]}.csv --save_sample samples_FCN__${cp.first().name.split('.ckpt.data')[0]} --lamda 7
     """
 }
 
@@ -880,7 +880,7 @@ process DistVal_NEE {
     """
 }
 
-PLOT_RES_NEE2 = file('src/MoveSamples.csv')
+PLOT_RES_NEE2 = file('src/MoveSamples.py')
 
 process regroupAndPlot {
     publishDir './Final_NEE/', overwrite: true

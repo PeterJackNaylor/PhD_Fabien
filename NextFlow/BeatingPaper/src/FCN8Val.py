@@ -8,7 +8,7 @@ import os, sys
 from PIL import Image
 from matplotlib import pyplot as plt
 import pdb
-
+from scipy import misc
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
 from tf_image_segmentation.utils.inference import adapt_network_for_any_size_input
 from tf_image_segmentation.utils.visualization import visualize_segmentation_adaptive
@@ -19,7 +19,7 @@ import pandas as pd
 from tf_image_segmentation.models.fcn_8s import FCN_8s
 from UsefulFunctions.RandomUtils import CheckOrCreate, color_bin
 from skimage.io import imsave
-
+from Deprocessing.Morphology import PostProcess
 
 if __name__ == '__main__':
     
@@ -39,12 +39,13 @@ if __name__ == '__main__':
                       help="iter")
     parser.add_option('--output', dest="output", type="str") 
     parser.add_option("--save_sample", dest="save_sample", type="str")
-
+    parser.add_option("--lamda", dest="lamda", type="int")
     (options, args) = parser.parse_args()
     CheckOrCreate(options.save_sample)
     save_folder = join(options.save_sample, options.tf_records.split('.')[0])
     CheckOrCreate(save_folder)
-
+    p1 = options.lamda
+    p2 = 0.5
 
     restoremodel = ".".join(glob(join(options.checkpoint, '*_*'))[0].split('.')[:-1])
     slim = tf.contrib.slim
@@ -72,7 +73,6 @@ if __name__ == '__main__':
                                               number_of_classes=number_of_classes,
                                               is_training=False)
     prob = [h for h in [s for s in [t for t in pred.op.inputs][0].op.inputs][0].op.inputs][0]
-
     # Take away the masked out values from evaluation
     # weights = tf.to_float( tf.not_equal(annotation_batch_tensor, 255) )
 
@@ -108,13 +108,16 @@ if __name__ == '__main__':
         for i in xrange(options.iter):
             
             image_np, annotation_np, pred_np, prob_np = sess.run([image, annotation, pred, prob])
-            pdb.set_trace()
+            prob_float = np.exp(-prob_np[0,:,:,0]) / (np.exp(-prob_np[0,:,:,0]) + np.exp(-prob_np[0,:,:,1]))
+            prob_float = misc.imresize(prob_float, size=image_np[:,:,0].shape)
+            prob_int8 = (prob_float.copy() * 255).astype(np.uint8)
+            FP = PostProcess(prob_float, p1, p2)
             y_true = annotation_np.flatten()
             y_true[y_true > 0] = 1
             y_pred = pred_np.flatten()
             ACC.append(accuracy_score(y_true, y_pred))
             AUC.append(auc(y_true, y_pred))
-            labeled_pred = label(pred_np[0,:,:,0])
+            labeled_pred = label(FP)
             labeled_anno = label(annotation_np[:,:,0])
             AJI.append(AJI_fast(annotation_np[:,:,0], pred_np[0,:,:,0]))
             F1.append(f1_score(y_true, y_pred, pos_label=1))
@@ -126,9 +129,11 @@ if __name__ == '__main__':
             xval_name = join(save_folder, "X_val_{}_{}.png".format(i, j))
             yval_name = join(save_folder, "Y_val_{}_{}.png".format(i, j))
             pred_bin_name = join(save_folder, "predbin_{}_{}.png".format(i, j))
+            prob_name = join(save_folder, "prob_{}_{}.png".format(i, j))
             imsave(xval_name, image_np)
             imsave(yval_name, color_bin(labeled_pred))
             imsave(pred_bin_name, color_bin(labeled_anno))
+            imsave(prob_name, prob_int8)
             
         coord.request_stop()
         coord.join(threads)
