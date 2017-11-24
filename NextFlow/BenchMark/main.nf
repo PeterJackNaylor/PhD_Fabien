@@ -20,7 +20,7 @@ process ChangeInput {
     file path from IMAGE_FOLD
     file changescale from CHANGESCALE
     output:
-    file "" IMAGE_FOLD2, IMAGE_FOLD3
+    file "ImageFolder" into IMAGE_FOLD2, IMAGE_FOLD3
     """
     py $changescale --path $path
 
@@ -53,7 +53,7 @@ UNET_RECORDS = ["UNet", "--UNet", 212, IMAGE_FOLD2]
 FCN_RECORDS = ["FCN", "--no-UNet", 224, IMAGE_FOLD3]
 DIST_RECORDS = ["DIST", "--no-UNet", 224, DISTANCE_FOLD]
 RECORDS_OPTIONS = [UNET_RECORDS, FCN_RECORDS, DIST_RECORDS]
-RECORDS_HP = [["train", "16", ""], ["test", "1", 500], ["validation", "1", 1000]]
+RECORDS_HP = [["train", "16", "0"], ["test", "1", 500], ["validation", "1", 1000]]
 
 process CreateRecords {
 
@@ -61,17 +61,17 @@ process CreateRecords {
     file py from TFRECORDS
     val epoch from params.epoch
     set name, unet, size_train, file(path) from RECORDS_OPTIONS
-    each set split, crop, size_test from RECORDS_HP
+    each op from RECORDS_HP
 
     output:
-    set "$name", "$split", file("${split}_${name}.tfrecords") into NSR0, NSR1, NSR2
+    set "${name}", "${op[0]}", file("${op[0]}_${name}.tfrecords") into NSR0, NSR1, NSR2
     """
-    python $py --output ${split}_${name}.tfrecords --split $split --path $path --crop $crop $unet --size_train $size_train --size_test $size_train --seed 42 --epoch $epoch --type JUST_READ 
+    python $py --output ${op[0]}_${name}.tfrecords --split ${op[0]} --path $path --crop ${op[1]} $unet --size_train $size_train --size_test ${op[2]} --seed 42 --epoch $epoch --type JUST_READ 
     """
 }
-NSR0.filter( it[1] == "train" ).set{TRAIN_REC}
-NSR1.filter( it[1] == "test" ).set{TEST_REC}
-NSR2.filter( it[1] == "validation" ).set{VAL_REC}
+NSR0.filter{ it -> it[1] == "train" }.set{TRAIN_REC}
+NSR1.filter{ it -> it[1] == "test" }.set{TEST_REC}
+NSR2.filter{ it -> it[1] == "validation" }.set{VAL_REC}
 
 /*          2) We create the mean
 
@@ -123,6 +123,7 @@ DIST_TRAINING = ["DIST", Dist_file, 212]
 
 TRAINING_CHANNEL = Channel.from([UNET_TRAINING, FCN_TRAINING, DIST_TRAINING])
 PRETRAINED_8 = file(params.image_dir + "/pretrained/checkpoint16/")
+/*
 TRAIN_REC.join(TRAINING_CHANNEL) .set {TRAINING_OPTIONS}
 
 process Training {
@@ -150,4 +151,4 @@ process Training {
     """
     python $py --tf_record $rec --path $path  --log ${name}__${feat}_${wd}_${lr} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --restore $__ 
     """
-}
+} */

@@ -44,6 +44,8 @@ def GetOptions():
                       help="1st input for post processing.")
     parser.add_option('--p2', dest="p2", type="float",
                       help="2nd input for post processing.")
+
+    parser.add_option('--size_test', dest="size_test", type="str")
     parser.add_option('--restore', dest="restore", type="str")
     parser.add_option('--save_path', dest="save_path", type="str")
     (options, args) = parser.parse_args()
