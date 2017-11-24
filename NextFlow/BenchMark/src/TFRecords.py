@@ -2,34 +2,9 @@ from Data.CreateTFRecords import CreateTFRecord
 from UsefulFunctions.ImageTransf import Identity, Flip, Rotation, OutOfFocus, ElasticDeformation, HE_Perturbation, HSV_Perturbation
 import numpy as np
 from optparse import OptionParser
+from utils import GetOptions
 
 
-def options_parser():
-
-    parser = OptionParser()
-
-    parser.add_option('--output', dest="TFRecords", type="string",
-                      help="name for the output .tfrecords")
-    parser.add_option('--path', dest="path", type="str",
-                      help="Where to find the annotations")
-    parser.add_option('--crop', dest="crop", type="int",
-                      help="Number of crops to divide one image in")
-    parser.add_option('--size', dest="size", type="int",
-                      help='first dimension for size')
-    parser.add_option('--seed', dest="seed", type="int", default=42,
-                      help='Seed to use, still not really implemented')  
-    parser.add_option('--epoch', dest="epoch", type ="int",
-                       help="Number of epochs to perform")  
-    parser.add_option('--type', dest="type", type ="str",
-                       help="Type for the datagen")  
-    parser.add_option('--UNet', dest='UNet', action='store_true')
-    parser.add_option('--no-UNet', dest='UNet', action='store_false')
-    parser.add_option('--split', dest='split', type='str')
-    parser.set_defaults(feature=True)
-
-    (options, args) = parser.parse_args()
-    options.SIZE = (options.size, options.size)
-    return options
 
 def ListTransform(n_rot=4, n_elastic=50, n_he=50, n_hsv = 50,
                   var_elast=[1.2, 24. / 512, 0.07], var_hsv=[0.01, 0.07],
@@ -65,12 +40,12 @@ def ListTransform(n_rot=4, n_elastic=50, n_he=50, n_hsv = 50,
 
 if __name__ == '__main__':
 
-    options = options_parser()
+    options = GetOptions()
 
     OUTNAME = options.TFRecords
     PATH = options.path
     CROP = options.crop
-    SIZE = options.SIZE
+    SIZE = options.size_train
     SPLIT = options.split
     var_elast = [1.3, 0.03, 0.15]
     var_he  = [0.01, 0.2]
@@ -91,11 +66,14 @@ if __name__ == '__main__':
     elif options.split == "test":
         TEST_PATIENT = ["test"]
         TRANSFORM_LIST = transform_list_test
+        SIZE = options.size_test
+
     elif options.split == "validation":
         options.split = "test"
         TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
                         "bladder", "colorectal", "stomach"]
         TRANSFORM_LIST = transform_list_test
+        SIZE = options.size_test
 
 
 
