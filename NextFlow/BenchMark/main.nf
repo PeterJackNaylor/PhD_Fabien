@@ -1,8 +1,10 @@
 
 // General parameters
 params.image_dir = '/data/users/pnaylor/Bureau'
+params.epoch = 1
+params.python_dir = '/data/users/pnaylor/Documents/Python/PhD_Fabien'
+params.home = "/data/users/pnaylor"
 IMAGE_FOLD = file(params.image_dir + "/ForDataGenTrainTestVal")
-
 
 /*          0) Resave all the images so that they have 1 for label instead of 255 
 TODO: include size_test to tfrecords make values in tfrecords go to 1 and not 255!
@@ -10,12 +12,36 @@ In outputs:
 newpath name
 */
 
+CHANGESCALE = file('src/changescale.py')
+
 process ChangeInput {
 
+    input:
+    file path from IMAGE_FOLD
+    file changescale from CHANGESCALE
+    output:
+    file "" IMAGE_FOLD2, IMAGE_FOLD3
+    """
+    py $changescale --path $path
 
-
+    """
 }
 
+BinToDistanceFile = file('src/BinToDistance.py')
+
+process BinToDistance {
+    queue = "all.q"
+    clusterOptions = "-S /bin/bash"
+    input:
+    file py from BinToDistanceFile
+    file toannotate from IMAGE_FOLD
+    output:
+    file 'ToAnnotateDistance' into DISTANCE_FOLD
+
+    """
+    python $py $toannotate
+    """
+}
 
 /*          1) We create all the needed records 
 In outputs:
@@ -23,18 +49,18 @@ a set with the name, the split and the record
 */
 
 TFRECORDS = file('src/TFRecords.py')
-UNET_RECORDS = ["UNet", "--UNet", 212]
-FCN_RECORDS = ["FCN", "--no-UNet", 224]
-DIST_RECORDS = ["DIST", "--no-UNet", 224]
+UNET_RECORDS = ["UNet", "--UNet", 212, IMAGE_FOLD2]
+FCN_RECORDS = ["FCN", "--no-UNet", 224, IMAGE_FOLD3]
+DIST_RECORDS = ["DIST", "--no-UNet", 224, DISTANCE_FOLD]
 RECORDS_OPTIONS = [UNET_RECORDS, FCN_RECORDS, DIST_RECORDS]
 RECORDS_HP = [["train", "16", ""], ["test", "1", 500], ["validation", "1", 1000]]
 
 process CreateRecords {
 
+    input:
     file py from TFRECORDS
     val epoch from params.epoch
-    file path from IMAGE_FOLD
-    set name, unet, size_train from RECORDS_OPTIONS
+    set name, unet, size_train, file(path) from RECORDS_OPTIONS
     each set split, crop, size_test from RECORDS_HP
 
     output:
@@ -124,12 +150,4 @@ process Training {
     """
     python $py --tf_record $rec --path $path  --log ${name}__${feat}_${wd}_${lr} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --restore $__ 
     """
-}
-
-process TrainingFCN {
-
-
-
-
-
 }
