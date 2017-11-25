@@ -11,7 +11,7 @@ parser.add_option("--path", dest="path", type="string",
 (options, args) = parser.parse_args()
 
 dst = 'ImageFolder'
-CheckOrCreate(dst)
+# CheckOrCreate(dst)
 shutil.copytree(options.path, dst, symlinks=False, ignore=None)
 
 FILES = glob(join(dst, "GT_*", "GT_*.png"))

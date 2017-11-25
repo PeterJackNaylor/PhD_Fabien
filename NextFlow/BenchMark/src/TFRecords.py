@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     options = GetOptions()
 
-    OUTNAME = options.TFRecords
+    OUTNAME = options.TFRecord
     PATH = options.path
     CROP = options.crop
     SIZE = options.size_train

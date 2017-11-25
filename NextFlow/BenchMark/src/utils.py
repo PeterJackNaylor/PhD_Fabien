@@ -2,7 +2,7 @@ from optparse import OptionParser
 from Prediction.AJI import AJI_fast
 from skimage.measure import label
 from Deprocessing.Morphology import PostProcess
-from sklearn.metrics import accuracy_score, roc_auc_curve
+from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.metrics import jaccard_similarity_score, f1_score
 from sklearn.metrics import recall_score, precision_score
 from UsefulFunctions.RandomUtils import add_contours, color_bin
@@ -16,7 +16,7 @@ def GetOptions():
                       help="Where to find the TFrecord file")
     parser.add_option("--path", dest="path", type="string",
                       help="Where to collect the patches")
-    parser.add_option("--size", dest="size", type="int",
+    parser.add_option("--size_train", dest="size_train", type="int",
                       help="size of the input image to the network")
     parser.add_option("--log", dest="log",
                       help="log dir")
@@ -45,9 +45,15 @@ def GetOptions():
     parser.add_option('--p2', dest="p2", type="float",
                       help="2nd input for post processing.")
 
+    parser.add_option('--seed', dest="seed", type="int")
     parser.add_option('--size_test', dest="size_test", type="str")
     parser.add_option('--restore', dest="restore", type="str")
     parser.add_option('--save_path', dest="save_path", type="str")
+    parser.add_option('--type', dest="type", type ="str",
+                       help="Type for the datagen")  
+    parser.add_option('--UNet', dest='UNet', action='store_true')
+    parser.add_option('--no-UNet', dest='UNet', action='store_false')
+
     (options, args) = parser.parse_args()
 
     return options

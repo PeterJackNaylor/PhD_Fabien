@@ -20,9 +20,9 @@ process ChangeInput {
     file path from IMAGE_FOLD
     file changescale from CHANGESCALE
     output:
-    file "ImageFolder" into IMAGE_FOLD2, IMAGE_FOLD3
+    file "ImageFolder" into IMAGE_FOLD2, IMAGE_FOLD3, IMAGE_FOLD4
     """
-    py $changescale --path $path
+    python $changescale --path $path
 
     """
 }
@@ -36,7 +36,7 @@ process BinToDistance {
     file py from BinToDistanceFile
     file toannotate from IMAGE_FOLD
     output:
-    file 'ToAnnotateDistance' into DISTANCE_FOLD
+    file "ToAnnotateDistance" into DISTANCE_FOLD
 
     """
     python $py $toannotate
@@ -47,12 +47,13 @@ process BinToDistance {
 In outputs:
 a set with the name, the split and the record
 */
-
+//IMAGE_FOLD4 .subscribe{println it}
+println( IMAGE_FOLD4 .collect() )
 TFRECORDS = file('src/TFRecords.py')
-UNET_RECORDS = ["UNet", "--UNet", 212, IMAGE_FOLD2]
-FCN_RECORDS = ["FCN", "--no-UNet", 224, IMAGE_FOLD3]
-DIST_RECORDS = ["DIST", "--no-UNet", 224, DISTANCE_FOLD]
-RECORDS_OPTIONS = [UNET_RECORDS, FCN_RECORDS, DIST_RECORDS]
+UNET_RECORDS = ["UNet", "--UNet", 212, IMAGE_FOLD2.collect().first()]
+FCN_RECORDS = ["FCN", "--no-UNet", 224, IMAGE_FOLD3.collect().first()]
+DIST_RECORDS = ["DIST", "--UNet", 212, DISTANCE_FOLD]
+RECORDS_OPTIONS = Channel.from([UNET_RECORDS, FCN_RECORDS, DIST_RECORDS])
 RECORDS_HP = [["train", "16", "0"], ["test", "1", 500], ["validation", "1", 1000]]
 
 process CreateRecords {
@@ -60,13 +61,13 @@ process CreateRecords {
     input:
     file py from TFRECORDS
     val epoch from params.epoch
-    set name, unet, size_train, file(path) from RECORDS_OPTIONS
+    set name, unet, size_train, path from RECORDS_OPTIONS
     each op from RECORDS_HP
 
     output:
     set "${name}", "${op[0]}", file("${op[0]}_${name}.tfrecords") into NSR0, NSR1, NSR2
     """
-    python $py --output ${op[0]}_${name}.tfrecords --split ${op[0]} --path $path --crop ${op[1]} $unet --size_train $size_train --size_test ${op[2]} --seed 42 --epoch $epoch --type JUST_READ 
+    python $py --tf_record ${op[0]}_${name}.tfrecords --split ${op[0]} --path $path --crop ${op[1]} $unet --size_train $size_train --size_test ${op[2]} --seed 42 --epoch $epoch --type JUST_READ 
     """
 }
 NSR0.filter{ it -> it[1] == "train" }.set{TRAIN_REC}
