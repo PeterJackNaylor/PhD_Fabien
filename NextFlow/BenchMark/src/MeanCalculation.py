@@ -32,7 +32,7 @@ if __name__ == '__main__':
     for i in range(DG.length):
         key = DG.NextKeyRandList(0)
         res += np.mean(DG[key][0], axis=(0, 1))
-    count += 1
+        count += 1
     for i in range(DG_test.length):
         key = DG_test.NextKeyRandList(0)
         res += np.mean(DG_test[key][0], axis=(0, 1))
