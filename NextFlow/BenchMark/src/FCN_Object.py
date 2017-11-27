@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tf_image_segmentation.models.fcn_8s import FCN_8s, extract_vgg_16_mapping_without_fc8
+from tf_image_segmentation.models.fcn_8s import FCN_8s
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
 from tf_image_segmentation.utils.training import get_valid_logits_and_labels
 from tf_image_segmentation.utils.inference import adapt_network_for_any_size_input

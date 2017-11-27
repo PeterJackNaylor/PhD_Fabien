@@ -1,4 +1,5 @@
 from Data.CreateTFRecords import CreateTFRecord
+import pdb
 from UsefulFunctions.ImageTransf import Identity, Flip, Rotation, OutOfFocus, ElasticDeformation, HE_Perturbation, HSV_Perturbation
 import numpy as np
 from optparse import OptionParser
@@ -76,7 +77,7 @@ if __name__ == '__main__':
         SIZE = options.size_test
 
 
-
+    SIZE = (SIZE, SIZE)
     CreateTFRecord(OUTNAME, PATH, CROP, SIZE,
                    TRANSFORM_LIST, UNET, None, 
                    SEED, TEST_PATIENT, N_EPOCH,

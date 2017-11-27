@@ -13,14 +13,16 @@ newpath name
 */
 
 CHANGESCALE = file('src/changescale.py')
+NAMES = ["FCN", "UNet"]
 
 process ChangeInput {
 
     input:
     file path from IMAGE_FOLD
     file changescale from CHANGESCALE
+    each name from NAMES
     output:
-    file "ImageFolder" into IMAGE_FOLD2, IMAGE_FOLD3, IMAGE_FOLD4
+    set val("$name"), file("ImageFolder") into IMAGE_FOLD2, IMAGE_FOLD3, IMAGE_FOLD4
     """
     python $changescale --path $path
 
@@ -36,7 +38,7 @@ process BinToDistance {
     file py from BinToDistanceFile
     file toannotate from IMAGE_FOLD
     output:
-    file "ToAnnotateDistance" into DISTANCE_FOLD
+    set val("DIST"), file("ToAnnotateDistance") into DISTANCE_FOLD
 
     """
     python $py $toannotate
@@ -47,32 +49,33 @@ process BinToDistance {
 In outputs:
 a set with the name, the split and the record
 */
-//IMAGE_FOLD4 .subscribe{println it}
-println( IMAGE_FOLD4 .collect() )
+
 TFRECORDS = file('src/TFRecords.py')
-UNET_RECORDS = ["UNet", "--UNet", 212, IMAGE_FOLD2.collect().first()]
-FCN_RECORDS = ["FCN", "--no-UNet", 224, IMAGE_FOLD3.collect().first()]
-DIST_RECORDS = ["DIST", "--UNet", 212, DISTANCE_FOLD]
-RECORDS_OPTIONS = Channel.from([UNET_RECORDS, FCN_RECORDS, DIST_RECORDS])
-RECORDS_HP = [["train", "16", "0"], ["test", "1", 500], ["validation", "1", 1000]]
+IMAGE_FOLD2 .concat(DISTANCE_FOLD) .set{FOLDS}
+IMAGE_FOLD3 .concat(DISTANCE_FOLD).set{FOLDS2}
+UNET_RECORDS = ["UNet", "--UNet", 212]
+FCN_RECORDS = ["FCN", "--no-UNet", 224]
+DIST_RECORDS = ["DIST", "--UNet", 212]
+RECORDS_OPTIONS = Channel.from(UNET_RECORDS, FCN_RECORDS, DIST_RECORDS)
+FOLDS.join(RECORDS_OPTIONS) .set{RECORDS_OPTIONS_v2}
+RECORDS_HP = [["train", "16", "0"], ["test", "1", 500]]
 
 process CreateRecords {
 
     input:
     file py from TFRECORDS
     val epoch from params.epoch
-    set name, unet, size_train, path from RECORDS_OPTIONS
+    set name, file(path), unet, size_train from RECORDS_OPTIONS_v2
     each op from RECORDS_HP
 
     output:
-    set "${name}", "${op[0]}", file("${op[0]}_${name}.tfrecords") into NSR0, NSR1, NSR2
+    set val("${name}"), val("${op[0]}"), file("${op[0]}_${name}.tfrecords") into NSR0, NSR1, NSR2
     """
     python $py --tf_record ${op[0]}_${name}.tfrecords --split ${op[0]} --path $path --crop ${op[1]} $unet --size_train $size_train --size_test ${op[2]} --seed 42 --epoch $epoch --type JUST_READ 
     """
 }
 NSR0.filter{ it -> it[1] == "train" }.set{TRAIN_REC}
 NSR1.filter{ it -> it[1] == "test" }.set{TEST_REC}
-NSR2.filter{ it -> it[1] == "validation" }.set{VAL_REC}
 
 /*          2) We create the mean
 
@@ -104,8 +107,6 @@ a set with the name, the split and the record
 
 ITERTEST = 24
 
-ITER32 = 10800
-ITER16 = 10800
 ITER8 = 10800
 
 
@@ -122,18 +123,18 @@ UNET_TRAINING = ["UNet", Unet_file, 212]
 FCN_TRAINING  = ["FCN", Fcn_file, 224]
 DIST_TRAINING = ["DIST", Dist_file, 212]
 
-TRAINING_CHANNEL = Channel.from([UNET_TRAINING, FCN_TRAINING, DIST_TRAINING])
+TRAINING_CHANNEL = Channel.from(UNET_TRAINING, FCN_TRAINING, DIST_TRAINING)
 PRETRAINED_8 = file(params.image_dir + "/pretrained/checkpoint16/")
-/*
-TRAIN_REC.join(TRAINING_CHANNEL) .set {TRAINING_OPTIONS}
 
+TRAIN_REC.join(TRAINING_CHANNEL).join(FOLDS2) .set {TRAINING_OPTIONS}
 process Training {
+    clusterOptions "-S /bin/bash"
+    maxForks 2
 
-    maxForks = 2
-
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
     input:
-    set name, file(rec), file(py), size from TRAINING_OPTIONS
-    file path from IMAGE_FOLD
+    set name, split, file(rec), file(py), size, file(path) from TRAINING_OPTIONS
     val home from params.home
     val bs from BS
     each feat from FEATURES
@@ -141,15 +142,18 @@ process Training {
     each wd from WEIGHT_DECAY    
     file _ from MeanFile
     file __ from PRETRAINED_8
-    val epoch from EPOCHUNET
+    val epoch from params.epoch
+    val iters from ITER8 //only for FCN 
     output:
-    set "$name", file("${name}__${feat}_${wd}_${lr}") into RESULT_TRAIN
+    set val("$name"), file("${name}__${feat}_${wd}_${lr}") into RESULT_TRAIN
 
-    beforeScript "source $home/CUDA_LOCK/.whichNODE"
-    afterScript "source $home/CUDA_LOCK/.freeNODE"
+    when:
+    "$name" != "FCN" || ("$feat" == "${FEATURES[0]}" && "$wd" == "${WEIGHT_DECAY[0]}")
+
 
     script:
     """
-    python $py --tf_record $rec --path $path  --log ${name}__${feat}_${wd}_${lr} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --restore $__ 
+    python $py --tf_record $rec --path $path  --log ${name}__${feat}_${wd}_${lr} --learning_rate $lr --batch_size $bs --epoch 5 --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --restore $__ --size_train $size --split $split --iters $iters
     """
-} */
+
+} 

@@ -125,12 +125,12 @@ class UNetBatchNorm(UNet):
             print "no validation"
         else:
             n_test = DG_TEST.length
-            n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
+            n_batch = int(math.ceil(float(n_test) / 1)) 
 
             l, acc, F1, recall, precision, meanacc = 0., 0., 0., 0., 0., 0.
 
             for i in range(n_batch):
-                Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
+                Xval, Yval = DG_TEST.Batch(0, 1)
                 feed_dict = {self.input_node: Xval,
                              self.train_labels_node: Yval,
                              self.is_training: False}

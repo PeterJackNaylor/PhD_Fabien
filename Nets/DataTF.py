@@ -93,16 +93,16 @@ class DataReader(ConvolutionalNeuralNetwork):
             self.images_queue = self.image - self.MEAN_ARRAY
         else:
             self.images_queue = self.image
-        self.image_PH = tf.placeholder_with_default(self.images_queue, shape=[self.BATCH_SIZE,
-                                                                              self.IMAGE_SIZE[0], 
-                                                                              self.IMAGE_SIZE[1],
+        self.image_PH = tf.placeholder_with_default(self.images_queue, shape=[None,
+                                                                              None, 
+                                                                              None,
                                                                               3])
         return self.image_PH
     def label_node_f(self):
         self.labels_queue = self.annotation
-        self.labels_PH = tf.placeholder_with_default(self.labels_queue, shape=[self.BATCH_SIZE,
-                                                                          self.IMAGE_SIZE[0], 
-                                                                          self.IMAGE_SIZE[1],
+        self.labels_PH = tf.placeholder_with_default(self.labels_queue, shape=[None,
+                                                                          None, 
+                                                                          None,
                                                                           1])
 
         return self.labels_PH

@@ -72,7 +72,9 @@ if __name__== "__main__":
     TFRecord = options.TFRecord
     LEARNING_RATE = options.lr
     BATCH_SIZE = options.bs
-    SIZE = (options.size, options.size)
+    SIZE = (options.size_train, options.size_train)
+    if options.size_test is not None:
+        SIZE = (options.size_test, options.size_test)
     N_ITER_MAX = 0 ## defined later
     LRSTEP = "10epoch"
     N_TRAIN_SAVE = 100
@@ -86,7 +88,6 @@ if __name__== "__main__":
 
     ## Datagen parameters
     PATH = options.path
-
     TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
                         "bladder", "colorectal", "stomach", "test"]
     DG_TRAIN = DataGenMulti(PATH, split='train', crop = 16, size=SIZE,
