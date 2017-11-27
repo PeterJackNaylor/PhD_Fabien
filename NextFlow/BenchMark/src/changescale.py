@@ -15,8 +15,8 @@ dst = 'ImageFolder'
 shutil.copytree(options.path, dst, symlinks=False, ignore=None)
 
 FILES = glob(join(dst, "GT_*", "GT_*.png"))
-
-for f in FILES:
+AND_TEST = glob(join(dst, "GT_test", "test_*.png"))
+for f in FILES + AND_TEST:
     img = imread(f)
     img[img > 0] = 1
     imsave(f, img.astype('int8'))

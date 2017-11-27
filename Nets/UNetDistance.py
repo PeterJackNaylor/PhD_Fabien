@@ -332,11 +332,11 @@ class UNetDistance(UNetBatchNorm):
             print "no validation"
         else:
             n_test = DG_TEST.length
-            n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
+            n_batch = int(math.ceil(float(n_test) / 1)) 
 
             l = 0.
             for i in range(n_batch):
-                Xval, Yval = DG_TEST.Batch(0, self.BATCH_SIZE)
+                Xval, Yval = DG_TEST.Batch(0, 1)
                 #Yval = Yval / 255.
                 feed_dict = {self.input_node: Xval,
                              self.train_labels_node: Yval,

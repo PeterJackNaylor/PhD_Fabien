@@ -21,14 +21,14 @@ if __name__== "__main__":
     ## Model parameters
     TFRecord = options.TFRecord
     LEARNING_RATE = options.lr
-    SIZE = (options.size, options.size)
-    N_ITER_MAX = 0 ## defined later
+    SIZE = (options.size_train, options.size_train)
+    N_ITER_MAX = options.iters
     N_TRAIN_SAVE = 1000
     MEAN_FILE = options.mean_file 
     save_dir = options.log
     checkpoint = options.restore
 
-    model = FCN8(checkpoint, save_dir, TFRecord, options.size,
+    model = FCN8(checkpoint, save_dir, TFRecord, options.size_train,
                  2, 1000)
 
     if SPLIT == "train":

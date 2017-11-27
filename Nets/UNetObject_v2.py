@@ -39,9 +39,9 @@ class UNet(DataReader):
             self.images_queue = self.image - self.MEAN_ARRAY
         else:
             self.images_queue = self.image
-        self.image_PH = tf.placeholder_with_default(self.images_queue, shape=[self.BATCH_SIZE,
-                                                                              self.IMAGE_SIZE[0] + 184, 
-                                                                              self.IMAGE_SIZE[1] + 184,
+        self.image_PH = tf.placeholder_with_default(self.images_queue, shape=[None,
+                                                                              None, 
+                                                                              None,
                                                                               3])
         return self.image_PH
 
