@@ -20,15 +20,15 @@ def GetOptions():
                       help="size of the input image to the network")
     parser.add_option("--log", dest="log",
                       help="log dir")
-    parser.add_option("--learning_rate", dest="lr", type="float",
+    parser.add_option("--learning_rate", dest="lr", type="float", default=0.01,
                       help="learning_rate")
-    parser.add_option("--batch_size", dest="bs", type="int",
+    parser.add_option("--batch_size", dest="bs", type="int", default=1,
                       help="batch size")
-    parser.add_option("--epoch", dest="epoch", type="int",
+    parser.add_option("--epoch", dest="epoch", type="int", default=1,
                       help="number of epochs")
     parser.add_option("--n_features", dest="n_features", type="int",
                       help="number of channels on first layers")
-    parser.add_option("--weight_decay", dest="weight_decay", type="float",
+    parser.add_option("--weight_decay", dest="weight_decay", type="float", default=0.00005,
                       help="weight decay value")
     parser.add_option("--dropout", dest="dropout", type="float",
                       default=0.5, help="dropout value to apply to the FC layers.")

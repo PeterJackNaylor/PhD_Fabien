@@ -102,7 +102,7 @@ process Mean {
 In inputs: Meanfile, name, split, rec
 
 In outputs:
-a set with the name, the split and the record
+a set with the name, the parameters of the model
 */
 
 ITERTEST = 24
@@ -119,22 +119,22 @@ Unet_file = file('src/UNet.py')
 Fcn_file = file('src/FCN.py')
 Dist_file = file('src/Dist.py')
 
-UNET_TRAINING = ["UNet", Unet_file, 212]
-FCN_TRAINING  = ["FCN", Fcn_file, 224]
-DIST_TRAINING = ["DIST", Dist_file, 212]
+UNET_TRAINING = ["UNet", Unet_file, 212, 0]
+FCN_TRAINING  = ["FCN", Fcn_file, 224, ITER8]
+DIST_TRAINING = ["DIST", Dist_file, 212, 0]
 
 TRAINING_CHANNEL = Channel.from(UNET_TRAINING, FCN_TRAINING, DIST_TRAINING)
 PRETRAINED_8 = file(params.image_dir + "/pretrained/checkpoint16/")
 
 TRAIN_REC.join(TRAINING_CHANNEL).join(FOLDS2) .set {TRAINING_OPTIONS}
+
 process Training {
-    clusterOptions "-S /bin/bash"
     maxForks 2
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
     input:
-    set name, split, file(rec), file(py), size, file(path) from TRAINING_OPTIONS
+    set name, split, file(rec), file(py), size, iters, file(path) from TRAINING_OPTIONS
     val home from params.home
     val bs from BS
     each feat from FEATURES
@@ -143,9 +143,8 @@ process Training {
     file _ from MeanFile
     file __ from PRETRAINED_8
     val epoch from params.epoch
-    val iters from ITER8 //only for FCN 
     output:
-    set val("$name"), file("${name}__${feat}_${wd}_${lr}") into RESULT_TRAIN
+    set val("$name"), file("${name}__${feat}_${wd}_${lr}", file("$py"), feat, wd, lr into RESULT_TRAIN
 
     when:
     "$name" != "FCN" || ("$feat" == "${FEATURES[0]}" && "$wd" == "${WEIGHT_DECAY[0]}")
@@ -153,7 +152,36 @@ process Training {
 
     script:
     """
-    python $py --tf_record $rec --path $path  --log ${name}__${feat}_${wd}_${lr} --learning_rate $lr --batch_size $bs --epoch 5 --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --restore $__ --size_train $size --split $split --iters $iters
+    python $py --tf_record $rec --path $path  --log ${name}__${feat}_${wd}_${lr} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --restore $__ --size_train $size --split $split --iters $iters
     """
 
 } 
+
+/*          3) We test
+In inputs: Meanfile, name, split, rec
+
+In outputs:
+a set with the name, the split and the record
+*/
+
+RESULT_TRAIN .join(TEST_REC) .set {TEST_OPTIONS}
+
+process Testing {
+    maxForks 2
+
+    beforeScript "source $home/CUDA_LOCK/.whichNODE"
+    afterScript "source $home/CUDA_LOCK/.freeNODE"
+    input:
+    set name, file(model), file(py), feat, wd, lr, file(rec), split from TEST_OPTIONS    
+    file _ from MeanFile
+
+    output:
+    set val("$name"), file("${name}__${feat}_${wd}_${lr}.csv") into RESULT_TRAIN
+
+    script:
+    """
+    python $py --tf_record $rec --path $path  --log $model --batch_size 1 --n_features $feat --mean_file $_ --n_threads 100 --size_train $size --split $split --iters $iters --split $split
+    """  
+
+}
+
