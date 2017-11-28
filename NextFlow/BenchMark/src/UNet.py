@@ -20,6 +20,7 @@ class Model(UNetBatchNorm):
         init_op = tf.group(tf.global_variables_initializer(),
                    tf.local_variables_initializer())
         self.sess.run(init_op)
+        self.Saver()
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
 
@@ -28,7 +29,7 @@ class Model(UNetBatchNorm):
             l,  prob, batch_labels = self.sess.run([self.loss, self.train_prediction,
                                                                self.train_labels_node], feed_dict=feed_dict)
             loss += l
-            out = ComputeMetrics(prob[0], batch_labels[0], p1, p2)
+            out = ComputeMetrics(prob[0,:,:,0], batch_labels[0,:,:,0], p1, p2)
             acc += out[0]
             roc += out[1]
             jac += out[2]
@@ -127,7 +128,7 @@ if __name__== "__main__":
         file_name = options.log + ".csv"
         f = open(file_name, 'w')
         outs = model.test(options.p1, 0.5, N_ITER_MAX)
-        outs = [LOG] + outs + [p1, 0.5]
+        outs = [LOG] + list(outs) + [p1, 0.5]
         NAMES = ["ID", "Loss", "Acc", "F1", "Recall", "Precision", "ROC", "Jaccard", "AJI", "p1", "p2"]
         f.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(*NAMES))
 

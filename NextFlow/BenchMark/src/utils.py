@@ -69,7 +69,7 @@ def ComputeMetrics(prob, batch_labels, p1, p2, rgb=None, save_path=None, ind=0):
     pred[pred > 0] = 1 
     l, p = lbl.flatten(), pred.flatten()
     acc = accuracy_score(l, p)
-    roc = roc_auc_curve(l, p)
+    roc = roc_auc_score(l, p)
     jac = jaccard_similarity_score(l, p)
     f1 = f1_score(l, p)
     recall = recall_score(l, p)
