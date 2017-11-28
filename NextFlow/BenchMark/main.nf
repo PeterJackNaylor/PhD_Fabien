@@ -165,7 +165,8 @@ a set with the name, the split and the record
 */
 
 RESULT_TRAIN .join(TEST_REC) .set {TEST_OPTIONS}
-
+P1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+P2 = [0.5, 1.0, 1.5, 2.0, 2.5]
 process Testing {
     maxForks 2
 
@@ -174,7 +175,8 @@ process Testing {
     input:
     set name, file(model), file(py), feat, wd, lr, file(rec), split from TEST_OPTIONS    
     file _ from MeanFile
-
+    each p1 from P1
+    each p2 from P2
     output:
     set val("$name"), file("${name}__${feat}_${wd}_${lr}.csv") into RESULT_TRAIN
 
