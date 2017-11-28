@@ -23,10 +23,10 @@ class Model(UNetBatchNorm):
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
 
-        for step in range(steps):
+        for step in range(steps):  
             feed_dict = {self.is_training: False} 
-            l, lr, prob, batch_labels = self.sess.run([self.loss, self.train_prediction,
-                                                              self.train_labels_node], feed_dict=feed_dict)
+            l,  prob, batch_labels = self.sess.run([self.loss, self.train_prediction,
+                                                               self.train_labels_node], feed_dict=feed_dict)
             loss += l
             out = ComputeMetrics(prob[0], batch_labels[0], p1, p2)
             acc += out[0]
