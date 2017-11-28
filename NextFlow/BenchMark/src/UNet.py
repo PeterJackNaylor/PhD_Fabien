@@ -17,12 +17,16 @@ class Model(UNetBatchNorm):
         loss, roc = 0., 0.
         acc, F1, recall = 0., 0., 0.
         precision, jac, AJI = 0., 0., 0.
+        init_op = tf.group(tf.global_variables_initializer(),
+                   tf.local_variables_initializer())
+        self.sess.run(init_op)
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
 
         for step in range(steps):  
-            l, lr, prob, batch_labels = self.sess.run([self.loss, self.train_prediction,
-                                                              self.train_labels_node])
+            feed_dict = {self.is_training: False} 
+            l,  prob, batch_labels = self.sess.run([self.loss, self.train_prediction,
+                                                              self.train_labels_node], feed_dict=feed_dict)
             loss += l
             out = ComputeMetrics(prob[0], batch_labels[0], p1, p2)
             acc += out[0]

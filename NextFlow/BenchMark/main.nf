@@ -53,6 +53,7 @@ a set with the name, the split and the record
 TFRECORDS = file('src/TFRecords.py')
 IMAGE_FOLD2 .concat(DISTANCE_FOLD) .set{FOLDS}
 IMAGE_FOLD3 .concat(DISTANCE_FOLD).set{FOLDS2}
+IMAGE_FOLD4 .concat(DISTANCE_FOLD).set{FOLDS3}
 UNET_RECORDS = ["UNet", "--UNet", 212]
 FCN_RECORDS = ["FCN", "--no-UNet", 224]
 DIST_RECORDS = ["DIST", "--UNet", 212]
@@ -144,7 +145,7 @@ process Training {
     file __ from PRETRAINED_8
     val epoch from params.epoch
     output:
-    set val("$name"), file("${name}__${feat}_${wd}_${lr}", file("$py"), feat, wd, lr into RESULT_TRAIN
+    set val("$name"), file("${name}__${feat}_${wd}_${lr}"), file("$py"), feat, wd, lr into RESULT_TRAIN
 
     when:
     "$name" != "FCN" || ("$feat" == "${FEATURES[0]}" && "$wd" == "${WEIGHT_DECAY[0]}")
@@ -164,7 +165,7 @@ In outputs:
 a set with the name, the split and the record
 */
 
-RESULT_TRAIN .join(TEST_REC) .set {TEST_OPTIONS}
+RESULT_TRAIN .join(TEST_REC) .join(FOLDS3) .set {TEST_OPTIONS}
 
 process Testing {
     maxForks 2
@@ -172,15 +173,16 @@ process Testing {
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
     input:
-    set name, file(model), file(py), feat, wd, lr, file(rec), split from TEST_OPTIONS    
+    set name, file(model), file(py), feat, wd, lr, split, file(rec), file(path) from TEST_OPTIONS    
     file _ from MeanFile
+    val home from params.home
 
     output:
-    set val("$name"), file("${name}__${feat}_${wd}_${lr}.csv") into RESULT_TRAIN
+    set val("$name"), file("${name}__${feat}_${wd}_${lr}.csv") into RESULT_TEST
 
     script:
     """
-    python $py --tf_record $rec --path $path  --log $model --batch_size 1 --n_features $feat --mean_file $_ --n_threads 100 --size_train $size --split $split --iters $iters --split $split
+    python $py --tf_record $rec --path $path  --log $model --batch_size 1 --n_features $feat --mean_file $_ --n_threads 100 --split $split --size_test 500
     """  
 
 }
