@@ -1,4 +1,5 @@
 import tensorflow as tf
+import pdb
 from tf_image_segmentation.models.fcn_8s import FCN_8s
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
 from tf_image_segmentation.utils.training import get_valid_logits_and_labels
@@ -98,7 +99,7 @@ class FCN8():
     def train8(self, iters, lr):
 
         self.setup_train8(lr)
-
+        model_save = os.path.join(self.checkpointnew, self.checkpointnew)
         with tf.Session()  as sess:
             
             sess.run(self.combined_op)
@@ -115,14 +116,14 @@ class FCN8():
                 
                 if i % self.n_print == 0:
                     self.summary_string_writer.add_summary(summary_string, i)
-                    save_path = self.saver.save(sess, self.checkpointnew)
+                    save_path = self.saver.save(sess, model_save)
                     print("Model saved in file: %s" % save_path)
                     
                 
             coord.request_stop()
             coord.join(threads)
             
-            save_path = self.saver.save(sess, self.checkpointnew)
+            save_path = self.saver.save(sess, model_save)
             print("Model saved in file: %s" % save_path)
 
 
@@ -133,10 +134,10 @@ class FCN8():
         annotation_batch_tensor = tf.expand_dims(self.annotation, axis=0)
         # Be careful: after adaptation, network returns final labels
         # and not logits
-        FCN_8s = adapt_network_for_any_size_input(FCN_8s, 32)
+        FCN_8s_bis = adapt_network_for_any_size_input(FCN_8s, 32)
 
 
-        pred, fcn_16s_variables_mapping = FCN_8s(image_batch_tensor=image_batch_tensor,
+        pred, fcn_16s_variables_mapping = FCN_8s_bis(image_batch_tensor=image_batch_tensor,
                                                   number_of_classes=self.num_labels,
                                                   is_training=False)
         prob = [h for h in [s for s in [t for t in pred.op.inputs][0].op.inputs][0].op.inputs][0]
@@ -149,7 +150,6 @@ class FCN8():
         with tf.Session() as sess:
             
             sess.run(initializer)
-
             saver.restore(sess, restore)
             
             coord = tf.train.Coordinator()
@@ -163,7 +163,7 @@ class FCN8():
                 prob_int8 = misc.imresize(prob_float, size=image_np[:,:,0].shape)
 
                 prob_float = (prob_int8.copy().astype(float) / 255)
-                out = ComputeMetrics(prob_float, annotation_np[0,:,:,0], p1, 0.5)
+                out = ComputeMetrics(prob_float, annotation_np[:,:,0], p1, 0.5)
                 acc += out[0]
                 roc += out[1]
                 jac += out[2]

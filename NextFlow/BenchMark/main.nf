@@ -164,7 +164,7 @@ In inputs: Meanfile, name, split, rec
 In outputs:
 a set with the name, the split and the record
 */
-
+ITERS = 26
 P1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 P2 = [0.5, 1.0, 1.5, 2.0]
 RESULT_TRAIN .join(TEST_REC) .join(FOLDS3) .set {TEST_OPTIONS}
@@ -179,6 +179,7 @@ process Testing {
     file _ from MeanFile
     each p1 from P1
     each p2 from P2
+    val iters from ITERS
     val home from params.home
     output:
     set val("$name"), file("${name}__${feat}_${wd}_${lr}.csv") into RESULT_TEST
@@ -188,7 +189,7 @@ process Testing {
 
     script:
     """
-    python $py --tf_record $rec --path $path  --log $model --batch_size 1 --n_features $feat --mean_file $_ --n_threads 100 --split $split --size_test 500 --p1 ${p1} --p2 ${p2}
+    python $py --tf_record $rec --path $path  --log $model --batch_size 1 --n_features $feat --mean_file $_ --n_threads 100 --split $split --size_test 500 --p1 ${p1} --p2 ${p2} --restore $model --iters $iters
     """  
 
 }

@@ -19,12 +19,17 @@ class Model(UNetDistance):
         loss, roc = 0., 0.
         acc, F1, recall = 0., 0., 0.
         precision, jac, AJI = 0., 0., 0.
+        init_op = tf.group(tf.global_variables_initializer(),
+                   tf.local_variables_initializer())
+        self.sess.run(init_op)
+        self.Saver()
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
 
         for step in range(steps):  
-            l, lr, prob, batch_labels = self.sess.run([self.loss, self.predictions,
-                                                              self.train_labels_node])
+            feed_dict = {self.is_training: False} 
+            l, prob, batch_labels = self.sess.run([self.loss, self.predictions,
+                                                              self.train_labels_node], feed_dict=feed_dict)
             loss += l
             out = ComputeMetrics(prob[0], batch_labels[0], p1, p2)
             acc += out[0]
@@ -127,7 +132,7 @@ if __name__== "__main__":
         file_name = options.log + ".csv"
         f = open(file_name, 'w')
         outs = model.test(p1, p2, N_ITER_MAX)
-        outs = [LOG] + outs + [p1, p2]
+        outs = [LOG] + list(outs) + [p1, p2]
         NAMES = ["ID", "Loss", "Acc", "F1", "Recall", "Precision", "ROC", "Jaccard", "AJI", "p1", "p2"]
         f.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(*NAMES))
 
