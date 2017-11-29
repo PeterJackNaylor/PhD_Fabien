@@ -125,7 +125,7 @@ if __name__== "__main__":
         model.train(DG_TEST)
     elif SPLIT == "test":
         p1 = options.p1
-        file_name = options.log + ".csv"
+        file_name = options.output
         f = open(file_name, 'w')
         outs = model.test(options.p1, 0.5, N_ITER_MAX)
         outs = [LOG] + list(outs) + [p1, 0.5]

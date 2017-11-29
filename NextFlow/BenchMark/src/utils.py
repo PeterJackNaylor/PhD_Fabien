@@ -54,6 +54,7 @@ def GetOptions():
                        help="Type for the datagen")  
     parser.add_option('--UNet', dest='UNet', action='store_true')
     parser.add_option('--no-UNet', dest='UNet', action='store_false')
+    parser.add_option('--output', dest="output", type="str")
 
     (options, args) = parser.parse_args()
 

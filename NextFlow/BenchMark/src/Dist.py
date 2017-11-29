@@ -129,7 +129,7 @@ if __name__== "__main__":
     elif SPLIT == "test":
         p1 = options.p1
         p2 = options.p2
-        file_name = options.log + ".csv"
+        file_name = options.output
         f = open(file_name, 'w')
         outs = model.test(p1, p2, N_ITER_MAX)
         outs = [LOG] + list(outs) + [p1, p2]

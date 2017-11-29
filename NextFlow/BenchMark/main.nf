@@ -182,15 +182,44 @@ process Testing {
     val iters from ITERS
     val home from params.home
     output:
-    set val("$name"), file("${name}__${feat}_${wd}_${lr}.csv") into RESULT_TEST
+    set val("$name"), file("${name}__${feat}_${wd}_${lr}_${p1}_${p2}.csv"), file("$model") into RESULT_TEST
 
     when:
     ("$name" == "DIST" && "${p1}" < 6) || ("$name" != "DIST" && "${p2}" == "${P2[0]}" && "${p1}" >5)
 
     script:
     """
-    python $py --tf_record $rec --path $path  --log $model --batch_size 1 --n_features $feat --mean_file $_ --n_threads 100 --split $split --size_test 500 --p1 ${p1} --p2 ${p2} --restore $model --iters $iters
+    python $py --tf_record $rec --path $path  --log $model --batch_size 1 --n_features $feat --mean_file $_ --n_threads 100 --split $split --size_test 500 --p1 ${p1} --p2 ${p2} --restore $model --iters $iters --output ${name}__${feat}_${wd}_${lr}_${p1}_${p2}.csv
     """  
+
+}
+/*          3) We test
+In inputs: name, all result_test.csv per key
+
+In outputs:
+name, best_model, p1, p2
+*/
+
+REGROUP = file('src/regroup.py')
+
+RESULT_TEST .groupTuple() 
+            .set { KEY_CSV }
+
+
+process GetBestPerKey {
+    
+    input:
+    file py from REGROUP
+    set name, file(csv), file(model) from KEY_CSV
+
+    output:
+    set val("$name"), file("best_model") into BEST_MODEL_TEST
+    file "$name_test.csv"
+    """
+    python $py --store_best best_model --output $name_test.csv
+
+    """
+
 
 }
 

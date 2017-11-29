@@ -39,7 +39,7 @@ if __name__== "__main__":
         p1 = options.p1
         LOG = options.log
 
-        file_name = options.log + ".csv"
+        file_name = options.output
         f = open(file_name, 'w')
 
         checkpoint = os.path.join(checkpoint, checkpoint) 
