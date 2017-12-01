@@ -30,6 +30,9 @@ class Model(UNetDistance):
             feed_dict = {self.is_training: False} 
             l, prob, batch_labels = self.sess.run([self.loss, self.predictions,
                                                               self.train_labels_node], feed_dict=feed_dict)
+            prob[prob > 255] = 255
+            prob[prob < 0] = 0
+            prob = prob.astype(int)
             loss += l
             out = ComputeMetrics(prob[0], batch_labels[0], p1, p2)
             acc += out[0]

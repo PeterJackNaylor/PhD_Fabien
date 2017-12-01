@@ -77,6 +77,7 @@ process CreateRecords {
 }
 NSR0.filter{ it -> it[1] == "train" }.set{TRAIN_REC}
 NSR1.filter{ it -> it[1] == "test" }.set{TEST_REC}
+NSR2.filter{ it -> it[1] == "test" }.set{TEST_REC2}
 
 /*          2) We create the mean
 
@@ -111,7 +112,7 @@ ITERTEST = 24
 ITER8 = 108 // 00
 
 
-LEARNING_RATE = [0.01, 0.001, 0.0001, 0.00001, 0.000001]
+LEARNING_RATE = [0.01, 0.001]//, 0.0001, 0.00001, 0.000001]
 FEATURES = [16, 32, 64]
 WEIGHT_DECAY = [0.00005, 0.0005]
 BS = 10
@@ -145,11 +146,10 @@ process Training {
     file __ from PRETRAINED_8
     val epoch from params.epoch
     output:
-    set val("$name"), file("${name}__${feat}_${wd}_${lr}"), file("$py"), feat, wd, lr into RESULT_TRAIN
+    set val("$name"), file("${name}__${feat}_${wd}_${lr}"), file("$py"), feat, wd, lr into RESULT_TRAIN, RESULT_TRAIN2
 
     when:
     "$name" != "FCN" || ("$feat" == "${FEATURES[0]}" && "$wd" == "${WEIGHT_DECAY[0]}")
-
 
     script:
     """
@@ -157,7 +157,6 @@ process Training {
     """
 
 } 
-
 /*          3) We test
 In inputs: Meanfile, name, split, rec
 
@@ -167,26 +166,29 @@ a set with the name, the split and the record
 ITERS = 26
 P1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 P2 = [0.5, 1.0, 1.5, 2.0]
-RESULT_TRAIN .join(TEST_REC) .join(FOLDS3) .set {TEST_OPTIONS}
-
+// RESULT_TRAIN .join(TEST_REC) .join(FOLDS3) .into {TEST_OPTIONS;TEST_OPTIONS2}
+TEST_REC.cross(RESULT_TRAIN).map{ first, second -> [first, second.drop(1)].flatten() } .set{ TEST_OPTIONS_pre }
+FOLDS3.cross(TEST_OPTIONS_pre).map { first, second -> [first, second.drop(1)].flatten() }.into{TEST_OPTIONS;TEST_OPTIONS2}
+// TEST_OPTIONS2.println()
+// TEST_OPTIONS2 .subscribe{println(it)}
 process Testing {
     maxForks 2
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
     input:
-    set name, file(model), file(py), feat, wd, lr, split, file(rec), file(path) from TEST_OPTIONS    
+    set name, file(path), split, file(rec), file(model), file(py), feat, wd, lr from TEST_OPTIONS    
     file _ from MeanFile
     each p1 from P1
     each p2 from P2
     val iters from ITERS
     val home from params.home
     output:
-    set val("$name"), file("${name}__${feat}_${wd}_${lr}_${p1}_${p2}.csv"), file("$model") into RESULT_TEST
-
+    set val("$name"), file("${name}__${feat}_${wd}_${lr}_${p1}_${p2}.csv") into RESULT_TEST
+    set val("$name"), file("$model") into MODEL_TEST
     when:
-    ("$name" == "DIST" && "${p1}" < 6) || ("$name" != "DIST" && "${p2}" == "${P2[0]}" && "${p1}" >5)
-
+    ("$name" == "DIST" && p1 < 6) || ("$name" != "DIST" && p2 == P2[0] && p1 > 5)
+    
     script:
     """
     python $py --tf_record $rec --path $path  --log $model --batch_size 1 --n_features $feat --mean_file $_ --n_threads 100 --split $split --size_test 500 --p1 ${p1} --p2 ${p2} --restore $model --iters $iters --output ${name}__${feat}_${wd}_${lr}_${p1}_${p2}.csv
@@ -201,22 +203,23 @@ name, best_model, p1, p2
 */
 
 REGROUP = file('src/regroup.py')
-
+// RESULT_TEST .subscribe {it -> println(it)}
 RESULT_TEST .groupTuple() 
             .set { KEY_CSV }
-
+MODEL_TEST .unique() .set {KEY_MODEL}
+KEY_CSV .join(KEY_MODEL) .set {KEY_CSV_MODEL}
 
 process GetBestPerKey {
     
     input:
     file py from REGROUP
-    set name, file(csv), file(model) from KEY_CSV
+    set name, file(csv), file(model) from KEY_CSV_MODEL
 
     output:
-    set val("$name"), file("best_model") into BEST_MODEL_TEST
-    file "$name_test.csv"
+    set val("$name"), file("best_model"), val('feat_val'), val('p1_val'), val('p2_val') into BEST_MODEL_TEST
+    file "${name}_test.csv"
     """
-    python $py --store_best best_model --output $name_test.csv
+    python $py --store_best best_model --output ${name}_test.csv
 
     """
 
