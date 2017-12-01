@@ -49,12 +49,12 @@ process BinToDistance {
 REFERENCE = file(IMAGE_FOLD + '/Slide_test/test_{1,2}.png')
 MAT_NORMALIZE = file('src/Normalize.m')
 TYPE = ["Macenko", "RGBHist"]
-TOOL_BOX = '/Users/naylorpeter/Documents/MATLAB/stain_normalisation_toolbox/'
+TOOL_BOX = '/Data/users/pnaylor/Documents/MATLAB/stain_normalisation_toolbox/'
 
 process Normalise {
     publishDir "${type}_images"
     input:
-    file path from DISTANCE_FOLD
+    set name, file(path) from DISTANCE_FOLD
     file matlab_n from MAT_NORMALIZE
     file reference from REFERENCE
     each type from TYPE
@@ -116,7 +116,7 @@ process Mean {
     file py from MEANPY
     set val(name), file(toannotate) from FOLDS4
     output:
-    set val("$name"), file("mean_file.npy"), file("$toannotate") into MeanFile, Meanfile2
+    set val("$name"), file("mean_file.npy"), file("$toannotate") into MeanFile, Meanfile2, Meanfile3
 
     """
     python $py --path $toannotate --output .
