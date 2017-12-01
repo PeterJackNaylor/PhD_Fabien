@@ -147,7 +147,7 @@ UNET_TRAINING = ["UNet", Unet_file, 212, 0]
 FCN_TRAINING  = ["FCN", Fcn_file, 224, ITER8]
 DIST_TRAINING = ["DIST", Dist_file, 212, 0]
 
-TRAINING_CHANNEL = Channel.from(UNET_TRAINING, FCN_TRAINING, DIST_TRAINING)
+Channel.from(UNET_TRAINING, FCN_TRAINING, DIST_TRAINING) .into{ TRAINING_CHANNEL; TRAINING_CHANNEL2}
 PRETRAINED_8 = file(params.image_dir + "/pretrained/checkpoint16/")
 
 TRAIN_REC.join(TRAINING_CHANNEL).join(MeanFile) .set {TRAINING_OPTIONS}
@@ -224,25 +224,46 @@ name, best_model, p1, p2
 
 REGROUP = file('src/regroup.py')
 // RESULT_TEST .subscribe {it -> println(it)}
-RESULT_TEST .groupTuple() 
-            .set { KEY_CSV }
-MODEL_TEST .unique() .set {KEY_MODEL}
-KEY_CSV .join(KEY_MODEL) .set {KEY_CSV_MODEL}
+RESULT_TEST  .groupTuple() 
+             .set { KEY_CSV }
+RESULT_TRAIN2.map{name, model, py, feat, wd, lr -> [name, model]} .groupTuple() . set {ALL_MODELS}
+
+//MODEL_TEST .unique().subscribe{println(it)} //.set {KEY_MODEL}
+ KEY_CSV .join(ALL_MODELS) .set {KEY_CSV_MODEL}
 
 process GetBestPerKey {
-    
+    publishDir "./Test_tables/" , pattern: "*.csv"
     input:
     file py from REGROUP
     set name, file(csv), file(model) from KEY_CSV_MODEL
 
     output:
-    set val("$name"), file("best_model"), val('feat_val'), val('p1_val'), val('p2_val') into BEST_MODEL_TEST
+    set val("$name"), file("best_model") into BEST_MODEL_TEST
+    file 'feat_val' into N_FEATS
+    file 'p1_val' into P1_VAL
+    file 'p2_val' into P2_VAL
     file "${name}_test.csv"
     """
     python $py --store_best best_model --output ${name}_test.csv
-
     """
-
-
 }
 
+BEST_MODEL_TEST.join(TRAINING_CHANNEL2) .set{ VALIDATION_OPTIONS}
+N_FEATS .map{ it.text } .set {FEATS_}
+P1_VAL  .map{ it.text } .set {P1_}
+P2_VAL  .map{ it.text } .set {P2_}
+process Validation {
+
+    publishDir "./Validation/"
+
+    input:
+    set name, file(best_model), file(py), _, __ from VALIDATION_OPTIONS
+    val feat from FEATS_ 
+    val p1 from P1_
+    val p2 from P2_
+    output:
+    
+    """
+    python $py --log $best_model --restore $best_model --batch_size 1 --n_features ${feat}  --n_threads 100 --split validation --size_test 500 --p1 ${p1} --p2 ${p2} 
+    """
+}
