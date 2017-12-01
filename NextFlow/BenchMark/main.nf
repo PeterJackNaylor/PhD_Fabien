@@ -49,6 +49,7 @@ process BinToDistance {
 REFERENCE = file(IMAGE_FOLD + '/Slide_test/test_{1,2}.png')
 MAT_NORMALIZE = file('src/Normalize.m')
 TYPE = ["Macenko", "RGBHist"]
+TOOL_BOX = '/Users/naylorpeter/Documents/MATLAB/stain_normalisation_toolbox/'
 
 process Normalise {
     publishDir "${type}_images"
