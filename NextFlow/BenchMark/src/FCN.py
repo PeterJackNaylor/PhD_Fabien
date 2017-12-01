@@ -50,4 +50,24 @@ if __name__== "__main__":
 
         f.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(*outs))
     elif SPLIT == "validation":
-        model.validate()
+        
+        TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
+                        "bladder", "colorectal", "stomach"]
+
+        file_name = options.output
+        f = open(file_name, 'w')
+        NAMES = ["NUMBER", "ORGAN", "Loss", "Acc", "F1", "Recall", "Precision", "ROC", "Jaccard", "AJI", "p1", "p2"]
+        f.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(*NAMES))
+
+
+        for organ in TEST_PATIENT:
+            DG_TEST  = DataGenMulti(PATH, split="test", crop = 1, size=(992, 992),num=[organ],
+                           transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
+            save_organ = os.path.join(options.save_path, organ)
+            CheckOrCreate(save_organ)
+            outs = model.validation(DG_TEST, options.p1, 0.5, save_organ)
+            for i in range(len(outs)):
+                small_o = outs[i]
+                small_o = [i, organ] + small_o + [options.p1, 0.5]
+                f.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(*small_o))
+        f.close()

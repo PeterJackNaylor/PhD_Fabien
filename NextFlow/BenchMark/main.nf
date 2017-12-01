@@ -248,7 +248,7 @@ process GetBestPerKey {
     """
 }
 
-BEST_MODEL_TEST.join(TRAINING_CHANNEL2) .set{ VALIDATION_OPTIONS}
+BEST_MODEL_TEST.join(TRAINING_CHANNEL2).join(Meanfile3) .set{ VALIDATION_OPTIONS}
 N_FEATS .map{ it.text } .set {FEATS_}
 P1_VAL  .map{ it.text } .set {P1_}
 P2_VAL  .map{ it.text } .set {P2_}
@@ -257,13 +257,13 @@ process Validation {
     publishDir "./Validation/"
 
     input:
-    set name, file(best_model), file(py), _, __ from VALIDATION_OPTIONS
+    set name, file(best_model), file(py), _, __, file(mean), file(path) from VALIDATION_OPTIONS
     val feat from FEATS_ 
     val p1 from P1_
     val p2 from P2_
     output:
     
     """
-    python $py --log $best_model --restore $best_model --batch_size 1 --n_features ${feat}  --n_threads 100 --split validation --size_test 500 --p1 ${p1} --p2 ${p2} 
+    python $py --mean_file $mean --path $path --log $best_model --restore $best_model --batch_size 1 --n_features ${feat} --n_threads 100 --split validation --size_test 500 --p1 ${p1} --p2 ${p2} --output ${name}.csv
     """
 }

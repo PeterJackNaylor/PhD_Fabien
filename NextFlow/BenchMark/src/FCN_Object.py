@@ -177,6 +177,7 @@ class FCN8():
             recall, precision, roc = np.array([recall, precision, roc]) / steps
             jac, AJI = np.array([jac, AJI]) / steps
             return loss, acc, F1, recall, precision, roc, jac, AJI 
+    def validation(self, checkpoint, p1):
 
 
 

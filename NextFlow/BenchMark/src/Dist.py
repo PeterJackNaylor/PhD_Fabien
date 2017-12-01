@@ -146,7 +146,7 @@ if __name__== "__main__":
         TEST_PATIENT = ["testbreast", "testliver", "testkidney", "testprostate",
                         "bladder", "colorectal", "stomach"]
 
-        file_name = options.log + "__val.csv"
+        file_name = options.output
         f = open(file_name, 'w')
         NAMES = ["NUMBER", "ORGAN", "Loss", "Acc", "F1", "Recall", "Precision", "ROC", "Jaccard", "AJI", "p1", "p2"]
         f.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(*NAMES))
