@@ -12,7 +12,7 @@ from skimage.io import imsave
 def GetOptions():
 
     parser = OptionParser()
-    parser.add_option("--tf_record", dest="TFRecord", type="string",
+    parser.add_option("--tf_record", dest="TFRecord", type="string", default="",
                       help="Where to find the TFrecord file")
     parser.add_option("--path", dest="path", type="string",
                       help="Where to collect the patches")
@@ -49,7 +49,7 @@ def GetOptions():
     parser.add_option('--seed', dest="seed", type="int")
     parser.add_option('--size_test', dest="size_test", type="int")
     parser.add_option('--restore', dest="restore", type="str")
-    parser.add_option('--save_path', dest="save_path", type="str")
+    parser.add_option('--save_path', dest="save_path", type="str", default=".")
     parser.add_option('--type', dest="type", type ="str",
                        help="Type for the datagen")  
     parser.add_option('--UNet', dest='UNet', action='store_true')

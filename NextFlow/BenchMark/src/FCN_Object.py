@@ -178,7 +178,7 @@ class FCN8():
             jac, AJI = np.array([jac, AJI]) / steps
             return loss, acc, F1, recall, precision, roc, jac, AJI 
     def validation(self, checkpoint, p1):
-
+        print "Not Implemented"
 
 
 

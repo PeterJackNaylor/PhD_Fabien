@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from utils import GetOptions, ComputeMetrics
+from glob import glob
 from Nets.UNetBatchNorm_v2 import UNetBatchNorm
 import tensorflow as tf
 import numpy as np
@@ -61,7 +62,7 @@ class Model(UNetBatchNorm):
                                     feed_dict=feed_dict)
             rgb = (Xval[0,92:-92,92:-92] + np.load(self.MEAN_FILE)).astype(np.int8)
             out = ComputeMetrics(pred[0,:,:,0], Yval[0,:,:,0], p1, p2, rgb=rgb, save_path=save_path)
-            out = [l] + out
+            out = [l] + list(out)
             res.append(out)
         return res
 
@@ -104,7 +105,8 @@ if __name__== "__main__":
         N_ITER_MAX = N_EPOCH * DG_TRAIN.length // BATCH_SIZE
     elif SPLIT == "test":
         N_ITER_MAX = N_EPOCH * DG_TEST.length // BATCH_SIZE
-    
+    elif SPLIT == "validation":
+        LOG = glob(os.path.join(LOG, '*'))[0] 
     model = Model(TFRecord,            LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=SIZE,
@@ -146,7 +148,7 @@ if __name__== "__main__":
 
 
         for organ in TEST_PATIENT:
-            DG_TEST  = DataGenMulti(PATH, split="test", crop = 1, size=(992, 992),num=[organ],
+            DG_TEST  = DataGenMulti(PATH, split="test", crop = 1, size=(996, 996),num=[organ],
                            transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
             save_organ = os.path.join(options.save_path, organ)
             CheckOrCreate(save_organ)
