@@ -53,9 +53,6 @@ class Model(UNetDistance):
     def validation(self, DG_TEST, p1, p2, save_path):
         n_test = DG_TEST.length
         n_batch = int(math.ceil(float(n_test) / self.BATCH_SIZE)) 
-        loss, roc = [], []
-        acc, F1, recall = [], [], []
-        precision, jac, AJI = [], [], []
         res = []
 
         for i in range(n_batch):
@@ -65,8 +62,12 @@ class Model(UNetDistance):
                          self.is_training: False}
             l, pred = self.sess.run([self.loss, self.predictions],
                                     feed_dict=feed_dict)
-            rgb = (Xval[0,92:-92,92:-92] + np.load(self.MEAN_FILE)).astype(np.int8)
-            out = ComputeMetrics(pred[0,:,:], Yval[0,:,:,0], p1, p2, rgb=rgb, save_path=save_path)
+            pred[pred > 255] = 255
+            pred[pred < 0] = 0
+            pred = pred.astype(int)
+            rgb = (Xval[0,92:-92,92:-92] + np.load(self.MEAN_FILE)).astype(np.uint8)
+            Yval[ Yval > 0 ] = 255
+            out = ComputeMetrics(pred[0,:,:], Yval[0,:,:,0], p1, p2, rgb=rgb, save_path=save_path, ind=i)
             out = [l] + list(out)
             res.append(out)
         return res

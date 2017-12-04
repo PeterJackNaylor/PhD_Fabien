@@ -191,7 +191,31 @@ def read_and_decode(filename_queue, IMAGE_HEIGHT, IMAGE_WIDTH,
     
     return images, annotations
 
-
+def SmallRec(OUT, DG, ITER):
+    tfrecords_filename = OUT
+    writer = tf.python_io.TFRecordWriter(tfrecords_filename)
+    original_images = []
+    for _ in range(ITER):
+        key = DG.NextKeyRandList(0)
+        img, annotation = DG[key]
+#        img = img.astype(np.uint8)
+        annotation = annotation.astype(np.uint8)
+        height = img.shape[0]
+        width = img.shape[1]
+    
+        original_images.append((img, annotation))
+        
+        img_raw = img.tostring()
+        annotation_raw = annotation.tostring()
+        
+        example = tf.train.Example(features=tf.train.Features(feature={
+            'height': _int64_feature(height),
+            'width': _int64_feature(width),
+            'image_raw': _bytes_feature(img_raw),
+            'mask_raw': _bytes_feature(annotation_raw)}))
+        
+        writer.write(example.SerializeToString())
+    writer.close()
 
 
 def options_parser():

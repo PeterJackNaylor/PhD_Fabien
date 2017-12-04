@@ -1,4 +1,5 @@
 import tensorflow as tf
+import copy
 import pdb
 from tf_image_segmentation.models.fcn_8s import FCN_8s
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
@@ -14,13 +15,15 @@ import numpy as np
 from scipy import misc
 slim = tf.contrib.slim
 from utils import ComputeMetrics
+from Data.CreateTFRecords import SmallRec
 
 class FCN8():
 
     def __init__(self, checkpoint, save_dir, record, 
-                       size, num_labels, n_print):
+                       size, num_labels, n_print, split='train'):
 
         self.checkpoint8 = checkpoint
+        self.Setuped = False
         self.checkpointnew = save_dir
         self.record = record
         self.size = size
@@ -29,7 +32,10 @@ class FCN8():
         self.setup_record()
         self.class_labels = range(num_labels)
         self.class_labels.append(255)
-        self.fcn_8s_checkpoint_path = glob(self.checkpoint8 + "/*.data*")[0].split(".data")[0]
+        if split != "validation":
+            self.fcn_8s_checkpoint_path = glob(self.checkpoint8 + "/*.data*")[0].split(".data")[0]
+        else:
+            self.setup_val(record)
     def setup_record(self):
         filename_queue = tf.train.string_input_producer(
                                     [self.record], num_epochs=10)
@@ -177,28 +183,61 @@ class FCN8():
             recall, precision, roc = np.array([recall, precision, roc]) / steps
             jac, AJI = np.array([jac, AJI]) / steps
             return loss, acc, F1, recall, precision, roc, jac, AJI 
-    def validation(self, checkpoint, p1):
-        print "Not Implemented"
+    def setup_val(self, tfname):
+        self.restore = glob(os.path.join(self.checkpoint8, "FCN__*", "*.data*" ))[0].split(".data")[0]  
+        
+        filename_queue = tf.train.string_input_producer(
+                                    [tfname], num_epochs=10)
+        self.image_queue, self.annotation_queue = read_tfrecord_and_decode_into_image_annotation_pair_tensors(filename_queue)
+        self.image = tf.placeholder_with_default(self.image, shape=[None, 
+                                                                    None,
+                                                                       3])
+        self.annotation = tf.placeholder_with_default(self.annotation_queue, shape=[None,
+                                                                    None,
+                                                                       1])
+        self.resized_image, resized_annotation = scale_randomly_image_with_annotation_with_fixed_size_output(self.image, self.annotation, (self.size, self.size))
+        self.resized_annotation = tf.squeeze(resized_annotation)
+        image_batch_tensor = tf.expand_dims(self.image, axis=0)
+        annotation_batch_tensor = tf.expand_dims(self.annotation, axis=0)
+        # Be careful: after adaptation, network returns final labels
+        # and not logits
+        FCN_8s_bis = adapt_network_for_any_size_input(FCN_8s, 32)
+        self.pred, fcn_16s_variables_mapping = FCN_8s_bis(image_batch_tensor=image_batch_tensor,
+                                                      number_of_classes=self.num_labels,
+                                                      is_training=False)
+        self.prob = [h for h in [s for s in [t for t in self.pred.op.inputs][0].op.inputs][0].op.inputs][0]
+        initializer = tf.local_variables_initializer()
+        self.saver = tf.train.Saver()
+        with tf.Session() as sess:
+            sess.run(initializer)
+            self.saver.restore(sess, self.restore)
+    def validation(self, DG_TEST, steps, p1, p2, save_organ):
 
+        tmp_name = os.path.basename(save_organ) + ".tfRecord" 
+        # SmallRec(tmp_name, DG_TEST, steps)
+        # pred, prob = self.setup_val(tmp_name)
+        res = []
+        print "DOing this {}".format(save_organ)
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
 
+            self.saver.restore(sess, self.restore)
+            #coord = tf.train.Coordinator()
+            #threads = tf.train.start_queue_runners(coord=coord)
+            for i in xrange(steps):
+                Xval, Yval = DG_TEST.Batch(0, 1)
 
+                feed_dict = {self.image: Xval[0], self.annotation: Yval[0]}
+                image_np, annotation_np, pred_np, prob_np = sess.run([self.image, self.annotation, self.pred, self.prob], feed_dict=feed_dict)
+                prob_float = np.exp(-prob_np[0,:,:,0]) / (np.exp(-prob_np[0,:,:,0]) + np.exp(-prob_np[0,:,:,1]))
+                prob_int8 = misc.imresize(prob_float, size=image_np[:,:,0].shape)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                prob_float = (prob_int8.copy().astype(float) / 255)
+                out = ComputeMetrics(prob_float, annotation_np[:,:,0], p1, 0.5, rgb=image_np, save_path=save_organ, ind=i)
+                out = [0.] + list(out)
+                res.append(out)
+            #coord.request_stop()
+            #coord.join(threads)
+            return res
+    def copy(self):
+        return copy.deepcopy(self) 

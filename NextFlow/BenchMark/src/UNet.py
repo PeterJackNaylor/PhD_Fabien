@@ -30,7 +30,7 @@ class Model(UNetBatchNorm):
             l,  prob, batch_labels = self.sess.run([self.loss, self.train_prediction,
                                                                self.train_labels_node], feed_dict=feed_dict)
             loss += l
-            out = ComputeMetrics(prob[0,:,:,0], batch_labels[0,:,:,0], p1, p2)
+            out = ComputeMetrics(prob[0,:,:,1], batch_labels[0,:,:,0], p1, p2)
             acc += out[0]
             roc += out[1]
             jac += out[2]
@@ -60,8 +60,8 @@ class Model(UNetBatchNorm):
                          self.is_training: False}
             l, pred = self.sess.run([self.loss, self.train_prediction],
                                     feed_dict=feed_dict)
-            rgb = (Xval[0,92:-92,92:-92] + np.load(self.MEAN_FILE)).astype(np.int8)
-            out = ComputeMetrics(pred[0,:,:,0], Yval[0,:,:,0], p1, p2, rgb=rgb, save_path=save_path)
+            rgb = (Xval[0,92:-92,92:-92] + np.load(self.MEAN_FILE)).astype(np.uint8)
+            out = ComputeMetrics(pred[0,:,:,1], Yval[0,:,:,0], p1, p2, rgb=rgb, save_path=save_path, ind=i)
             out = [l] + list(out)
             res.append(out)
         return res

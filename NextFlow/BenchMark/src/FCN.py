@@ -9,6 +9,7 @@ from optparse import OptionParser
 from UsefulFunctions.RandomUtils import CheckOrCreate
 from UsefulFunctions.ImageTransf import ListTransform
 from Data.CreateTFRecords import read_and_decode
+from Data.DataGenClass import DataGenMulti
 import pdb
 import os
 
@@ -31,7 +32,7 @@ if __name__== "__main__":
     checkpoint = options.restore
 
     model = FCN8(checkpoint, save_dir, TFRecord, SIZE[0],
-                 2, 1000)
+                 2, 1000, options.split)
 
     if SPLIT == "train":
         model.train8(N_ITER_MAX, LEARNING_RATE)
@@ -58,14 +59,14 @@ if __name__== "__main__":
         f = open(file_name, 'w')
         NAMES = ["NUMBER", "ORGAN", "Loss", "Acc", "F1", "Recall", "Precision", "ROC", "Jaccard", "AJI", "p1", "p2"]
         f.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(*NAMES))
-
-
+        transform_list, transform_list_test = ListTransform()
+        PATH = options.path
         for organ in TEST_PATIENT:
-            DG_TEST  = DataGenMulti(PATH, split="test", crop = 1, size=(992, 992),num=[organ],
-                           transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
+            DG_TEST  = DataGenMulti(PATH, split="test", crop = 1, size=(1000, 1000),num=[organ],
+                           transforms=transform_list_test, UNet=False, mean_file=None)
             save_organ = os.path.join(options.save_path, organ)
             CheckOrCreate(save_organ)
-            outs = model.validation(DG_TEST, options.p1, 0.5, save_organ)
+            outs = model.validation(DG_TEST, 2, options.p1, 0.5, save_organ)
             for i in range(len(outs)):
                 small_o = outs[i]
                 small_o = [i, organ] + small_o + [options.p1, 0.5]
