@@ -54,6 +54,7 @@ class DataReader(ConvolutionalNeuralNetwork):
         self.N_EPOCH = N_EPOCH
         self.N_THREADS = N_THREADS
         self.DROPOUT = DROPOUT
+        self.MEAN_FILE = MEAN_FILE
         if MEAN_FILE is not None:
             MEAN_ARRAY = tf.constant(np.load(MEAN_FILE), dtype=tf.float32) # (3)
             self.MEAN_ARRAY = tf.reshape(MEAN_ARRAY, [1, 1, 3])
