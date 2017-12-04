@@ -263,8 +263,9 @@ process Validation {
     val p1 from P1_
     val p2 from P2_
     output:
-    
+    file "./$name"
+    file "${name}.csv" into CSV_VAL
     """
-    python $py --mean_file $mean --path $path --log $best_model --restore $best_model --batch_size 1 --n_features ${feat} --n_threads 100 --split validation --size_test 500 --p1 ${p1} --p2 ${p2} --output ${name}.csv
+    python $py --mean_file $mean --path $path --log $best_model --restore $best_model --batch_size 1 --n_features ${feat} --n_threads 100 --split validation --size_test 500 --p1 ${p1} --p2 ${p2} --output ${name}.csv --save_path $name
     """
 }
