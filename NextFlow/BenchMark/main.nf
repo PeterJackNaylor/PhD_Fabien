@@ -22,7 +22,7 @@ process ChangeInput {
     file changescale from CHANGESCALE
     each name from NAMES
     output:
-    set val("$name"), file("ImageFolder") into IMAGE_FOLD2, IMAGE_FOLD3, IMAGE_FOLD4
+    set val("$name"), file("ImageFolder") into IMAGE_FOLD2, IMAGE_FOLD3 
     """
     python $changescale --path $path
 
@@ -38,26 +38,50 @@ process BinToDistance {
     file py from BinToDistanceFile
     file toannotate from IMAGE_FOLD
     output:
-    set val("DIST"), file("ToAnnotateDistance") into DISTANCE_FOLD
+    set val("DIST"), file("ToAnnotateDistance") into DISTANCE_FOLD, DISTANCE_FOLD2
 
     """
     python $py $toannotate
     """
 }
+// Remove IMAGE_FOLD3 if it doesn't complain for IMAGE_FOLD2
 
+REFERENCE = file(IMAGE_FOLD + '/Slide_test/test_{1,2}.png')
+MAT_NORMALIZE = file('src/Normalize.m')
+TYPE = ["Macenko", "RGBHist"]
+TOOL_BOX = '/Data/users/pnaylor/Documents/MATLAB/stain_normalisation_toolbox/'
+
+process Normalise {
+    publishDir "${type}_images"
+    input:
+    set name, file(path) from DISTANCE_FOLD
+    file matlab_n from MAT_NORMALIZE
+    file reference from REFERENCE
+    each type from TYPE
+    val tool_box from TOOL_BOX
+    output:
+    set val("DIST_${type}_${reference.baseName.split('_')[1]}"), file("ImageFolder") into NORM_FOLD
+    """
+    matlab -nodisplay -nosplash -nodesktop -r '${matlab_n.baseName} $path $type $reference $tool_box;exit;'
+    """
+}
 /*          1) We create all the needed records 
 In outputs:
 a set with the name, the split and the record
 */
 
 TFRECORDS = file('src/TFRecords.py')
-IMAGE_FOLD2 .concat(DISTANCE_FOLD) .set{FOLDS}
-IMAGE_FOLD3 .concat(DISTANCE_FOLD).set{FOLDS2}
-IMAGE_FOLD4 .concat(DISTANCE_FOLD).set{FOLDS3}
-UNET_RECORDS = ["UNet", "--UNet", 212]
-FCN_RECORDS = ["FCN", "--no-UNet", 224]
-DIST_RECORDS = ["DIST", "--UNet", 212]
-RECORDS_OPTIONS = Channel.from(UNET_RECORDS, FCN_RECORDS, DIST_RECORDS)
+IMAGE_FOLD2 .concat(DISTANCE_FOLD) .concat(NORM_FOLD) .into{FOLDS;FOLDS2;FOLDS3;FOLDS4}
+UNET_REC = ["UNet", "--UNet", 212]
+FCN_REC = ["FCN", "--no-UNet", 224]
+DIST_REC = ["DIST", "--UNet", 212]
+MACENKO_1 = ["DIST_Macenko_1", "--UNet", 212]
+MACENKO_2 = ["DIST_Macenko_2", "--UNet", 212]
+RGBHIST_1 = ["DIST_RGBHist_1", "--UNet", 212]
+RGBHIST_2 = ["DIST_RGBHist_2", "--UNet", 212]
+
+RECORDS_OPTIONS = Channel.from(UNET_REC, FCN_REC, DIST_REC, MACENKO_1, MACENKO_2, RGBHIST_1, RGBHIST_2)
+
 FOLDS.join(RECORDS_OPTIONS) .set{RECORDS_OPTIONS_v2}
 RECORDS_HP = [["train", "16", "0"], ["test", "1", 500]]
 
@@ -90,9 +114,9 @@ process Mean {
 
     input:
     file py from MEANPY
-    file toannotate from IMAGE_FOLD
+    set val(name), file(toannotate) from FOLDS4
     output:
-    file "mean_file.npy" into MeanFile, MeanFile2, MeanFile3, MeanFile4, MeanFile5, MeanFile6, MeanFile7, MeanFile4_NEE, MeanFile7_NEE
+    set val("$name"), file("mean_file.npy"), file("$toannotate") into MeanFile, Meanfile2, Meanfile3
 
     """
     python $py --path $toannotate --output .
@@ -106,9 +130,9 @@ In outputs:
 a set with the name, the parameters of the model
 */
 
-ITERTEST = 24
+ITERTEST = 50
 
-ITER8 = 108 // 00
+ITER8 = 10800
 
 
 LEARNING_RATE = [0.01, 0.001, 0.0001, 0.00001, 0.000001]
@@ -124,10 +148,10 @@ UNET_TRAINING = ["UNet", Unet_file, 212, 0]
 FCN_TRAINING  = ["FCN", Fcn_file, 224, ITER8]
 DIST_TRAINING = ["DIST", Dist_file, 212, 0]
 
-TRAINING_CHANNEL = Channel.from(UNET_TRAINING, FCN_TRAINING, DIST_TRAINING)
+Channel.from(UNET_TRAINING, FCN_TRAINING, DIST_TRAINING) .into{ TRAINING_CHANNEL; TRAINING_CHANNEL2}
 PRETRAINED_8 = file(params.image_dir + "/pretrained/checkpoint16/")
 
-TRAIN_REC.join(TRAINING_CHANNEL).join(FOLDS2) .set {TRAINING_OPTIONS}
+TRAIN_REC.join(TRAINING_CHANNEL).join(MeanFile) .set {TRAINING_OPTIONS}
 
 process Training {
     maxForks 2
@@ -135,29 +159,26 @@ process Training {
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
     input:
-    set name, split, file(rec), file(py), size, iters, file(path) from TRAINING_OPTIONS
+    set name, split, file(rec), file(py), size, iters, file(mean), file(path) from TRAINING_OPTIONS
     val home from params.home
     val bs from BS
     each feat from FEATURES
     each lr from LEARNING_RATE
-    each wd from WEIGHT_DECAY    
-    file _ from MeanFile
+    each wd from WEIGHT_DECAY   
     file __ from PRETRAINED_8
     val epoch from params.epoch
     output:
-    set val("$name"), file("${name}__${feat}_${wd}_${lr}"), file("$py"), feat, wd, lr into RESULT_TRAIN
+    set val("$name"), file("${name}__${feat}_${wd}_${lr}"), file("$py"), feat, wd, lr into RESULT_TRAIN, RESULT_TRAIN2
 
     when:
     "$name" != "FCN" || ("$feat" == "${FEATURES[0]}" && "$wd" == "${WEIGHT_DECAY[0]}")
 
-
     script:
     """
-    python $py --tf_record $rec --path $path  --log ${name}__${feat}_${wd}_${lr} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100 --restore $__ --size_train $size --split $split --iters $iters
+    python $py --tf_record $rec --path $path  --log ${name}__${feat}_${wd}_${lr} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file ${mean} --n_threads 100 --restore $__ --size_train $size --split $split --iters $iters
     """
 
 } 
-
 /*          3) We test
 In inputs: Meanfile, name, split, rec
 
@@ -167,29 +188,31 @@ a set with the name, the split and the record
 ITERS = 26
 P1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 P2 = [0.5, 1.0, 1.5, 2.0]
-RESULT_TRAIN .join(TEST_REC) .join(FOLDS3) .set {TEST_OPTIONS}
-
+// RESULT_TRAIN .join(TEST_REC) .join(FOLDS3) .into {TEST_OPTIONS;TEST_OPTIONS2}
+TEST_REC.cross(RESULT_TRAIN).map{ first, second -> [first, second.drop(1)].flatten() } .set{ TEST_OPTIONS_pre }
+Meanfile2.cross(TEST_OPTIONS_pre).map { first, second -> [first, second.drop(1)].flatten() } .into{TEST_OPTIONS;TEST_OPTIONS2}
+// TEST_OPTIONS2.println()
+// TEST_OPTIONS2 .subscribe{println(it)}
 process Testing {
     maxForks 2
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
     input:
-    set name, file(model), file(py), feat, wd, lr, split, file(rec), file(path) from TEST_OPTIONS    
-    file _ from MeanFile
+    set name, file(mean), file(path), split, file(rec), file(model), file(py), feat, wd, lr from TEST_OPTIONS    
     each p1 from P1
     each p2 from P2
     val iters from ITERS
     val home from params.home
     output:
-    set val("$name"), file("${name}__${feat}_${wd}_${lr}_${p1}_${p2}.csv"), file("$model") into RESULT_TEST
-
+    set val("$name"), file("${name}__${feat}_${wd}_${lr}_${p1}_${p2}.csv") into RESULT_TEST
+    set val("$name"), file("$model") into MODEL_TEST
     when:
-    ("$name" == "DIST" && "${p1}" < 6) || ("$name" != "DIST" && "${p2}" == "${P2[0]}" && "${p1}" >5)
-
+    ("$name" =~ "DIST" && p1 < 6) || ( !("$name" =~ "DIST") && p2 == P2[0] && p1 > 5)
+    
     script:
     """
-    python $py --tf_record $rec --path $path  --log $model --batch_size 1 --n_features $feat --mean_file $_ --n_threads 100 --split $split --size_test 500 --p1 ${p1} --p2 ${p2} --restore $model --iters $iters --output ${name}__${feat}_${wd}_${lr}_${p1}_${p2}.csv
+    python $py --tf_record $rec --path $path  --log $model --batch_size 1 --n_features $feat --mean_file ${mean} --n_threads 100 --split $split --size_test 500 --p1 ${p1} --p2 ${p2} --restore $model --iters $iters --output ${name}__${feat}_${wd}_${lr}_${p1}_${p2}.csv
     """  
 
 }
@@ -201,25 +224,48 @@ name, best_model, p1, p2
 */
 
 REGROUP = file('src/regroup.py')
+// RESULT_TEST .subscribe {it -> println(it)}
+RESULT_TEST  .groupTuple() 
+             .set { KEY_CSV }
+RESULT_TRAIN2.map{name, model, py, feat, wd, lr -> [name, model]} .groupTuple() . set {ALL_MODELS}
 
-RESULT_TEST .groupTuple() 
-            .set { KEY_CSV }
-
+//MODEL_TEST .unique().subscribe{println(it)} //.set {KEY_MODEL}
+ KEY_CSV .join(ALL_MODELS) .set {KEY_CSV_MODEL}
 
 process GetBestPerKey {
-    
+    publishDir "./Test_tables/" , pattern: "*.csv"
     input:
     file py from REGROUP
-    set name, file(csv), file(model) from KEY_CSV
+    set name, file(csv), file(model) from KEY_CSV_MODEL
 
     output:
     set val("$name"), file("best_model") into BEST_MODEL_TEST
-    file "$name_test.csv"
+    file 'feat_val' into N_FEATS
+    file 'p1_val' into P1_VAL
+    file 'p2_val' into P2_VAL
+    file "${name}_test.csv"
     """
-    python $py --store_best best_model --output $name_test.csv
-
+    python $py --store_best best_model --output ${name}_test.csv
     """
-
-
 }
 
+BEST_MODEL_TEST.join(TRAINING_CHANNEL2).join(Meanfile3) .set{ VALIDATION_OPTIONS}
+N_FEATS .map{ it.text } .set {FEATS_}
+P1_VAL  .map{ it.text } .set {P1_}
+P2_VAL  .map{ it.text } .set {P2_}
+process Validation {
+
+    publishDir "./Validation/"
+
+    input:
+    set name, file(best_model), file(py), _, __, file(mean), file(path) from VALIDATION_OPTIONS
+    val feat from FEATS_ 
+    val p1 from P1_
+    val p2 from P2_
+    output:
+    file "./$name"
+    file "${name}.csv" into CSV_VAL
+    """
+    python $py --mean_file $mean --path $path --log $best_model --restore $best_model --batch_size 1 --n_features ${feat} --n_threads 100 --split validation --size_test 500 --p1 ${p1} --p2 ${p2} --output ${name}.csv --save_path $name
+    """
+}
