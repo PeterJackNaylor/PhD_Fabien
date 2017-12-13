@@ -233,8 +233,8 @@ def options_parser():
 def ListTransform(n_he=50, var_he=[0.07, 0.07]):
     transform_list = []
 
-    k_h = np.random.uniform(low=1-var_hsv[0], high=1+var_hsv[0], size=n_he)
-    k_e = np.random.uniform(low=1-var_hsv[0], high=1+var_hsv[0], size=n_he)
+    k_h = np.random.uniform(low=1-var_he[0], high=1+var_he[0], size=n_he)
+    k_e = np.random.uniform(low=1-var_he[1], high=1+var_he[1], size=n_he)
 
     for i in range(n_he):
         transform_list.append(Identity())

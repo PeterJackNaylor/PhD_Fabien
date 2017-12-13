@@ -21,7 +21,7 @@ WEIGHT_DECAY = [ 0.00005]
 H = Channel.from(0.01, 0.1, 0.2, 0.3, 0.4)
 E = Channel.from(0.01, 0.1, 0.2, 0.3, 0.4)
 BS = 10
-H .combine(E) .into{HE}
+H .combine(E) .set{HE}
 node = []
 comp1 = Channel.from( 15..24 )
 comp2 = Channel.from( 15..24 )
@@ -45,14 +45,14 @@ process Mean {
 
 process CreateTFRecords_he {
     clusterOptions = "-S /bin/bash -l h_vmem=60G"
-    queue "compute-0-${c}@all.q"
+    queue "all.q@compute-0-${c}"
     memory '60G'
-    maxForks = 2
+    maxForks = 8
     input:
     file py from TFRECORDS
     val epoch from params.epoch
     file path from IMAGE_FOLD
-    val h, e from HE
+    set h, e from HE
     val c from  COMP
     output:
     file "HE_${he1}_${he2}.tfrecords" into DATAQUEUE_HE
@@ -61,7 +61,7 @@ process CreateTFRecords_he {
         PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
         /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/envs/cpu_tf/bin/python \$@
     }
-    pyglib $py --output HE_${he1}_${he2}.tfrecords --he1 $he1 --he2 $he2 --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type Normal --train
+    pyglib $py --output HE_${h}_${e}.tfrecords --he1 $h --he2 $e --path $path --crop 4 --UNet --size 212 --seed 42 --epoch $epoch --type Normal --train
     """
 }
 
@@ -81,7 +81,7 @@ process Training {
     each lr from LEARNING_RATE
     each wd from WEIGHT_DECAY    
     file _ from MeanFile
-    file __ from DATA
+    file __ from DATAQUEUE_HE
     val epoch from params.epoch
     output:
     file "${__.getBaseName().split('.tfrecord')[0]}" into RESULTS 
@@ -134,7 +134,7 @@ process RegroupResults {
     input:
     file fold from RES .toList()
     output:
-    file "results.csv" into RES
+    file "results.csv" into RES_csv
     """
     echo IMPLEMENT
     """
