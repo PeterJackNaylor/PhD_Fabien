@@ -81,7 +81,7 @@ process Training {
     each feat from ARCH_FEATURES
     each lr from LEARNING_RATE
     each wd from WEIGHT_DECAY
-    each rep in REPEAT    
+    each rep from REPEAT    
     file _ from MeanFile
     file __ from DATAQUEUE_HE
     val epoch from params.epoch
