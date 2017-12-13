@@ -1,0 +1,1 @@
+nextflow run head.nf -profile mines --image_dir /share/data40T_v2/Peter/Data --epoch 40 --python_dir /share/data40T_v2/Peter/Python/PythonScripts/PhD_Fabien --home /share/data40T_v2/Peter --with-trace -resume

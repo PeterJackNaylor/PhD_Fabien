@@ -44,7 +44,6 @@ def GetOptions():
                       help="1st input for post processing.")
     parser.add_option('--p2', dest="p2", type="float",
                       help="2nd input for post processing.")
-
     parser.add_option('--iters', dest="iters", type="int")
     parser.add_option('--seed', dest="seed", type="int")
     parser.add_option('--size_test', dest="size_test", type="int")
@@ -55,6 +54,7 @@ def GetOptions():
     parser.add_option('--UNet', dest='UNet', action='store_true')
     parser.add_option('--no-UNet', dest='UNet', action='store_false')
     parser.add_option('--output', dest="output", type="str")
+    parser.add_option('--output_csv', dest="output_csv", type="str")
 
     (options, args) = parser.parse_args()
 
