@@ -65,6 +65,7 @@ process CreateTFRecords_he {
     """
 }
 
+REPEAT = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 
 process Training {
@@ -79,12 +80,13 @@ process Training {
 //    val pat from PATIENT
     each feat from ARCH_FEATURES
     each lr from LEARNING_RATE
-    each wd from WEIGHT_DECAY    
+    each wd from WEIGHT_DECAY
+    each rep in REPEAT    
     file _ from MeanFile
     file __ from DATA
     val epoch from params.epoch
     output:
-    file "${__.getBaseName().split('.tfrecord')[0]}" into RESULTS 
+    file "${__.getBaseName().split('.tfrecord')[0]}_${rep}" into RESULTS 
 
     beforeScript "source $home/CUDA_LOCK/.whichNODE"
     afterScript "source $home/CUDA_LOCK/.freeNODE"
@@ -94,7 +96,7 @@ process Training {
     function pyglib {
         /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/envs/cpu_tf/bin/python \$@
     }
-    pyglib $py --tf_record $__ --path $path  --log ./${__.getBaseName().split('.tfrecord')[0]} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
+    pyglib $py --tf_record $__ --path $path  --log ./${__.getBaseName().split('.tfrecord')[0]}_${rep} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
     echo 'Done' >> ${__.getBaseName().split('.tfrecord')[0]}/readme.md
     """
 }
