@@ -55,7 +55,7 @@ process CreateTFRecords_he {
     set h, e from HE
     val c from  COMP
     output:
-    file "HE_${he1}_${he2}.tfrecords" into DATAQUEUE_HE
+    file "HE_${h}_${e}.tfrecords" into DATAQUEUE_HE
     """
     function pyglib {
         PS1=\${PS1:=} CONDA_PATH_BACKUP="" source activate cpu_tf
@@ -94,17 +94,16 @@ process Training {
     script:
     """
     function pyglib {
-        /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/envs/cpu_tf/bin/python \$@
+        /share/apps/glibc-2.20/lib/ld-linux-x86-64.so.2 --library-path /share/apps/glibc-2.20/lib:$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/cuda/lib64/:/cbio/donnees/pnaylor/cuda/lib64:/usr/lib64/nvidia /cbio/donnees/pnaylor/anaconda2/bin/python \$@
     }
     pyglib $py --tf_record $__ --path $path  --log ./${__.getBaseName().split('.tfrecord')[0]}_${rep} --learning_rate $lr --batch_size $bs --epoch $epoch --n_features $feat --weight_decay $wd --mean_file $_ --n_threads 100
-    echo 'Done' >> ${__.getBaseName().split('.tfrecord')[0]}/readme.md
     """
 }
 
 process Testing {
-    clusterOptions = "-S /bin/bash"
     publishDir "./Test/"
-    maxForks = 2
+    clusterOptions "-S /bin/bash -l h_vmem=60G"
+    memory '60G'
     input:
     file path from IMAGE_FOLD
     file py from TESTPY
@@ -113,9 +112,6 @@ process Testing {
     file _ from MeanFile2
     output:
     file "${folder}.txt" into RES
-
-    beforeScript "source $home/CUDA_LOCK/.whichNODE"
-    afterScript "source $home/CUDA_LOCK/.freeNODE"
 
     script:
     """
@@ -138,7 +134,33 @@ process RegroupResults {
     output:
     file "results.csv" into RES_csv
     """
-    echo IMPLEMENT
+#!/usr/bin/env python
+from glob import glob
+import pandas as pd
+from os.path import join, basename
+from UsefulFunctions.RandomUtils import textparser
+filess = glob('*.txt')
+import pdb
+result = pd.DataFrame(columns=['Model', 'Param1', 'Param2', 'Repeat', 'AJI', 'Mean acc', 'Precision', 'Recall', 'F1', 'ACC'])
+
+def name_parse(string):
+    string = basename(string).split('.tx')[0]
+    model = string.split('_')[0]
+    Param1 = string.split('_')[1]
+    Param2 = string.split('_')[2]
+    Param3 = string.split('_')[3]
+    return model, Param1, Param2, Param3
+
+for k, f in enumerate(filess):
+    model, p1, p2, p3 = name_parse(f)
+    dic = textparser(f)
+    dic['Param1'] = p1
+    dic['Param2'] = p2
+    dic['Repeat'] = p3
+    dic['Model'] = model
+    result.loc[k] = pd.Series(dic)
+result = result.set_index(['Model', 'Param1', 'Param2', 'Repeat'])
+result.to_csv('results.csv')
     """
 }
 

@@ -43,7 +43,7 @@ def CreateTFRecord(OUTNAME, PATH, CROP, SIZE,
 
     DG.SetPatient(TEST_PATIENT)
     N_ITER_MAX = N_EPOCH * DG.length
-
+    print N_ITER_MAX
 
     original_images = []
     key = DG.RandomKey(False)
