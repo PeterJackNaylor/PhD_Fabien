@@ -166,7 +166,6 @@ process Training {
 } 
 
 /*          4) a) We choose the best hyperparamter with respect to the test data set
-            4) b) We choose the best hyperparamter with respect to the validation data set
 
 In inputs: Meanfile, image_path resp., split, rec, model, python, feat
 In outputs: a set with the name and model or csv
@@ -199,36 +198,8 @@ process Testing {
 
 }
 
-// b)
-ITERVAL = 14
-VAL_REC.cross(RESULT_TRAIN_VAL).map{ first, second -> [first, second.drop(1)].flatten() } .set{ VAL_OPTIONS_pre }
-Meanfile2VAL.cross(VAL_OPTIONS_pre).map { first, second -> [first, second.drop(1)].flatten() } .into{VAL_OPTIONS;VAL_OPTIONS2}
-
-process Testing_Val {
-    maxForks 2
-    beforeScript "source $home/CUDA_LOCK/.whichNODE"
-    afterScript "source $home/CUDA_LOCK/.freeNODE"
-    input:
-    set name, file(mean), file(path), split, file(rec), file(model), file(py), feat, wd, lr from VAL_OPTIONS    
-    each p1 from P1
-    each p2 from P2
-    val iters from ITERVAL
-    val home from params.home
-    output:
-    set val("$name"), file("${name}__${feat}_${wd}_${lr}_${p1}_${p2}.csv") into RESULT_VAL
-    set val("$name"), file("$model") into MODEL_TEST
-    when:
-    ("$name" =~ "DIST" && p1 < 6) || ( !("$name" =~ "DIST") && p2 == P2[0] && p1 > 5)
-    script:
-    """
-    python $py --tf_record $rec --path $path  --log $model --batch_size 1 --n_features $feat --mean_file ${mean} --n_threads 100 --split $split --size_test 996 --p1 ${p1} --p2 ${p2} --restore $model --iters $iters --output ${name}__${feat}_${wd}_${lr}_${p1}_${p2}.csv
-    """  
-
-}
-
 
 /*          5) We regroup a) the test on dataset 1
-                          b) the test on dataset 2 (same as for val)
 In inputs: name, all result_test.csv per key
 In outputs: name, best_model, p1, p2
 */
@@ -256,33 +227,9 @@ process GetBestPerKey {
     """
 }
 
-// b)
-RESULT_VAL  .groupTuple() 
-             .set { KEY_CSV_VAL }
-RESULT_TRAIN_VAL2.map{name, model, py, feat, wd, lr -> [name, model]} .groupTuple() . set {ALL_MODELS_VAL}
-KEY_CSV_VAL .join(ALL_MODELS_VAL) .set {KEY_CSV_MODEL_VAL}
-
-process GetBestPerKey_Val {
-    publishDir "./Val_tables/" , pattern: "*.csv"
-    input:
-    file py from REGROUP
-    set name, file(csv), file(model) from KEY_CSV_MODEL_VAL
-
-    output:
-    set val("$name"), file("best_model") into BEST_MODEL_TEST_VAL
-    file 'feat_val' into N_FEATS_VAL
-    file 'p1_val' into P1_VAL_VAL
-    file 'p2_val' into P2_VAL_VAL
-    file "${name}_val.csv"
-    """
-    python $py --store_best best_model --output ${name}_val.csv
-    """
-}
-
 /*
 Compute validation score on validation set
 a) Validation with hyper parameter choosen on different dataset
-b) Validation with hyper parameter choosen on the same dataset
 
 */
 // a)
@@ -301,27 +248,6 @@ process Validation {
     output:
     file "./$name"
     file "${name}.csv" into CSV_VAL
-    """
-    python $py --mean_file $mean --path $path --log $best_model --restore $best_model --batch_size 1 --n_features ${feat} --n_threads 100 --split validation --size_test 500 --p1 ${p1} --p2 ${p2} --output ${name}.csv --save_path $name
-    """
-}
-
-// b)
-BEST_MODEL_TEST_VAL.join(TRAINING_CHANNELVAL2).join(Meanfile3VAL) .set{ VALIDATION_OPTIONS_VAL}
-N_FEATS_VAL .map{ it.text } .set {FEATS_VAL}
-P1_VAL_VAL  .map{ it.text } .set {P1_VAL}
-P2_VAL_VAL  .map{ it.text } .set {P2_VAL}
-
-process Validation_VAL {
-    publishDir "./ValidationWithoutNested/"
-    input:
-    set name, file(best_model), file(py), _, __, file(mean), file(path) from VALIDATION_OPTIONS_VAL
-    val feat from FEATS_VAL
-    val p1 from P1_VAL
-    val p2 from P2_VAL
-    output:
-    file "./$name"
-    file "${name}.csv" into CSV_VAL_VAL
     """
     python $py --mean_file $mean --path $path --log $best_model --restore $best_model --batch_size 1 --n_features ${feat} --n_threads 100 --split validation --size_test 500 --p1 ${p1} --p2 ${p2} --output ${name}.csv --save_path $name
     """

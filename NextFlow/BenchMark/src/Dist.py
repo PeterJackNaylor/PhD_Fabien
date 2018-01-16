@@ -34,6 +34,7 @@ class Model(UNetDistance):
             prob[prob > 255] = 255
             prob[prob < 0] = 0
             prob = prob.astype(int)
+            batch_labels[batch_labels > 0] = 255
             loss += l
             out = ComputeMetrics(prob[0], batch_labels[0], p1, p2)
             acc += out[0]
@@ -151,7 +152,7 @@ if __name__== "__main__":
 
         file_name = options.output
         f = open(file_name, 'w')
-        NAMES = ["NUMBER", "ORGAN", "Loss", "Acc", "F1", "Recall", "Precision", "ROC", "Jaccard", "AJI", "p1", "p2"]
+        NAMES = ["NUMBER", "ORGAN", "Loss", "Acc", "ROC", "Jaccard", "Recall", "Precision", "F1", "AJI", "p1", "p2"]
         f.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(*NAMES))
 
 
