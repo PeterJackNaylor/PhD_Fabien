@@ -43,7 +43,7 @@ process CreateTFRecords {
 	output:
 	set file("$path"), file("${path}.tfrecords") into PATH_RECORDS
 	"""
-	python $py --output ${path}.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch 2 --type JUST_READ --train
+	python $py --output ${path}.tfrecords --path $path --crop 4 --UNet --size 212 --seed 42 --epoch 20 --type JUST_READ --train
 	"""
 }
 
@@ -59,7 +59,7 @@ process Training {
 
 
 	"""
-	python -W ignore ${second[1]} --tf_record ${first[2]} --path ${first[1]} --log . --learning_rate 0.001 --batch_size 4 --epoch 10 --n_features 2 --weight_decay 0.005 --dropout 0.5 --n_threads 50
+	python -W ignore ${second[1]} --tf_record ${first[2]} --path ${first[1]} --log . --learning_rate 0.001 --batch_size 4 --epoch 100 --n_features 2 --weight_decay 0.005 --dropout 0.5 --n_threads 50
 	"""
 }
 

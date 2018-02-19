@@ -74,16 +74,21 @@ def DistanceWithoutNormalise(bin_image):
     return res
 
 def DistanceBinNormalise(bin_image):
-    res = distance_transform_cdt(bin_image)
-    props = regionprops(label(bin_image))
-    res = res.astype('float')
-    for p in props:
-        MAX_VALUE = res[p.coords].max()
-        for x, y in p.coords:
-            res[x, y] = res[x, y] / float(MAX_VALUE)
-    res = res * 255
-    res = res.astype('uint8')
-    return res
+    bin_image = label(bin_image)
+    result = np.zeros_like(bin_image, dtype="float")
+
+    for k in range(1, bin_image.max() + 1):
+        tmp = np.zeros_like(result, dtype="float")
+        tmp[bin_image == k] = 1
+        dist = distance_transform_cdt(tmp)
+        MAX = dist.max()
+        dist = dist.astype(float) / MAX
+        result[bin_image == k] = dist[bin_image == k]
+    result = result * 255
+    result = result.astype('uint8')
+    return result
+
+
 
 if __name__ == '__main__':
 
@@ -98,7 +103,11 @@ if __name__ == '__main__':
     parser.add_option("--mu", dest="mu", type="int")
     parser.add_option("--sigma", dest="sigma", type="int")
     parser.add_option("--sigma2", dest="sigma2", type="int")
+    parser.add_option("--normalized", dest='normalized', type='int')
     (options, args) = parser.parse_args()
+
+    if (options.normalized != 0 and options.normalized != 1):
+        raise AssertionError('normalized not define, give --normalized 0 or --normalized 1')
 
 
     path = "/data/users/pnaylor/Bureau/ToAnnotate"
@@ -111,7 +120,7 @@ if __name__ == '__main__':
     size = (512, 512)
     crop = 1
     DG = DataGenRandomT(path, crop=crop, size=size, transforms=transf_test,
-                 split="train", num="")
+                 split="train", num="", seed_=42)
     Slide_train = join(options.output, "Slide_train")
     CheckOrCreate(Slide_train)
     Gt_train = join(options.output, "GT_train")
@@ -124,19 +133,26 @@ if __name__ == '__main__':
 
     for i in range(DG.length):
         key = DG.NextKeyRandList(0)
-        img, gt = DG[key]  
+        img, gt = DG[key]
+        gt_lab = gt.copy()  
         gt = label(gt)
         gt = dilation(gt, disk(3))
         GT_noise = AddNoise(gt, options.mu, options.sigma, options.sigma2, 1, 255)
         GT_noise = Noise(GT_noise, 5)
         if options.test > i:
             imsave(join(Slide_test, "test_{}.png").format(i), GT_noise)
-            imsave(join(Gt_test, "test_{}.png").format(i), DistanceWithoutNormalise(gt))
+            if options.normalized == 0:
+                imsave(join(Gt_test, "test_{}.png").format(i), DistanceBinNormalise(gt))
+            else:
+                imsave(join(Gt_test, "test_{}.png").format(i), DistanceWithoutNormalise(gt))
         else:   
             imsave(join(Slide_train, "train_{}.png").format(i), GT_noise)
-            imsave(join(Gt_train, "train_{}.png").format(i), DistanceWithoutNormalise(gt))
-    fig, ax = plt.subplots(nrows=2)
-    ax[0].imshow(gt)
-    ax[1].imshow(GT_noise)
-    plt.show()
+            if options.normalized == 0:
+                imsave(join(Gt_train, "train_{}.png").format(i), DistanceBinNormalise(gt))
+            else:
+                imsave(join(Gt_train, "train_{}.png").format(i), DistanceWithoutNormalise(gt))
+    # fig, ax = plt.subplots(nrows=2)
+    # ax[0].imshow(gt)
+    # ax[1].imshow(GT_noise)
+    # plt.show()
     #np.save(join(options.out, "mean_file.npy"), mean)
