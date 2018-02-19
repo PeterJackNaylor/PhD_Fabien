@@ -304,7 +304,7 @@ if __name__== "__main__":
     DG_TEST  = DataGenRandomT(PATH, split="test", crop = CROP, size=(HEIGHT, WIDTH), 
                        transforms=transform_list_test, UNet=True, mean_file=MEAN_FILE)
     DG_TEST.SetPatient(test_patient)
-
+    print TFRecord
     model = UNetBatchNorm(TFRecord,    LEARNING_RATE=LEARNING_RATE,
                                        BATCH_SIZE=BATCH_SIZE,
                                        IMAGE_SIZE=SIZE,

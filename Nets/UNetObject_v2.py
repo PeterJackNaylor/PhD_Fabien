@@ -63,15 +63,21 @@ class UNet(DataReader):
 
     def CropAndMerge(self, Input1, Input2, name="bridge"):
         #pdb.set_trace()
-        Size1 = tf.shape(Input1)[1]
-        Size2 = tf.shape(Input2)[1]
+        Size1_x = tf.shape(Input1)[1]
+        Size2_x = tf.shape(Input2)[1]
+
+        Size1_y = tf.shape(Input1)[2]
+        Size2_y = tf.shape(Input2)[2]
         ### Size1 > Size2
         with tf.name_scope(name):
             #assert Size1 > Size2 
-            diff = tf.divide(tf.subtract(Size1, Size2), 2)
-            diff = tf.cast(diff, tf.int32)
-            Size2 = tf.cast(Size2, tf.int32)
-            crop = tf.slice(Input1, [0, diff, diff, 0], [-1, Size2, Size2, -1])
+            diff_x = tf.divide(tf.subtract(Size1_x, Size2_x), 2)
+            diff_y = tf.divide(tf.subtract(Size1_y, Size2_y), 2)
+            diff_x = tf.cast(diff_x, tf.int32)
+            Size2_x = tf.cast(Size2_x, tf.int32)
+            diff_y = tf.cast(diff_y, tf.int32)
+            Size2_y = tf.cast(Size2_y, tf.int32)
+            crop = tf.slice(Input1, [0, diff_x, diff_y, 0], [-1, Size2_x, Size2_y, -1])
             concat = tf.concat([crop, Input2], axis=3)
 
             return concat
